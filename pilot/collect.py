@@ -52,12 +52,17 @@ def is_src_path(p, src_dirs, tests_dir):
 
 # ---------------------------------------------------------------- commits
 def pick_commits(repo, n, src_dirs, tests_dir):
-    """Last n first-parent commits that change at least one source .py file, oldest first,
-    plus the commit just before the first one (baseline for 'previous' evidence)."""
-    log = git(repo, "log", "--first-parent", "--no-merges", "--format=%H", "-n", "2000", "HEAD").split()
+    """Last n commits on the first-parent (mainline) history that change at least one source
+    .py file, oldest first, plus the commit just before the first one (baseline).
+    Merge commits are included: on GitHub-style projects most changes land as PR merges, and
+    their diff against the first parent is exactly the change that entered the main branch."""
+    log = git(repo, "log", "--first-parent", "--format=%H %P", "-n", "3000", "HEAD").splitlines()
     chosen = []
-    for sha in log:
-        files = git(repo, "diff-tree", "--no-commit-id", "--name-only", "-r", sha).split()
+    for line in log:
+        sha, *parents = line.split()
+        if not parents:
+            continue
+        files = git(repo, "diff", "--name-only", parents[0], sha).split()
         if any(is_src_path(f, src_dirs, tests_dir) for f in files):
             chosen.append(sha)
         if len(chosen) == n + 1:
@@ -150,11 +155,16 @@ def run_tests(repo, spec, timeout, workdir):
     env["COVERAGE_FILE"] = str(workdir / ".coverage")
     env["PYTHONDONTWRITEBYTECODE"] = "1"
     junit = workdir / "junit.xml"
+    covrc = workdir / "coveragerc"
+    covrc.write_text("[run]\nbranch = False\nparallel = False\n")   # ignore the project's own coverage config
     for f in (workdir / ".coverage", junit):
         if f.exists():
             f.unlink()
-    cmd = [sys.executable, "-m", "pytest", tests_dir, "-q", "-p", "no:cacheprovider", "--no-header", "-o", "junit_family=xunit1",
-           "--cov-context=test", "--cov-report=", f"--junitxml={junit}"] + [f"--cov={p}" for p in pkgs]
+    # -o filterwarnings=default: some projects turn every warning into an error; a deprecation
+    # warning from a newer tool version must not abort test collection.
+    cmd = [sys.executable, "-m", "pytest", tests_dir, "-q", "-p", "no:cacheprovider", "--no-header",
+           "-o", "junit_family=xunit1", "-o", "filterwarnings=default",
+           f"--cov-config={covrc}", "--cov-context=test", "--cov-report=", f"--junitxml={junit}"] + [f"--cov={p}" for p in pkgs]
     t0 = time.time()
     try:
         r = run(cmd, cwd=repo, timeout=timeout, env=env)
@@ -193,8 +203,13 @@ def run_tests(repo, spec, timeout, workdir):
         ctx = dict(con.execute("select id, context from context"))
         files = dict(con.execute("select id, path from file"))
         rows = con.execute("select file_id, context_id, numbits from line_bits").fetchall()
+        from coverage.numbits import numbits_to_nums, nums_to_numbits
+        if not rows:   # branch coverage stores arcs instead of lines
+            arcs = {}
+            for fid, cid, a, b in con.execute("select file_id, context_id, fromno, tono from arc"):
+                arcs.setdefault((fid, cid), set()).update(x for x in (a, b) if x > 0)
+            rows = [(fid, cid, nums_to_numbits(sorted(v))) for (fid, cid), v in arcs.items()]
         con.close()
-        from coverage.numbits import numbits_to_nums
         import_lines = {}
         for fid, cid, bits in rows:
             c = ctx.get(cid, "")
@@ -231,7 +246,7 @@ def collect(name, n, timeout):
 
     commits = pick_commits(repo, n, src_dirs, tests_dir)
     history = []
-    for line in git(repo, "log", "--first-parent", "--no-merges", "--name-only", "--format=@@%H", "-n", "3000", commits[-1]).splitlines():
+    for line in git(repo, "log", "--first-parent", "--diff-merges=first-parent", "--name-only", "--format=@@%H", "-n", "3000", commits[-1]).splitlines():
         if line.startswith("@@"):
             history.append({"sha": line[2:], "files": []})
         elif line.strip() and history:
