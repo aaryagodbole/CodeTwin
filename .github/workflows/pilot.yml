@@ -1,0 +1,77 @@
+name: CodeTwin pilot study
+
+# Runs the data collection for the paper on GitHub's runners.
+# Triggered by a push to the pilot-data branch, or manually from the Actions tab.
+on:
+  push:
+    branches: [pilot-data]
+    paths: ["pilot/**", ".github/workflows/pilot.yml"]
+  workflow_dispatch:
+    inputs:
+      commits:
+        description: "Commits per project"
+        default: "40"
+
+permissions:
+  contents: write
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [click, marshmallow, toolz, itsdangerous, dateutil]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install test tooling
+        run: pip install pytest pytest-cov "coverage>=7.6" hypothesis freezegun simplejson pytz six
+      - name: Collect evidence (${{ matrix.project }})
+        working-directory: pilot
+        run: python collect.py --project ${{ matrix.project }} --commits ${{ github.event.inputs.commits || '40' }}
+      - name: Package data
+        working-directory: pilot
+        run: tar --exclude='_work' -czf data_${{ matrix.project }}.tar.gz data/${{ matrix.project }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: data_${{ matrix.project }}
+          path: pilot/data_${{ matrix.project }}.tar.gz
+
+  analyze:
+    needs: collect
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install numpy scikit-learn matplotlib
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      - name: Unpack data
+        run: |
+          mkdir -p pilot
+          for f in artifacts/*/*.tar.gz; do tar -xzf "$f" -C pilot; done
+          ls pilot/data
+      - name: Analyse
+        working-directory: pilot
+        run: python analyze.py
+      - name: Publish data and results to the pilot-results branch
+        run: |
+          mkdir -p out/data
+          cp artifacts/*/*.tar.gz out/data/
+          cp -r pilot/results out/results
+          cd out
+          git init -q -b pilot-results
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          echo "Data and results of the CodeTwin pilot study. Run: ${{ github.run_id }} (commit ${{ github.sha }})" > README.md
+          git add -A
+          git commit -q -m "Pilot data and results (run ${{ github.run_id }})"
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" pilot-results

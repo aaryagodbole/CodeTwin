@@ -1,0 +1,5 @@
+pilot/data/
+pilot/repos/
+pilot/results/
+__pycache__/
+*.pyc
