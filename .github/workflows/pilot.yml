@@ -32,11 +32,17 @@ jobs:
         run: pip install pytest pytest-cov "coverage>=7.6" hypothesis freezegun simplejson pytz six
       - name: Collect evidence (${{ matrix.project }})
         working-directory: pilot
-        run: python collect.py --project ${{ matrix.project }} --commits ${{ github.event.inputs.commits || '40' }}
+        run: |
+          set -o pipefail
+          mkdir -p data/${{ matrix.project }}
+          python collect.py --project ${{ matrix.project }} --commits ${{ github.event.inputs.commits || '40' }} 2>&1 | tee collect.log
+          cp collect.log data/${{ matrix.project }}/collect.log
       - name: Package data
+        if: always()
         working-directory: pilot
         run: tar --exclude='_work' -czf data_${{ matrix.project }}.tar.gz data/${{ matrix.project }}
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: data_${{ matrix.project }}
           path: pilot/data_${{ matrix.project }}.tar.gz
@@ -60,13 +66,20 @@ jobs:
           for f in artifacts/*/*.tar.gz; do tar -xzf "$f" -C pilot; done
           ls pilot/data
       - name: Analyse
+        id: analyse
+        continue-on-error: true
         working-directory: pilot
-        run: python analyze.py
-      - name: Publish data and results to the pilot-results branch
         run: |
-          mkdir -p out/data
-          cp artifacts/*/*.tar.gz out/data/
-          cp -r pilot/results out/results
+          set -o pipefail
+          python analyze.py 2>&1 | tee analyze.log
+      - name: Publish data and results to the pilot-results branch
+        if: always()
+        run: |
+          mkdir -p out/data out/results
+          cp artifacts/*/*.tar.gz out/data/ || true
+          cp -r pilot/results/. out/results/ || true
+          cp pilot/analyze.log out/ || true
+          echo "analyze step: ${{ steps.analyse.outcome }}" > out/STATUS.txt
           cd out
           git init -q -b pilot-results
           git config user.name "github-actions[bot]"
