@@ -1,0 +1,510 @@
+{
+ "n_test_commits": 119,
+ "n_with_affected": 101,
+ "ci": {
+  "NameMatch": {
+   "recall": [
+    0.49201693556452414,
+    0.4237983649437259,
+    0.5627594315750256
+   ],
+   "safe": [
+    0.37815126050420167,
+    0.29411764705882354,
+    0.46218487394957986
+   ],
+   "time_red": [
+    0.7119249360282934,
+    0.6562151341921172,
+    0.7634874103394376
+   ]
+  },
+  "StaticImport": {
+   "recall": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "safe": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "time_red": [
+    0.173569685582779,
+    0.11753876804823364,
+    0.23599768465342183
+   ]
+  },
+  "CoverageFile": {
+   "recall": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "safe": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "time_red": [
+    0.369360875674146,
+    0.3029046155959827,
+    0.4378424086801168
+   ]
+  },
+  "CoverageLine": {
+   "recall": [
+    0.9527265226522653,
+    0.9152913728872887,
+    0.9835008500850085
+   ],
+   "safe": [
+    0.9327731092436975,
+    0.8823529411764706,
+    0.9747899159663865
+   ],
+   "time_red": [
+    0.49111333519652106,
+    0.42208809474690956,
+    0.5594029957588087
+   ]
+  },
+  "Hybrid(Static+CovFile)": {
+   "recall": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "safe": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "time_red": [
+    0.17116554243600476,
+    0.11391839141369528,
+    0.232194994140583
+   ]
+  },
+  "CRC@0.1": {
+   "recall": [
+    0.9892739273927393,
+    0.9744224422442245,
+    1.0
+   ],
+   "safe": [
+    0.9747899159663865,
+    0.9411764705882353,
+    1.0
+   ],
+   "time_red": [
+    0.3907184101866194,
+    0.323586657808444,
+    0.46004791569589204
+   ]
+  },
+  "CRC@0.2": {
+   "recall": [
+    0.9684718471847187,
+    0.9388663866386638,
+    0.9917491749174918
+   ],
+   "safe": [
+    0.9411764705882353,
+    0.8991596638655462,
+    0.9831932773109243
+   ],
+   "time_red": [
+    0.46173912674141177,
+    0.39438591741912093,
+    0.5318862127282017
+   ]
+  },
+  "CRC+abstain@0.1": {
+   "recall": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "safe": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "time_red": [
+    0.0512701262951896,
+    0.017910148442107632,
+    0.09031038040054681
+   ]
+  },
+  "CodeTwin@0.1": {
+   "recall": [
+    0.570709562891773,
+    0.5111950417657859,
+    0.6311838408827589
+   ]
+  },
+  "CoverageRanked@0.1": {
+   "recall": [
+    0.5682343153670205,
+    0.5084025522744583,
+    0.6270132488257687
+   ]
+  },
+  "Random@0.1": {
+   "recall": [
+    0.4880458931217474,
+    0.42589630715220583,
+    0.5505012480798771
+   ]
+  },
+  "CodeTwin@0.25": {
+   "recall": [
+    0.7241808192694492,
+    0.6718875153998918,
+    0.7749233426954002
+   ]
+  },
+  "CoverageRanked@0.25": {
+   "recall": [
+    0.7213755387413965,
+    0.6688767803978201,
+    0.7712675603611409
+   ]
+  },
+  "Random@0.25": {
+   "recall": [
+    0.6392921852447563,
+    0.5863764913955947,
+    0.6917056280867364
+   ]
+  },
+  "CodeTwin@0.5": {
+   "recall": [
+    0.8243897155578728,
+    0.782907952156435,
+    0.8637845419290244
+   ]
+  },
+  "CoverageRanked@0.5": {
+   "recall": [
+    0.8212018967759945,
+    0.7793340681263269,
+    0.8604738780883581
+   ]
+  },
+  "Random@0.5": {
+   "recall": [
+    0.7868158539090351,
+    0.7452670030207558,
+    0.8266157331259534
+   ]
+  }
+ },
+ "tests": {
+  "recall CodeTwin vs CoverageRanked @0.1": {
+   "n": 101,
+   "nonzero": 1,
+   "p": 0.31731050786291415,
+   "mean_diff": 0.0024752475247524753
+  },
+  "recall CodeTwin vs Random @0.1": {
+   "n": 101,
+   "nonzero": 69,
+   "p": 1.1933291037091322e-10,
+   "mean_diff": 0.08266366977002558
+  },
+  "recall CodeTwin vs CoverageRanked @0.25": {
+   "n": 101,
+   "nonzero": 2,
+   "p": 0.17971249487899976,
+   "mean_diff": 0.0028052805280528053
+  },
+  "recall CodeTwin vs Random @0.25": {
+   "n": 101,
+   "nonzero": 70,
+   "p": 3.4548056297537734e-10,
+   "mean_diff": 0.08488863402469281
+  },
+  "recall CodeTwin vs CoverageRanked @0.5": {
+   "n": 101,
+   "nonzero": 3,
+   "p": 0.10880943004054568,
+   "mean_diff": 0.003187818781878187
+  },
+  "recall CodeTwin vs Random @0.5": {
+   "n": 101,
+   "nonzero": 52,
+   "p": 3.7634120809636093e-06,
+   "mean_diff": 0.0375738616488377
+  },
+  "safe CRC@0.1 vs CoverageLine (McNemar)": {
+   "a_only_safe": 5,
+   "b_only_safe": 0,
+   "p": 0.0625
+  },
+  "time_red CRC@0.1 vs CoverageLine": {
+   "n": 119,
+   "nonzero": 40,
+   "p": 3.569388204466033e-08,
+   "mean_diff": -0.10039492500990176
+  },
+  "safe CRC@0.1 vs CoverageFile (McNemar)": {
+   "a_only_safe": 0,
+   "b_only_safe": 3,
+   "p": 0.25
+  },
+  "time_red CRC@0.1 vs CoverageFile": {
+   "n": 119,
+   "nonzero": 15,
+   "p": 0.0006549583433856954,
+   "mean_diff": 0.021357534512473474
+  }
+ },
+ "failures_crc_0.10": [
+  {
+   "project": "dateutil",
+   "sha": "21b6862a1e",
+   "date": "2026-10-21",
+   "subject": "Allow pickling and deepcopy of cached recurrence rules (#1600)",
+   "changed": [
+    "src/dateutil/rrule.py"
+   ],
+   "affected": 4,
+   "selected": 3,
+   "missed": [
+    {
+     "test": "tests/test_tz.py",
+     "p": 0.184,
+     "cov_line": 0,
+     "cov_file": 1,
+     "static_inv_dist": 0.3333333333333333,
+     "name_match": 0
+    }
+   ],
+   "lambda": 0.195,
+   "triggers_fired": [
+    "dynamic_call",
+    "untested_change",
+    "module_level_change"
+   ]
+  },
+  {
+   "project": "itsdangerous",
+   "sha": "0e13d6613a",
+   "date": "2021-10-06",
+   "subject": "Merge branch '2.0.x'",
+   "changed": [
+    "src/itsdangerous/encoding.py",
+    "src/itsdangerous/jws.py",
+    "src/itsdangerous/serializer.py",
+    "src/itsdangerous/url_safe.py"
+   ],
+   "affected": 4,
+   "selected": 2,
+   "missed": [
+    {
+     "test": "tests/test_itsdangerous/test_serializer.py",
+     "p": 0.382,
+     "cov_line": 0,
+     "cov_file": 1,
+     "static_inv_dist": 1.0,
+     "name_match": 1
+    },
+    {
+     "test": "tests/test_itsdangerous/test_timed.py",
+     "p": 0.247,
+     "cov_line": 0,
+     "cov_file": 1,
+     "static_inv_dist": 0.5,
+     "name_match": 0
+    }
+   ],
+   "lambda": 0.924,
+   "triggers_fired": [
+    "untested_change"
+   ]
+  },
+  {
+   "project": "toolz",
+   "sha": "a1e25cbd2c",
+   "date": "2026-09-17",
+   "subject": "Expose combined `__annotations__` on composed functions (#496) (#634)",
+   "changed": [
+    "toolz/functoolz.py"
+   ],
+   "affected": 9,
+   "selected": 6,
+   "missed": [
+    {
+     "test": "toolz/tests/test_curried.py",
+     "p": 0.244,
+     "cov_line": 0,
+     "cov_file": 1,
+     "static_inv_dist": 0.5,
+     "name_match": 0
+    },
+    {
+     "test": "toolz/tests/test_serialization.py",
+     "p": 0.238,
+     "cov_line": 0,
+     "cov_file": 1,
+     "static_inv_dist": 0.5,
+     "name_match": 0
+    },
+    {
+     "test": "toolz/tests/test_signatures.py",
+     "p": 0.245,
+     "cov_line": 0,
+     "cov_file": 1,
+     "static_inv_dist": 0.5,
+     "name_match": 0
+    }
+   ],
+   "lambda": 0.247,
+   "triggers_fired": [
+    "dynamic_call",
+    "untested_change",
+    "module_level_change"
+   ]
+  }
+ ],
+ "needless_abstentions_crc_0.10": [
+  {
+   "project": "click",
+   "sha": "94c191ca6c",
+   "subject": "Add `@custom_version_option`, freeze `@version_option` (#3581)",
+   "changed": [
+    "src/click/__init__.py",
+    "src/click/decorators.py"
+   ],
+   "triggers_fired": [
+    "untested_change",
+    "module_level_change"
+   ],
+   "time_saved_lost": 0.031
+  },
+  {
+   "project": "click",
+   "sha": "a44e9f05ed",
+   "subject": "Update documentation following Colorama removal (#3671)",
+   "changed": [
+    "src/click/termui.py",
+    "src/click/utils.py"
+   ],
+   "triggers_fired": [
+    "dynamic_call",
+    "untested_change"
+   ],
+   "time_saved_lost": 0.038
+  },
+  {
+   "project": "click",
+   "sha": "8a4ce84256",
+   "subject": "Validate `style()` color arguments (#3677)",
+   "changed": [
+    "src/click/termui.py"
+   ],
+   "triggers_fired": [
+    "module_level_change"
+   ],
+   "time_saved_lost": 0.219
+  },
+  {
+   "project": "click",
+   "sha": "8c1a0a7abb",
+   "subject": "Strip all ANSI sequences (#3681)",
+   "changed": [
+    "src/click/_compat.py"
+   ],
+   "triggers_fired": [
+    "dynamic_call",
+    "module_level_change"
+   ],
+   "time_saved_lost": 0.034
+  },
+  {
+   "project": "click",
+   "sha": "b67832c216",
+   "subject": "Fix parsing when a parameter is named `help` (#3678)",
+   "changed": [
+    "src/click/core.py"
+   ],
+   "triggers_fired": [
+    "module_level_change"
+   ],
+   "time_saved_lost": 0.14
+  },
+  {
+   "project": "click",
+   "sha": "b551fe8571",
+   "subject": "Streamline option flag management (#3641)",
+   "changed": [
+    "src/click/core.py"
+   ],
+   "triggers_fired": [
+    "module_level_change"
+   ],
+   "time_saved_lost": 0.138
+  },
+  {
+   "project": "click",
+   "sha": "7df2f82305",
+   "subject": "Add built-in PowerShell shell completion support (#3637)",
+   "changed": [
+    "src/click/shell_completion.py"
+   ],
+   "triggers_fired": [
+    "module_level_change"
+   ],
+   "time_saved_lost": 0.972
+  },
+  {
+   "project": "click",
+   "sha": "333c28d79c",
+   "subject": "Mark clearly functions private status. Deprecated Python 2 utilities. (#3695)",
+   "changed": [
+    "src/click/__init__.py",
+    "src/click/_termui_impl.py",
+    "src/click/core.py",
+    "src/click/termui.py",
+    "src/click/types.py",
+    "src/click/utils.py"
+   ],
+   "triggers_fired": [
+    "dynamic_call",
+    "module_level_change"
+   ],
+   "time_saved_lost": 0.054
+  },
+  {
+   "project": "click",
+   "sha": "cfa01eeb78",
+   "subject": "Deprecate `isolated_filesystem` and document its limits (#3704)",
+   "changed": [
+    "src/click/testing.py"
+   ],
+   "triggers_fired": [
+    "dynamic_call",
+    "untested_change",
+    "static_runtime_conflict"
+   ],
+   "time_saved_lost": 0.433
+  },
+  {
+   "project": "click",
+   "sha": "5e906a8afb",
+   "subject": "`click.prompt` typing clarifications / improvements (#3407)",
+   "changed": [
+    "src/click/termui.py",
+    "src/click/types.py"
+   ],
+   "triggers_fired": [
+    "module_level_change"
+   ],
+   "time_saved_lost": 0.062
+  }
+ ],
+ "n_needless_abstentions_crc_0.10": 107
+}
