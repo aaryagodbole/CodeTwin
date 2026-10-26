@@ -1,0 +1,6 @@
+click {'commits': 40, 'test_commits': 24, 'kloc': 12.9, 'test_files': 42, 'collected': 40, 'with_coverage': 40, 'suite_time': 4.1, 'avg_affected': 13.1, 'python': '3.12.15'}
+dateutil {'commits': 40, 'test_commits': 24, 'kloc': 8.5, 'test_files': 16, 'collected': 40, 'with_coverage': 40, 'suite_time': 39.9, 'avg_affected': 7.1, 'python': '3.12.15'}
+itsdangerous {'commits': 40, 'test_commits': 24, 'kloc': 1.2, 'test_files': 7, 'collected': 40, 'with_coverage': 40, 'suite_time': 1.4, 'avg_affected': 1.7, 'python': '3.12.15'}
+marshmallow {'commits': 40, 'test_commits': 24, 'kloc': 5.1, 'test_files': 12, 'collected': 40, 'with_coverage': 40, 'suite_time': 1.9, 'avg_affected': 5.2, 'python': '3.12.15'}
+toolz {'commits': 38, 'test_commits': 23, 'kloc': 3.8, 'test_files': 13, 'collected': 40, 'with_coverage': 39, 'suite_time': 0.3, 'avg_affected': 3.6, 'python': '3.12.15'}
+wrote results/results.json, results/tables_*.tex, results/budget.pdf/.png

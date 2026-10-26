@@ -1,0 +1,1828 @@
+{
+ "summary": {
+  "click": {
+   "commits": 40,
+   "test_commits": 24,
+   "kloc": 12.9,
+   "test_files": 42,
+   "collected": 40,
+   "with_coverage": 40,
+   "suite_time": 4.1,
+   "avg_affected": 13.1,
+   "python": "3.12.15"
+  },
+  "dateutil": {
+   "commits": 40,
+   "test_commits": 24,
+   "kloc": 8.5,
+   "test_files": 16,
+   "collected": 40,
+   "with_coverage": 40,
+   "suite_time": 39.9,
+   "avg_affected": 7.1,
+   "python": "3.12.15"
+  },
+  "itsdangerous": {
+   "commits": 40,
+   "test_commits": 24,
+   "kloc": 1.2,
+   "test_files": 7,
+   "collected": 40,
+   "with_coverage": 40,
+   "suite_time": 1.4,
+   "avg_affected": 1.7,
+   "python": "3.12.15"
+  },
+  "marshmallow": {
+   "commits": 40,
+   "test_commits": 24,
+   "kloc": 5.1,
+   "test_files": 12,
+   "collected": 40,
+   "with_coverage": 40,
+   "suite_time": 1.9,
+   "avg_affected": 5.2,
+   "python": "3.12.15"
+  },
+  "toolz": {
+   "commits": 38,
+   "test_commits": 23,
+   "kloc": 3.8,
+   "test_files": 13,
+   "collected": 40,
+   "with_coverage": 39,
+   "suite_time": 0.3,
+   "avg_affected": 3.6,
+   "python": "3.12.15"
+  }
+ },
+ "features": [
+  "cov_line",
+  "cov_file",
+  "static_inv_dist",
+  "name_match",
+  "cochange",
+  "test_changed"
+ ],
+ "protocol": {
+  "calib_frac": 0.4,
+  "budgets": [
+   0.1,
+   0.25,
+   0.5
+  ],
+  "alphas": [
+   0.05,
+   0.1,
+   0.2
+  ],
+  "random_seeds": 20,
+  "ablation_budget": 0.25,
+  "training": "leave-one-project-out (other projects only)",
+  "calibration": "first 40% of each project's commits (not used for training)"
+ },
+ "calibration": {
+  "click": {
+   "0.05": {
+    "lambda": -1.0,
+    "n_train": 158,
+    "n_calib": 16,
+    "n_test": 24,
+    "feasible": false,
+    "abstain_rate": 0.875
+   },
+   "0.1": {
+    "lambda": 0.22323179119446782,
+    "n_train": 158,
+    "n_calib": 16,
+    "n_test": 24,
+    "feasible": true,
+    "abstain_rate": 0.875
+   },
+   "0.2": {
+    "lambda": 0.26523176672419074,
+    "n_train": 158,
+    "n_calib": 16,
+    "n_test": 24,
+    "feasible": true,
+    "abstain_rate": 0.875
+   }
+  },
+  "dateutil": {
+   "0.05": {
+    "lambda": -1.0,
+    "n_train": 158,
+    "n_calib": 16,
+    "n_test": 24,
+    "feasible": false,
+    "abstain_rate": 1.0
+   },
+   "0.1": {
+    "lambda": 0.19482661263764206,
+    "n_train": 158,
+    "n_calib": 16,
+    "n_test": 24,
+    "feasible": true,
+    "abstain_rate": 1.0
+   },
+   "0.2": {
+    "lambda": 0.24079882111883716,
+    "n_train": 158,
+    "n_calib": 16,
+    "n_test": 24,
+    "feasible": true,
+    "abstain_rate": 1.0
+   }
+  },
+  "itsdangerous": {
+   "0.05": {
+    "lambda": -1.0,
+    "n_train": 158,
+    "n_calib": 16,
+    "n_test": 24,
+    "feasible": false,
+    "abstain_rate": 0.9583333333333334
+   },
+   "0.1": {
+    "lambda": 0.9238852436199392,
+    "n_train": 158,
+    "n_calib": 16,
+    "n_test": 24,
+    "feasible": true,
+    "abstain_rate": 0.9583333333333334
+   },
+   "0.2": {
+    "lambda": 0.9284257468359125,
+    "n_train": 158,
+    "n_calib": 16,
+    "n_test": 24,
+    "feasible": true,
+    "abstain_rate": 0.9583333333333334
+   }
+  },
+  "marshmallow": {
+   "0.05": {
+    "lambda": -1.0,
+    "n_train": 158,
+    "n_calib": 16,
+    "n_test": 24,
+    "feasible": false,
+    "abstain_rate": 1.0
+   },
+   "0.1": {
+    "lambda": 0.2088113417942398,
+    "n_train": 158,
+    "n_calib": 16,
+    "n_test": 24,
+    "feasible": true,
+    "abstain_rate": 1.0
+   },
+   "0.2": {
+    "lambda": 0.9638316452357283,
+    "n_train": 158,
+    "n_calib": 16,
+    "n_test": 24,
+    "feasible": true,
+    "abstain_rate": 1.0
+   }
+  },
+  "toolz": {
+   "0.05": {
+    "lambda": -1.0,
+    "n_train": 160,
+    "n_calib": 15,
+    "n_test": 23,
+    "feasible": false,
+    "abstain_rate": 0.782608695652174
+   },
+   "0.1": {
+    "lambda": 0.2467138006664182,
+    "n_train": 160,
+    "n_calib": 15,
+    "n_test": 23,
+    "feasible": true,
+    "abstain_rate": 0.782608695652174
+   },
+   "0.2": {
+    "lambda": 0.9382526473445367,
+    "n_train": 160,
+    "n_calib": 15,
+    "n_test": 23,
+    "feasible": true,
+    "abstain_rate": 0.782608695652174
+   }
+  }
+ },
+ "triggers": {
+  "click": {
+   "test_commits": 24,
+   "baseline_unsafe": 2,
+   "baseline_safe": 22,
+   "flagged_unsafe": 2,
+   "flagged_safe": 19,
+   "per_trigger": {
+    "dynamic_call": 11,
+    "untested_change": 8,
+    "static_runtime_conflict": 1,
+    "module_level_change": 16
+   },
+   "per_trigger_on_unsafe": {
+    "dynamic_call": 0,
+    "untested_change": 1,
+    "static_runtime_conflict": 0,
+    "module_level_change": 2
+   }
+  },
+  "dateutil": {
+   "test_commits": 24,
+   "baseline_unsafe": 2,
+   "baseline_safe": 22,
+   "flagged_unsafe": 2,
+   "flagged_safe": 22,
+   "per_trigger": {
+    "dynamic_call": 18,
+    "untested_change": 5,
+    "static_runtime_conflict": 1,
+    "module_level_change": 19
+   },
+   "per_trigger_on_unsafe": {
+    "dynamic_call": 2,
+    "untested_change": 2,
+    "static_runtime_conflict": 0,
+    "module_level_change": 2
+   }
+  },
+  "itsdangerous": {
+   "test_commits": 24,
+   "baseline_unsafe": 1,
+   "baseline_safe": 23,
+   "flagged_unsafe": 1,
+   "flagged_safe": 22,
+   "per_trigger": {
+    "dynamic_call": 1,
+    "untested_change": 1,
+    "static_runtime_conflict": 0,
+    "module_level_change": 22
+   },
+   "per_trigger_on_unsafe": {
+    "dynamic_call": 0,
+    "untested_change": 1,
+    "static_runtime_conflict": 0,
+    "module_level_change": 0
+   }
+  },
+  "marshmallow": {
+   "test_commits": 24,
+   "baseline_unsafe": 2,
+   "baseline_safe": 22,
+   "flagged_unsafe": 2,
+   "flagged_safe": 22,
+   "per_trigger": {
+    "dynamic_call": 24,
+    "untested_change": 5,
+    "static_runtime_conflict": 0,
+    "module_level_change": 11
+   },
+   "per_trigger_on_unsafe": {
+    "dynamic_call": 2,
+    "untested_change": 1,
+    "static_runtime_conflict": 0,
+    "module_level_change": 1
+   }
+  },
+  "toolz": {
+   "test_commits": 23,
+   "baseline_unsafe": 1,
+   "baseline_safe": 22,
+   "flagged_unsafe": 1,
+   "flagged_safe": 17,
+   "per_trigger": {
+    "dynamic_call": 11,
+    "untested_change": 9,
+    "static_runtime_conflict": 0,
+    "module_level_change": 10
+   },
+   "per_trigger_on_unsafe": {
+    "dynamic_call": 1,
+    "untested_change": 1,
+    "static_runtime_conflict": 0,
+    "module_level_change": 1
+   }
+  }
+ },
+ "coefficients": {
+  "click": {
+   "cov_line": 3.5292539475831273,
+   "cov_file": 3.106482015773386,
+   "static_inv_dist": 0.9054253992007357,
+   "name_match": 0.5010352268410607,
+   "cochange": -0.0041757454845599085,
+   "test_changed": 5.696010412558824
+  },
+  "dateutil": {
+   "cov_line": 4.303731748093327,
+   "cov_file": 3.313468384918009,
+   "static_inv_dist": 0.6086177484874579,
+   "name_match": 0.055493610896167216,
+   "cochange": -0.7147354264232676,
+   "test_changed": 6.340115125300017
+  },
+  "itsdangerous": {
+   "cov_line": 4.015493393147993,
+   "cov_file": 3.4735570444899335,
+   "static_inv_dist": 1.005907317584481,
+   "name_match": 0.13385800668539036,
+   "cochange": -0.5312741999315593,
+   "test_changed": 6.615317189180941
+  },
+  "marshmallow": {
+   "cov_line": 4.186385082080338,
+   "cov_file": 3.564666142132272,
+   "static_inv_dist": 1.5396853784874993,
+   "name_match": -0.0733700983232765,
+   "cochange": -0.3432913918796068,
+   "test_changed": 6.585195928630327
+  },
+  "toolz": {
+   "cov_line": 4.186725996926911,
+   "cov_file": 3.2770166573231942,
+   "static_inv_dist": 0.9650367066412102,
+   "name_match": 0.3967198133763179,
+   "cochange": -0.3538164703480031,
+   "test_changed": 6.245313152004187
+  }
+ },
+ "baselines": {
+  "RetestAll": {
+   "click": {
+    "n_commits": 24,
+    "recall": 1.0,
+    "precision": 0.42287250408941945,
+    "safe_rate": 1.0,
+    "test_red": 0.0,
+    "time_red": 0.0
+   },
+   "dateutil": {
+    "n_commits": 24,
+    "recall": 1.0,
+    "precision": 0.4977124183006536,
+    "safe_rate": 1.0,
+    "test_red": 0.0,
+    "time_red": 0.0
+   },
+   "itsdangerous": {
+    "n_commits": 24,
+    "recall": 1.0,
+    "precision": 0.5269230769230769,
+    "safe_rate": 1.0,
+    "test_red": 0.0,
+    "time_red": 0.0
+   },
+   "marshmallow": {
+    "n_commits": 24,
+    "recall": 1.0,
+    "precision": 0.48263888888888884,
+    "safe_rate": 1.0,
+    "test_red": 0.0,
+    "time_red": 0.0
+   },
+   "toolz": {
+    "n_commits": 23,
+    "recall": 1.0,
+    "precision": 0.3924310983134513,
+    "safe_rate": 1.0,
+    "test_red": 0.0,
+    "time_red": 0.0
+   },
+   "ALL": {
+    "n_commits": 119,
+    "recall": 1.0,
+    "precision": 0.46312700631618164,
+    "safe_rate": 1.0,
+    "test_red": 0.0,
+    "time_red": 0.0
+   }
+  },
+  "NameMatch": {
+   "click": {
+    "n_commits": 24,
+    "recall": 0.37985468793322924,
+    "precision": 0.8768115942028984,
+    "safe_rate": 0.20833333333333334,
+    "test_red": 0.9038001916763886,
+    "time_red": 0.8204355683345969
+   },
+   "dateutil": {
+    "n_commits": 24,
+    "recall": 0.44351025132275135,
+    "precision": 0.8975694444444443,
+    "safe_rate": 0.125,
+    "test_red": 0.7770731209150327,
+    "time_red": 0.5194181340364926
+   },
+   "itsdangerous": {
+    "n_commits": 24,
+    "recall": 0.8397435897435896,
+    "precision": 1.0,
+    "safe_rate": 0.7916666666666666,
+    "test_red": 0.7708333333333334,
+    "time_red": 0.6720636433554684
+   },
+   "marshmallow": {
+    "n_commits": 24,
+    "recall": 0.3780588624338624,
+    "precision": 0.8958333333333334,
+    "safe_rate": 0.16666666666666666,
+    "test_red": 0.8715277777777777,
+    "time_red": 0.7563952464135136
+   },
+   "toolz": {
+    "n_commits": 23,
+    "recall": 0.6072192513368985,
+    "precision": 0.980392156862745,
+    "safe_rate": 0.6086956521739131,
+    "test_red": 0.880054727880815,
+    "time_red": 0.7947637033045736
+   },
+   "ALL": {
+    "n_commits": 119,
+    "recall": 0.49201693556452414,
+    "precision": 0.9195544554455446,
+    "safe_rate": 0.37815126050420167,
+    "test_red": 0.8403267639505839,
+    "time_red": 0.7119249360282934
+   }
+  },
+  "StaticImport": {
+   "click": {
+    "n_commits": 24,
+    "recall": 1.0,
+    "precision": 0.46589441244416124,
+    "safe_rate": 1.0,
+    "test_red": 0.07533291681718494,
+    "time_red": 0.033072203824552365
+   },
+   "dateutil": {
+    "n_commits": 24,
+    "recall": 1.0,
+    "precision": 0.574504529375853,
+    "safe_rate": 1.0,
+    "test_red": 0.12952410130718955,
+    "time_red": 0.03832187893692802
+   },
+   "itsdangerous": {
+    "n_commits": 24,
+    "recall": 1.0,
+    "precision": 0.9846153846153847,
+    "safe_rate": 1.0,
+    "test_red": 0.7062499999999999,
+    "time_red": 0.6475775865301511
+   },
+   "marshmallow": {
+    "n_commits": 24,
+    "recall": 1.0,
+    "precision": 0.5265151515151515,
+    "safe_rate": 1.0,
+    "test_red": 0.08333333333333337,
+    "time_red": 0.0035089608572386
+   },
+   "toolz": {
+    "n_commits": 23,
+    "recall": 1.0,
+    "precision": 0.47421271538918597,
+    "safe_rate": 1.0,
+    "test_red": 0.22577784534306272,
+    "time_red": 0.1441416287294706
+   },
+   "ALL": {
+    "n_commits": 119,
+    "recall": 1.0,
+    "precision": 0.5742738612793662,
+    "safe_rate": 1.0,
+    "test_red": 0.24419713342752464,
+    "time_red": 0.173569685582779
+   }
+  },
+  "CoverageFile": {
+   "click": {
+    "n_commits": 24,
+    "recall": 1.0,
+    "precision": 0.75863142615518,
+    "safe_rate": 1.0,
+    "test_red": 0.4350575325267528,
+    "time_red": 0.2770776980463534
+   },
+   "dateutil": {
+    "n_commits": 24,
+    "recall": 1.0,
+    "precision": 0.8872926841676841,
+    "safe_rate": 1.0,
+    "test_red": 0.4545955882352941,
+    "time_red": 0.32554848154380994
+   },
+   "itsdangerous": {
+    "n_commits": 24,
+    "recall": 1.0,
+    "precision": 0.9846153846153847,
+    "safe_rate": 1.0,
+    "test_red": 0.7062499999999999,
+    "time_red": 0.6475775865301511
+   },
+   "marshmallow": {
+    "n_commits": 24,
+    "recall": 1.0,
+    "precision": 0.6435185185185185,
+    "safe_rate": 1.0,
+    "test_red": 0.25,
+    "time_red": 0.12238027827997022
+   },
+   "toolz": {
+    "n_commits": 23,
+    "recall": 1.0,
+    "precision": 0.7352941176470589,
+    "safe_rate": 1.0,
+    "test_red": 0.5619489206445729,
+    "time_red": 0.478779440852893
+   },
+   "ALL": {
+    "n_commits": 119,
+    "recall": 1.0,
+    "precision": 0.7870098184756236,
+    "safe_rate": 1.0,
+    "test_red": 0.48089495859759906,
+    "time_red": 0.369360875674146
+   }
+  },
+  "CoverageLine": {
+   "click": {
+    "n_commits": 24,
+    "recall": 0.9569609134826527,
+    "precision": 0.9710144927536232,
+    "safe_rate": 0.9166666666666666,
+    "test_red": 0.6272889881816011,
+    "time_red": 0.48466577737764344
+   },
+   "dateutil": {
+    "n_commits": 24,
+    "recall": 0.9557291666666666,
+    "precision": 0.9947916666666666,
+    "safe_rate": 0.9166666666666666,
+    "test_red": 0.526797385620915,
+    "time_red": 0.38993662864051365
+   },
+   "itsdangerous": {
+    "n_commits": 24,
+    "recall": 0.9615384615384616,
+    "precision": 1.0,
+    "safe_rate": 0.9583333333333334,
+    "test_red": 0.7312500000000001,
+    "time_red": 0.6850436687676797
+   },
+   "marshmallow": {
+    "n_commits": 24,
+    "recall": 0.9398148148148149,
+    "precision": 0.9074074074074074,
+    "safe_rate": 0.9166666666666666,
+    "test_red": 0.4791666666666667,
+    "time_red": 0.2891419840140383
+   },
+   "toolz": {
+    "n_commits": 23,
+    "recall": 0.9542483660130718,
+    "precision": 1.0,
+    "safe_rate": 0.9565217391304348,
+    "test_red": 0.7032532684706598,
+    "time_red": 0.6118075424864791
+   },
+   "ALL": {
+    "n_commits": 119,
+    "recall": 0.9527265226522653,
+    "precision": 0.9701595159515952,
+    "safe_rate": 0.9327731092436975,
+    "test_red": 0.6127974634124834,
+    "time_red": 0.49111333519652106
+   }
+  },
+  "Hybrid(Static+CovFile)": {
+   "click": {
+    "n_commits": 24,
+    "recall": 1.0,
+    "precision": 0.4457080770404346,
+    "safe_rate": 1.0,
+    "test_red": 0.059401544268165345,
+    "time_red": 0.021151660721796677
+   },
+   "dateutil": {
+    "n_commits": 24,
+    "recall": 1.0,
+    "precision": 0.574504529375853,
+    "safe_rate": 1.0,
+    "test_red": 0.12952410130718955,
+    "time_red": 0.03832187893692802
+   },
+   "itsdangerous": {
+    "n_commits": 24,
+    "recall": 1.0,
+    "precision": 0.9846153846153847,
+    "safe_rate": 1.0,
+    "test_red": 0.7062499999999999,
+    "time_red": 0.6475775865301511
+   },
+   "marshmallow": {
+    "n_commits": 24,
+    "recall": 1.0,
+    "precision": 0.5265151515151515,
+    "safe_rate": 1.0,
+    "test_red": 0.08333333333333337,
+    "time_red": 0.0035089608572386
+   },
+   "toolz": {
+    "n_commits": 23,
+    "recall": 1.0,
+    "precision": 0.47421271538918597,
+    "safe_rate": 1.0,
+    "test_red": 0.22577784534306272,
+    "time_red": 0.1441416287294706
+   },
+   "ALL": {
+    "n_commits": 119,
+    "recall": 1.0,
+    "precision": 0.5696769730191116,
+    "safe_rate": 1.0,
+    "test_red": 0.24098408350167191,
+    "time_red": 0.17116554243600476
+   }
+  }
+ },
+ "budget": {
+  "0.1": {
+   "CodeTwin": {
+    "click": {
+     "n_commits": 24,
+     "recall": 0.5771276074712258,
+     "precision": 0.7699177125950581,
+     "safe_rate": 0.2916666666666667,
+     "test_red": 0.6786809861365265,
+     "time_red": 0.8324019859161664
+    },
+    "dateutil": {
+     "n_commits": 24,
+     "recall": 0.6339368386243387,
+     "precision": 0.7257745726495726,
+     "safe_rate": 0.25,
+     "test_red": 0.5414726307189542,
+     "time_red": 0.7451870918881675
+    },
+    "itsdangerous": {
+     "n_commits": 24,
+     "recall": 0.6025641025641025,
+     "precision": 0.9615384615384616,
+     "safe_rate": 0.625,
+     "test_red": 0.6916666666666668,
+     "time_red": 0.8517259270673022
+    },
+    "marshmallow": {
+     "n_commits": 24,
+     "recall": 0.4717261904761904,
+     "precision": 0.8312499999999999,
+     "safe_rate": 0.16666666666666666,
+     "test_red": 0.7430555555555555,
+     "time_red": 0.8212189189253721
+    },
+    "toolz": {
+     "n_commits": 23,
+     "recall": 0.5881461675579324,
+     "precision": 0.7470588235294118,
+     "safe_rate": 0.5217391304347826,
+     "test_red": 0.6714806932198236,
+     "time_red": 0.8191507936197016
+    },
+    "ALL": {
+     "n_commits": 119,
+     "recall": 0.570709562891773,
+     "precision": 0.794818783497783,
+     "safe_rate": 0.3697478991596639,
+     "test_red": 0.6652191267388301,
+     "time_red": 0.8138931296166498
+    }
+   },
+   "CoverageRanked": {
+    "click": {
+     "n_commits": 24,
+     "recall": 0.5771276074712258,
+     "precision": 0.7699177125950581,
+     "safe_rate": 0.2916666666666667,
+     "test_red": 0.6786809861365265,
+     "time_red": 0.8322244250851988
+    },
+    "dateutil": {
+     "n_commits": 24,
+     "recall": 0.6235201719576721,
+     "precision": 0.7148237179487179,
+     "safe_rate": 0.20833333333333334,
+     "test_red": 0.5316687091503268,
+     "time_red": 0.745231281123893
+    },
+    "itsdangerous": {
+     "n_commits": 24,
+     "recall": 0.6025641025641025,
+     "precision": 0.9615384615384616,
+     "safe_rate": 0.625,
+     "test_red": 0.6916666666666668,
+     "time_red": 0.8484301228448615
+    },
+    "marshmallow": {
+     "n_commits": 24,
+     "recall": 0.4717261904761904,
+     "precision": 0.8312499999999999,
+     "safe_rate": 0.16666666666666666,
+     "test_red": 0.7430555555555555,
+     "time_red": 0.8194541657830058
+    },
+    "toolz": {
+     "n_commits": 23,
+     "recall": 0.5881461675579324,
+     "precision": 0.7470588235294118,
+     "safe_rate": 0.5217391304347826,
+     "test_red": 0.6714806932198236,
+     "time_red": 0.8167165494858525
+    },
+    "ALL": {
+     "n_commits": 119,
+     "recall": 0.5682343153670205,
+     "precision": 0.7922166002025304,
+     "safe_rate": 0.36134453781512604,
+     "test_red": 0.6632418652459977,
+     "time_red": 0.8123751303719464
+    }
+   },
+   "Random": {
+    "click": {
+     "n_commits": 24,
+     "recall": 0.5192192436284301,
+     "precision": 0.7424665840956728,
+     "safe_rate": 0.2604166666666667,
+     "test_red": 0.67404882319383,
+     "time_red": 0.8314239823515911
+    },
+    "dateutil": {
+     "n_commits": 24,
+     "recall": 0.594698438135938,
+     "precision": 0.7007442210567211,
+     "safe_rate": 0.16666666666666666,
+     "test_red": 0.5158675449346405,
+     "time_red": 0.7468171181035386
+    },
+    "itsdangerous": {
+     "n_commits": 24,
+     "recall": 0.26121794871794873,
+     "precision": 0.49807692307692303,
+     "safe_rate": 0.50625,
+     "test_red": 0.6935416666666665,
+     "time_red": 0.8669463187401566
+    },
+    "marshmallow": {
+     "n_commits": 24,
+     "recall": 0.4409102182539682,
+     "precision": 0.7804513888888888,
+     "safe_rate": 0.16666666666666666,
+     "test_red": 0.7376736111111112,
+     "time_red": 0.826684515554223
+    },
+    "toolz": {
+     "n_commits": 23,
+     "recall": 0.5353030303030304,
+     "precision": 0.7018627450980393,
+     "safe_rate": 0.5217391304347826,
+     "test_red": 0.6737382183034357,
+     "time_red": 0.8193303711485697
+    },
+    "ALL": {
+     "n_commits": 119,
+     "recall": 0.4880458931217474,
+     "precision": 0.7032880469263543,
+     "safe_rate": 0.32268907563025206,
+     "test_red": 0.6588499035523443,
+     "time_red": 0.8182313022723138
+    }
+   }
+  },
+  "0.25": {
+   "CodeTwin": {
+    "click": {
+     "n_commits": 24,
+     "recall": 0.7553699082591089,
+     "precision": 0.522946595290114,
+     "safe_rate": 0.4166666666666667,
+     "test_red": 0.42767399419246205,
+     "time_red": 0.7300517222164644
+    },
+    "dateutil": {
+     "n_commits": 24,
+     "recall": 0.777774598087098,
+     "precision": 0.6083333333333333,
+     "safe_rate": 0.3333333333333333,
+     "test_red": 0.3000510620915033,
+     "time_red": 0.6981805252632928
+    },
+    "itsdangerous": {
+     "n_commits": 24,
+     "recall": 0.6794871794871794,
+     "precision": 0.7307692307692307,
+     "safe_rate": 0.625,
+     "test_red": 0.4958333333333333,
+     "time_red": 0.7926215526255573
+    },
+    "marshmallow": {
+     "n_commits": 24,
+     "recall": 0.6142526455026455,
+     "precision": 0.7316468253968255,
+     "safe_rate": 0.16666666666666666,
+     "test_red": 0.545138888888889,
+     "time_red": 0.7337430465881486
+    },
+    "toolz": {
+     "n_commits": 23,
+     "recall": 0.7956922162804515,
+     "precision": 0.623062558356676,
+     "safe_rate": 0.6521739130434783,
+     "test_red": 0.5151008411877978,
+     "time_red": 0.7252043720615506
+    },
+    "ALL": {
+     "n_commits": 119,
+     "recall": 0.7241808192694492,
+     "precision": 0.6364292969629697,
+     "safe_rate": 0.4369747899159664,
+     "test_red": 0.45626936160897347,
+     "time_red": 0.7360506292273846
+    }
+   },
+   "CoverageRanked": {
+    "click": {
+     "n_commits": 24,
+     "recall": 0.7430510676793987,
+     "precision": 0.5110179442310282,
+     "safe_rate": 0.4166666666666667,
+     "test_red": 0.413610035275562,
+     "time_red": 0.7304699101951111
+    },
+    "dateutil": {
+     "n_commits": 24,
+     "recall": 0.777774598087098,
+     "precision": 0.6083333333333333,
+     "safe_rate": 0.3333333333333333,
+     "test_red": 0.3000510620915033,
+     "time_red": 0.6979145884669576
+    },
+    "itsdangerous": {
+     "n_commits": 24,
+     "recall": 0.6794871794871794,
+     "precision": 0.7307692307692307,
+     "safe_rate": 0.625,
+     "test_red": 0.4958333333333333,
+     "time_red": 0.7700511850187676
+    },
+    "marshmallow": {
+     "n_commits": 24,
+     "recall": 0.6142526455026455,
+     "precision": 0.7316468253968255,
+     "safe_rate": 0.16666666666666666,
+     "test_red": 0.545138888888889,
+     "time_red": 0.7375656375308731
+    },
+    "toolz": {
+     "n_commits": 23,
+     "recall": 0.7956922162804515,
+     "precision": 0.6069561157796451,
+     "safe_rate": 0.6521739130434783,
+     "test_red": 0.4869514543427588,
+     "time_red": 0.7226235305739424
+    },
+    "ALL": {
+     "n_commits": 119,
+     "recall": 0.7213755387413965,
+     "precision": 0.6310018860900142,
+     "safe_rate": 0.4369747899159664,
+     "test_red": 0.44799229512627176,
+     "time_red": 0.7318014530443839
+    }
+   },
+   "Random": {
+    "click": {
+     "n_commits": 24,
+     "recall": 0.6432675077766242,
+     "precision": 0.47457081462319783,
+     "safe_rate": 0.28958333333333336,
+     "test_red": 0.3959215592509026,
+     "time_red": 0.730600549105794
+    },
+    "dateutil": {
+     "n_commits": 24,
+     "recall": 0.7536525742775743,
+     "precision": 0.5987578393828393,
+     "safe_rate": 0.27708333333333335,
+     "test_red": 0.3005412581699347,
+     "time_red": 0.6908461035100601
+    },
+    "itsdangerous": {
+     "n_commits": 24,
+     "recall": 0.5400641025641025,
+     "precision": 0.6173076923076922,
+     "safe_rate": 0.5854166666666667,
+     "test_red": 0.4958333333333334,
+     "time_red": 0.7807471100676665
+    },
+    "marshmallow": {
+     "n_commits": 24,
+     "recall": 0.5648974867724867,
+     "precision": 0.6721478174603175,
+     "safe_rate": 0.16666666666666666,
+     "test_red": 0.5345486111111111,
+     "time_red": 0.7526970284357947
+    },
+    "toolz": {
+     "n_commits": 23,
+     "recall": 0.6533719548425431,
+     "precision": 0.5615896358543417,
+     "safe_rate": 0.5260869565217391,
+     "test_red": 0.46849472990777347,
+     "time_red": 0.7237160682191871
+    },
+    "ALL": {
+     "n_commits": 119,
+     "recall": 0.6392921852447563,
+     "precision": 0.5840483991098329,
+     "safe_rate": 0.36764705882352944,
+     "test_red": 0.43882061405584494,
+     "time_red": 0.7358222567723101
+    }
+   }
+  },
+  "0.5": {
+   "CodeTwin": {
+    "click": {
+     "n_commits": 24,
+     "recall": 0.9098789335956239,
+     "precision": 0.44154294442901454,
+     "safe_rate": 0.4166666666666667,
+     "test_red": 0.15236397589338768,
+     "time_red": 0.5110414422389709
+    },
+    "dateutil": {
+     "n_commits": 24,
+     "recall": 0.8404310388685389,
+     "precision": 0.6078125,
+     "safe_rate": 0.3333333333333333,
+     "test_red": 0.20905841503267977,
+     "time_red": 0.5394749948653482
+    },
+    "itsdangerous": {
+     "n_commits": 24,
+     "recall": 0.6987179487179487,
+     "precision": 0.6025641025641024,
+     "safe_rate": 0.625,
+     "test_red": 0.3,
+     "time_red": 0.6765995053205133
+    },
+    "marshmallow": {
+     "n_commits": 24,
+     "recall": 0.7334656084656084,
+     "precision": 0.4589285714285714,
+     "safe_rate": 0.20833333333333334,
+     "test_red": 0.23611111111111108,
+     "time_red": 0.5704574059248817
+    },
+    "toolz": {
+     "n_commits": 23,
+     "recall": 0.9105466428995841,
+     "precision": 0.4565359477124183,
+     "safe_rate": 0.6521739130434783,
+     "test_red": 0.26591162460727685,
+     "time_red": 0.5451243020657405
+    },
+    "ALL": {
+     "n_commits": 119,
+     "recall": 0.8243897155578728,
+     "precision": 0.5084328503029455,
+     "safe_rate": 0.44537815126050423,
+     "test_red": 0.23240984382234992,
+     "time_red": 0.5687362967050855
+    }
+   },
+   "CoverageRanked": {
+    "click": {
+     "n_commits": 24,
+     "recall": 0.9067498163360719,
+     "precision": 0.43459373086375414,
+     "safe_rate": 0.4166666666666667,
+     "test_red": 0.1454868945464021,
+     "time_red": 0.5146800839548057
+    },
+    "dateutil": {
+     "n_commits": 24,
+     "recall": 0.8404310388685389,
+     "precision": 0.6078125,
+     "safe_rate": 0.3333333333333333,
+     "test_red": 0.20905841503267977,
+     "time_red": 0.5394749948653482
+    },
+    "itsdangerous": {
+     "n_commits": 24,
+     "recall": 0.6987179487179487,
+     "precision": 0.6025641025641024,
+     "safe_rate": 0.625,
+     "test_red": 0.3,
+     "time_red": 0.6765995053205133
+    },
+    "marshmallow": {
+     "n_commits": 24,
+     "recall": 0.7230489417989417,
+     "precision": 0.44940476190476186,
+     "safe_rate": 0.20833333333333334,
+     "test_red": 0.22569444444444442,
+     "time_red": 0.5727559456760986
+    },
+    "toolz": {
+     "n_commits": 23,
+     "recall": 0.9105466428995841,
+     "precision": 0.45823996265172734,
+     "safe_rate": 0.6521739130434783,
+     "test_red": 0.2870933414411675,
+     "time_red": 0.5036767691691325
+    },
+    "ALL": {
+     "n_commits": 119,
+     "recall": 0.8212018967759945,
+     "precision": 0.5048740870692409,
+     "safe_rate": 0.44537815126050423,
+     "test_red": 0.23301597436732335,
+     "time_red": 0.5619228437520373
+    }
+   },
+   "Random": {
+    "click": {
+     "n_commits": 24,
+     "recall": 0.8495406251454639,
+     "precision": 0.40866325028726963,
+     "safe_rate": 0.35833333333333334,
+     "test_red": 0.1480277170769647,
+     "time_red": 0.5182596134656304
+    },
+    "dateutil": {
+     "n_commits": 24,
+     "recall": 0.8404310388685389,
+     "precision": 0.6078125,
+     "safe_rate": 0.3333333333333333,
+     "test_red": 0.20905841503267975,
+     "time_red": 0.5394749948653482
+    },
+    "itsdangerous": {
+     "n_commits": 24,
+     "recall": 0.6987179487179487,
+     "precision": 0.6025641025641024,
+     "safe_rate": 0.625,
+     "test_red": 0.3,
+     "time_red": 0.6765995053205133
+    },
+    "marshmallow": {
+     "n_commits": 24,
+     "recall": 0.7058201058201058,
+     "precision": 0.43942956349206347,
+     "safe_rate": 0.18333333333333335,
+     "test_red": 0.22829861111111108,
+     "time_red": 0.5790311694867528
+    },
+    "toolz": {
+     "n_commits": 23,
+     "recall": 0.807976827094474,
+     "precision": 0.4119024276377217,
+     "safe_rate": 0.5869565217391305,
+     "test_red": 0.26712399918921653,
+     "time_red": 0.5352378688845374
+    },
+    "ALL": {
+     "n_commits": 119,
+     "recall": 0.7868158539090351,
+     "precision": 0.48879939488704277,
+     "safe_rate": 0.41596638655462187,
+     "test_red": 0.23019399847605135,
+     "time_red": 0.5700104015097666
+    }
+   }
+  }
+ },
+ "crc": {
+  "0.05": {
+   "plain": {
+    "click": {
+     "n_commits": 24,
+     "recall": 1.0,
+     "precision": 0.42287250408941945,
+     "safe_rate": 1.0,
+     "test_red": 0.0,
+     "time_red": 0.0
+    },
+    "dateutil": {
+     "n_commits": 24,
+     "recall": 1.0,
+     "precision": 0.4977124183006536,
+     "safe_rate": 1.0,
+     "test_red": 0.0,
+     "time_red": 0.0
+    },
+    "itsdangerous": {
+     "n_commits": 24,
+     "recall": 1.0,
+     "precision": 0.5269230769230769,
+     "safe_rate": 1.0,
+     "test_red": 0.0,
+     "time_red": 0.0
+    },
+    "marshmallow": {
+     "n_commits": 24,
+     "recall": 1.0,
+     "precision": 0.48263888888888884,
+     "safe_rate": 1.0,
+     "test_red": 0.0,
+     "time_red": 0.0
+    },
+    "toolz": {
+     "n_commits": 23,
+     "recall": 1.0,
+     "precision": 0.3924310983134513,
+     "safe_rate": 1.0,
+     "test_red": 0.0,
+     "time_red": 0.0
+    },
+    "ALL": {
+     "n_commits": 119,
+     "recall": 1.0,
+     "precision": 0.46312700631618164,
+     "safe_rate": 1.0,
+     "test_red": 0.0,
+     "time_red": 0.0
+    }
+   },
+   "abstain": {
+    "click": {
+     "n_commits": 24,
+     "recall": 1.0,
+     "precision": 0.42287250408941945,
+     "safe_rate": 1.0,
+     "test_red": 0.0,
+     "time_red": 0.0
+    },
+    "dateutil": {
+     "n_commits": 24,
+     "recall": 1.0,
+     "precision": 0.4977124183006536,
+     "safe_rate": 1.0,
+     "test_red": 0.0,
+     "time_red": 0.0
+    },
+    "itsdangerous": {
+     "n_commits": 24,
+     "recall": 1.0,
+     "precision": 0.5269230769230769,
+     "safe_rate": 1.0,
+     "test_red": 0.0,
+     "time_red": 0.0
+    },
+    "marshmallow": {
+     "n_commits": 24,
+     "recall": 1.0,
+     "precision": 0.48263888888888884,
+     "safe_rate": 1.0,
+     "test_red": 0.0,
+     "time_red": 0.0
+    },
+    "toolz": {
+     "n_commits": 23,
+     "recall": 1.0,
+     "precision": 0.3924310983134513,
+     "safe_rate": 1.0,
+     "test_red": 0.0,
+     "time_red": 0.0
+    },
+    "ALL": {
+     "n_commits": 119,
+     "recall": 1.0,
+     "precision": 0.46312700631618164,
+     "safe_rate": 1.0,
+     "test_red": 0.0,
+     "time_red": 0.0
+    }
+   },
+   "abstain_rate_ALL": 0.9243697478991597
+  },
+  "0.1": {
+   "plain": {
+    "click": {
+     "n_commits": 24,
+     "recall": 1.0,
+     "precision": 0.7788177615589068,
+     "safe_rate": 1.0,
+     "test_red": 0.45098890507577233,
+     "time_red": 0.28899824114910905
+    },
+    "dateutil": {
+     "n_commits": 24,
+     "recall": 0.9895833333333334,
+     "precision": 0.915070461945462,
+     "safe_rate": 0.9583333333333334,
+     "test_red": 0.4622549019607843,
+     "time_red": 0.32954557607574864
+    },
+    "itsdangerous": {
+     "n_commits": 24,
+     "recall": 0.9615384615384616,
+     "precision": 1.0,
+     "safe_rate": 0.9583333333333334,
+     "test_red": 0.7312500000000001,
+     "time_red": 0.6850436687676797
+    },
+    "marshmallow": {
+     "n_commits": 24,
+     "recall": 1.0,
+     "precision": 0.6435185185185185,
+     "safe_rate": 1.0,
+     "test_red": 0.25,
+     "time_red": 0.12238027827997022
+    },
+    "toolz": {
+     "n_commits": 23,
+     "recall": 0.980392156862745,
+     "precision": 0.8176470588235294,
+     "safe_rate": 0.9565217391304348,
+     "test_red": 0.6254940711462451,
+     "time_red": 0.5335767160725012
+    },
+    "ALL": {
+     "n_commits": 119,
+     "recall": 0.9892739273927393,
+     "precision": 0.8140489509603008,
+     "safe_rate": 0.9747899159663865,
+     "test_red": 0.5029765966826975,
+     "time_red": 0.3907184101866194
+    }
+   },
+   "abstain": {
+    "click": {
+     "n_commits": 24,
+     "recall": 1.0,
+     "precision": 0.45001948864187136,
+     "safe_rate": 1.0,
+     "test_red": 0.05543884220354809,
+     "time_red": 0.039713254656404344
+    },
+    "dateutil": {
+     "n_commits": 24,
+     "recall": 1.0,
+     "precision": 0.4977124183006536,
+     "safe_rate": 1.0,
+     "test_red": 0.0,
+     "time_red": 0.0
+    },
+    "itsdangerous": {
+     "n_commits": 24,
+     "recall": 1.0,
+     "precision": 0.5846153846153845,
+     "safe_rate": 1.0,
+     "test_red": 0.03125,
+     "time_red": 0.037875306372549024
+    },
+    "marshmallow": {
+     "n_commits": 24,
+     "recall": 1.0,
+     "precision": 0.48263888888888884,
+     "safe_rate": 1.0,
+     "test_red": 0.0,
+     "time_red": 0.0
+    },
+    "toolz": {
+     "n_commits": 23,
+     "recall": 1.0,
+     "precision": 0.5161113396407514,
+     "safe_rate": 1.0,
+     "test_red": 0.18283166109253066,
+     "time_red": 0.18430519845359486
+    },
+    "ALL": {
+     "n_commits": 119,
+     "recall": 1.0,
+     "precision": 0.4975522018337113,
+     "safe_rate": 1.0,
+     "test_red": 0.05282067578162486,
+     "time_red": 0.0512701262951896
+    }
+   },
+   "abstain_rate_ALL": 0.9243697478991597
+  },
+  "0.2": {
+   "plain": {
+    "click": {
+     "n_commits": 24,
+     "recall": 0.9907773386034257,
+     "precision": 0.8650683059250833,
+     "safe_rate": 0.9166666666666666,
+     "test_red": 0.5426704508441854,
+     "time_red": 0.3992065398949505
+    },
+    "dateutil": {
+     "n_commits": 24,
+     "recall": 0.9895833333333334,
+     "precision": 0.9359037952787954,
+     "safe_rate": 0.9583333333333334,
+     "test_red": 0.46470588235294114,
+     "time_red": 0.32974874919995595
+    },
+    "itsdangerous": {
+     "n_commits": 24,
+     "recall": 0.9615384615384616,
+     "precision": 1.0,
+     "safe_rate": 0.9583333333333334,
+     "test_red": 0.7312500000000001,
+     "time_red": 0.6850436687676797
+    },
+    "marshmallow": {
+     "n_commits": 24,
+     "recall": 0.9398148148148149,
+     "precision": 0.9074074074074074,
+     "safe_rate": 0.9166666666666666,
+     "test_red": 0.4791666666666667,
+     "time_red": 0.2891419840140383
+    },
+    "toolz": {
+     "n_commits": 23,
+     "recall": 0.9542483660130718,
+     "precision": 1.0,
+     "safe_rate": 0.9565217391304348,
+     "test_red": 0.7032532684706598,
+     "time_red": 0.6118075424864791
+    },
+    "ALL": {
+     "n_commits": 119,
+     "recall": 0.9684718471847187,
+     "precision": 0.9320399990172848,
+     "safe_rate": 0.9411764705882353,
+     "test_red": 0.5832088837945899,
+     "time_red": 0.46173912674141177
+    }
+   },
+   "abstain": {
+    "click": {
+     "n_commits": 24,
+     "recall": 1.0,
+     "precision": 0.46014512064592344,
+     "safe_rate": 1.0,
+     "test_red": 0.0725373482726424,
+     "time_red": 0.056001601822220116
+    },
+    "dateutil": {
+     "n_commits": 24,
+     "recall": 1.0,
+     "precision": 0.4977124183006536,
+     "safe_rate": 1.0,
+     "test_red": 0.0,
+     "time_red": 0.0
+    },
+    "itsdangerous": {
+     "n_commits": 24,
+     "recall": 1.0,
+     "precision": 0.5846153846153845,
+     "safe_rate": 1.0,
+     "test_red": 0.03125,
+     "time_red": 0.037875306372549024
+    },
+    "marshmallow": {
+     "n_commits": 24,
+     "recall": 1.0,
+     "precision": 0.48263888888888884,
+     "safe_rate": 1.0,
+     "test_red": 0.0,
+     "time_red": 0.0
+    },
+    "toolz": {
+     "n_commits": 23,
+     "recall": 1.0,
+     "precision": 0.6631701631701632,
+     "safe_rate": 1.0,
+     "test_red": 0.2001114827201784,
+     "time_red": 0.18550854847058673
+    },
+    "ALL": {
+     "n_commits": 119,
+     "recall": 1.0,
+     "precision": 0.5246105140722578,
+     "safe_rate": 1.0,
+     "test_red": 0.059608911437878324,
+     "time_red": 0.05478775135712566
+    }
+   },
+   "abstain_rate_ALL": 0.9243697478991597
+  }
+ },
+ "ablation": {
+  "Full model": {
+   "click": {
+    "n_commits": 24,
+    "recall": 0.7553699082591089,
+    "precision": 0.522946595290114,
+    "safe_rate": 0.4166666666666667,
+    "test_red": 0.42767399419246205,
+    "time_red": 0.7300517222164644
+   },
+   "dateutil": {
+    "n_commits": 24,
+    "recall": 0.777774598087098,
+    "precision": 0.6083333333333333,
+    "safe_rate": 0.3333333333333333,
+    "test_red": 0.3000510620915033,
+    "time_red": 0.6981805252632928
+   },
+   "itsdangerous": {
+    "n_commits": 24,
+    "recall": 0.6794871794871794,
+    "precision": 0.7307692307692307,
+    "safe_rate": 0.625,
+    "test_red": 0.4958333333333333,
+    "time_red": 0.7926215526255573
+   },
+   "marshmallow": {
+    "n_commits": 24,
+    "recall": 0.6142526455026455,
+    "precision": 0.7316468253968255,
+    "safe_rate": 0.16666666666666666,
+    "test_red": 0.545138888888889,
+    "time_red": 0.7337430465881486
+   },
+   "toolz": {
+    "n_commits": 23,
+    "recall": 0.7956922162804515,
+    "precision": 0.623062558356676,
+    "safe_rate": 0.6521739130434783,
+    "test_red": 0.5151008411877978,
+    "time_red": 0.7252043720615506
+   },
+   "ALL": {
+    "n_commits": 119,
+    "recall": 0.7241808192694492,
+    "precision": 0.6364292969629697,
+    "safe_rate": 0.4369747899159664,
+    "test_red": 0.45626936160897347,
+    "time_red": 0.7360506292273846
+   }
+  },
+  "- line coverage": {
+   "click": {
+    "n_commits": 24,
+    "recall": 0.7321815024620074,
+    "precision": 0.5165144219983364,
+    "safe_rate": 0.375,
+    "test_red": 0.42615672061636495,
+    "time_red": 0.7297492667505147
+   },
+   "dateutil": {
+    "n_commits": 24,
+    "recall": 0.777774598087098,
+    "precision": 0.6083333333333333,
+    "safe_rate": 0.3333333333333333,
+    "test_red": 0.3000510620915033,
+    "time_red": 0.6981805252632928
+   },
+   "itsdangerous": {
+    "n_commits": 24,
+    "recall": 0.6794871794871794,
+    "precision": 0.7307692307692307,
+    "safe_rate": 0.625,
+    "test_red": 0.4958333333333333,
+    "time_red": 0.7926215526255573
+   },
+   "marshmallow": {
+    "n_commits": 24,
+    "recall": 0.6038359788359788,
+    "precision": 0.7229662698412698,
+    "safe_rate": 0.16666666666666666,
+    "test_red": 0.5381944444444445,
+    "time_red": 0.7352303370154066
+   },
+   "toolz": {
+    "n_commits": 23,
+    "recall": 0.7956922162804515,
+    "precision": 0.6454715219421103,
+    "safe_rate": 0.6521739130434783,
+    "test_red": 0.5563494476537956,
+    "time_red": 0.7252053628218971
+   },
+   "ALL": {
+    "n_commits": 119,
+    "recall": 0.7164250436918915,
+    "precision": 0.6366736441105751,
+    "safe_rate": 0.42857142857142855,
+    "test_red": 0.4625352163671663,
+    "time_red": 0.7362897790304047
+   }
+  },
+  "- file coverage": {
+   "click": {
+    "n_commits": 24,
+    "recall": 0.7372539662301234,
+    "precision": 0.5147735326548087,
+    "safe_rate": 0.375,
+    "test_red": 0.4063738074510989,
+    "time_red": 0.7309270919420019
+   },
+   "dateutil": {
+    "n_commits": 24,
+    "recall": 0.777774598087098,
+    "precision": 0.6083333333333333,
+    "safe_rate": 0.3333333333333333,
+    "test_red": 0.3000510620915033,
+    "time_red": 0.6979145884669576
+   },
+   "itsdangerous": {
+    "n_commits": 24,
+    "recall": 0.6794871794871794,
+    "precision": 0.7307692307692307,
+    "safe_rate": 0.625,
+    "test_red": 0.4958333333333333,
+    "time_red": 0.7926215526255573
+   },
+   "marshmallow": {
+    "n_commits": 24,
+    "recall": 0.6142526455026455,
+    "precision": 0.7296626984126985,
+    "safe_rate": 0.16666666666666666,
+    "test_red": 0.5416666666666666,
+    "time_red": 0.7422883342660193
+   },
+   "toolz": {
+    "n_commits": 23,
+    "recall": 0.7956922162804515,
+    "precision": 0.6041549953314659,
+    "safe_rate": 0.6521739130434783,
+    "test_red": 0.4869514543427588,
+    "time_red": 0.7250970857806646
+   },
+   "ALL": {
+    "n_commits": 119,
+    "recall": 0.7200554067281952,
+    "precision": 0.6309141676594088,
+    "safe_rate": 0.42857142857142855,
+    "test_red": 0.44583260772189826,
+    "time_red": 0.7378762234299845
+   }
+  },
+  "- static import": {
+   "click": {
+    "n_commits": 24,
+    "recall": 0.7553699082591089,
+    "precision": 0.522946595290114,
+    "safe_rate": 0.4166666666666667,
+    "test_red": 0.42767399419246205,
+    "time_red": 0.730531341854407
+   },
+   "dateutil": {
+    "n_commits": 24,
+    "recall": 0.777774598087098,
+    "precision": 0.6083333333333333,
+    "safe_rate": 0.3333333333333333,
+    "test_red": 0.3000510620915033,
+    "time_red": 0.6981805252632928
+   },
+   "itsdangerous": {
+    "n_commits": 24,
+    "recall": 0.6794871794871794,
+    "precision": 0.7307692307692307,
+    "safe_rate": 0.625,
+    "test_red": 0.4958333333333333,
+    "time_red": 0.7926215526255573
+   },
+   "marshmallow": {
+    "n_commits": 24,
+    "recall": 0.6142526455026455,
+    "precision": 0.7316468253968255,
+    "safe_rate": 0.16666666666666666,
+    "test_red": 0.545138888888889,
+    "time_red": 0.7337430465881486
+   },
+   "toolz": {
+    "n_commits": 23,
+    "recall": 0.7956922162804515,
+    "precision": 0.623062558356676,
+    "safe_rate": 0.6521739130434783,
+    "test_red": 0.5114776527820007,
+    "time_red": 0.7261685741157369
+   },
+   "ALL": {
+    "n_commits": 119,
+    "recall": 0.7241808192694492,
+    "precision": 0.6364292969629697,
+    "safe_rate": 0.4369747899159664,
+    "test_red": 0.45556908149692865,
+    "time_red": 0.7363337176186191
+   }
+  },
+  "- name match": {
+   "click": {
+    "n_commits": 24,
+    "recall": 0.7466742560851958,
+    "precision": 0.5182643210426223,
+    "safe_rate": 0.4166666666666667,
+    "test_red": 0.4237057402242081,
+    "time_red": 0.7298351380580486
+   },
+   "dateutil": {
+    "n_commits": 24,
+    "recall": 0.777774598087098,
+    "precision": 0.6083333333333333,
+    "safe_rate": 0.3333333333333333,
+    "test_red": 0.3000510620915033,
+    "time_red": 0.6981805252632928
+   },
+   "itsdangerous": {
+    "n_commits": 24,
+    "recall": 0.6794871794871794,
+    "precision": 0.7307692307692307,
+    "safe_rate": 0.625,
+    "test_red": 0.4958333333333333,
+    "time_red": 0.7926215526255573
+   },
+   "marshmallow": {
+    "n_commits": 24,
+    "recall": 0.6142526455026455,
+    "precision": 0.7316468253968255,
+    "safe_rate": 0.16666666666666666,
+    "test_red": 0.545138888888889,
+    "time_red": 0.7337430465881486
+   },
+   "toolz": {
+    "n_commits": 23,
+    "recall": 0.7956922162804515,
+    "precision": 0.6342670401493932,
+    "safe_rate": 0.6521739130434783,
+    "test_red": 0.5248555792034054,
+    "time_red": 0.7255680180773705
+   },
+   "ALL": {
+    "n_commits": 119,
+    "recall": 0.7222006212496473,
+    "precision": 0.6372489393667703,
+    "safe_rate": 0.4369747899159664,
+    "test_red": 0.45735441101335056,
+    "time_red": 0.7360772329127786
+   }
+  },
+  "- co-change": {
+   "click": {
+    "n_commits": 24,
+    "recall": 0.7553699082591089,
+    "precision": 0.522946595290114,
+    "safe_rate": 0.4166666666666667,
+    "test_red": 0.42767399419246205,
+    "time_red": 0.7300517222164644
+   },
+   "dateutil": {
+    "n_commits": 24,
+    "recall": 0.777774598087098,
+    "precision": 0.6083333333333333,
+    "safe_rate": 0.3333333333333333,
+    "test_red": 0.3000510620915033,
+    "time_red": 0.6981805252632928
+   },
+   "itsdangerous": {
+    "n_commits": 24,
+    "recall": 0.6794871794871794,
+    "precision": 0.7307692307692307,
+    "safe_rate": 0.625,
+    "test_red": 0.4958333333333333,
+    "time_red": 0.7928318575677236
+   },
+   "marshmallow": {
+    "n_commits": 24,
+    "recall": 0.6142526455026455,
+    "precision": 0.7316468253968255,
+    "safe_rate": 0.16666666666666666,
+    "test_red": 0.545138888888889,
+    "time_red": 0.7337430465881486
+   },
+   "toolz": {
+    "n_commits": 23,
+    "recall": 0.7956922162804515,
+    "precision": 0.623062558356676,
+    "safe_rate": 0.6521739130434783,
+    "test_red": 0.5151008411877978,
+    "time_red": 0.7252043720615506
+   },
+   "ALL": {
+    "n_commits": 119,
+    "recall": 0.7241808192694492,
+    "precision": 0.6364292969629697,
+    "safe_rate": 0.4369747899159664,
+    "test_red": 0.45626936160897347,
+    "time_red": 0.7360930436695021
+   }
+  },
+  "- test changed": {
+   "click": {
+    "n_commits": 24,
+    "recall": 0.7321815024620074,
+    "precision": 0.5162228080171276,
+    "safe_rate": 0.375,
+    "test_red": 0.408533004463237,
+    "time_red": 0.7303600622225325
+   },
+   "dateutil": {
+    "n_commits": 24,
+    "recall": 0.777774598087098,
+    "precision": 0.6083333333333333,
+    "safe_rate": 0.3333333333333333,
+    "test_red": 0.3000510620915033,
+    "time_red": 0.6979145884669576
+   },
+   "itsdangerous": {
+    "n_commits": 24,
+    "recall": 0.6794871794871794,
+    "precision": 0.7307692307692307,
+    "safe_rate": 0.625,
+    "test_red": 0.4958333333333333,
+    "time_red": 0.7926215526255573
+   },
+   "marshmallow": {
+    "n_commits": 24,
+    "recall": 0.6142526455026455,
+    "precision": 0.7316468253968255,
+    "safe_rate": 0.16666666666666666,
+    "test_red": 0.545138888888889,
+    "time_red": 0.7392486297814287
+   },
+   "toolz": {
+    "n_commits": 23,
+    "recall": 0.7956922162804515,
+    "precision": 0.6041549953314659,
+    "safe_rate": 0.6521739130434783,
+    "test_red": 0.4833282659369617,
+    "time_red": 0.7251967339821156
+   },
+   "ALL": {
+    "n_commits": 119,
+    "recall": 0.718900291216644,
+    "precision": 0.6317156763817097,
+    "safe_rate": 0.42857142857142855,
+    "test_red": 0.4462680760268673,
+    "time_red": 0.7371680745874294
+   }
+  },
+  "- all coverage": {
+   "click": {
+    "n_commits": 24,
+    "recall": 0.6502830245957875,
+    "precision": 0.47961828990769634,
+    "safe_rate": 0.2916666666666667,
+    "test_red": 0.3873707516833371,
+    "time_red": 0.7336338538006012
+   },
+   "dateutil": {
+    "n_commits": 24,
+    "recall": 0.7604134869759869,
+    "precision": 0.6023809523809524,
+    "safe_rate": 0.2916666666666667,
+    "test_red": 0.3000510620915033,
+    "time_red": 0.7064164947342491
+   },
+   "itsdangerous": {
+    "n_commits": 24,
+    "recall": 0.6602564102564101,
+    "precision": 0.7051282051282051,
+    "safe_rate": 0.625,
+    "test_red": 0.4958333333333333,
+    "time_red": 0.7961504108438762
+   },
+   "marshmallow": {
+    "n_commits": 24,
+    "recall": 0.5648974867724869,
+    "precision": 0.6703869047619048,
+    "safe_rate": 0.16666666666666666,
+    "test_red": 0.53125,
+    "time_red": 0.7591588358899509
+   },
+   "toolz": {
+    "n_commits": 23,
+    "recall": 0.6584373143196673,
+    "precision": 0.5667600373482727,
+    "safe_rate": 0.5217391304347826,
+    "test_red": 0.4585233606972739,
+    "time_red": 0.7272544440152062
+   },
+   "ALL": {
+    "n_commits": 119,
+    "recall": 0.6588192139844968,
+    "precision": 0.5978142231771574,
+    "safe_rate": 0.37815126050420167,
+    "test_red": 0.43440471282885257,
+    "time_red": 0.7446679201579666
+   }
+  }
+ }
+}
