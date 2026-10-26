@@ -477,8 +477,8 @@ def write_tex(R, projects):
         return (f"{name} & {pct(a.get('test_red'))} & {pct(a.get('time_red'))} & {num(a.get('precision'))} & "
                 f"{num(a.get('recall'))} & {pct(a.get('safe_rate'))} \\\\")
     L = [row(label.get(k, k), v["ALL"]) for k, v in R["baselines"].items()]
-    L.append(row(f"\\textbf{{CodeTwin AI}} ({int(ABL_BUDGET * 100)}\\% budget)", R["budget"][str(ABL_BUDGET)]["CodeTwin"]["ALL"]))
-    L.append(row(f"\\textbf{{CodeTwin AI}} (CRC, $\\alpha={MAIN_ALPHA}$)", R["crc"][str(MAIN_ALPHA)]["plain"]["ALL"]))
+    L.append(row(f"CodeTwin, $B$={int(ABL_BUDGET * 100)}\\%", R["budget"][str(ABL_BUDGET)]["CodeTwin"]["ALL"]))
+    L.append(row(f"CodeTwin, $\\alpha$={MAIN_ALPHA}", R["crc"][str(MAIN_ALPHA)]["plain"]["ALL"]))
     (OUT / "tables_rq1.tex").write_text("\n".join(L) + "\n")
 
     L = []
