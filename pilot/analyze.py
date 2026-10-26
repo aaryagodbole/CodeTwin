@@ -394,8 +394,8 @@ def main(projects):
                 n_abst += fired
                 E["crc"][p][a]["plain"].append(evaluate_set(c, sel))
                 E["crc"][p][a]["abstain"].append(evaluate_set(c, set(c["universe"]) if fired else sel))
-            cres[str(a)] = {"lambda": lam, "n_train": len(train_set), "n_calib": len(cal_set), "n_test": len(test),
-                            "feasible": lam >= 0,
+            cres[str(a)] = {"lambda": float(lam), "n_train": len(train_set), "n_calib": len(cal_set), "n_test": len(test),
+                            "feasible": bool(lam >= 0),
                             "abstain_rate": n_abst / len(test) if test else None}
         results["calibration"][p] = cres
 
@@ -439,11 +439,19 @@ def main(projects):
     abl_names = ["Full model"] + ["- " + n for n, _ in ABLATIONS]
     results["ablation"] = {n: block(lambda q, n=n: E["ablation"][q][n]) for n in abl_names}
 
-    (OUT / "results.json").write_text(json.dumps(results, indent=1))
+    (OUT / "results.json").write_text(json.dumps(results, indent=1, default=_jsonable))
     write_tex(results, projects)
     write_plot(results)
     print("wrote results/results.json, results/tables_*.tex, results/budget.pdf/.png")
     return results
+
+def _jsonable(o):
+    """numpy scalars/arrays and sets -> plain JSON types."""
+    if isinstance(o, np.generic):
+        return o.item()
+    if isinstance(o, (set, np.ndarray)):
+        return list(o.tolist() if isinstance(o, np.ndarray) else sorted(o))
+    raise TypeError(f"not JSON serializable: {type(o).__name__}")
 
 # ------------------------------------------------------------------ paper outputs
 def pct(x):
