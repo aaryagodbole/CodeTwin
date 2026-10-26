@@ -239,6 +239,10 @@ def collect(name, n, timeout):
         if r.returncode:
             sys.exit(r.stderr)
     git(repo, "checkout", "-q", "-f", git(repo, "rev-parse", "--abbrev-ref", "origin/HEAD").strip().split("/", 1)[1])
+    # Some test suites read the package's installed metadata (importlib.metadata.version).
+    # An editable install points at the working tree, so it follows every checkout below.
+    r = run([sys.executable, "-m", "pip", "install", "-q", "--no-deps", "-e", str(repo)])
+    print(f"[{name}] editable install: {'ok' if r.returncode == 0 else 'failed (continuing): ' + r.stderr[-300:]}", flush=True)
     out = DATA / name / "commits"
     out.mkdir(parents=True, exist_ok=True)
     work = DATA / name / "_work"
