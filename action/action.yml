@@ -1,0 +1,44 @@
+name: CodeTwin AI test selection
+description: Select the tests a pull request needs, state the residual risk, and run them.
+inputs:
+  alpha:
+    description: Target miss rate
+    default: "0.10"
+  run-selected:
+    description: Run the selected tests after selecting them
+    default: "true"
+runs:
+  using: composite
+  steps:
+    - name: Install CodeTwin
+      shell: bash
+      run: pip install "codetwin @ git+https://github.com/aaryagodbole/codetwin@dev"
+    - name: Record evidence on the base commit
+      shell: bash
+      run: |
+        git fetch --depth=1 origin "${{ github.base_ref }}"
+        git stash -u || true
+        git checkout -q FETCH_HEAD
+        [ -f .codetwin.toml ] || codetwin init
+        codetwin record
+        git checkout -q "${{ github.sha }}"
+    - name: Select tests
+      id: select
+      shell: bash
+      run: |
+        codetwin select --alpha "${{ inputs.alpha }}" --json > codetwin-decision.json
+        python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+        import json
+        d = json.load(open("codetwin-decision.json"))
+        print(f"### CodeTwin AI: {d['decision'].upper()} (estimated residual risk {d['residual_risk']:.1%})")
+        for r in d["reasons"]:
+            print(f"- {r}")
+        print(f"\n{len(d['selected'])} test files selected:\n")
+        for t in d["selected"]:
+            print(f"- `{t}`")
+        PY
+        echo "tests=$(python -c "import json;print(' '.join(json.load(open('codetwin-decision.json'))['selected']))")" >> "$GITHUB_OUTPUT"
+    - name: Run selected tests
+      if: inputs.run-selected == 'true' && steps.select.outputs.tests != ''
+      shell: bash
+      run: python -m pytest ${{ steps.select.outputs.tests }}
