@@ -1,0 +1,12 @@
+# CodeTwin AI configuration
+[project]
+src_root = "src"          # directory added to PYTHONPATH ("." or "src")
+packages = ["codetwin"]            # packages measured by coverage
+source_dirs = ["src/codetwin"]      # directories that contain source files
+tests_dir = "tests"
+
+[selection]
+alpha = 0.10                     # target miss rate
+budget = 0.25                    # share of full-suite time in budget mode
+aci_gamma = 0.02                 # step size of adaptive calibration
+fallback = "file-coverage"       # broader run on abstention: file-coverage | full

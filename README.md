@@ -42,7 +42,8 @@ src/codetwin/        Python engine, CLI and MCP server
 tests/               pytest suite (unit + end-to-end on a throwaway git repo)
 extensions/vscode/   VS Code extension (TypeScript) – calls the CLI
 action/              GitHub composite action for pull requests
-docs/                architecture and roadmap
+docs/                architecture, roadmap, MCP setup
+scripts/check.sh     the definition of done (lint, tests, extension build)
 ```
 
 ## AI agents (MCP)
@@ -50,11 +51,14 @@ docs/                architecture and roadmap
 `codetwin-mcp` starts a stdio MCP server with the tools `verify_change`, `get_impact`, `recommend_tests` and
 `explain_decision`. Set `CODETWIN_ROOT` to the repository to analyse.
 
+Client configuration examples: [docs/mcp.md](docs/mcp.md).
+
 ## Development
 
 ```bash
-pip install -e ".[dev,mcp]" && ruff check src tests && python -m pytest
-cd extensions/vscode && npm install && npm run compile
+pip install -e ".[dev,mcp]"
+scripts/check.sh            # ruff + pytest + VS Code extension build; must pass before every PR
 ```
 
+This repository uses CodeTwin on itself (`.codetwin.toml`). AI coding agents read [AGENTS.md](AGENTS.md).
 See [CONTRIBUTING.md](CONTRIBUTING.md) and [docs/roadmap.md](docs/roadmap.md).
