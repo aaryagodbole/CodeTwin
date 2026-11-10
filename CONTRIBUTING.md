@@ -2,6 +2,8 @@
 
 * Branches: `main` is stable, `dev` is the integration branch. Work on `feature/<short-name>` branches
   created from `dev` and open a pull request into `dev`.
+* Reviews: Aarya Godbole (project lead) reviews and merges every pull request into `dev` and releases `dev`
+  into `main`; `.github/CODEOWNERS` requests her review automatically. Do not merge your own pull request.
 * Every pull request must pass `scripts/check.sh` (same as CI: ruff, pytest, extension build) and add or update
   tests for the change. Optional: `pip install pre-commit && pre-commit install` to lint on every commit.
 * Use the pull-request template; AI coding agents follow `AGENTS.md`.

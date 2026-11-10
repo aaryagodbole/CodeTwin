@@ -13,8 +13,9 @@ Nothing in *Could* starts before the Must items are evaluated.
 | Area | Owner | Objectives |
 |---|---|---|
 | A – graph, cross-repo, contracts | Suhani | O1 |
-| B – selection outputs, test gaps, evidence cards, PR check, dashboard API | Madhura | O2, O4 |
-| C – calibration, risk, blind spots, LLM links, agents | Aarya | O3, O5 |
+| Lead – reviews and merges every pull request, releases into `main`, integration | Aarya | all |
+| B – selection outputs, test gaps, evidence cards, dashboard API | Madhura | O2, O4 |
+| C – calibration, risk, blind spots, PR check, LLM links, agents | Aarya | O3, O4, O5 |
 | D – VS Code extension, dashboard UI, legacy-code lens | Shreya | O4, E1 |
 
 ## Done
@@ -38,7 +39,7 @@ Nothing in *Could* starts before the Must items are evaluated.
 | 7 – 20 Dec | Madhura | Evidence cards for every recommended test | Must | O2 |
 | 7 – 27 Dec | Aarya | Per-project model trained from `codetwin learn` history | Should | O2, O3 |
 | 14 – 27 Dec | Shreya | VS Code F2 impact CodeLens | Must | O4 |
-| 21 Dec – 10 Jan | Madhura | PR comment and check run in the GitHub Action | Must | O4 |
+| 21 Dec – 10 Jan | Aarya | PR comment and check run in the GitHub Action | Must | O4 |
 | 2 – 24 Jan | Suhani | Cross-repo: declared repositories, cross-repo edges, 2–3 library + dependents sets | Must | O1 |
 | 2 – 24 Jan | Aarya | Evidence freshness in the risk number (U5, RQ5) | Should | O3 |
 | 2 – 24 Jan | Shreya | VS Code F1 select-to-impact graph panel | Must | O4 |
