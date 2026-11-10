@@ -20,6 +20,8 @@
 \usepackage{booktabs}
 \usepackage{array}
 \usepackage{url}
+\usepackage{tikz}
+\usetikzlibrary{positioning,arrows.meta,fit}
 
 
 \makeatletter
@@ -438,9 +440,40 @@ Table~\ref{tab:subjects} lists the subjects. The five \emph{history} projects (c
 With $T$, $t(i)$, $A(c)$ and $S(c)$ as before, we report test reduction $1-|S|/|T|$, time reduction $1-\sum_{i\in S}t(i)/\sum_{i\in T}t(i)$, precision $|S\cap A|/|S|$ and recall $|S\cap A|/|A|$, each averaged over changes (precision and recall over changes with at least one affected test). A selection is \textit{safe} for a change if $A(c)\subseteq S(c)$; the observed miss rate is the share of unsafe changes. For seeded faults we report the \textit{mutant detection rate}, the share of detected mutants for which the selection contains at least one detecting test. For $r(c)$ we report the Brier score~\cite{brier1950verification}, the mean squared difference between $r(c)$ and the observed miss (0 or 1), compared with a constant forecast, and the expected calibration error over five bins. Run times are the measured times of the new version.
 
 \subsection{Protocol}
-Each project's changes are ordered in time. The first 40\% calibrate and the rest are test changes; calibration changes are never used for training. The risk model is trained leave-one-project-out on the other history projects; the NameRTS projects use a model trained on all history projects. Budgets are 10\%, 25\% and 50\% of the previous version's full-suite time, and targets are $\alpha\in\{0.01,0.05,0.10,0.20\}$; the sliding window and ACI start from the same calibration set, and ACI uses $\gamma=<<ACI_GAMMA>>$, fixed in advance. Isotonic recalibration for $r(c)$ is fitted on the calibration changes. For the ablation we retrain the model without one evidence signal, or without all coverage signals, and compare at the 25\% budget. We report 95\% bootstrap confidence intervals (10,000 resamples over test changes) and paired Wilcoxon signed-rank tests for recall.
+Fig.~\ref{fig:workflow} summarises the study. Each project's changes are ordered in time. The first 40\% calibrate and the rest are test changes; calibration changes are never used for training. The risk model is trained leave-one-project-out on the other history projects; the NameRTS projects use a model trained on all history projects. Budgets are 10\%, 25\% and 50\% of the previous version's full-suite time, and targets are $\alpha\in\{0.01,0.05,0.10,0.20\}$; the sliding window and ACI start from the same calibration set, and ACI uses $\gamma=<<ACI_GAMMA>>$, fixed in advance. Isotonic recalibration for $r(c)$ is fitted on the calibration changes. For the ablation we retrain the model without one evidence signal, or without all coverage signals, and compare at the 25\% budget. We report 95\% bootstrap confidence intervals (10,000 resamples over test changes) and paired Wilcoxon signed-rank tests for recall.
 
 % =====================================================================
+
+\begin{figure*}[t]
+\centering
+\begin{tikzpicture}[font=\scriptsize, node distance=3.5mm and 4mm,
+  box/.style={draw, rounded corners=1.5pt, align=center, minimum height=9mm, text width=27mm, fill=white},
+  gt/.style={box, fill=black!6}, an/.style={box, text width=30mm, fill=black!12},
+  arr/.style={-{Stealth[length=1.6mm]}, semithick}]
+\node[box] (hist) {\textbf{Changes}\\ 5 history projects (last 250 commits)\\ 3 NameRTS projects (its pairs)};
+\node[box, right=of hist] (co) {\textbf{Check out}\\ parent and new version of each change};
+\node[box, right=of co] (run) {\textbf{Run pytest}\\ per-test coverage, run times, test outcomes};
+\node[box, right=of run] (st) {\textbf{Static facts (AST)}\\ imports, dynamic calls, functions, import-time lines};
+\node[box, right=of st] (mut) {\textbf{Seed faults}\\ up to 3 mutants on changed lines; detecting tests};
+\node[gt, below=6mm of co] (g1) {\textbf{Ground truth 1}\\ coverage-affected tests};
+\node[gt, right=of g1] (g2) {\textbf{Ground truth 2}\\ tests detecting seeded faults};
+\node[gt, right=of g2] (g3) {\textbf{Ground truth 3}\\ NameRTS affected tests (published)};
+\node[an, below=6mm of hist] (f) {\textbf{Evidence before the run}\\ 7 features from parent coverage, diff and static facts};
+\node[an, below=5mm of f] (sel) {\textbf{Selection}\\ budget ranking; CRC threshold (static, window, ACI)};
+\node[an, right=of sel] (risk) {\textbf{Residual risk} $r(c)$\\ and abstention to a broader run};
+\node[an, right=of risk] (base) {\textbf{Baselines}\\ coverage, static, name, hybrid, random, NameRTS};
+\node[box, right=of base, text width=40mm] (met) {\textbf{Metrics in time order}\\ miss rate vs.\ target, time saved, recall, fault detection, Brier score};
+\draw[arr] (hist) -- (co); \draw[arr] (co) -- (run); \draw[arr] (run) -- (st); \draw[arr] (st) -- (mut);
+\draw[arr] (run.south) -- ++(0,-1.5mm) -| (g1.north);
+\draw[arr] (mut.south) |- ++(0,-2.5mm) -| (g2.north);
+\draw[arr] (hist.south) -- (f.north);
+\draw[arr] (f) -- (sel); \draw[arr] (sel) -- (risk); \draw[arr] (risk) -- (base); \draw[arr] (base) -- (met);
+\node[draw, dashed, rounded corners=2pt, inner sep=1.5mm, fit=(g1)(g2)(g3)] (gts) {};
+\draw[arr] (gts.east) -| (met.north);
+\end{tikzpicture}
+\caption{Study workflow. Collection (top row) runs on GitHub Actions in 52 parallel shards; the analysis (bottom row) processes each project's changes in time order and uses the new version's test run only for the ground truths.}
+\label{fig:workflow}
+\end{figure*}
 \section{Results}\label{sec:results}
 % =====================================================================
 \subsection{RQ1: Selection Quality}
@@ -464,6 +497,15 @@ Table~\ref{tab:rq1} compares all techniques over the <<N_HIST_TEST>> test change
 
 Fig.~\ref{fig:budget} shows budget mode. At 10, 25 and 50\% of full-suite time, the learned ranking reached a recall of <<B10_CT_RECALL>>, <<B25_CT_RECALL>> and <<B50_CT_RECALL>>. It beat random selection at every budget (paired Wilcoxon tests, $p<<P_B10_RND>>$, $p<<P_B25_RND>>$ and $p<<P_B50_RND>>$; mean differences <<D_B10_RND>>, <<D_B25_RND>> and <<D_B50_RND>>) but was practically identical to the coverage ranking (<<B10_CR_RECALL>>, <<B25_CR_RECALL>> and <<B50_CR_RECALL>>; $p<<P_B10_CR>>$, $p<<P_B25_CR>>$ and $p<<P_B50_CR>>$). With a fixed budget at most <<B50_CT_SAFE>>\% of changes were safe, which is why a calibrated mode is needed.
 
+Fig.~\ref{fig:tradeoff} places every technique by time saved and miss rate. The coverage baselines form the frontier on these projects; adaptive calibration moves along it as the target changes, and risk-based abstention sits just above file coverage, with slightly more time saved and a small miss rate.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/tradeoff.pdf}
+\caption{Time saved against the share of changes with a missed affected test (history projects; vertical axis linear up to 5\%, then logarithmic). Circles: baselines; triangles: CodeTwin AI with adaptive calibration; diamonds: with risk-based abstention.}
+\label{fig:tradeoff}
+\end{figure}
+
 \textbf{Answer to RQ1:} risk-ranked selection finds more affected tests than random selection within the same budget, but on these projects it adds nothing over a coverage ranking (H1 not supported against coverage-only selection).
 
 \begin{figure}[t]
@@ -474,7 +516,7 @@ Fig.~\ref{fig:budget} shows budget mode. At 10, 25 and 50\% of full-suite time, 
 \end{figure}
 
 \subsection{RQ2: Calibration and Residual Risk}
-Table~\ref{tab:rq2} and Fig.~\ref{fig:calib} report the observed miss rate for each target. Static calibration, fitted once on each project's oldest 40\% of changes, did not hold: for targets of 5\%, 10\% and 20\% it missed affected tests on <<CRC5_MISS>>\%, <<CRC10_MISS>>\% and <<CRC20_MISS>>\% of later changes. The worst case was <<WORST_STATIC_PROJ>>, where the threshold fitted on old changes (<<WORST_STATIC_LAMBDA>>) was too high for newer ones and <<WORST_STATIC_MISS>>\% of test changes were missed. The sliding window, which recalibrates on recent changes, came closer (<<WIN5_MISS>>\%, <<WIN10_MISS>>\% and <<WIN20_MISS>>\%). Adaptive calibration kept the miss rate at or below every target on the history projects: <<ACI1_MISS>>\%, <<ACI5_MISS>>\%, <<ACI10_MISS>>\% and <<ACI20_MISS>>\% for targets of 1\%, 5\%, 10\% and 20\%, while saving <<ACI5_TIME>>\%, <<ACI10_TIME>>\% and <<ACI20_TIME>>\% of test time at the three larger targets. At $\alpha=0.10$ its safety equalled that of line coverage (<<LINE_SAFE>>\%) with slightly less time saved, but the level is chosen in advance and can be tightened: at $\alpha=0.05$ it was safe on <<ACI5_SAFE_PCT>>\% of changes. In our earlier study, with 15--16 calibration changes per project, static calibration appeared valid; with <<CALIB_MIN>>--<<CALIB_MAX>> calibration changes over longer periods, drift dominates.
+Table~\ref{tab:rq2} and Fig.~\ref{fig:calib} report the observed miss rate for each target. Static calibration, fitted once on each project's oldest 40\% of changes, did not hold: for targets of 5\%, 10\% and 20\% it missed affected tests on <<CRC5_MISS>>\%, <<CRC10_MISS>>\% and <<CRC20_MISS>>\% of later changes. The worst case was <<WORST_STATIC_PROJ>>, where the threshold fitted on old changes (<<WORST_STATIC_LAMBDA>>) was too high for newer ones and <<WORST_STATIC_MISS>>\% of test changes were missed. The sliding window, which recalibrates on recent changes, came closer (<<WIN5_MISS>>\%, <<WIN10_MISS>>\% and <<WIN20_MISS>>\%). Adaptive calibration kept the miss rate at or below every target on the history projects: <<ACI1_MISS>>\%, <<ACI5_MISS>>\%, <<ACI10_MISS>>\% and <<ACI20_MISS>>\% for targets of 1\%, 5\%, 10\% and 20\%, while saving <<ACI5_TIME>>\%, <<ACI10_TIME>>\% and <<ACI20_TIME>>\% of test time at the three larger targets. At $\alpha=0.10$ its safety equalled that of line coverage (<<LINE_SAFE>>\%) with slightly less time saved, but the level is chosen in advance and can be tightened: at $\alpha=0.05$ it was safe on <<ACI5_SAFE_PCT>>\% of changes. Fig.~\ref{fig:perproject} shows that the pooled result hides variation: per history project, adaptive calibration missed between <<ACI10_PROJ_MIN>>\% and <<ACI10_PROJ_MAX>>\% of changes at $\alpha=0.10$ (highest for <<ACI10_PROJ_MAXNAME>>), so a single project can exceed the target by about a point; on the NameRTS commits the highest was <<NACI10_PROJ_MAX>>\% (<<NACI10_PROJ_MAXNAME>>). In our earlier study, with 15--16 calibration changes per project, static calibration appeared valid; with <<CALIB_MIN>>--<<CALIB_MAX>> calibration changes over longer periods, drift dominates.
 
 \begin{table}[t]
 \caption{Observed Miss Rate (\%) and Time Saved (\%) per Target $\alpha$ (History Projects)}
@@ -495,17 +537,40 @@ $\alpha$ & Miss & Time & Miss & Time & Miss & Time \\
 
 \begin{figure}[t]
 \centering
+\includegraphics[width=\columnwidth]{figures/per_project.pdf}
+\caption{Share of changes with a missed affected test per project at target $\alpha=0.10$ ($^\ast$NameRTS commits). A bar of zero means no miss.}
+\label{fig:perproject}
+\end{figure}
+
+\begin{figure}[t]
+\centering
 \includegraphics[width=\columnwidth]{figures/calibration.pdf}
 \caption{Observed miss rate against the target $\alpha$ for the three calibration variants (history projects). Points below the dotted line meet the target.}
 \label{fig:calib}
 \end{figure}
 
-The per-change estimate $r(c)$ separated risky from safe selections. In budget mode at 25\%, where selections are often unsafe, its mean was <<RB_PRED>>\% against an observed miss rate of <<RB_OBS>>\%, with a Brier score of <<RB_BRIER>> against <<RB_BRIER0>> for a constant forecast. For the adaptively calibrated selections at $\alpha=0.10$ it overestimated the risk (mean <<RC_PRED>>\% against <<RC_OBS>>\% observed; Brier <<RC_BRIER>> against <<RC_BRIER0>> for a constant forecast), probably because skipped tests are not independent, as Eq.~(\ref{eq:rc}) assumes: when one is affected, others often are too. It still separated changes well: the <<RC_LOW_N>> of <<RC_N>> changes with $r(c)<0.2$ were missed <<RC_LOW_OBS>>\% of the time, the <<RC_HI_N>> changes with $r(c)>0.8$ <<RC_HI_OBS>>\% of the time. Its value is therefore mainly in ranking changes by risk, which RQ3 uses.
+The per-change estimate $r(c)$ separated risky from safe selections. In budget mode at 25\%, where selections are often unsafe, its mean was <<RB_PRED>>\% against an observed miss rate of <<RB_OBS>>\%, with a Brier score of <<RB_BRIER>> against <<RB_BRIER0>> for a constant forecast. For the adaptively calibrated selections at $\alpha=0.10$ it overestimated the risk (mean <<RC_PRED>>\% against <<RC_OBS>>\% observed; Brier <<RC_BRIER>> against <<RC_BRIER0>> for a constant forecast), probably because skipped tests are not independent, as Eq.~(\ref{eq:rc}) assumes: when one is affected, others often are too. It still separated changes well: the <<RC_LOW_N>> of <<RC_N>> changes with $r(c)<0.2$ were missed <<RC_LOW_OBS>>\% of the time, the <<RC_HI_N>> changes with $r(c)>0.8$ <<RC_HI_OBS>>\% of the time. Fig.~\ref{fig:reliability} shows the reliability diagram. Its value is therefore mainly in ranking changes by risk, which RQ3 uses.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/reliability.pdf}
+\caption{Reliability of the residual-risk estimate $r(c)$ (history projects): mean estimate against observed miss rate in five bins; numbers give the changes per bin. Points below the diagonal overestimate the risk.}
+\label{fig:reliability}
+\end{figure}
 
 \textbf{Answer to RQ2:} on the history projects the miss rate stays at the target only with calibration that adapts over time (H2 supported for ACI, not for static calibration); $r(c)$ ranks changes by risk but overestimates its level for calibrated selections.
 
 \subsection{RQ3: Uncertainty Triggers and Risk-Based Abstention}
 Line coverage was unsafe on <<TF_UNSAFE>> of the <<TF_TEST>> test changes (<<BASE_UNSAFE_RATE>>\%). The file-level triggers of our earlier study flagged <<TF_FLAG_UNSAFE>> of them but also fired on <<TF_FALSE>>\% of the safe changes. Restricting the triggers to changed lines halved the abstention rate but kept only <<TL_FLAG_UNSAFE>> of the <<TL_UNSAFE>> unsafe changes, a smaller share than of the safe ones (<<TL_FALSE>>\%): the line-level rules did not point at the changes that were actually risky. The risk rule $r(c)>\alpha$, applied to the line-coverage selection, flagged <<TR_FLAG_UNSAFE>> of the <<TR_UNSAFE>> unsafe changes while firing on only <<TR_FALSE>>\% of the safe ones.
+
+Fig.~\ref{fig:triggers} contrasts the three rules.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/triggers.pdf}
+\caption{Share of unsafe and of safe changes (for line-coverage selection) that each abstention rule flags (history projects). A useful rule flags many unsafe and few safe changes.}
+\label{fig:triggers}
+\end{figure}
 
 Table~\ref{tab:rq3} shows the cost of each policy on top of adaptive calibration at $\alpha=0.10$. File-level triggers made almost every change safe but abstained on <<AF_RATE>>\% of changes, leaving <<AF_FULL_TIME>>\% saving with a full-suite fallback. Risk-based abstention fired on <<AR_RATE>>\% of changes; with file-coverage selection as the broader run, <<AR_FILECOV_SAFE>>\% of changes were safe and <<AR_FILECOV_TIME>>\% of test time was saved. At $\alpha=0.05$ the same policy missed <<AR5_FILECOV_MISS>>\% of changes and saved <<AR5_FILECOV_TIME>>\%. For comparison, file coverage alone was safe on every change and saved <<FILE_TIME>>\%: on these projects, abstention adds a stated, adjustable risk rather than extra savings.
 

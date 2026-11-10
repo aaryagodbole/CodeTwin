@@ -706,6 +706,7 @@ def main(projects):
     (OUT / "results.json").write_text(json.dumps(results, indent=1, default=_jsonable))
     write_report(results, hist_p, pair_p)
     write_plots(results, hist_p, pair_p)
+    write_extra_plots(results, hist_p, pair_p)
     print("wrote results/", flush=True)
     return results
 
@@ -818,6 +819,90 @@ def write_plots(R, hist_p, pair_p):
     ax.set_xlim(0, 0.22); ax.set_ylim(0, 0.32); ax.set_xticks(ALPHAS); ax.set_xticklabels([f"{a:.2f}" for a in ALPHAS]); ax.tick_params(labelsize=7); ax.grid(alpha=0.3, lw=0.5)
     ax.legend(fontsize=7, frameon=False); fig.tight_layout()
     fig.savefig(OUT / "calibration.pdf"); fig.savefig(OUT / "calibration.png", dpi=200); plt.close(fig)
+
+def write_extra_plots(R, hist_p, pair_p):
+    """Figures for the paper beyond the budget and calibration curves (all from results.json)."""
+    try:
+        import matplotlib
+        matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
+    except ImportError:
+        return
+    A = R["agg"]
+    m = lambda x: x[0] if isinstance(x, list) else x
+    plt.rcParams.update({"font.size": 7})
+
+    # 1) trade-off: time saved vs observed miss rate (history projects)
+    pts = [("Retest-all", "base:Retest-all", "o"), ("Name matching", "base:Name matching", "o"),
+           ("Static import", "base:Static import", "o"), ("Hybrid", "base:Hybrid", "o"),
+           ("File coverage", "base:File coverage", "o"), ("Function coverage", "base:Function coverage", "o"),
+           ("Line coverage", "base:Line coverage", "o"), ("Budget 25%", "budget:0.25:CodeTwin", "s"),
+           ("Static CRC 0.10", "crc:0.1:plain", "v"), ("ACI 0.05", "aci:0.05:plain", "^"),
+           ("ACI 0.10", "aci:0.1:plain", "^"), ("ACI 0.20", "aci:0.2:plain", "^"),
+           ("ACI 0.10 + risk abst.", "aci:0.1:abstain-risk:filecov", "D"),
+           ("ACI 0.05 + risk abst.", "aci:0.05:abstain-risk:filecov", "D")]
+    off = {"Name matching": (-4, 5, "right"), "Budget 25%": (-5, -3, "right"), "ACI 0.20": (4, 3, "left"),
+           "Static CRC 0.10": (5, -5, "left"), "Function coverage": (-5, 1, "right"), "ACI 0.10": (-5, 1, "right"),
+           "Line coverage": (5, -2, "left"), "Retest-all": (0, 7, "left"), "Hybrid": (2, -9, "left"),
+           "File coverage": (5, -2, "left")}
+    fig, ax = plt.subplots(figsize=(3.5, 2.9))
+    for lab, k, mk in pts:
+        a = A[k]["HIST"]
+        x, y = 100 * m(a["time_red"]), 100 * (1 - m(a["safe_rate"]))
+        filled = mk in ("^", "D")
+        ax.scatter(x, y, marker=mk, s=22, facecolors="black" if filled else "white", edgecolors="black", lw=0.8, zorder=3)
+        dx, dy, ha = off.get(lab, (4, 2, "left"))
+        ax.annotate(lab, (x, y), xytext=(dx, dy), textcoords="offset points", fontsize=5.5, ha=ha)
+    ax.set_ylim(-0.6, 100)
+    ax.set_xlabel("Test time saved (%)"); ax.set_ylabel("Changes with a missed affected test (%)")
+    ax.set_yscale("symlog", linthresh=5); ax.set_yticks([0, 2, 5, 10, 20, 40, 70]); ax.set_yticklabels(["0", "2", "5", "10", "20", "40", "70"])
+    ax.set_xlim(-3, 88); ax.grid(alpha=0.3, lw=0.5)
+    fig.tight_layout(); fig.savefig(OUT / "tradeoff.pdf"); fig.savefig(OUT / "tradeoff.png", dpi=200); plt.close(fig)
+
+    # 2) per-project miss rate at alpha = 0.10 for the three calibration variants
+    projs = [p for p in hist_p + pair_p if p in A["crc:0.1:plain"]]
+    fig, ax = plt.subplots(figsize=(3.5, 2.2))
+    w = 0.26
+    for j, (vn, lab, col) in enumerate((("crc", "Static", "white"), ("win", "Sliding window", "0.65"), ("aci", "Adaptive (ACI)", "black"))):
+        ys = [100 * (1 - m(A[f"{vn}:0.1:plain"][p]["safe_rate"])) for p in projs]
+        ax.bar([i + (j - 1) * w for i in range(len(projs))], ys, w, color=col, edgecolor="black", lw=0.6, label=lab)
+    ax.axhline(10, color="black", ls="--", lw=0.8, label="target 10%")
+    ax.set_xticks(range(len(projs))); ax.set_xticklabels([p + ("*" if p in pair_p else "") for p in projs], rotation=30, ha="right")
+    ax.set_ylabel("Missed changes (%)"); ax.legend(frameon=False, fontsize=6, ncol=4, loc="lower center", bbox_to_anchor=(0.5, 1.0))
+    ax.set_ylim(0, max(32, ax.get_ylim()[1])); ax.grid(axis="y", alpha=0.3, lw=0.5)
+    fig.tight_layout(); fig.savefig(OUT / "per_project.pdf"); fig.savefig(OUT / "per_project.png", dpi=200); plt.close(fig)
+
+    # 3) abstention rules: share of unsafe and of safe changes they flag (vs line coverage misses)
+    T = R["triggers"]
+    labels, unsafe, safe = [], [], []
+    for lvl, lab in (("file", "File-level\ntriggers"), ("line", "Line-level\ntriggers"), ("risk", "Risk\n$r(c)>\\alpha$")):
+        tu = sum(T[p][lvl]["unsafe"] for p in hist_p); fu = sum(T[p][lvl]["flag_unsafe"] for p in hist_p)
+        ts = sum(T[p][lvl]["safe"] for p in hist_p); fs = sum(T[p][lvl]["flag_safe"] for p in hist_p)
+        labels.append(lab.replace("\\n", "\n")); unsafe.append(100 * fu / tu if tu else 0); safe.append(100 * fs / ts if ts else 0)
+    fig, ax = plt.subplots(figsize=(3.5, 2.1))
+    x = range(len(labels))
+    b1 = ax.bar([i - 0.18 for i in x], unsafe, 0.36, color="black", label="unsafe changes flagged")
+    b2 = ax.bar([i + 0.18 for i in x], safe, 0.36, color="white", edgecolor="black", lw=0.6, label="safe changes flagged")
+    for b in list(b1) + list(b2):
+        ax.text(b.get_x() + b.get_width() / 2, b.get_height() + 1.5, f"{b.get_height():.0f}", ha="center", fontsize=6)
+    ax.set_xticks(list(x)); ax.set_xticklabels(labels); ax.set_ylim(0, 110); ax.set_ylabel("Changes flagged (%)")
+    ax.legend(frameon=False, fontsize=6, loc="upper right"); ax.grid(axis="y", alpha=0.3, lw=0.5)
+    fig.tight_layout(); fig.savefig(OUT / "triggers.pdf"); fig.savefig(OUT / "triggers.png", dpi=200); plt.close(fig)
+
+    # 4) reliability diagram of r(c) (ACI selections at alpha = 0.10 and budget 25%)
+    fig, ax = plt.subplots(figsize=(3.5, 2.6))
+    ax.plot([0, 1], [0, 1], ls=":", color="grey", lw=0.8, label="perfect calibration")
+    for key, mk, lab in (("aci10:HIST", "o-", "ACI, $\\alpha$=0.10"), ("budget25:HIST", "s--", "Budget 25%")):
+        rr = R["residual_risk"].get(key)
+        if not rr:
+            continue
+        bs = [b for b in rr["bins"] if b[2]]
+        ax.plot([b[3] for b in bs], [b[4] for b in bs], mk, color="black", lw=1, ms=4, label=lab.replace("\\\\", "\\"))
+        for b in bs:
+            ax.annotate(str(b[2]), (b[3], b[4]), xytext=(4, -8) if mk.startswith("o") else (-10, 5), textcoords="offset points", fontsize=5)
+    ax.set_xlabel("Estimated residual risk $r(c)$ (bin mean)"); ax.set_ylabel("Observed miss rate")
+    ax.set_xlim(0, 1); ax.set_ylim(0, 1); ax.grid(alpha=0.3, lw=0.5); ax.legend(frameon=False, fontsize=6, loc="upper left")
+    fig.tight_layout(); fig.savefig(OUT / "reliability.pdf"); fig.savefig(OUT / "reliability.png", dpi=200); plt.close(fig)
 
 if __name__ == "__main__":
     projs = sys.argv[1:] or sorted(p.name for p in DATA.iterdir() if (p / "meta.json").exists())

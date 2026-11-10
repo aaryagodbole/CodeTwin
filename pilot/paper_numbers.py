@@ -249,6 +249,12 @@ for a_ in ("0.05", "0.1", "0.2"):
     x_ = A[f"aci:{a_}:plain"].get("NRTS")
     if x_:
         put(f"NACI{int(round(float(a_) * 100))}_MISS", miss(x_["safe_rate"]))
+pa = {p: miss(A["aci:0.1:plain"][p]["safe_rate"]) for p in HIST}
+put("ACI10_PROJ_MIN", min(pa.values(), key=float)); put("ACI10_PROJ_MAX", max(pa.values(), key=float))
+put("ACI10_PROJ_MAXNAME", max(pa, key=lambda p: float(pa[p])))
+pn = {p: miss(A["aci:0.1:plain"][p]["safe_rate"]) for p in NRTS}
+if pn:
+    put("NACI10_PROJ_MAX", max(pn.values(), key=float)); put("NACI10_PROJ_MAXNAME", max(pn, key=lambda p: float(pn[p])))
 put("LINE_MISSED_TESTS", R.get("line_missed_tests", "--"))
 
 # ------------------------------------------------------------ failure cases
