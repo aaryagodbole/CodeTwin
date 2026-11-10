@@ -1,5 +1,5 @@
-"""Read-only HTTP API over the evidence store for the web dashboard (`codetwin serve`).
-Objective O4. Keep FastAPI an optional extra so the CLI stays light.
+"""Read-only HTTP API over the evidence store, for the web dashboard (`codetwin serve`).
 
-Status: planned, not implemented yet.
+Install with `pip install "codetwin[server]"`. Endpoints are under /api; the built dashboard
+(dashboard/out) can be served from the same process with `--static`.
 """

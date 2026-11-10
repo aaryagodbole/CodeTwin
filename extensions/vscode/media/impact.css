@@ -1,0 +1,11 @@
+:root { --fg: var(--vscode-foreground); }
+body { margin: 0; padding: 8px; color: var(--vscode-foreground); font-family: var(--vscode-font-family); font-size: 12px; }
+header { margin-bottom: 4px; }
+#summary { opacity: 0.8; margin-left: 8px; }
+#legend span { margin-right: 12px; }
+#legend span::before { content: ""; display: inline-block; width: 18px; margin-right: 4px; vertical-align: middle; border-top: 2px solid #8a8a8a; }
+#legend .runtime::before { border-top-color: #3794ff; }
+#legend .co-change::before { border-top: 2px dashed #e8912d; }
+#legend .unresolved::before { border-top: 2px dotted #6e6e6e; }
+#graph { width: 100%; height: calc(100vh - 120px); min-height: 240px; }
+#unknowns { margin: 4px 0 0; padding-left: 16px; color: var(--vscode-editorWarning-foreground); }

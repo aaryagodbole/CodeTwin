@@ -8,6 +8,10 @@ updates:
     directory: "/extensions/vscode"
     schedule: { interval: weekly }
     target-branch: dev
+  - package-ecosystem: npm
+    directory: "/dashboard"
+    schedule: { interval: weekly }
+    target-branch: dev
   - package-ecosystem: github-actions
     directory: "/"
     schedule: { interval: monthly }

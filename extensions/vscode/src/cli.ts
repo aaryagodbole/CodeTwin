@@ -17,7 +17,7 @@ export interface Decision {
 export function runCli(args: string[], cwd: string): Promise<string> {
   const cli = vscode.workspace.getConfiguration("codetwin").get<string>("cliPath", "codetwin");
   return new Promise((resolve, reject) => {
-    execFile(cli, ["-C", cwd, ...args], { cwd, maxBuffer: 16 * 1024 * 1024 }, (err, stdout, stderr) => {
+    execFile(cli, args[0] === "--version" ? args : ["-C", cwd, ...args], { cwd, maxBuffer: 16 * 1024 * 1024 }, (err, stdout, stderr) => {
       if (err) {
         reject(new Error(stderr || err.message));
       } else {

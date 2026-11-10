@@ -5,10 +5,11 @@ Instructions for AI coding agents working in this repository. Humans: see README
 ## Commands
 
 ```bash
-pip install -e ".[dev,mcp]"            # once, from the repository root
+pip install -e ".[dev,mcp,server]"            # once, from the repository root
 scripts/check.sh                       # the definition of done: ruff + pytest + extension build
 python -m pytest tests/test_risk.py    # one file; tests need `git` on PATH (they create throwaway repos)
-cd extensions/vscode && npm install && npm run compile
+cd extensions/vscode && npm ci && npm run compile
+cd dashboard && npm ci && npm run dev    # needs `codetwin serve` running in a project
 ```
 
 A change is done only when `scripts/check.sh` passes and new behaviour has a test.
@@ -23,8 +24,9 @@ A change is done only when `scripts/check.sh` passes and new behaviour has a tes
 - **Calibration semantics are fixed by the paper.** `crc_threshold` returns `-1.0` when no threshold is feasible,
   which means "select every test". The adaptive level is updated only after an outcome is known
   (`AdaptiveLevel.update`). Abstain when `residual_risk > alpha`. Do not change these without changing the paper.
-- **Layering.** The VS Code extension, GitHub Action and MCP server call the engine through the CLI or
-  `codetwin.engine.Engine`. Never put analysis logic in `extensions/` or `action/`.
+- **Layering.** The VS Code extension, GitHub Action, MCP server and dashboard call the engine through the CLI,
+  `codetwin.engine.Engine` or the read-only API. Never put analysis logic in `extensions/`, `action/` or `dashboard/`.
+- **Package manager.** npm for both `extensions/vscode` and `dashboard` (lockfiles committed; CI uses `npm ci`).
 - **Extension points.** New commands, MCP tools, report sections, DB migrations and editor features each go in
   their own file (`commands/`, `mcp_tools/`, `report/`, `store/migrations/`, `extensions/vscode/src/features/`);
   they are discovered automatically. Do not edit `cli.py`, `mcp_server.py`, `engine.py` or `extension.ts` to add

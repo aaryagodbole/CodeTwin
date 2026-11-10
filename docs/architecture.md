@@ -43,7 +43,8 @@ automatically. Shared files (`cli.py`, `mcp_server.py`, `engine.py`, `store/db.p
 | settings for your feature | your own table in `.codetwin.toml`, e.g. `[crossrepo]` | read with `cfg.section("crossrepo")`; no change to `config.py` |
 | a larger module | its own package: `crossrepo/`, `contracts/`, `server/`, `llm/` | purpose and status in the package docstring |
 | an editor feature (F1–F11) | `extensions/vscode/src/features/<name>.ts` | export a `Feature`, add one line to `features/index.ts`; react to `ctx.onDidDecide` |
-| the web dashboard | `dashboard/` (front end) and `src/codetwin/server/` (API) | front end reads only the API |
+| a dashboard page | `dashboard/src/app/<page>/page.tsx` + a link in `components/nav.tsx` | reads only the API (`src/lib/api.ts`) |
+| a dashboard API endpoint | `src/codetwin/server/app.py` (`GET /api/...`, read-only) | test in `tests/test_server.py` |
 
 Report sections only read the `report.Context` (pre-change evidence; no look-ahead) and must not change the
 selection or the decision. A section that raises is shown as `{"error": ...}`, never dropped silently.

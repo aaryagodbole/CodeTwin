@@ -48,10 +48,20 @@ Paper source, scripts and data: branches [`study-v2`](../../tree/study-v2) (scri
 
 Requires Python 3.11+ and `git`. The project you analyse needs a pytest test suite.
 
+From a release (recommended): download the wheel and the `.vsix` from the
+[Releases](../../releases) page, then
+
+```bash
+pip install "codetwin-X.Y.Z-py3-none-any.whl[mcp,server]"   # CLI, MCP server, dashboard
+code --install-extension codetwin-X.Y.Z.vsix                  # VS Code extension
+```
+
+From source:
+
 ```bash
 git clone https://github.com/aaryagodbole/CodeTwin.git
 cd CodeTwin
-pip install -e ".[mcp]"        # add ",dev" for development tools
+pip install -e ".[mcp,server]"     # add ",dev" for development tools
 ```
 
 ## Quick start
@@ -84,6 +94,8 @@ selected 2 test files:
 | `codetwin select [--alpha 0.05] [--json]` | select tests for the changes since the recorded commit; calibrated mode |
 | `codetwin select --budget 0.25` | best tests within 25% of full-suite time, with the risk left behind |
 | `codetwin impact FILE...` | tests reached by files, with how each link is known, and unresolved links |
+| `codetwin graph FILE [--lines 10-24] [--json]` | impact graph around a file or selected lines (importers, dependencies, tests, unknowns) |
+| `codetwin serve` | web dashboard and read-only API on `http://127.0.0.1:8765` |
 | `codetwin learn` | run the full suite, record whether the last selection missed a test, update calibration |
 | `codetwin explain` | the numbers and reasons behind the last decision |
 
@@ -135,9 +147,16 @@ Details: [docs/architecture.md](docs/architecture.md).
 
 ## Integrations
 
-**VS Code** – `extensions/vscode`: commands *Select tests for my change*, *Show impact of this file*,
-*Record evidence*, *Explain last decision*; the status bar shows the decision and risk.
-Build with `npm install && npm run compile`, then press F5 in VS Code.
+**VS Code** – `extensions/vscode`: select code (or put the cursor in a function) and run
+*CodeTwin: Show impact graph of selection* (right-click, `Ctrl+Alt+I`): a graph opens beside the editor with the
+files that import it, its dependencies, the tests that execute the selected lines and the links that cannot be
+followed, each edge styled by how it is known. Hovering a function shows `used by N · M tests · K unknown`.
+Also: *Select tests for my change*, *Record evidence*, *Explain last decision*; the status bar shows the decision
+and risk. Develop with `npm ci && npm run compile`, then press F5.
+
+**Web dashboard** – `dashboard/` (Next.js): overview, system map, decisions, results (observed miss rate vs
+target) and the impact graph of any file. `codetwin serve` serves it with the API; see
+[dashboard/README.md](dashboard/README.md).
 
 **GitHub Actions** – `action/`: on a pull request, records evidence on the base branch, selects tests for the PR,
 writes the decision and risk to the job summary and runs the selected tests:
@@ -151,8 +170,8 @@ writes the decision and risk to the job summary and runs the selected tests:
   with: { alpha: "0.10" }
 ```
 
-**AI coding agents (MCP)** – `codetwin-mcp` exposes `verify_change`, `get_impact`, `recommend_tests` and
-`explain_decision`, so an agent can ask before it opens a pull request. Setup: [docs/mcp.md](docs/mcp.md).
+**AI coding agents (MCP)** – `codetwin-mcp` exposes `verify_change`, `get_impact`, `get_graph`,
+`recommend_tests` and `explain_decision`, so an agent can ask before it opens a pull request. Setup: [docs/mcp.md](docs/mcp.md).
 
 ## Project structure
 
@@ -166,11 +185,12 @@ src/codetwin/
   report/            sections added to every decision (one file each)
   commands/          CLI commands (one file each)
   mcp_tools/         MCP tools for AI agents (one file each)
-  crossrepo/ contracts/ server/ llm/   planned modules (see docs/roadmap.md)
+  server/            read-only HTTP API for the dashboard
+  crossrepo/ contracts/ llm/   planned modules (see docs/roadmap.md)
   engine.py, cli.py, mcp_server.py, config.py, plugins.py   shared core
 tests/               unit tests and end-to-end tests on throwaway git repositories
 extensions/vscode/   VS Code extension; src/features/ has one file per editor feature
-dashboard/           web dashboard front end (planned)
+dashboard/           web dashboard (Next.js), served by `codetwin serve`
 action/              GitHub composite action
 docs/                architecture (incl. extension points), output contract, roadmap, MCP setup
 scripts/check.sh     lint + tests + extension build (the definition of done)
@@ -183,19 +203,21 @@ New features never edit the shared core: see
 ## Development
 
 ```bash
-pip install -e ".[dev,mcp]"
+pip install -e ".[dev,mcp,server]"
 scripts/check.sh
 ```
 
 Work on `feature/<name>` branches from `dev` and open a pull request into `dev`; see
-[CONTRIBUTING.md](CONTRIBUTING.md). The repository uses CodeTwin on itself (`.codetwin.toml`).
+[CONTRIBUTING.md](CONTRIBUTING.md). CI runs lint, tests with a coverage gate, a package build with a smoke test,
+and the extension and dashboard builds on every pull request. Releases: [docs/releasing.md](docs/releasing.md);
+changes: [CHANGELOG.md](CHANGELOG.md). The repository uses CodeTwin on itself (`.codetwin.toml`).
 
 ## Roadmap
 
 | Status | Work |
 |---|---|
-| done | Engine, CLI, MCP server, VS Code and Action skeletons, CI; research study and paper |
-| next | Evidence cards and symbol-level impact; trained per-project models; VS Code impact panel and CodeLens |
+| done | Engine, CLI, MCP server; VS Code impact graph of a selection; web dashboard; Action skeleton; CI and releases; research study and paper |
+| next | Test gaps, blind spots and evidence cards; symbol-level impact and CodeLens; PR comment; trained per-project models |
 | later | PR comment and merge gate; agent-in-the-loop demo; cross-repository evidence; second language adapter; verified LLM link suggestions |
 
 Full plan: [docs/roadmap.md](docs/roadmap.md).

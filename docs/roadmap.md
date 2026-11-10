@@ -12,7 +12,9 @@ Nothing in *Could* starts before the Must items are evaluated.
 
 | Work | Objective |
 |---|---|
-| Engine, CLI, MCP server (`verify_change`, `get_impact`, `recommend_tests`, `explain_decision`), VS Code and Action skeletons, CI | O2, O3, O4 |
+| Engine, CLI, MCP server (`verify_change`, `get_impact`, `get_graph`, `recommend_tests`, `explain_decision`), Action skeleton, CI and release workflow | O2, O3, O4 |
+| VS Code: impact graph of a selection beside the editor (F1, file-level and line-level), hover summary | O4 |
+| Web dashboard skeleton (Next.js): overview, system map, decisions, results, impact graph; `codetwin serve` API | O4 |
 | Calibrated threshold (CRC + adaptive), residual risk `r(c)`, abstention (U2) | O3 |
 | Study v2 and paper: 681 changes, 8 projects, 812 mutants, NameRTS comparison | O5 |
 
@@ -32,11 +34,11 @@ Nothing in *Could* starts before the Must items are evaluated.
 | 21 Dec – 10 Jan | Per-project model trained from `codetwin learn` history | Should | O2, O3 |
 | 2 – 24 Jan | Cross-repo: declared repositories, cross-repo edges, 2–3 library + dependents sets | Must | O1 |
 | 2 – 24 Jan | Evidence freshness in the risk number (U5, RQ5) | Should | O3 |
-| 2 – 24 Jan | VS Code F1 select-to-impact graph panel | Must | O4 |
-| 11 – 31 Jan | Dashboard API (`codetwin serve`, read-only over the evidence store) | Must | O4 |
+| 2 – 24 Jan | VS Code F1: symbol-level graph, cross-repo consumers in the panel | Must | O4 |
+| 11 – 31 Jan | Dashboard API: pull-request view, evidence cards, test gaps endpoints | Must | O4 |
 | 25 Jan – 14 Feb | OpenAPI / JSON-schema contract diff linked to consumers | Must | O1 |
 | 25 Jan – 28 Feb | LLM-suggested links verified by a runtime probe (U3, RQ6) – scope after guide's decision | Must | O1, O3 |
-| 1 – 28 Feb | Dashboard UI: system map, PR view, research results | Must | O4 |
+| 1 – 28 Feb | Dashboard UI: pull-request view, risk-budget slider, recall-vs-budget plot | Must | O4 |
 | 15 Feb – 7 Mar | Cross-repo evaluation with seeded API changes | Must | O1, O5 |
 | 1 – 14 Mar | Close-the-gap ranking (U4) | Should | O3 |
 | 1 – 21 Mar | Legacy-code lens / calibrated dead code (F6, E1) | Should | E1 |

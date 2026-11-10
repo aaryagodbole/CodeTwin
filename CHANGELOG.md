@@ -19,9 +19,14 @@ Baseline release: the structure every later pull request is compared against.
 - Extension points: one file per CLI command (`commands/`), MCP tool (`mcp_tools/`), report section (`report/`),
   database migration (`store/migrations/`) and VS Code feature (`extensions/vscode/src/features/`).
 - Output contract `schema: 1` for `select --json` (docs/output.md).
-- VS Code extension skeleton (select tests, impact of file, record, explain, status bar).
+- `codetwin graph`: impact graph around a file or selected lines, with evidence-typed edges; MCP `get_graph`.
+- VS Code extension (preview): impact graph of a selection beside the editor (Cytoscape), hover summary,
+  follow-selection; select tests, impact of file, record, explain, status bar; prompt to install the CLI.
+- Web dashboard (Next.js, static export): overview, system map, decisions, results (observed miss rate vs
+  target), impact graph of a file; `codetwin serve` serves it with a read-only FastAPI API.
 - GitHub composite action (record on base, select, job summary, run selected tests).
-- CI (lint, tests with coverage gate, package build, CLI smoke test, extension build) and release workflow.
+- CI (lint, tests with coverage gate, package build, CLI smoke test, extension and dashboard builds) and release
+  workflow (GitHub Release always; VS Code Marketplace, Open VSX and PyPI once configured).
 
 [Unreleased]: https://github.com/aaryagodbole/CodeTwin/compare/v0.1.0...HEAD
 [0.1.0]: https://github.com/aaryagodbole/CodeTwin/releases/tag/v0.1.0

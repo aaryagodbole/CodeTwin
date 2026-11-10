@@ -13,7 +13,8 @@
     "Other"
   ],
   "activationEvents": [
-    "workspaceContains:.codetwin.toml"
+    "workspaceContains:.codetwin.toml",
+    "onLanguage:python"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -33,14 +34,23 @@
       {
         "command": "codetwin.explain",
         "title": "CodeTwin: Explain last decision"
+      },
+      {
+        "command": "codetwin.showImpactGraph",
+        "title": "CodeTwin: Show impact graph of selection"
       }
     ],
     "menus": {
       "editor/context": [
         {
+          "command": "codetwin.showImpactGraph",
+          "when": "resourceLangId == python",
+          "group": "navigation@1"
+        },
+        {
           "command": "codetwin.impact",
           "when": "resourceLangId == python",
-          "group": "navigation"
+          "group": "navigation@2"
         }
       ]
     },
@@ -56,13 +66,37 @@
           "type": "number",
           "default": 0.1,
           "description": "Target miss rate."
+        },
+        "codetwin.installCommand": {
+          "type": "string",
+          "default": "pip install \"codetwin @ git+https://github.com/aaryagodbole/CodeTwin@main\"",
+          "description": "Command run in a terminal when the CLI is missing."
+        },
+        "codetwin.graph.hover": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show impact summary when hovering a function, class or selection."
+        },
+        "codetwin.graph.followSelection": {
+          "type": "boolean",
+          "default": true,
+          "description": "Update the impact graph as the selection changes."
         }
       }
-    }
+    },
+    "keybindings": [
+      {
+        "command": "codetwin.showImpactGraph",
+        "key": "ctrl+alt+i",
+        "mac": "cmd+alt+i",
+        "when": "editorLangId == python"
+      }
+    ]
   },
   "scripts": {
-    "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./"
+    "compile": "tsc -p ./ && node -e \"require('fs').copyFileSync(require.resolve('cytoscape/dist/cytoscape.min.js'),'media/cytoscape.min.js')\"",
+    "watch": "tsc -watch -p ./",
+    "package": "npm run compile && vsce package"
   },
   "devDependencies": {
     "@types/node": "^20.11.0",
@@ -73,5 +107,27 @@
     "type": "git",
     "url": "https://github.com/aaryagodbole/CodeTwin.git",
     "directory": "extensions/vscode"
+  },
+  "dependencies": {
+    "cytoscape": "^3.34.4"
+  },
+  "preview": true,
+  "icon": "media/icon.png",
+  "galleryBanner": {
+    "color": "#1e1e1e",
+    "theme": "dark"
+  },
+  "keywords": [
+    "testing",
+    "regression test selection",
+    "impact analysis",
+    "python",
+    "pytest",
+    "coverage",
+    "risk"
+  ],
+  "homepage": "https://github.com/aaryagodbole/CodeTwin#readme",
+  "bugs": {
+    "url": "https://github.com/aaryagodbole/CodeTwin/issues"
   }
 }
