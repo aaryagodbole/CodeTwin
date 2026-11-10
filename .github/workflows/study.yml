@@ -81,7 +81,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install test tooling
-        run: pip install "pytest>=8,<9" pytest-cov "coverage>=7.6" hypothesis freezegun simplejson pytz six attrs
+        run: pip install "pytest>=8,<9" pytest-cov "coverage>=7.6" hypothesis freezegun simplejson pytz six attrs pytest-timeout
       - name: Collect (${{ matrix.project }} ${{ matrix.shard }}/${{ matrix.of }})
         working-directory: pilot
         run: |

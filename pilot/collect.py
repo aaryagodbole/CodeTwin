@@ -343,6 +343,12 @@ def candidate_mutants(text, lines):
         good.append({"op": op, "line": ln, "col": c0, "replacement": rep, "text": mutated})
     return good
 
+try:
+    import pytest_timeout  # noqa: F401   (loaded by pytest through its entry point)
+    HAVE_TIMEOUT = True
+except ImportError:
+    HAVE_TIMEOUT = False
+
 def run_mutants(repo, spec, rec, snap, timeout_base, workdir, seed):
     """Seed up to MUTANTS_PER_CHANGE faults on changed source lines of the new version and record which
     test files detect each one (a test case that passed on the unmutated code fails on the mutant)."""
@@ -387,14 +393,18 @@ def run_mutants(repo, spec, rec, snap, timeout_base, workdir, seed):
         (repo / f).write_text(m["text"], encoding="utf-8")
         tmo = max(120, 3 * sum(run_["durations"].get(t, 1) for t in targets) + 60)
         try:
-            r = run([sys.executable, "-m", "pytest", *targets, *PYTEST_BASE, "-p", "no:cov", f"--junitxml={junit}"],
+            # a per-test timeout turns a hanging test into a failing one, so the detecting file is known
+            per_test = int(max(60, 2 * max(run_["durations"].get(t, 1) for t in targets)))
+            opts = [f"--timeout={per_test}"] if HAVE_TIMEOUT else []
+            r = run([sys.executable, "-m", "pytest", *targets, *PYTEST_BASE, "-p", "no:cov", *opts, f"--junitxml={junit}"],
                     cwd=repo, timeout=tmo, env=env)
             _, failing, ran = parse_junit(junit, repo)
-            new_fail = failing - base_fail
-            killers = sorted({x.split("::")[0] for x in new_fail})
-            # a file that produced no test cases at all (e.g. import error) counts as failing
-            killers = sorted(set(killers) | {t for t in targets if t not in ran and r.returncode not in (0, 5)})
-            res.update({"status": "killed" if killers else "survived", "killers": killers})
+            if not ran:                         # pytest itself failed: no evidence either way
+                res.update({"status": "error", "killers": [], "tail": (r.stdout + r.stderr)[-300:]})
+            else:
+                # collection errors appear as failing test cases of their file, so they count too
+                killers = sorted({x.split("::")[0] for x in failing - base_fail})
+                res.update({"status": "killed" if killers else "survived", "killers": killers})
         except subprocess.TimeoutExpired:
             res.update({"status": "timeout", "killers": []})
         finally:
