@@ -6,6 +6,7 @@ import subprocess
 from pathlib import Path
 
 from . import config as cfgmod
+from . import report
 from .evidence import coverage, static
 from .evidence import diff as diffmod
 from .evidence.model import TestRun
@@ -76,10 +77,11 @@ class Engine:
     # ------------------------------------------------------------- select
     def select(self, base: str | None = None, alpha: float | None = None, budget: float | None = None) -> Decision:
         base, prev, diff, rows = self.analyse(base)
-        if not any(self.is_source(f) for f in diff):
-            return Decision({t for t, r in rows.items() if r["forced"]}, "proceed", 0.0, None, "no-source-change",
-                            ["no source file changed; only added or changed tests run"])
         scores = self.model.scores(rows)
+        if not any(self.is_source(f) for f in diff):
+            d = Decision({t for t, r in rows.items() if r["forced"]}, "proceed", 0.0, None, "no-source-change",
+                         ["no source file changed; only added or changed tests run"])
+            return self._with_report(d, base, prev, diff, rows, scores)
         recal = self._recalibrator()
         alpha = self.cfg.alpha if alpha is None else alpha
         times = {t: prev.durations.get(t, 1.0) for t in rows}
@@ -99,11 +101,18 @@ class Engine:
             d.reasons = note + d.reasons
         unknowns = self.impact([f for f in diff if self.is_source(f)]).unknowns
         d.reasons += unknowns
+        self._with_report(d, base, prev, diff, rows, scores)
         did = self.store.save_decision(base=base, head="working-tree", mode=d.mode, alpha=alpha,
                                        alpha_t=self.store.get_state("alpha_t", alpha), threshold=d.threshold,
                                        residual_risk=d.residual_risk, decision=d.decision, selected=d.selected,
                                        reasons=d.reasons)
         self.store.set_state("last_decision", {"id": did, "base": base, "scores": scores, "selected": sorted(d.selected)})
+        return d
+
+    def _with_report(self, d: Decision, base, prev, diff, rows, scores) -> Decision:
+        ctx = report.Context(cfg=self.cfg, store=self.store, base=base, prev=prev, diff=diff, rows=rows, scores=scores,
+                             decision=d, is_source=self.is_source, facts_now=self.facts_now, impact=self.impact)
+        d.extras = report.build(ctx)
         return d
 
     def _recalibrator(self) -> Recalibrator:

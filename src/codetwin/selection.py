@@ -5,6 +5,8 @@ from dataclasses import dataclass, field
 
 from .risk.residual import residual_risk
 
+OUTPUT_SCHEMA = 1   # bump only for breaking changes to Decision.to_dict(); adding extras is not breaking
+
 
 @dataclass
 class Decision:
@@ -14,6 +16,13 @@ class Decision:
     threshold: float | None = None
     mode: str = "calibrated"
     reasons: list[str] = field(default_factory=list)
+    extras: dict = field(default_factory=dict)      # report sections (codetwin/report/), by name
+
+    def to_dict(self) -> dict:
+        """The output contract of `select --json`, MCP and the VS Code extension (docs/output.md)."""
+        return {"schema": OUTPUT_SCHEMA, "decision": self.decision, "residual_risk": round(self.residual_risk, 4),
+                "threshold": self.threshold, "mode": self.mode, "selected": sorted(self.selected),
+                "reasons": self.reasons, "extras": self.extras}
 
 
 def budget_select(rows: dict[str, dict], scores: dict[str, float], times: dict[str, float], budget_s: float) -> set[str]:

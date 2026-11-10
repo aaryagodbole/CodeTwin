@@ -2,13 +2,16 @@
 import { execFile } from "child_process";
 import * as vscode from "vscode";
 
+// Output contract of `codetwin select --json` (docs/output.md). New report sections appear under `extras`.
 export interface Decision {
+  schema: number;
   decision: "proceed" | "abstain";
   residual_risk: number;
   threshold: number | null;
   mode: string;
   selected: string[];
   reasons: string[];
+  extras: Record<string, { summary?: string; [key: string]: unknown }>;
 }
 
 export function runCli(args: string[], cwd: string): Promise<string> {

@@ -34,6 +34,13 @@ class Config:
     budget: float = 0.25
     aci_gamma: float = 0.02
     fallback: str = "file-coverage"
+    raw: dict = field(default_factory=dict)          # the whole parsed .codetwin.toml
+
+    def section(self, name: str) -> dict:
+        """A feature's own table in .codetwin.toml (e.g. [crossrepo]); new features read it here
+        instead of adding fields to this class."""
+        v = self.raw.get(name, {})
+        return v if isinstance(v, (dict, list)) else {}
 
     @property
     def state_dir(self) -> Path:
@@ -54,7 +61,7 @@ def load(root: str | Path = ".") -> Config:
     return Config(root=root, src_root=p.get("src_root", "."), packages=list(p.get("packages", [])),
                   source_dirs=list(p.get("source_dirs", [])), tests_dir=p.get("tests_dir", "tests"),
                   alpha=float(s.get("alpha", 0.10)), budget=float(s.get("budget", 0.25)),
-                  aci_gamma=float(s.get("aci_gamma", 0.02)), fallback=s.get("fallback", "file-coverage"))
+                  aci_gamma=float(s.get("aci_gamma", 0.02)), fallback=s.get("fallback", "file-coverage"), raw=data)
 
 
 def guess(root: str | Path = ".") -> dict:

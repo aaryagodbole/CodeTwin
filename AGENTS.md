@@ -25,6 +25,12 @@ A change is done only when `scripts/check.sh` passes and new behaviour has a tes
   (`AdaptiveLevel.update`). Abstain when `residual_risk > alpha`. Do not change these without changing the paper.
 - **Layering.** The VS Code extension, GitHub Action and MCP server call the engine through the CLI or
   `codetwin.engine.Engine`. Never put analysis logic in `extensions/` or `action/`.
+- **Extension points.** New commands, MCP tools, report sections, DB migrations and editor features each go in
+  their own file (`commands/`, `mcp_tools/`, `report/`, `store/migrations/`, `extensions/vscode/src/features/`);
+  they are discovered automatically. Do not edit `cli.py`, `mcp_server.py`, `engine.py` or `extension.ts` to add
+  a feature. Feature settings: `cfg.section("<name>")`. Table: `docs/architecture.md`.
+- **Output contract.** `Decision.to_dict()` is read by VS Code, the Action and agents (`docs/output.md`). Add data
+  as a report section under `extras`; changing top-level keys needs an `OUTPUT_SCHEMA` bump.
 - **MCP SDK.** Support both SDK 1.x (`mcp.server.fastmcp.FastMCP`) and 2.x (`mcp.server.mcpserver.MCPServer`);
   keep the import fallback in `mcp_server.py`.
 - **Coverage contexts need the C tracer.** `evidence/coverage.py` sets `COVERAGE_CORE=ctrace`; per-test contexts

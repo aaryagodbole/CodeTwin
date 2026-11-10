@@ -158,21 +158,27 @@ writes the decision and risk to the job summary and runs the selected tests:
 
 ```
 src/codetwin/
-  evidence/        diff.py, static.py, coverage.py, model.py   (Layer 1)
-  store/db.py      SQLite evidence store                         (Layer 2)
-  graph/impact.py  typed impact graph                            (Layer 2)
-  risk/            features, model, calibration, residual risk   (Layer 3)
-  selection.py     budget/threshold selection, proceed/abstain   (Layer 3)
-  engine.py        ties the layers together
-  cli.py           command-line interface
-  mcp_server.py    MCP server for AI agents
-tests/             unit tests and an end-to-end test on a throwaway git repository
-extensions/vscode/ VS Code extension (TypeScript)
-action/            GitHub composite action
-docs/              architecture, roadmap, MCP setup
-scripts/check.sh   lint + tests + extension build (the definition of done)
-AGENTS.md          instructions for AI coding agents working on this repository
+  evidence/          diff, static facts, per-test coverage                     (Layer 1)
+  store/             SQLite evidence store + migrations/*.sql                  (Layer 2)
+  graph/             typed impact graph                                        (Layer 2)
+  risk/              features, model, calibration, residual risk               (Layer 3)
+  selection.py       budget/threshold selection, proceed/abstain, output       (Layer 3)
+  report/            sections added to every decision (one file each)
+  commands/          CLI commands (one file each)
+  mcp_tools/         MCP tools for AI agents (one file each)
+  crossrepo/ contracts/ server/ llm/   planned modules (see docs/roadmap.md)
+  engine.py, cli.py, mcp_server.py, config.py, plugins.py   shared core
+tests/               unit tests and end-to-end tests on throwaway git repositories
+extensions/vscode/   VS Code extension; src/features/ has one file per editor feature
+dashboard/           web dashboard front end (planned)
+action/              GitHub composite action
+docs/                architecture (incl. extension points), output contract, roadmap, MCP setup
+scripts/check.sh     lint + tests + extension build (the definition of done)
+AGENTS.md            instructions for AI coding agents working on this repository
 ```
+
+New features never edit the shared core: see
+[docs/architecture.md → Extension points](docs/architecture.md#extension-points-how-to-add-a-feature-without-editing-shared-files).
 
 ## Development
 

@@ -24,6 +24,7 @@ dependencies = [
 
 [project.optional-dependencies]
 mcp = ["mcp>=1.2"]   # SDK 1.x (FastMCP) and 2.x (MCPServer) both work
+server = ["fastapi>=0.110", "uvicorn>=0.29"]   # dashboard API (codetwin.server)
 dev = ["ruff>=0.6", "pytest-timeout>=2.3"]
 
 [project.scripts]
