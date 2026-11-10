@@ -4,15 +4,12 @@ build-backend = "hatchling.build"
 
 [project]
 name = "codetwin"
-version = "0.1.0"
+dynamic = ["version"]
 description = "Evidence-aware, risk-calibrated change verification: select the tests a change needs and state the risk left behind."
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
-authors = [
-  { name = "Aarya Godbole" }, { name = "Suhani Bhati" },
-  { name = "Madhura Suryawanshi" }, { name = "Shreya Gole" },
-]
+authors = [{ name = "CodeTwin AI contributors" }]
 dependencies = [
   "networkx>=3.2",
   "numpy>=1.26",
@@ -25,11 +22,18 @@ dependencies = [
 [project.optional-dependencies]
 mcp = ["mcp>=1.2"]   # SDK 1.x (FastMCP) and 2.x (MCPServer) both work
 server = ["fastapi>=0.110", "uvicorn>=0.29"]   # dashboard API (codetwin.server)
-dev = ["ruff>=0.6", "pytest-timeout>=2.3"]
+dev = ["ruff>=0.6", "pytest-timeout>=2.3", "build>=1.2"]
 
 [project.scripts]
 codetwin = "codetwin.cli:main"
 codetwin-mcp = "codetwin.mcp_server:main"
+
+[project.urls]
+Repository = "https://github.com/aaryagodbole/CodeTwin"
+Changelog = "https://github.com/aaryagodbole/CodeTwin/blob/main/CHANGELOG.md"
+
+[tool.hatch.version]
+path = "src/codetwin/__init__.py"   # single source of the version
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/codetwin"]
@@ -37,6 +41,15 @@ packages = ["src/codetwin"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
+
+[tool.coverage.run]
+source = ["codetwin"]
+branch = true
+
+[tool.coverage.report]
+fail_under = 80          # CI fails if a pull request drops total coverage below this
+show_missing = true
+skip_empty = true
 
 [tool.ruff]
 line-length = 120

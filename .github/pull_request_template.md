@@ -1,6 +1,6 @@
 ## What and why
 
-<!-- One or two sentences. Link the Notion task or issue. -->
+<!-- One or two sentences. Link the issue or task. -->
 
 ## Layer
 
@@ -8,7 +8,8 @@
 
 ## Checklist
 
-- [ ] `scripts/check.sh` passes
+- [ ] `scripts/check.sh` passes (lint, tests, coverage threshold, extension build)
+- [ ] Line added to `CHANGELOG.md` under Unreleased
 - [ ] New behaviour has a test
 - [ ] No look-ahead: decisions use only evidence from before the change's tests run
 - [ ] Unresolved links are reported, not dropped

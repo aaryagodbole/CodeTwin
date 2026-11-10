@@ -41,7 +41,7 @@ automatically. Shared files (`cli.py`, `mcp_server.py`, `engine.py`, `store/db.p
 | data in every decision (test gaps, blind spots, evidence cards, freshness) | `src/codetwin/report/<name>.py` | `NAME`, `contribute(ctx) -> dict` with a `"summary"`; appears under `extras.<NAME>` in `select --json`, MCP and VS Code |
 | a database table or column | `src/codetwin/store/migrations/NNNN_<name>.sql` | applied once, tracked by file name; never edit an applied file |
 | settings for your feature | your own table in `.codetwin.toml`, e.g. `[crossrepo]` | read with `cfg.section("crossrepo")`; no change to `config.py` |
-| a larger module | its own package: `crossrepo/`, `contracts/`, `server/`, `llm/` | owner named in the package docstring |
+| a larger module | its own package: `crossrepo/`, `contracts/`, `server/`, `llm/` | purpose and status in the package docstring |
 | an editor feature (F1–F11) | `extensions/vscode/src/features/<name>.ts` | export a `Feature`, add one line to `features/index.ts`; react to `ctx.onDidDecide` |
 | the web dashboard | `dashboard/` (front end) and `src/codetwin/server/` (API) | front end reads only the API |
 

@@ -198,16 +198,7 @@ Work on `feature/<name>` branches from `dev` and open a pull request into `dev`;
 | next | Evidence cards and symbol-level impact; trained per-project models; VS Code impact panel and CodeLens |
 | later | PR comment and merge gate; agent-in-the-loop demo; cross-repository evidence; second language adapter; verified LLM link suggestions |
 
-Full plan with owners: [docs/roadmap.md](docs/roadmap.md).
-
-## Team
-
-| | |
-|---|---|
-| Aarya Godbole | Suhani Bhati |
-| Madhura Suryawanshi | Shreya Gole |
-
-Guide: **Dr. T. A. Kamble**, Dept. of CSE (Data Science), TSSM's PVPIT, Pune.
+Full plan: [docs/roadmap.md](docs/roadmap.md).
 
 ## License
 

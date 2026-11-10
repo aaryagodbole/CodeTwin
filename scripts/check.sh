@@ -3,7 +3,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 ruff check src tests
-python -m pytest
+python -m pytest --cov --cov-report=term
 if command -v npm >/dev/null; then
   (cd extensions/vscode && { [ -d node_modules ] || npm install --silent; } && npm run --silent compile)
 else

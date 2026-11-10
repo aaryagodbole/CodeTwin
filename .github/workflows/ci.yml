@@ -5,10 +5,24 @@ on:
     branches: [main, dev]
   pull_request:
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  python:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install ruff
+      - run: ruff check src tests
+
+  test:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         python-version: ["3.11", "3.12"]
     steps:
@@ -16,9 +30,57 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+          cache: pip
       - run: pip install -e ".[dev,mcp]"
-      - run: ruff check src tests
-      - run: python -m pytest
+      - name: Tests with coverage (fails below the threshold in pyproject.toml)
+        run: python -m pytest --cov --cov-report=term-missing --cov-report=xml --junitxml=junit.xml
+      - name: Coverage summary
+        if: always() && matrix.python-version == '3.12'
+        run: |
+          python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import xml.etree.ElementTree as ET
+          r = ET.parse("coverage.xml").getroot()
+          print(f"### Coverage: {float(r.get('line-rate')) * 100:.1f}% lines, {float(r.get('branch-rate')) * 100:.1f}% branches")
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results-py${{ matrix.python-version }}
+          path: |
+            junit.xml
+            coverage.xml
+
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install build
+      - run: python -m build
+      - name: Install the built wheel in a clean environment and run it
+        run: |
+          python -m venv /tmp/v && /tmp/v/bin/pip install dist/*.whl
+          /tmp/v/bin/codetwin --version
+          /tmp/v/bin/codetwin --help
+      - name: Smoke test on this repository (record, change, select --json)
+        run: |
+          /tmp/v/bin/pip install "dist/$(ls dist | grep whl)[mcp]"
+          git config --global user.email ci@example.com && git config --global user.name ci
+          /tmp/v/bin/codetwin record
+          echo "# smoke" >> src/codetwin/selection.py
+          /tmp/v/bin/codetwin select --json > decision.json
+          python - <<'PY'
+          import json
+          d = json.load(open("decision.json"))
+          assert d["schema"] == 1, d
+          assert {"decision", "residual_risk", "selected", "reasons", "extras"} <= set(d), d
+          assert "src/codetwin/selection.py" in d["extras"]["changed_files"]["files"], d
+          print("smoke OK:", d["decision"], f"{d['residual_risk']:.1%}", len(d["selected"]), "tests")
+          PY
+          /tmp/v/bin/python -c "from codetwin.mcp_server import build_server; build_server('.')"
+      - uses: actions/upload-artifact@v4
+        with: { name: python-dist, path: dist/ }
 
   vscode-extension:
     runs-on: ubuntu-latest
@@ -28,7 +90,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with:
-          node-version: "20"
+        with: { node-version: "20" }
       - run: npm install
       - run: npm run compile
+      - run: npx --yes @vscode/vsce package --out codetwin.vsix
+      - uses: actions/upload-artifact@v4
+        with: { name: vscode-extension, path: extensions/vscode/codetwin.vsix }

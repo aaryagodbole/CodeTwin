@@ -1,0 +1,42 @@
+name: Release
+
+# Push a tag vX.Y.Z on main (after updating CHANGELOG.md and src/codetwin/__init__.py) to publish a release
+# with the Python package and the VS Code extension attached.
+on:
+  push:
+    tags: ["v*.*.*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - uses: actions/setup-node@v4
+        with: { node-version: "20" }
+      - name: Check that the tag matches the package version
+        run: |
+          v=$(python -c "import re;print(re.search(r'__version__ = \"(.+)\"', open('src/codetwin/__init__.py').read())[1])")
+          [ "v$v" = "${GITHUB_REF_NAME}" ] || { echo "tag ${GITHUB_REF_NAME} != version $v"; exit 1; }
+      - run: pip install -e ".[dev,mcp]" && python -m pytest
+      - run: pip install build && python -m build
+      - name: Build VS Code extension
+        working-directory: extensions/vscode
+        run: npm install && npm run compile && npx --yes @vscode/vsce package --out "../../dist/codetwin-${GITHUB_REF_NAME#v}.vsix"
+      - name: Release notes from CHANGELOG.md
+        run: |
+          python - <<'PY' > notes.md
+          import os, re
+          v = os.environ["GITHUB_REF_NAME"][1:]
+          text = open("CHANGELOG.md").read()
+          m = re.search(rf"## \[{re.escape(v)}\][^\n]*\n(.*?)(?=\n## \[|\n\[Unreleased\]:|\Z)", text, re.S)
+          print(m[1].strip() if m else f"Release {v}")
+          PY
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" dist/* --title "CodeTwin AI $GITHUB_REF_NAME" --notes-file notes.md

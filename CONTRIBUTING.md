@@ -2,8 +2,8 @@
 
 * Branches: `main` is stable, `dev` is the integration branch. Work on `feature/<short-name>` branches
   created from `dev` and open a pull request into `dev`.
-* Reviews: Aarya Godbole (project lead) reviews and merges every pull request into `dev` and releases `dev`
-  into `main`; `.github/CODEOWNERS` requests her review automatically. Do not merge your own pull request.
+* Reviews: every pull request needs an approving review from a code owner (`.github/CODEOWNERS`), who also
+  merges it. Releases from `dev` into `main` are done by the maintainers. Do not merge your own pull request.
 * Every pull request must pass `scripts/check.sh` (same as CI: ruff, pytest, extension build) and add or update
   tests for the change. Optional: `pip install pre-commit && pre-commit install` to lint on every commit.
 * Put new code where [docs/architecture.md → Extension points](docs/architecture.md#extension-points-how-to-add-a-feature-without-editing-shared-files)

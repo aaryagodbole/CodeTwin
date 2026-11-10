@@ -1,0 +1,14 @@
+version: 2
+updates:
+  - package-ecosystem: pip
+    directory: "/"
+    schedule: { interval: weekly }
+    target-branch: dev
+  - package-ecosystem: npm
+    directory: "/extensions/vscode"
+    schedule: { interval: weekly }
+    target-branch: dev
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule: { interval: monthly }
+    target-branch: dev

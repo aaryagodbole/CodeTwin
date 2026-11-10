@@ -8,3 +8,8 @@ venv/
 .codetwin/
 dist/
 build/
+*.vsix
+dist/
+coverage.xml
+junit.xml
+.coverage

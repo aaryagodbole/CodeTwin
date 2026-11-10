@@ -5,25 +5,58 @@
   "version": "0.1.0",
   "publisher": "codetwin",
   "license": "MIT",
-  "engines": { "vscode": "^1.90.0" },
-  "categories": ["Testing", "Other"],
-  "activationEvents": ["workspaceContains:.codetwin.toml"],
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Testing",
+    "Other"
+  ],
+  "activationEvents": [
+    "workspaceContains:.codetwin.toml"
+  ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
-      { "command": "codetwin.selectTests", "title": "CodeTwin: Select tests for my change" },
-      { "command": "codetwin.impact", "title": "CodeTwin: Show impact of this file" },
-      { "command": "codetwin.record", "title": "CodeTwin: Record evidence (run full suite with coverage)" },
-      { "command": "codetwin.explain", "title": "CodeTwin: Explain last decision" }
+      {
+        "command": "codetwin.selectTests",
+        "title": "CodeTwin: Select tests for my change"
+      },
+      {
+        "command": "codetwin.impact",
+        "title": "CodeTwin: Show impact of this file"
+      },
+      {
+        "command": "codetwin.record",
+        "title": "CodeTwin: Record evidence (run full suite with coverage)"
+      },
+      {
+        "command": "codetwin.explain",
+        "title": "CodeTwin: Explain last decision"
+      }
     ],
     "menus": {
-      "editor/context": [ { "command": "codetwin.impact", "when": "resourceLangId == python", "group": "navigation" } ]
+      "editor/context": [
+        {
+          "command": "codetwin.impact",
+          "when": "resourceLangId == python",
+          "group": "navigation"
+        }
+      ]
     },
     "configuration": {
       "title": "CodeTwin AI",
       "properties": {
-        "codetwin.cliPath": { "type": "string", "default": "codetwin", "description": "Path to the codetwin command-line tool." },
-        "codetwin.alpha": { "type": "number", "default": 0.1, "description": "Target miss rate." }
+        "codetwin.cliPath": {
+          "type": "string",
+          "default": "codetwin",
+          "description": "Path to the codetwin command-line tool."
+        },
+        "codetwin.alpha": {
+          "type": "number",
+          "default": 0.1,
+          "description": "Target miss rate."
+        }
       }
     }
   },
@@ -35,5 +68,10 @@
     "@types/node": "^20.11.0",
     "@types/vscode": "^1.90.0",
     "typescript": "^5.4.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aaryagodbole/CodeTwin.git",
+    "directory": "extensions/vscode"
   }
 }
