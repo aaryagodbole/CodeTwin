@@ -61,7 +61,7 @@ jobs:
       - name: Build VS Code extension
         working-directory: extensions/vscode
         run: npm ci && npm run compile && npx --yes @vscode/vsce package --out "../../dist/codetwin-${TAG#v}.vsix"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with: { name: dist, path: dist/ }
 
   github-release:

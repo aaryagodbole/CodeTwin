@@ -42,7 +42,7 @@ jobs:
           r = ET.parse("coverage.xml").getroot()
           print(f"### Coverage: {float(r.get('line-rate')) * 100:.1f}% lines, {float(r.get('branch-rate')) * 100:.1f}% branches")
           PY
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: test-results-py${{ matrix.python-version }}
@@ -79,7 +79,7 @@ jobs:
           print("smoke OK:", d["decision"], f"{d['residual_risk']:.1%}", len(d["selected"]), "tests")
           PY
           /tmp/v/bin/python -c "from codetwin.mcp_server import build_server; build_server('.')"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with: { name: python-dist, path: dist/ }
 
   vscode-extension:
@@ -94,7 +94,7 @@ jobs:
       - run: npm ci
       - run: npm run compile
       - run: npx --yes @vscode/vsce package --out codetwin.vsix
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with: { name: vscode-extension, path: extensions/vscode/codetwin.vsix }
 
   dashboard:
@@ -109,5 +109,5 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run build
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with: { name: dashboard, path: dashboard/out }
