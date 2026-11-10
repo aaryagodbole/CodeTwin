@@ -370,16 +370,16 @@ def train(commits, feats=None):
     m.feats_ = list(feats)
     return m
 
-_SCORE_CACHE = {}
-
 def scores_of(model, c):
+    """Test scores of one change; cached on the model object (ids of discarded models can be reused)."""
     if model is None:
         return {t: 1.0 for t in c["universe"]}
-    key = (id(model), id(c))
-    if key not in _SCORE_CACHE:
+    cache = model.__dict__.setdefault("score_cache_", {})
+    key = c["sha"] + ":" + str(c["index"])
+    if key not in cache:
         ts, X, _ = X_of(c, model.feats_)
-        _SCORE_CACHE[key] = dict(zip(ts, model.predict_proba(X)[:, 1]))
-    return _SCORE_CACHE[key]
+        cache[key] = dict(zip(ts, model.predict_proba(X)[:, 1]))
+    return cache[key]
 
 def crc_threshold(calib, model, alpha):
     """Conformal risk control: largest lambda with n/(n+1) R_n(lambda) + 1/(n+1) <= alpha, where the
@@ -601,7 +601,10 @@ def main(projects):
                     bs = baseline_sets(c)
                     hyb = bs["Hybrid"] | sel
                     fcov = bs["File coverage"] | sel
-                    risky = residual_risk(c, scores_of(model, c), sel, recal) > a
+                    rc_ = residual_risk(c, scores_of(model, c), sel, recal)
+                    risky = rc_ > a
+                    if vname == "aci" and a == MAIN_ALPHA:
+                        RISK["aci10"][p].append((rc_, 0.0 if c["affected"] <= sel else 1.0))
                     RISKAB[f"{vname}:{a}"][p].append(risky)
                     for lvl in ("file", "line", "risk"):
                         fired = risky if lvl == "risk" else any(c["trig_" + lvl].values())
@@ -807,7 +810,7 @@ def write_plots(R, hist_p, pair_p):
         ys = [1 - A[f"{vn}:{a}:plain"]["HIST"]["safe_rate"][0] for a in ALPHAS]
         ax.plot(ALPHAS, ys, mk, color="black", lw=1, ms=4, label=lab)
     ax.set_xlabel(r"Target miss rate $\alpha$", fontsize=8); ax.set_ylabel("Observed miss rate", fontsize=8)
-    ax.set_xlim(0, 0.22); ax.set_ylim(0, 0.32); ax.tick_params(labelsize=7); ax.grid(alpha=0.3, lw=0.5)
+    ax.set_xlim(0, 0.22); ax.set_ylim(0, 0.32); ax.set_xticks(ALPHAS); ax.set_xticklabels([f"{a:.2f}" for a in ALPHAS]); ax.tick_params(labelsize=7); ax.grid(alpha=0.3, lw=0.5)
     ax.legend(fontsize=7, frameon=False); fig.tight_layout()
     fig.savefig(OUT / "calibration.pdf"); fig.savefig(OUT / "calibration.png", dpi=200); plt.close(fig)
 
