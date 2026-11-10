@@ -370,11 +370,16 @@ def train(commits, feats=None):
     m.feats_ = list(feats)
     return m
 
+_SCORE_CACHE = {}
+
 def scores_of(model, c):
     if model is None:
         return {t: 1.0 for t in c["universe"]}
-    ts, X, _ = X_of(c, model.feats_)
-    return dict(zip(ts, model.predict_proba(X)[:, 1]))
+    key = (id(model), id(c))
+    if key not in _SCORE_CACHE:
+        ts, X, _ = X_of(c, model.feats_)
+        _SCORE_CACHE[key] = dict(zip(ts, model.predict_proba(X)[:, 1]))
+    return _SCORE_CACHE[key]
 
 def crc_threshold(calib, model, alpha):
     """Conformal risk control: largest lambda with n/(n+1) R_n(lambda) + 1/(n+1) <= alpha, where the
@@ -417,6 +422,25 @@ def residual_risk(c, s, sel, recal):
         if t not in sel:
             keep *= 1.0 - recal(s[t])
     return 1.0 - keep
+
+ACI_GAMMA = 0.02
+
+def crc_online(cs, k, model, alpha, window, gamma=None):
+    """Time-aware calibration for the test changes cs[k:]. Each change is calibrated on the `window`
+    most recent earlier changes (whose ground truth is known by then, e.g. from post-merge full runs).
+    With gamma, adaptive conformal inference (Gibbs and Candes, 2021) also updates the level online:
+    alpha_t+1 = alpha_t + gamma * (alpha - err_t), so the long-run miss rate tracks alpha under drift."""
+    a_t, out = alpha, []
+    for j in range(k, len(cs)):
+        cal = cs[max(0, j - window): j]
+        lam = crc_threshold(cal, model, min(a_t, 1.0)) if a_t > 0 else -1.0
+        c = cs[j]
+        sel = calibrated_set(c, scores_of(model, c), lam)
+        err = 0.0 if c["affected"] <= sel else 1.0
+        out.append((sel, lam))
+        if gamma:
+            a_t = a_t + gamma * (alpha - err)
+    return out
 
 def calibrated_set(c, s, lam):
     return (forced(c) | {t for t in c["universe"] if s[t] >= lam}) if lam >= 0 else set(c["universe"])
@@ -512,6 +536,7 @@ def main(projects):
                             "calibration": "first 40% of each project's changes in time order (never used for training)"}}
     ground_truth_check = defaultdict(lambda: [0, 0])     # killers within coverage-affected set
     RISK = defaultdict(lambda: defaultdict(list))        # mode -> project -> [(predicted r(c), observed miss)]
+    RISKAB = defaultdict(lambda: defaultdict(list))      # calibration variant -> project -> [r(c) > alpha]
 
     for p in hist_p + pair_p:
         calib, test = split(data[p])
@@ -564,19 +589,29 @@ def main(projects):
 
         # calibrated selection with and without abstention
         cres = {}
+        k = len(calib)
         for a in ALPHAS:
             lam = crc_threshold(calib, model, a)
-            n_ab = {"file": 0, "line": 0}
+            variants = {"crc": [(calibrated_set(c, scores_of(model, c), lam), lam) for c in test],
+                        "win": crc_online(data[p], k, model, a, window=k),
+                        "aci": crc_online(data[p], k, model, a, window=k, gamma=ACI_GAMMA)}
+            for vname, sels in variants.items():
+                for c, (sel, _) in zip(test, sels):
+                    E[f"{vname}:{a}:plain"][p].append(evaluate_set(c, sel))
+                    bs = baseline_sets(c)
+                    hyb = bs["Hybrid"] | sel
+                    fcov = bs["File coverage"] | sel
+                    risky = residual_risk(c, scores_of(model, c), sel, recal) > a
+                    RISKAB[f"{vname}:{a}"][p].append(risky)
+                    for lvl in ("file", "line", "risk"):
+                        fired = risky if lvl == "risk" else any(c["trig_" + lvl].values())
+                        E[f"{vname}:{a}:abstain-{lvl}:full"][p].append(evaluate_set(c, set(c["universe"]) if fired else sel))
+                        E[f"{vname}:{a}:abstain-{lvl}:hybrid"][p].append(evaluate_set(c, hyb if fired else sel))
+                        E[f"{vname}:{a}:abstain-{lvl}:filecov"][p].append(evaluate_set(c, fcov if fired else sel))
+            n_ab = {lvl: sum(any(c["trig_" + lvl].values()) for c in test) for lvl in ("file", "line")}
             for c in test:
                 s = scores_of(model, c)
                 sel = calibrated_set(c, s, lam)
-                hyb = baseline_sets(c)["Hybrid"] | sel
-                E[f"crc:{a}:plain"][p].append(evaluate_set(c, sel))
-                for lvl in ("file", "line"):
-                    fired = any(c["trig_" + lvl].values())
-                    n_ab[lvl] += fired
-                    E[f"crc:{a}:abstain-{lvl}:full"][p].append(evaluate_set(c, set(c["universe"]) if fired else sel))
-                    E[f"crc:{a}:abstain-{lvl}:hybrid"][p].append(evaluate_set(c, hyb if fired else sel))
                 if a == MAIN_ALPHA:
                     ev = evaluate_set(c, sel)
                     per_change[p].append({"sha": c["sha"][:7], "subject": c["subject"][:80], "safe": ev["safe"],
@@ -591,8 +626,10 @@ def main(projects):
         results["calibration"][p] = cres
 
         # triggers against the line-coverage baseline
+        for c in test:
+            c["trig_risk"] = {"r(c) > 0.1": residual_risk(c, scores_of(model, c), baseline_sets(c)["Line coverage"], recal) > MAIN_ALPHA}
         tr = {}
-        for lvl in ("file", "line"):
+        for lvl in ("file", "line", "risk"):
             unsafe = [c for c in test if not evaluate_set(c, baseline_sets(c)["Line coverage"])["safe"]]
             safe_ = [c for c in test if evaluate_set(c, baseline_sets(c)["Line coverage"])["safe"]]
             keys = list(test[0]["trig_" + lvl]) if test else []
@@ -635,6 +672,8 @@ def main(projects):
             d["NRTS"] = aggregate([e for p in pair_p for e in E[key][p]], ci=ci)
         return d
     results["agg"] = {k: block(k, ci=True) for k in sorted(E)}
+    results["risk_abstain_rate"] = {k: {grp: (float(np.mean([x for q in ps for x in d[q]])) if any(d[q] for q in ps) else None)
+                                        for grp, ps in (("HIST", hist_p), ("NRTS", pair_p))} for k, d in RISKAB.items()}
     for a in ALPHAS:
         for lvl in ("file", "line"):
             for grp, ps in (("HIST", hist_p), ("NRTS", pair_p)):
@@ -700,8 +739,8 @@ def write_report(R, hist_p, pair_p):
               "| Technique | Test red % | Time red % | Precision | Recall | Safe % | Mutants detected % | Fault-safe % | NameRTS-GT safe % |",
               "|---|---|---|---|---|---|---|---|---|"]
         keys = [k for k in A if k.startswith("base:")] + [f"budget:{ABL_BUDGET}:CodeTwin"] + \
-               [f"crc:{a}:plain" for a in ALPHAS] + [f"crc:{a}:abstain-line:hybrid" for a in ALPHAS] + \
-               [f"crc:{a}:abstain-line:full" for a in ALPHAS] + [f"crc:{a}:abstain-file:full" for a in ALPHAS]
+               [f"{vn}:{a}:plain" for vn in ("crc", "win", "aci") for a in ALPHAS] + \
+               [f"{vn}:{a}:abstain-{lv}:{fb}" for vn in ("crc", "aci") for lv in ("risk", "line", "file") for fb in ("filecov", "hybrid", "full") for a in ALPHAS]
         for k in keys:
             a = A.get(k, {}).get(grp)
             if not a:
@@ -719,7 +758,8 @@ def write_report(R, hist_p, pair_p):
     for p, cr in R["calibration"].items():
         for a, x in cr.items():
             L.append(f"| {p} | {a} | {x['lambda']:.3f} | {x['feasible']} | {x['n_calib']} | {v(x['abstain_file'])} | {v(x['abstain_line'])} |")
-    L += ["", "## Abstention rates (pooled)", "", "```", json.dumps(A["abstain_rate"], indent=1), "```"]
+    L += ["", "## Abstention rates (pooled)", "", "```", json.dumps(A["abstain_rate"], indent=1), "```",
+          "", "## Risk-based abstention rates (r(c) > alpha)", "", "```", json.dumps(R["risk_abstain_rate"], indent=1), "```"]
     L += ["", "## Triggers vs line-coverage misses", "", "```", json.dumps(R["triggers"], indent=1), "```"]
     L += ["", "## Ablation (HIST, 25% budget)", "", "| Model | Recall | Safe % | Mutants detected % |", "|---|---|---|---|"]
     for k in [k for k in A if k.startswith("abl:")]:
@@ -760,14 +800,14 @@ def write_plots(R, hist_p, pair_p):
 
     # calibration plot: observed miss rate vs target alpha (plain CRC), per group
     fig, ax = plt.subplots(figsize=(3.5, 2.6))
-    ax.plot([0, 0.22], [0, 0.22], color="grey", lw=0.8, ls="--", label="target = observed")
-    for grp, mk, lab in (("HIST", "o", "History projects"), ("NRTS", "s", "NameRTS commits")):
-        if any("safe_rate" not in A[f"crc:{a}:plain"].get(grp, {}) for a in ALPHAS):
+    ax.plot([0, 0.32], [0, 0.32], color="grey", lw=0.8, ls=":", label="observed = target")
+    for vn, mk, lab in (("crc", "o-", "Static calibration"), ("win", "s--", "Sliding window"), ("aci", "^-.", "Adaptive (ACI)")):
+        if any("safe_rate" not in A[f"{vn}:{a}:plain"].get("HIST", {}) for a in ALPHAS):
             continue
-        ys = [1 - A[f"crc:{a}:plain"][grp]["safe_rate"][0] for a in ALPHAS]
-        ax.plot(ALPHAS, ys, mk + "-", color="black", lw=1, ms=4, label=lab)
+        ys = [1 - A[f"{vn}:{a}:plain"]["HIST"]["safe_rate"][0] for a in ALPHAS]
+        ax.plot(ALPHAS, ys, mk, color="black", lw=1, ms=4, label=lab)
     ax.set_xlabel(r"Target miss rate $\alpha$", fontsize=8); ax.set_ylabel("Observed miss rate", fontsize=8)
-    ax.set_xlim(0, 0.22); ax.set_ylim(0, 0.22); ax.tick_params(labelsize=7); ax.grid(alpha=0.3, lw=0.5)
+    ax.set_xlim(0, 0.22); ax.set_ylim(0, 0.32); ax.tick_params(labelsize=7); ax.grid(alpha=0.3, lw=0.5)
     ax.legend(fontsize=7, frameon=False); fig.tight_layout()
     fig.savefig(OUT / "calibration.pdf"); fig.savefig(OUT / "calibration.png", dpi=200); plt.close(fig)
 
