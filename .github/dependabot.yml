@@ -1,18 +1,35 @@
+# Dependency updates: one grouped pull request per ecosystem per month, into dev.
+# Security updates are still opened as soon as an advisory is published.
 version: 2
 updates:
   - package-ecosystem: pip
     directory: "/"
-    schedule: { interval: weekly }
+    schedule: { interval: monthly }
     target-branch: dev
+    groups:
+      python:
+        patterns: ["*"]
+
   - package-ecosystem: npm
     directory: "/extensions/vscode"
-    schedule: { interval: weekly }
+    schedule: { interval: monthly }
     target-branch: dev
+    groups:
+      vscode-extension:
+        patterns: ["*"]
+
   - package-ecosystem: npm
     directory: "/dashboard"
-    schedule: { interval: weekly }
+    schedule: { interval: monthly }
     target-branch: dev
+    groups:
+      dashboard:
+        patterns: ["*"]
+
   - package-ecosystem: github-actions
     directory: "/"
     schedule: { interval: monthly }
     target-branch: dev
+    groups:
+      github-actions:
+        patterns: ["*"]
