@@ -99,9 +99,9 @@
     "package": "npm run compile && vsce package"
   },
   "devDependencies": {
-    "@types/node": "^20.11.0",
+    "@types/node": "^26.6.6",
     "@types/vscode": "^1.90.0",
-    "typescript": "^5.4.0"
+    "typescript": "^7.0.2"
   },
   "repository": {
     "type": "git",
