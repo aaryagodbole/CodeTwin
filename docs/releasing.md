@@ -7,12 +7,11 @@ Versions follow [Semantic Versioning](https://semver.org/). `0.x` releases are p
 1. On `dev`: move the **Unreleased** entries in `CHANGELOG.md` under a new version heading, and set the same
    version in `src/codetwin/__init__.py` and `extensions/vscode/package.json`.
 2. Merge `dev` into `main` (pull request, CI green).
-3. Tag `main` and push the tag:
-   ```bash
-   git checkout main && git pull
-   git tag -a v0.2.0 -m "v0.2.0" && git push origin v0.2.0
-   ```
-4. The **Release** workflow tests, builds and publishes. If the tag does not match the versions, it stops.
+3. Start the release, either way:
+   - **GitHub website:** Actions → **Release** → **Run workflow** → branch `main`, tag `v0.2.0` → Run.
+   - **Terminal:** `git checkout main && git pull && git tag -a v0.2.0 -m "v0.2.0" && git push origin v0.2.0`
+4. The **Release** workflow tests, builds, creates the tag (website route) and publishes. If the tag does not
+   match the versions, it stops before anything is published.
 
 ## What gets published
 

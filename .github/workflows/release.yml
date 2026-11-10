@@ -1,7 +1,9 @@
 name: Release
 
 # How to release: update CHANGELOG.md and the version in src/codetwin/__init__.py and
-# extensions/vscode/package.json on dev, merge dev into main, then push a tag vX.Y.Z on main.
+# extensions/vscode/package.json on dev, merge dev into main, then either
+#   - GitHub website: Actions -> Release -> Run workflow (branch main, tag vX.Y.Z), or
+#   - terminal: push a tag vX.Y.Z on main.
 #
 # Always: GitHub Release with the Python package (dashboard bundled), the VS Code extension (.vsix) and notes.
 # Optional, once configured (see docs/releasing.md):
@@ -11,6 +13,17 @@ name: Release
 on:
   push:
     tags: ["v*.*.*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Version tag to create on main, e.g. v0.1.0"
+        required: true
+
+env:
+  TAG: ${{ inputs.tag || github.ref_name }}
+
+concurrency:
+  group: release-${{ inputs.tag || github.ref_name }}
 
 permissions:
   contents: write
@@ -26,12 +39,15 @@ jobs:
         with: { python-version: "3.12" }
       - uses: actions/setup-node@v4
         with: { node-version: "22" }
+      - name: Run from main only
+        if: github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/main'
+        run: { echo "Run the release from the main branch"; exit 1; }
       - name: Check that the tag matches every version
         id: version
         run: |
           v=$(python -c "import re;print(re.search(r'__version__ = \"(.+)\"', open('src/codetwin/__init__.py').read())[1])")
           e=$(node -p "require('./extensions/vscode/package.json').version")
-          [ "v$v" = "$GITHUB_REF_NAME" ] && [ "v$e" = "$GITHUB_REF_NAME" ] || { echo "tag $GITHUB_REF_NAME, python $v, extension $e"; exit 1; }
+          [ "v$v" = "$TAG" ] && [ "v$e" = "$TAG" ] || { echo "tag $TAG, python $v, extension $e"; exit 1; }
           echo "version=$v" >> "$GITHUB_OUTPUT"
       - name: Tests
         run: pip install -e ".[dev,mcp,server]" && python -m pytest
@@ -44,7 +60,7 @@ jobs:
         run: python -m build
       - name: Build VS Code extension
         working-directory: extensions/vscode
-        run: npm ci && npm run compile && npx --yes @vscode/vsce package --out "../../dist/codetwin-${GITHUB_REF_NAME#v}.vsix"
+        run: npm ci && npm run compile && npx --yes @vscode/vsce package --out "../../dist/codetwin-${TAG#v}.vsix"
       - uses: actions/upload-artifact@v4
         with: { name: dist, path: dist/ }
 
@@ -59,7 +75,7 @@ jobs:
         run: |
           python3 - <<'PY' > notes.md
           import os, re
-          v = os.environ["GITHUB_REF_NAME"][1:]
+          v = os.environ["TAG"][1:]
           text = open("CHANGELOG.md").read()
           m = re.search(rf"## \[{re.escape(v)}\][^\n]*\n(.*?)(?=\n## \[|\n\[Unreleased\]:|\Z)", text, re.S)
           print(m[1].strip() if m else f"Release {v}")
@@ -68,8 +84,9 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          pre=""; case "$GITHUB_REF_NAME" in v0.*) pre="--prerelease";; esac
-          gh release create "$GITHUB_REF_NAME" dist/* --title "CodeTwin AI $GITHUB_REF_NAME" --notes-file notes.md $pre
+          pre=""; case "$TAG" in v0.*) pre="--prerelease";; esac
+          # --target creates the tag on this commit when the release is started from the Actions tab
+          gh release create "$TAG" dist/* --target "$GITHUB_SHA" --title "CodeTwin AI $TAG" --notes-file notes.md $pre
 
   vscode-marketplace:
     needs: build
