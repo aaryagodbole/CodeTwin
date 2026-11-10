@@ -1,0 +1,14 @@
+pvlib {'mode': 'pairs', 'changes_collected': 50, 'changes': 45, 'skipped': {'no source change / no tests': 5}, 'calib': 18, 'test': 27, 'kloc': 35.3, 'test_files': 54.7, 'suite_time': 88.4, 'avg_affected': 4.4, 'first': '2025-03-14', 'last': '2025-11-03', 'mutants_killed': 69, 'python': '3.12.16'}
+seaborn {'mode': 'pairs', 'changes_collected': 50, 'changes': 47, 'skipped': {'no source change / no tests': 3}, 'calib': 18, 'test': 29, 'kloc': 29.3, 'test_files': 34.1, 'suite_time': 338.3, 'avg_affected': 8.1, 'first': '2023-08-19', 'last': '2025-01-26', 'mutants_killed': 83, 'python': '3.12.16'}
+Traceback (most recent call last):
+  File "/home/runner/work/CodeTwin/CodeTwin/pilot/analyze.py", line 776, in <module>
+    main(projs)
+  File "/home/runner/work/CodeTwin/CodeTwin/pilot/analyze.py", line 660, in main
+    write_report(results, hist_p, pair_p)
+  File "/home/runner/work/CodeTwin/CodeTwin/pilot/analyze.py", line 715, in write_report
+    L.append(f"| {b} | " + " | ".join(ci(A[f'budget:{b}:{n}']['HIST']['recall'], False, 3)
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/CodeTwin/CodeTwin/pilot/analyze.py", line 715, in <genexpr>
+    L.append(f"| {b} | " + " | ".join(ci(A[f'budget:{b}:{n}']['HIST']['recall'], False, 3)
+                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+KeyError: 'recall'
