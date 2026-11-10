@@ -1,10 +1,10 @@
-name: CodeTwin study v2
+name: CodeTwin study v2 (NameRTS projects, pinned environment)
 
 # Collects the data for the paper on GitHub's runners and publishes data + results to the
-# study-v2-results branch. Triggered by a push to study-v2 (pilot/** or this file) or manually.
+# study-v2-nrts-results branch. Triggered by a push to study-v2 (pilot/** or this file) or manually.
 on:
   push:
-    branches: [study-v2]
+    branches: [study-v2-nrts]
     paths: ["pilot/**", ".github/workflows/study.yml"]
   workflow_dispatch:
 
@@ -23,38 +23,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - {project: click,        shard: 0, of: 6}
-          - {project: click,        shard: 1, of: 6}
-          - {project: click,        shard: 2, of: 6}
-          - {project: click,        shard: 3, of: 6}
-          - {project: click,        shard: 4, of: 6}
-          - {project: click,        shard: 5, of: 6}
-          - {project: marshmallow,  shard: 0, of: 4}
-          - {project: marshmallow,  shard: 1, of: 4}
-          - {project: marshmallow,  shard: 2, of: 4}
-          - {project: marshmallow,  shard: 3, of: 4}
-          - {project: toolz,        shard: 0, of: 3}
-          - {project: toolz,        shard: 1, of: 3}
-          - {project: toolz,        shard: 2, of: 3}
-          - {project: itsdangerous, shard: 0, of: 3}
-          - {project: itsdangerous, shard: 1, of: 3}
-          - {project: itsdangerous, shard: 2, of: 3}
-          - {project: dateutil,     shard: 0, of: 8}
-          - {project: dateutil,     shard: 1, of: 8}
-          - {project: dateutil,     shard: 2, of: 8}
-          - {project: dateutil,     shard: 3, of: 8}
-          - {project: dateutil,     shard: 4, of: 8}
-          - {project: dateutil,     shard: 5, of: 8}
-          - {project: dateutil,     shard: 6, of: 8}
-          - {project: dateutil,     shard: 7, of: 8}
-          - {project: loguru,  shard: 0, of: 8, pairs: true}
-          - {project: loguru,  shard: 1, of: 8, pairs: true}
-          - {project: loguru,  shard: 2, of: 8, pairs: true}
-          - {project: loguru,  shard: 3, of: 8, pairs: true}
-          - {project: loguru,  shard: 4, of: 8, pairs: true}
-          - {project: loguru,  shard: 5, of: 8, pairs: true}
-          - {project: loguru,  shard: 6, of: 8, pairs: true}
-          - {project: loguru,  shard: 7, of: 8, pairs: true}
           - {project: pvlib,   shard: 0, of: 10, pairs: true}
           - {project: pvlib,   shard: 1, of: 10, pairs: true}
           - {project: pvlib,   shard: 2, of: 10, pairs: true}
@@ -125,7 +93,7 @@ jobs:
         run: |
           set -o pipefail
           python analyze.py 2>&1 | tee analyze.log
-      - name: Publish data and results to the study-v2-results branch
+      - name: Publish data and results to the study-v2-nrts-results branch
         if: always()
         run: |
           mkdir -p out/data out/results
@@ -134,10 +102,10 @@ jobs:
           cp pilot/analyze.log out/ || true
           echo "analyze step: ${{ steps.analyse.outcome }}" > out/STATUS.txt
           cd out
-          git init -q -b study-v2-results
+          git init -q -b study-v2-nrts-results
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           echo "Data and results of the CodeTwin study v2. Run: ${{ github.run_id }} (commit ${{ github.sha }})" > README.md
           git add -A
           git commit -q -m "Study v2 data and results (run ${{ github.run_id }})"
-          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" study-v2-results
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" study-v2-nrts-results
