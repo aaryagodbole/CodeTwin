@@ -41,7 +41,9 @@ jobs:
         with: { node-version: "22" }
       - name: Run from main only
         if: github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/main'
-        run: { echo "Run the release from the main branch"; exit 1; }
+        run: |
+          echo "Run the release from the main branch"
+          exit 1
       - name: Check that the tag matches every version
         id: version
         run: |
