@@ -11,7 +11,7 @@ requires-python = ">=3.11"
 license = { text = "MIT" }
 authors = [{ name = "CodeTwin AI contributors" }]
 dependencies = [
-  "networkx>=3.2",
+  "networkx>=3.6.1",
   "numpy>=1.26",
   "scikit-learn>=1.4",
   "coverage>=7.6",
