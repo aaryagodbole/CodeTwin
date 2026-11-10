@@ -53,7 +53,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with: { name: dist, path: dist }
       - name: Release notes from CHANGELOG.md
         run: |
@@ -78,7 +78,7 @@ jobs:
       VSCE_PAT: ${{ secrets.VSCE_PAT }}
       OVSX_PAT: ${{ secrets.OVSX_PAT }}
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with: { name: dist, path: dist }
       - name: VS Code Marketplace
         if: env.VSCE_PAT != ''
@@ -98,7 +98,7 @@ jobs:
     permissions:
       id-token: write          # trusted publishing; no token stored in the repository
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with: { name: dist, path: dist }
       - run: rm -f dist/*.vsix
       - uses: pypa/gh-action-pypi-publish@release/v1
