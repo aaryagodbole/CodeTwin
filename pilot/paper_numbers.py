@@ -55,7 +55,7 @@ for p in HIST + NRTS:
     s = S[p]
     tag = "" if p in HIST else "$^\\ast$"
     rows.append(f"{p}{tag} & {s['changes']} ({s['calib']}/{s['test']}) & {s['kloc']} & {s['test_files']:.0f} & "
-                f"{s['suite_time']:.1f} & {s['avg_affected']:.1f} & {s['mutants_killed']} & {s['first'][:4]}--{s['last'][:4]} \\\\")
+                f"{s['suite_time']:.1f} & {s['avg_affected']:.1f} & {s['mutants_killed']} & {s['first'][:4] if s['first'][:4] == s['last'][:4] else s['first'][:4] + '--' + s['last'][:4]} \\\\")
     if p == HIST[-1] and NRTS:
         rows.append("\\midrule")
 put("TAB_SUBJECTS", "\n".join(rows))
