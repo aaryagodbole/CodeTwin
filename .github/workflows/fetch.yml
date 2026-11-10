@@ -1,0 +1,42 @@
+name: Fetch study artifacts
+
+# Copies the data artifacts that the collection runs have already uploaded to the study-v2-data
+# branch, so that the analysis can run without waiting for every shard of a run to finish.
+on:
+  push:
+    branches: [fetch-artifacts]
+    paths: [".github/workflows/fetch.yml"]
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: run1
+          run-id: 42777977095
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/download-artifact@v4
+        with:
+          path: run2
+          run-id: 42779475888
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true
+      - name: Publish
+        run: |
+          mkdir -p out/run1 out/run2
+          find run1 -name '*.tar.gz' -exec cp {} out/run1/ \;
+          find run2 -name '*.tar.gz' -exec cp {} out/run2/ \; || true
+          ls -la out/run1 out/run2
+          cd out
+          git init -q -b study-v2-data
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          echo "Artifacts of runs 42777977095 (run1) and 42779475888 (run2), fetched by run ${{ github.run_id }}" > README.md
+          git add -A
+          git commit -q -m "Study v2 artifacts (fetch run ${{ github.run_id }})"
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" study-v2-data
