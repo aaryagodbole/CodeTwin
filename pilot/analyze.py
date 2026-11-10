@@ -396,6 +396,28 @@ def crc_threshold(calib, model, alpha):
             best = max(best, lam)
     return best
 
+def fit_recalibration(calib, model):
+    """Isotonic recalibration of test-level probabilities on the calibration changes (non-forced tests)."""
+    from sklearn.isotonic import IsotonicRegression
+    xs, ys = [], []
+    for c in calib:
+        s, F = scores_of(model, c), forced(c)
+        for t in c["universe"]:
+            if t not in F:
+                xs.append(s[t]); ys.append(c["rows"][t]["label"])
+    if len(set(ys)) < 2:
+        return lambda p: p
+    iso = IsotonicRegression(y_min=0.0, y_max=1.0, out_of_bounds="clip").fit(xs, ys)
+    return lambda p: float(iso.predict([p])[0])
+
+def residual_risk(c, s, sel, recal):
+    """Estimated probability that the selection misses an affected test: 1 - prod over skipped tests of (1 - p)."""
+    keep = 1.0
+    for t in c["universe"]:
+        if t not in sel:
+            keep *= 1.0 - recal(s[t])
+    return 1.0 - keep
+
 def calibrated_set(c, s, lam):
     return (forced(c) | {t for t in c["universe"] if s[t] >= lam}) if lam >= 0 else set(c["universe"])
 
@@ -489,6 +511,7 @@ def main(projects):
                             "training": "leave-one-project-out over the history projects; NameRTS projects use a model trained on all history projects",
                             "calibration": "first 40% of each project's changes in time order (never used for training)"}}
     ground_truth_check = defaultdict(lambda: [0, 0])     # killers within coverage-affected set
+    RISK = defaultdict(lambda: defaultdict(list))        # mode -> project -> [(predicted r(c), observed miss)]
 
     for p in hist_p + pair_p:
         calib, test = split(data[p])
@@ -530,6 +553,14 @@ def main(projects):
                                                                         "mut_det", "fault_safe")}
                 avg.update({"has_affected": rr[0]["has_affected"], "mut_n": rr[0]["mut_n"]})
                 E[f"budget:{b}:Random"][p].append(avg)
+
+        # per-change residual-risk estimate r(c) and the observed outcome
+        recal = fit_recalibration(calib, model)
+        for c in test:
+            s = scores_of(model, c)
+            for mode, sel in (("budget25", budget_select(c, s, 0.25)), ("crc10", calibrated_set(c, s, crc_threshold(calib, model, MAIN_ALPHA))),
+                              ("linecov", baseline_sets(c)["Line coverage"])):
+                RISK[mode][p].append((residual_risk(c, s, sel, recal), 0.0 if c["affected"] <= sel else 1.0))
 
         # calibrated selection with and without abstention
         cres = {}
@@ -579,6 +610,21 @@ def main(projects):
             for c in test:
                 E["abl:" + name][p].append(evaluate_set(c, budget_select(c, scores_of(m, c), ABL_BUDGET)))
 
+    rr = {}
+    for mode, d in RISK.items():
+        for grp, ps in (("HIST", hist_p), ("NRTS", pair_p)):
+            pts = [x for q in ps for x in d[q]]
+            if not pts:
+                continue
+            pr, ob = np.array([x[0] for x in pts]), np.array([x[1] for x in pts])
+            bins = np.clip((pr * 5).astype(int), 0, 4)
+            ece = sum(abs(pr[bins == b].mean() - ob[bins == b].mean()) * (bins == b).sum() for b in range(5) if (bins == b).any()) / len(pr)
+            rr[f"{mode}:{grp}"] = {"n": len(pts), "mean_predicted": float(pr.mean()), "observed_miss_rate": float(ob.mean()),
+                                   "brier": float(np.mean((pr - ob) ** 2)), "brier_constant": float(np.mean((ob.mean() - ob) ** 2)),
+                                   "ece5": float(ece),
+                                   "bins": [[b / 5, (b + 1) / 5, int((bins == b).sum()), float(pr[bins == b].mean()) if (bins == b).any() else None,
+                                             float(ob[bins == b].mean()) if (bins == b).any() else None] for b in range(5)]}
+    results["residual_risk"] = rr
     results["ground_truth_check"] = {p: {"killed_mutants": v[0], "killers_within_affected": v[1]} for p, v in ground_truth_check.items()}
 
     # ---------------- aggregate: per project, pooled over history projects ("HIST"), over NameRTS projects ("NRTS")
@@ -593,7 +639,7 @@ def main(projects):
         for lvl in ("file", "line"):
             for grp, ps in (("HIST", hist_p), ("NRTS", pair_p)):
                 n = sum(len(E[f"crc:{a}:plain"][p]) for p in ps)
-                fired = sum(results["calibration"][p][str(a)]["abstain_" + lvl] * len(E[f"crc:{a}:plain"][p]) for p in ps)
+                fired = sum((results["calibration"][p][str(a)]["abstain_" + lvl] or 0) * len(E[f"crc:{a}:plain"][p]) for p in ps)
                 results["agg"].setdefault("abstain_rate", {})[f"{a}:{lvl}:{grp}"] = fired / n if n else None
 
     # ---------------- paired tests (pooled history projects)
@@ -686,6 +732,7 @@ def write_report(R, hist_p, pair_p):
                  f"line-abstain+hybrid safe {v(a2.get('safe_rate'))}, time red {v(a2.get('time_red'))}; "
                  f"line cov safe {v(A['base:Line coverage'].get(p, {}).get('safe_rate'))}, "
                  f"time red {v(A['base:Line coverage'].get(p, {}).get('time_red'))}")
+    L += ["", "## Per-change residual-risk estimate r(c) vs observed misses", "", "```", json.dumps(R["residual_risk"], indent=1), "```"]
     L += ["", "## Paired tests (HIST)", "", "```", json.dumps(R["tests"], indent=1), "```",
           "", "## Ground-truth check: killers of killed mutants inside the coverage-affected set", "", "```",
           json.dumps(R["ground_truth_check"], indent=1), "```", "", "## Coefficients", "", "```",
@@ -715,7 +762,7 @@ def write_plots(R, hist_p, pair_p):
     fig, ax = plt.subplots(figsize=(3.5, 2.6))
     ax.plot([0, 0.22], [0, 0.22], color="grey", lw=0.8, ls="--", label="target = observed")
     for grp, mk, lab in (("HIST", "o", "History projects"), ("NRTS", "s", "NameRTS commits")):
-        if grp == "NRTS" and not pair_p:
+        if any("safe_rate" not in A[f"crc:{a}:plain"].get(grp, {}) for a in ALPHAS):
             continue
         ys = [1 - A[f"crc:{a}:plain"][grp]["safe_rate"][0] for a in ALPHAS]
         ax.plot(ALPHAS, ys, mk + "-", color="black", lw=1, ms=4, label=lab)
