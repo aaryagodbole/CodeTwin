@@ -697,6 +697,11 @@ def main(projects):
         T[f"time_red: CRC(alpha={MAIN_ALPHA}) vs {base}"] = wilcox(pooled(ck, "time_red"), pooled("base:" + base, "time_red"))
     results["tests"] = T
     results["failure_cases"] = {p: [x for x in v if not x["safe"]] for p, v in per_change.items()}
+    # tests missed by line coverage: did they execute the changed file in the old version?
+    missed = [c["rows"][t]["cov_file"] for p in hist_p for c in split(data[p])[1]
+              for t in c["affected"] - baseline_sets(c)["Line coverage"]]
+    results["line_missed_tests"] = len(missed)
+    results["line_missed_with_file_cov"] = int(sum(missed))
 
     (OUT / "results.json").write_text(json.dumps(results, indent=1, default=_jsonable))
     write_report(results, hist_p, pair_p)

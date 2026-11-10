@@ -245,6 +245,12 @@ put("NRTS_CALIB_MAX", max(S[p]["calib"] for p in NRTS) if NRTS else "--")
 put("HIST_TEST_MIN", min(S[p]["test"] for p in HIST)); put("HIST_TEST_MAX", max(S[p]["test"] for p in HIST))
 put("DATEUTIL_CHANGES", S["dateutil"]["changes"] if "dateutil" in S else "--")
 
+for a_ in ("0.05", "0.1", "0.2"):
+    x_ = A[f"aci:{a_}:plain"].get("NRTS")
+    if x_:
+        put(f"NACI{int(round(float(a_) * 100))}_MISS", miss(x_["safe_rate"]))
+put("LINE_MISSED_TESTS", R.get("line_missed_tests", "--"))
+
 # ------------------------------------------------------------ failure cases
 fc = R["failure_cases"]
 put("N_FAIL_ACI_NOTE", sum(len(v) for p, v in fc.items() if p in HIST))
