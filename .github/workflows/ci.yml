@@ -67,7 +67,7 @@ jobs:
           /tmp/v/bin/codetwin --help
       - name: Smoke test on this repository (record, change, select --json)
         run: |
-          /tmp/v/bin/pip install "dist/$(ls dist | grep whl)[mcp]"
+          for whl in dist/*.whl; do /tmp/v/bin/pip install "${whl}[mcp]"; done
           git config --global user.email ci@example.com && git config --global user.name ci
           /tmp/v/bin/codetwin record
           echo "# smoke" >> src/codetwin/selection.py
