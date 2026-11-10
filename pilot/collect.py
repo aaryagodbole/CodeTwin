@@ -235,7 +235,7 @@ def parse_junit(junit, repo):
     return durations, failing, files
 
 PYTEST_BASE = ["-q", "-p", "no:cacheprovider", "--no-header", "-o", "junit_family=xunit1",
-               "-o", "filterwarnings=default"]
+               "-o", "filterwarnings=default", "--continue-on-collection-errors"]
 
 def run_tests(repo, spec, timeout, workdir):
     url, src_root, pkgs, tests_dir, src_dirs = spec
@@ -442,7 +442,9 @@ def install(repo, name):
     if name in EXTRAS:
         r = run([sys.executable, "-m", "pip", "install", "-q", "-e", f"{repo}[{EXTRAS[name]}]"])
         print(f"[{name}] dependencies: {'ok' if r.returncode == 0 else r.stderr[-400:]}", flush=True)
-        run([sys.executable, "-m", "pip", "install", "-q", "pytest>=8,<9", "pytest-cov", "coverage>=7.6"])
+        # the versions of the NameRTS replication environment, so that older commits still run
+        run([sys.executable, "-m", "pip", "install", "-q", "pytest>=8,<9", "pytest-cov", "coverage>=7.6",
+             "pandas==2.3.3", "numpy==2.3.5"])
     r = run([sys.executable, "-m", "pip", "install", "-q", "--no-deps", "-e", str(repo)])
     return r.returncode == 0
 
