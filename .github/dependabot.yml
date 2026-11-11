@@ -1,5 +1,6 @@
-# Dependency updates: one grouped pull request per ecosystem per month, into dev.
-# Security updates are still opened as soon as an advisory is published.
+# Dependency updates into dev, monthly. Minor and patch updates are grouped into one pull request per
+# ecosystem; each major update gets its own pull request, so one breaking upgrade does not block the rest.
+# Security updates are opened as soon as an advisory is published.
 version: 2
 updates:
   - package-ecosystem: pip
@@ -8,23 +9,33 @@ updates:
     target-branch: dev
     groups:
       python:
-        patterns: ["*"]
+        update-types: [minor, patch]
 
   - package-ecosystem: npm
     directory: "/extensions/vscode"
     schedule: { interval: monthly }
     target-branch: dev
+    ignore:
+      # must match engines.vscode in package.json; raise both together by hand
+      - dependency-name: "@types/vscode"
+      # must match the Node.js major that VS Code ships
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
     groups:
       vscode-extension:
-        patterns: ["*"]
+        update-types: [minor, patch]
 
   - package-ecosystem: npm
     directory: "/dashboard"
     schedule: { interval: monthly }
     target-branch: dev
+    ignore:
+      # must match the Node.js major used in CI (22)
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
     groups:
       dashboard:
-        patterns: ["*"]
+        update-types: [minor, patch]
 
   - package-ecosystem: github-actions
     directory: "/"
