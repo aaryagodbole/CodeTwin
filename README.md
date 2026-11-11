@@ -166,8 +166,11 @@ writes the decision and risk to the job summary and runs the selected tests:
   with: { fetch-depth: 0 }
 - uses: actions/setup-python@v5
   with: { python-version: "3.12" }
+- run: pip install -r requirements.txt          # the project's own test dependencies
 - uses: aaryagodbole/CodeTwin/action@main
-  with: { alpha: "0.10" }
+  with:
+    alpha: "0.10"
+    package: "codetwin"                        # or a wheel URL from a CodeTwin release
 ```
 
 **AI coding agents (MCP)** – `codetwin-mcp` exposes `verify_change`, `get_impact`, `get_graph`,
@@ -209,7 +212,9 @@ scripts/check.sh
 
 Work on `feature/<name>` branches from `dev` and open a pull request into `dev`; see
 [CONTRIBUTING.md](CONTRIBUTING.md). CI runs lint, tests with a coverage gate, a package build with a smoke test,
-and the extension and dashboard builds on every pull request. Releases: [docs/releasing.md](docs/releasing.md);
+type checking, a dependency audit, the extension and dashboard builds and this repository's own Action on every
+pull request. Repository settings: [docs/github-setup.md](docs/github-setup.md). Codespaces: `.devcontainer/`.
+Releases: [docs/releasing.md](docs/releasing.md);
 changes: [CHANGELOG.md](CHANGELOG.md). The repository uses CodeTwin on itself (`.codetwin.toml`).
 
 ## Roadmap

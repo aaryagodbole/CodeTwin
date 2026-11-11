@@ -36,7 +36,7 @@ class Config:
     fallback: str = "file-coverage"
     raw: dict = field(default_factory=dict)          # the whole parsed .codetwin.toml
 
-    def section(self, name: str) -> dict:
+    def section(self, name: str) -> dict | list:
         """A feature's own table in .codetwin.toml (e.g. [crossrepo]); new features read it here
         instead of adding fields to this class."""
         v = self.raw.get(name, {})

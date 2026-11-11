@@ -12,12 +12,12 @@ from codetwin.server.app import create_app
 
 def test_api_reads_evidence(toy_repo):
     main(["-C", str(toy_repo), "init"])
-    eng = Engine(toy_repo)
-    eng.record()
-    p = toy_repo / "src/shop/price.py"
-    p.write_text(p.read_text().replace('i["price"]', 'i["price"] * 1'))
-    eng.select()
-    eng.learn()
+    with Engine(toy_repo) as eng:
+        eng.record()
+        p = toy_repo / "src/shop/price.py"
+        p.write_text(p.read_text().replace('i["price"]', 'i["price"] * 1'))
+        eng.select()
+        eng.learn()
 
     c = TestClient(create_app(toy_repo))
     assert c.get("/api/health").json()["status"] == "ok"

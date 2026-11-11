@@ -14,7 +14,7 @@ def build_server(root: str = "."):
     try:                                    # MCP Python SDK 2.x
         from mcp.server.mcpserver import MCPServer as Server
     except ImportError:                     # SDK 1.x
-        from mcp.server.fastmcp import FastMCP as Server
+        from mcp.server.fastmcp import FastMCP as Server  # type: ignore[attr-defined,no-redef]
 
     mcp = Server("codetwin")
     for mod in discover("codetwin.mcp_tools"):

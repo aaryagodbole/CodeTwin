@@ -8,6 +8,7 @@ import sys
 import tempfile
 import time
 import xml.etree.ElementTree as ET
+from contextlib import closing
 from pathlib import Path
 
 from .model import TestRun
@@ -30,8 +31,8 @@ def run_suite(repo: str | Path, sha: str, tests_dir: str, packages: list[str], s
               tests: list[str] | None = None, timeout: int = 3600) -> TestRun:
     """Run pytest on `tests` (default: the whole tests_dir) and record per-test-file coverage."""
     repo = Path(repo).resolve()
-    with tempfile.TemporaryDirectory() as tmp:
-        tmp = Path(tmp)
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmp = Path(tmpdir)
         junit, rc_file = tmp / "junit.xml", tmp / "coveragerc"
         rc_file.write_text("[run]\nbranch = False\n")
         env = dict(os.environ, COVERAGE_CORE="ctrace", COVERAGE_FILE=str(tmp / ".coverage"))
@@ -40,13 +41,15 @@ def run_suite(repo: str | Path, sha: str, tests_dir: str, packages: list[str], s
                "-o", "junit_family=xunit1", f"--cov-config={rc_file}", "--cov-context=test", "--cov-report=",
                f"--junitxml={junit}", *[f"--cov={p}" for p in packages]]
         t0 = time.time()
+        rc: int | str
         try:
             rc = subprocess.run(cmd, cwd=repo, env=env, capture_output=True, text=True, timeout=timeout, check=False).returncode
         except subprocess.TimeoutExpired:
             rc = "timeout"
         run = TestRun(sha=sha, returncode=rc)
         if junit.exists():
-            for tc in ET.parse(junit).getroot().iter("testcase"):
+            # junit.xml is written by our own pytest run in a private temp dir, not external input
+            for tc in ET.parse(junit).getroot().iter("testcase"):  # noqa: S314
                 f = _junit_file(tc, repo)
                 run.durations[f] = run.durations.get(f, 0.0) + float(tc.get("time", 0) or 0)
                 if any(ch.tag in ("failure", "error") for ch in tc):
@@ -54,20 +57,21 @@ def run_suite(repo: str | Path, sha: str, tests_dir: str, packages: list[str], s
         covfile = tmp / ".coverage"
         if covfile.exists():
             from coverage.numbits import numbits_to_nums
-            con = sqlite3.connect(covfile)
-            ctx = dict(con.execute("select id, context from context"))
-            files = dict(con.execute("select id, path from file"))
-            for fid, cid, bits in con.execute("select file_id, context_id, numbits from line_bits"):
-                src = os.path.relpath(files[fid], repo).replace(os.sep, "/")
-                c = ctx.get(cid, "")
-                lines = numbits_to_nums(bits)
-                if "::" not in c:
-                    run.import_lines.setdefault(src, [])
-                    run.import_lines[src] = sorted(set(run.import_lines[src]) | set(lines))
-                    continue
-                test = c.split("::")[0].replace(os.sep, "/")
-                d = run.covered.setdefault(test, {})
-                d[src] = sorted(set(d.get(src, [])) | set(lines))
-            con.close()
+            imports: dict[str, set[int]] = {}
+            covered: dict[str, dict[str, set[int]]] = {}
+            with closing(sqlite3.connect(covfile)) as con:
+                ctx = dict(con.execute("select id, context from context"))
+                files = dict(con.execute("select id, path from file"))
+                for fid, cid, bits in con.execute("select file_id, context_id, numbits from line_bits"):
+                    src = os.path.relpath(files[fid], repo).replace(os.sep, "/")
+                    c = ctx.get(cid, "")
+                    lines = numbits_to_nums(bits)
+                    if "::" not in c:          # executed outside any test: import time
+                        imports.setdefault(src, set()).update(lines)
+                        continue
+                    test = c.split("::")[0].replace(os.sep, "/")
+                    covered.setdefault(test, {}).setdefault(src, set()).update(lines)
+            run.import_lines = {f: sorted(v) for f, v in imports.items()}
+            run.covered = {t: {f: sorted(v) for f, v in fs.items()} for t, fs in covered.items()}
         run.wall = time.time() - t0
         return run

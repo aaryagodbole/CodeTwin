@@ -8,5 +8,6 @@ def add_arguments(p) -> None:
 
 
 def run(args) -> int:
-    print_json(engine(args).learn())
+    with engine(args) as eng:
+        print_json(eng.learn())
     return 0

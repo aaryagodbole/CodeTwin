@@ -8,7 +8,8 @@ def add_arguments(p) -> None:
 
 
 def run(args) -> int:
-    r = engine(args).record()
+    with engine(args) as eng:
+        r = eng.record()
     print(f"recorded {r.sha[:10]}: {len(r.durations)} test files, {len(r.covered)} with coverage, "
           f"{len(r.failing)} failing test cases, {r.wall:.1f}s")
     return 0

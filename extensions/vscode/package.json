@@ -60,7 +60,8 @@
         "codetwin.cliPath": {
           "type": "string",
           "default": "codetwin",
-          "description": "Path to the codetwin command-line tool."
+          "description": "Path to the codetwin command-line tool (user or machine setting only; a workspace cannot change it).",
+          "scope": "machine"
         },
         "codetwin.alpha": {
           "type": "number",
@@ -69,8 +70,9 @@
         },
         "codetwin.installCommand": {
           "type": "string",
-          "default": "pip install \"codetwin @ git+https://github.com/aaryagodbole/CodeTwin@main\"",
-          "description": "Command run in a terminal when the CLI is missing."
+          "default": "pip install codetwin",
+          "description": "Command run in a terminal when the CLI is missing (until codetwin is on PyPI, use the wheel from a GitHub release).",
+          "scope": "machine"
         },
         "codetwin.graph.hover": {
           "type": "boolean",
@@ -129,5 +131,12 @@
   "homepage": "https://github.com/aaryagodbole/CodeTwin#readme",
   "bugs": {
     "url": "https://github.com/aaryagodbole/CodeTwin/issues"
+  },
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": false,
+      "description": "CodeTwin runs the project's test suite and the codetwin CLI."
+    },
+    "virtualWorkspaces": false
   }
 }

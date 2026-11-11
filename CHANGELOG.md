@@ -7,6 +7,25 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Security
+- GitHub Action: event and repository values (branch name, alpha, selected test file names) are passed through
+  environment variables and argument lists, never into shell code; test files with shell syntax in their names
+  can no longer run commands.
+- VS Code extension: disabled in untrusted workspaces; `codetwin.cliPath` and `codetwin.installCommand` can only
+  be set in user or machine settings, so a repository cannot choose which program runs.
+
+### Fixed
+- `codetwin learn` refuses to learn twice from the same decision (it counted the change twice in calibration).
+- Budget-mode outcomes no longer move the adaptive level, which tracks the calibrated threshold only.
+- Database connections are closed after every CLI command, MCP call and API request.
+- Coverage evidence is merged with sets instead of re-sorting per context (faster on large suites).
+
+### Added
+- CI: type checking (mypy), Python 3.13, ruff security and bug rules, `pip-audit` and `npm audit`,
+  the repository's own Action on pull requests, read-only default token permissions.
+- Rulesets for `main`, `dev` and release tags (`.github/rulesets/`), Codespaces dev container, `SECURITY.md`,
+  `docs/github-setup.md`, `release` environment for store tokens.
+
 ## [0.1.0] - 2026-11-10
 
 Baseline release: the structure every later pull request is compared against.

@@ -32,7 +32,8 @@ def build(eng, file: str, lines: tuple[int, int] | None) -> dict:
 
 
 def run(args) -> int:
-    view = build(engine(args), args.file, parse_lines(args.lines))
+    with engine(args) as eng:
+        view = build(eng, args.file, parse_lines(args.lines))
     if args.json:
         print_json(view)
         return 0

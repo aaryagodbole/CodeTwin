@@ -5,6 +5,9 @@ on:
     branches: [main, dev]
   pull_request:
 
+permissions:
+  contents: read          # CI only reads the repository
+
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
@@ -16,17 +19,46 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
-      - run: pip install ruff actionlint-py
-      - run: ruff check src tests
+      - run: pip install ruff actionlint-py shellcheck-py
+      - name: Lint Python (style, bugs, security rules; see pyproject.toml)
+        run: ruff check src tests
       - name: Check GitHub workflow files
         run: actionlint
+
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -e ".[dev,mcp,server]"
+      - run: mypy
+
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - uses: actions/setup-node@v4
+        with: { node-version: "22" }
+      - name: Python dependencies (known vulnerabilities)
+        run: |
+          python -m venv /tmp/a && /tmp/a/bin/pip install -q ".[mcp,server]" pip-audit
+          /tmp/a/bin/pip-audit
+      - name: VS Code extension dependencies
+        working-directory: extensions/vscode
+        run: npm audit --omit=dev --audit-level=high
+      - name: Dashboard dependencies
+        working-directory: dashboard
+        run: npm audit --omit=dev --audit-level=high
 
   test:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.11", "3.12"]
+        python-version: ["3.11", "3.12", "3.13"]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -113,3 +145,18 @@ jobs:
       - run: npm run build
       - uses: actions/upload-artifact@v4
         with: { name: dashboard, path: dashboard/out }
+
+  action:
+    # Runs this repository's own GitHub Action on the pull request, installing CodeTwin from the checkout.
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: git config --global user.email ci@example.com && git config --global user.name ci
+      - uses: ./action
+        with:
+          package: ".[mcp]"
+          run-selected: "false"

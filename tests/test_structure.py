@@ -20,10 +20,11 @@ def test_commands_and_tools_are_discovered():
 
 
 def test_migrations_apply_once(tmp_path):
-    s = Store(tmp_path / "e.sqlite")
-    names = [r[0] for r in s.con.execute("select name from migrations")]
+    with Store(tmp_path / "e.sqlite") as s:
+        names = [r[0] for r in s.con.execute("select name from migrations")]
     assert "0001_initial.sql" in names
-    assert Store(tmp_path / "e.sqlite").migrate() == []          # second open applies nothing
+    with Store(tmp_path / "e.sqlite") as s:
+        assert s.migrate() == []                                   # second open applies nothing
 
 
 def test_select_json_has_contract_and_report_sections(toy_repo, capsys):

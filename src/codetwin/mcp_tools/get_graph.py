@@ -8,4 +8,5 @@ def register(mcp, root: str) -> None:
         """Impact graph around a file or a line range: importers, dependencies, tests that execute it, and
         links the analysis cannot follow. Edges carry their evidence type (static, runtime, unresolved)."""
         lines = (start_line, end_line or start_line) if start_line else None
-        return build(Engine(root), file, lines)
+        with Engine(root) as eng:
+            return build(eng, file, lines)

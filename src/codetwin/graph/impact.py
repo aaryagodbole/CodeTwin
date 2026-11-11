@@ -17,7 +17,7 @@ class Impact:
 
 def build_graph(static: dict[str, FileFacts], run: TestRun | None, src_root: str) -> nx.MultiDiGraph:
     """Nodes are files; an edge u -> v means "u depends on v", labelled with its evidence type."""
-    g = nx.MultiDiGraph()
+    g: nx.MultiDiGraph = nx.MultiDiGraph()
     known = {module_of(f, src_root): f for f in static}
     for f, facts in static.items():
         g.add_node(f)
@@ -46,7 +46,7 @@ def impact_of(g: nx.MultiDiGraph, changed: list[str], tests: list[str], max_dept
         if f not in g:
             imp.unknowns.append(f"{f}: new or unparsed file, no evidence yet")
             continue
-        for u, _, data in g.out_edges(f, data=True):
+        for _u, _, data in g.out_edges(f, data=True):
             if data["type"] == EvidenceType.UNRESOLVED.value:
                 imp.unknowns.append(f"{f}: dynamic calls ({data.get('detail')}) cannot be followed statically")
         seen = {f: 0}

@@ -12,7 +12,8 @@ cd extensions/vscode && npm ci && npm run compile
 cd dashboard && npm ci && npm run dev    # needs `codetwin serve` running in a project
 ```
 
-A change is done only when `scripts/check.sh` passes and new behaviour has a test.
+A change is done only when `scripts/check.sh` passes (ruff, mypy, pytest with coverage, extension and dashboard
+builds) and new behaviour has a test.
 
 ## Rules specific to this project
 
@@ -33,6 +34,9 @@ A change is done only when `scripts/check.sh` passes and new behaviour has a tes
   a feature. Feature settings: `cfg.section("<name>")`. Table: `docs/architecture.md`.
 - **Output contract.** `Decision.to_dict()` is read by VS Code, the Action and agents (`docs/output.md`). Add data
   as a report section under `extras`; changing top-level keys needs an `OUTPUT_SCHEMA` bump.
+- **Resources.** Use `with Engine(root) as eng:` (or `with Store(...)`) so database connections are closed.
+- **Shell safety.** In workflows and `action/`, pass event and repository values through `env:` and quote them;
+  never put `${{ ... }}` or file names into shell code.
 - **MCP SDK.** Support both SDK 1.x (`mcp.server.fastmcp.FastMCP`) and 2.x (`mcp.server.mcpserver.MCPServer`);
   keep the import fallback in `mcp_server.py`.
 - **Coverage contexts need the C tracer.** `evidence/coverage.py` sets `COVERAGE_CORE=ctrace`; per-test contexts

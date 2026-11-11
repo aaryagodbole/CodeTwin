@@ -35,7 +35,7 @@ class RiskModel:
             return cls()
         X = np.array([[float(r[k]) for k in FEATURES] for r in rows])
         m = LogisticRegression(class_weight="balanced", max_iter=2000).fit(X, np.array(labels))
-        w = dict(zip(FEATURES, map(float, m.coef_[0])))
+        w = dict(zip(FEATURES, map(float, m.coef_[0]), strict=True))
         w["intercept"] = float(m.intercept_[0])
         return cls(w)
 

@@ -9,7 +9,8 @@ def add_arguments(p) -> None:
 
 
 def run(args) -> int:
-    imp = engine(args).impact(args.files)
+    with engine(args) as eng:
+        imp = eng.impact(args.files)
     if args.json:
         print_json({"tests": {t: sorted(v) for t, v in imp.tests.items()}, "unknowns": imp.unknowns})
         return 0

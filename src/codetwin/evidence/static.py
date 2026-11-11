@@ -16,7 +16,9 @@ def analyse_file(path: Path, root: Path, packages: list[str]) -> FileFacts:
     except SyntaxError:
         return FileFacts(dynamic=["unparsed"])
     mod_parts = os.path.relpath(path, root).replace(os.sep, "/")[:-3].split("/")
-    imports, dyn, dyn_lines = set(), set(), set()
+    imports: set[str] = set()
+    dyn: set[str] = set()
+    dyn_lines: set[int] = set()
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
             imports.update(a.name for a in node.names)

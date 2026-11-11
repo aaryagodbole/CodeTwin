@@ -2,10 +2,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import StrEnum
 
 
-class EvidenceType(str, Enum):
+class EvidenceType(StrEnum):
     """How a link between code and tests was found (Section IV-C of the paper)."""
     STATIC = "static"            # found in the syntax tree (imports)
     RUNTIME = "runtime"          # observed by per-test coverage

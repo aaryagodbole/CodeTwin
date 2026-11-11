@@ -7,8 +7,8 @@ name: Release
 #
 # Always: GitHub Release with the Python package (dashboard bundled), the VS Code extension (.vsix) and notes.
 # Optional, once configured (see docs/releasing.md):
-#   VS Code Marketplace  -> repository secret VSCE_PAT
-#   Open VSX             -> repository secret OVSX_PAT
+#   VS Code Marketplace  -> secret VSCE_PAT in the `release` environment
+#   Open VSX             -> secret OVSX_PAT in the `release` environment
 #   PyPI                 -> repository variable PUBLISH_PYPI=true and a PyPI trusted publisher for this workflow
 on:
   push:
@@ -93,6 +93,7 @@ jobs:
   vscode-marketplace:
     needs: build
     runs-on: ubuntu-latest
+    environment: release       # store tokens live here; deployments limited to main and v* tags (docs/github-setup.md)
     env:
       VSCE_PAT: ${{ secrets.VSCE_PAT }}
       OVSX_PAT: ${{ secrets.OVSX_PAT }}

@@ -10,6 +10,7 @@ import time
 from dataclasses import asdict
 from importlib import resources
 from pathlib import Path
+from typing import Self
 
 from ..evidence.model import FileFacts, TestRun
 
@@ -44,6 +45,15 @@ class Store:
                 new.append(name)
         self.con.commit()
         return new
+
+    def close(self) -> None:
+        self.con.close()
+
+    def __enter__(self) -> Self:
+        return self
+
+    def __exit__(self, *exc) -> None:
+        self.close()
 
     # ------------------------------------------------------------- runs
     def save_run(self, run: TestRun) -> None:
@@ -81,7 +91,9 @@ class Store:
             (time.time(), d["base"], d.get("head"), d["mode"], d.get("alpha"), d.get("alpha_t"), d.get("threshold"),
              d.get("residual_risk"), d["decision"], json.dumps(sorted(d["selected"])), json.dumps(d.get("reasons", []))))
         self.con.commit()
-        return int(cur.lastrowid)
+        if cur.lastrowid is None:
+            raise RuntimeError("decision was not stored")
+        return cur.lastrowid
 
     def save_outcome(self, decision_id: int, missed: bool) -> None:
         self.con.execute("insert or replace into outcomes values (?,?,?)", (decision_id, int(missed), time.time()))

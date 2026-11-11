@@ -1,5 +1,8 @@
 name: CodeTwin AI test selection
 description: Select the tests a pull request needs, state the residual risk, and run them.
+# Use in a pull_request workflow after checking out with fetch-depth: 0 and installing the project's
+# own test dependencies. Every value from the event or the repository is passed through environment
+# variables, never interpolated into shell code (test file names come from the pull request).
 inputs:
   alpha:
     description: Target miss rate
@@ -7,38 +10,63 @@ inputs:
   run-selected:
     description: Run the selected tests after selecting them
     default: "true"
+  package:
+    description: pip requirement for CodeTwin (a version, a wheel URL from a release, or a local path)
+    default: "codetwin"
+outputs:
+  decision:
+    description: proceed or abstain
+    value: ${{ steps.select.outputs.decision }}
+  residual-risk:
+    description: Estimated residual risk of the selection
+    value: ${{ steps.select.outputs.residual_risk }}
 runs:
   using: composite
   steps:
     - name: Install CodeTwin
       shell: bash
-      run: pip install "codetwin @ git+https://github.com/aaryagodbole/codetwin@dev"
+      env:
+        CODETWIN_PACKAGE: ${{ inputs.package }}
+      run: python -m pip install "$CODETWIN_PACKAGE"
+
     - name: Record evidence on the base commit
       shell: bash
+      env:
+        BASE_REF: ${{ github.base_ref }}
+        HEAD_SHA: ${{ github.sha }}
       run: |
-        git fetch --depth=1 origin "${{ github.base_ref }}"
-        git stash -u || true
-        git checkout -q FETCH_HEAD
+        [ -n "$BASE_REF" ] || { echo "::error::CodeTwin action runs on pull_request events"; exit 1; }
+        git fetch --no-tags origin "refs/heads/$BASE_REF"
+        git checkout -q --detach FETCH_HEAD
         [ -f .codetwin.toml ] || codetwin init
         codetwin record
-        git checkout -q "${{ github.sha }}"
+        git checkout -q --detach "$HEAD_SHA"
+
     - name: Select tests
       id: select
       shell: bash
+      env:
+        ALPHA: ${{ inputs.alpha }}
       run: |
-        codetwin select --alpha "${{ inputs.alpha }}" --json > codetwin-decision.json
-        python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
-        import json
+        codetwin select --alpha "$ALPHA" --json > codetwin-decision.json
+        python - <<'PY'
+        import json, os
         d = json.load(open("codetwin-decision.json"))
-        print(f"### CodeTwin AI: {d['decision'].upper()} (estimated residual risk {d['residual_risk']:.1%})")
-        for r in d["reasons"]:
-            print(f"- {r}")
-        print(f"\n{len(d['selected'])} test files selected:\n")
-        for t in d["selected"]:
-            print(f"- `{t}`")
+        with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as s:
+            s.write(f"### CodeTwin AI: {d['decision'].upper()} (estimated residual risk {d['residual_risk']:.1%})\n")
+            s.writelines(f"- {r}\n" for r in d["reasons"])
+            s.write(f"\n{len(d['selected'])} test files selected:\n\n")
+            s.writelines(f"- `{t}`\n" for t in d["selected"])
+        with open(os.environ["GITHUB_OUTPUT"], "a") as o:
+            o.write(f"decision={d['decision']}\nresidual_risk={d['residual_risk']}\ncount={len(d['selected'])}\n")
         PY
-        echo "tests=$(python -c "import json;print(' '.join(json.load(open('codetwin-decision.json'))['selected']))")" >> "$GITHUB_OUTPUT"
+
     - name: Run selected tests
-      if: inputs.run-selected == 'true' && steps.select.outputs.tests != ''
+      if: inputs.run-selected == 'true' && steps.select.outputs.count != '0'
       shell: bash
-      run: python -m pytest ${{ steps.select.outputs.tests }}
+      run: |
+        python - <<'PY'
+        import json, subprocess, sys
+        tests = json.load(open("codetwin-decision.json"))["selected"]
+        sys.exit(subprocess.call([sys.executable, "-m", "pytest", *tests]))
+        PY

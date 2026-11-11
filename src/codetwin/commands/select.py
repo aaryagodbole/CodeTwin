@@ -11,7 +11,8 @@ def add_arguments(p) -> None:
 
 
 def run(args) -> int:
-    d = engine(args).select(args.base, args.alpha, args.budget)
+    with engine(args) as eng:
+        d = eng.select(args.base, args.alpha, args.budget)
     if args.json:
         print_json(d.to_dict())
         return 0

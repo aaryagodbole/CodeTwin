@@ -63,15 +63,17 @@ def compute(diff: dict[str, FileDiff], prev_run: TestRun, prev_static: dict[str,
     graph, known = _import_graph(new_static, src_root)
     changed_mods = {module_of(f, src_root) for f, _ in changed}
     stems = {f.rsplit("/", 1)[-1][:-3] for f, _ in changed} - {"__init__"}
-    co, base = Counter(), 0
+    co: Counter[str] = Counter()
+    base = 0
     for files in (history or [])[-300:]:
         if set(files) & {f for f, _ in changed}:
             base += 1
             co.update(files)
     func_lines, outside = {}, {}
-    for f, d in changed:
+    for _f, d in changed:
         defs = prev_static.get(d.old_path, FileFacts()).defs
-        fl, out = set(), set()
+        fl: set[int] = set()
+        out: set[int] = set()
         for line in d.old:
             D = _innermost(defs, line)
             fl.update(range(D[2], D[1] + 1)) if D else out.add(line)
@@ -79,7 +81,7 @@ def compute(diff: dict[str, FileDiff], prev_run: TestRun, prev_static: dict[str,
     rows = {}
     for t in tests:
         cl = cfn = cf = 0
-        for f, d in changed:
+        for _f, d in changed:
             lines = set(prev_run.covered.get(t, {}).get(d.old_path, []))
             if not lines:
                 continue

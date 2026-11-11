@@ -6,7 +6,7 @@ A command module defines::
     HELP = "one-line help"
     ORDER = 50                          # optional: position in --help (lower first)
     def add_arguments(p): ...           # argparse sub-parser
-    def run(args) -> int: ...           # use ``engine(args)`` from ``commands._util``
+    def run(args) -> int: ...           # use ``with engine(args) as eng:`` (commands._util)
 
 Add a new file here for a new command; do not edit ``cli.py``.
 """

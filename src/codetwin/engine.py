@@ -1,9 +1,11 @@
 """Ties the layers together: record evidence, analyse a change, select tests, learn from outcomes."""
 from __future__ import annotations
 
+import json
 import math
 import subprocess
 from pathlib import Path
+from typing import Self
 
 from . import config as cfgmod
 from . import report
@@ -27,6 +29,15 @@ class Engine:
         self.root = self.cfg.root
         self.store = Store(self.cfg.db_path)
         self.model = RiskModel.load(self.cfg.state_dir / "model.json")
+
+    def close(self) -> None:
+        self.store.close()
+
+    def __enter__(self) -> Self:
+        return self
+
+    def __exit__(self, *exc) -> None:
+        self.close()
 
     # ------------------------------------------------------------- helpers
     def head(self) -> str:
@@ -106,7 +117,8 @@ class Engine:
                                        alpha_t=self.store.get_state("alpha_t", alpha), threshold=d.threshold,
                                        residual_risk=d.residual_risk, decision=d.decision, selected=d.selected,
                                        reasons=d.reasons)
-        self.store.set_state("last_decision", {"id": did, "base": base, "scores": scores, "selected": sorted(d.selected)})
+        self.store.set_state("last_decision", {"id": did, "base": base, "scores": scores, "selected": sorted(d.selected),
+                                               "mode": d.mode})
         return d
 
     def _with_report(self, d: Decision, base, prev, diff, rows, scores) -> Decision:
@@ -126,6 +138,9 @@ class Engine:
         last = self.store.get_state("last_decision")
         if not last:
             raise RuntimeError("no decision to learn from; run `codetwin select` first")
+        if self.store.con.execute("select 1 from outcomes where decision_id=?", (last["id"],)).fetchone():
+            raise RuntimeError(f"decision {last['id']} already has an outcome; run `codetwin select` for a new change "
+                               "(learning twice from one change would count it twice in the calibration set)")
         _base, _prev, diff, rows = self.analyse(last["base"])
         new = coverage.run_suite(self.root, "working-tree", self.cfg.tests_dir, self.cfg.packages, self.cfg.src_root)
         affected = set()
@@ -148,7 +163,10 @@ class Engine:
         pts += [[scores[t], int(t in affected)] for t in scores if not rows.get(t, {}).get("forced")]
         self.store.set_state("recal_points", pts[-5000:])
         level = AdaptiveLevel(self.cfg.alpha, self.cfg.aci_gamma, self.store.get_state("alpha_t"))
-        self.store.set_state("alpha_t", level.update(missed))
+        # The adaptive level tracks misses of the *calibrated* threshold only; a budget-mode selection
+        # missing a test says nothing about it. Scores and labels above are valid in both modes.
+        if last.get("mode", "calibrated") == "calibrated":
+            self.store.set_state("alpha_t", level.update(missed))
         self.store.save_outcome(last["id"], missed)
         return {"affected": sorted(affected), "missed": sorted(affected - selected), "alpha_t": level.alpha_t,
                 "calibration_size": len(calib)}
@@ -167,4 +185,4 @@ class Engine:
         row = self.store.con.execute("select decision, residual_risk, threshold, alpha, reasons from decisions where id=?",
                                      (last["id"],)).fetchone()
         return {"decision": row[0], "residual_risk": row[1], "threshold": row[2], "alpha": row[3],
-                "reasons": __import__("json").loads(row[4]), "selected": last["selected"]}
+                "reasons": json.loads(row[4]), "selected": last["selected"]}

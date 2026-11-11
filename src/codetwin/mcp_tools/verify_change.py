@@ -7,6 +7,7 @@ def register(mcp, root: str) -> None:
         """Decide whether the current working-tree change can proceed with a selected set of tests.
         Returns proceed, or run_more (run the broader selection), the estimated residual risk, the
         selected tests, the reasons (including what the analysis cannot see) and extra report sections."""
-        d = Engine(root).select(alpha=alpha).to_dict()
+        with Engine(root) as eng:
+            d = eng.select(alpha=alpha).to_dict()
         d["decision"] = "proceed" if d["decision"] == "proceed" else "run_more"
         return d
