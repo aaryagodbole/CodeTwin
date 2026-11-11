@@ -44,7 +44,8 @@ jobs:
         with: { node-version: "22" }
       - name: Python dependencies (known vulnerabilities)
         run: |
-          python -m venv /tmp/a && /tmp/a/bin/pip install -q ".[mcp,server]" pip-audit
+          python -m venv /tmp/a && /tmp/a/bin/python -m pip install -q --upgrade pip
+          /tmp/a/bin/pip install -q ".[mcp,server]" pip-audit
           /tmp/a/bin/pip-audit
       - name: VS Code extension dependencies
         working-directory: extensions/vscode
