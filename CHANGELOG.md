@@ -11,6 +11,15 @@ All notable changes to this project are documented here. The format follows
 - README: step-by-step development setup for first-time contributors, with Windows (Git Bash) instructions.
 - CI: `windows` job runs the full checks and the README commands on Windows for every pull request;
   `.gitattributes` keeps LF line endings so bash scripts work on Windows.
+- Report section `semantic_noop`: detects changes that only touch docstrings, comments or formatting (AST unchanged)
+  and lists the tests that suffice; annotation-only changes are reported separately and still run tests.
+- Report section `change_risk`: calibrated change-level risk q(c) of the selection next to the product formula r(c)
+  (prior weights from study v3; refitted from labelled changes once 40 exist). Advisory: decisions still use r(c).
+- Report section `promise`: observed miss rate of the last 50 labelled calibrated decisions with a 95% Wilson
+  interval, and an alert when even its lower end is above the target.
+- Command `codetwin weakcheck`: extreme mutation of each changed function, run against the tests that executed it,
+  to find functions that are executed but not checked.
+- `codetwin learn` labels the change-level features of the decision it learns from (`change_points`).
 
 ### Changed
 - Dependabot keeps the minimum versions in `pyproject.toml` and only proposes Python updates when a release
