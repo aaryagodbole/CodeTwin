@@ -218,8 +218,13 @@ New features never edit the shared core: see
 ## Development setup (step by step)
 
 Written for someone setting up a project for the first time. Follow the steps in order; each one says what it
-does and what you should see. Commands go in a **terminal**: *Terminal* on macOS, *Git Bash* on Windows
-(installed with Git in step 1), any terminal on Linux. Lines starting with `#` are comments; do not type them.
+does and what you should see. Lines starting with `#` are comments; do not type them.
+
+> **On Windows, type every command in Git Bash** (installed with Git in step 1), not in Command Prompt or
+> PowerShell, so the commands below work exactly as written. To get Git Bash inside VS Code:
+> **Terminal → New Terminal**, then the **⌄** next to **+** → **Git Bash**. To make it the default:
+> `Ctrl+Shift+P` → *Terminal: Select Default Profile* → **Git Bash**.
+> On macOS use *Terminal*, on Linux any terminal. CI runs these steps on Windows and Linux for every pull request.
 
 > **No installs at all?** Open the repository on GitHub → **Code → Codespaces → Create codespace on dev**.
 > Everything below (steps 1–6) is done for you in a browser VS Code; continue at step 7.
@@ -236,6 +241,10 @@ does and what you should see. Commands go in a **terminal**: *Terminal* on macOS
 
 Close and reopen the terminal after installing, so it finds the new programs. If a check command prints a
 version number, that tool is ready.
+
+Windows: if `python --version` opens the Microsoft Store or prints nothing, Windows is using its built-in shortcut
+instead of the real Python. Turn it off: **Settings → Apps → Advanced app settings → App execution aliases** →
+switch off *python.exe* and *python3.exe*, then reopen Git Bash.
 
 ### 2. Get access to the repository
 
@@ -278,8 +287,8 @@ Activate it, every time you open a new terminal for this project:
 | Your system | Command |
 |---|---|
 | macOS / Linux | `source .venv/bin/activate` |
-| Windows, Git Bash | `source .venv/Scripts/activate` |
-| Windows, PowerShell | `.venv\Scripts\Activate.ps1` |
+| **Windows (Git Bash)** | `source .venv/Scripts/activate` |
+| Windows, PowerShell (not recommended) | `.venv\Scripts\Activate.ps1` |
 
 The prompt now starts with `(.venv)`. Then install CodeTwin and the development tools (takes a few minutes):
 
@@ -372,6 +381,9 @@ Rules for AI coding assistants: [AGENTS.md](AGENTS.md).
 | `codetwin: command not found` | the virtual environment is not active: run the `activate` command from step 4 |
 | PowerShell: *running scripts is disabled* | run `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` once, or use Git Bash |
 | `Permission denied: scripts/check.sh` | run it as `bash scripts/check.sh` |
+| `$'\r': command not found` (Windows) | the file has Windows line endings; run `git config --global core.autocrlf input`, then `git rm -r --cached -q . && git reset --hard` (only with no unsaved changes) |
+| VS Code terminal shows `PS C:\...>` | that is PowerShell; open a **Git Bash** terminal instead (see the note at the top) |
+| `codetwin` works in one terminal but not another (Windows) | every new terminal needs `source .venv/Scripts/activate` first |
 | `Repository not found` when cloning or pushing | accept the GitHub invitation and run `gh auth login` again |
 | `npm ci` fails | check `node --version` is 22 or newer; delete `node_modules` and run `npm ci` again |
 | Tests fail with a *git* error | Git must be installed and `git config --global user.name/user.email` set (step 2) |
