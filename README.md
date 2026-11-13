@@ -46,6 +46,10 @@ Paper source, scripts and data: branches [`study-v2`](../../tree/study-v2) (scri
 
 ## Installation
 
+Using CodeTwin in your own project. To work **on** CodeTwin, follow
+[Development setup (step by step)](#development-setup-step-by-step) instead.
+
+
 Requires Python 3.11+ and `git`. The project you analyse needs a pytest test suite.
 
 From a release (recommended): download the wheel and the `.vsix` from the
@@ -211,19 +215,183 @@ AGENTS.md            instructions for AI coding agents working on this repositor
 New features never edit the shared core: see
 [docs/architecture.md → Extension points](docs/architecture.md#extension-points-how-to-add-a-feature-without-editing-shared-files).
 
-## Development
+## Development setup (step by step)
+
+Written for someone setting up a project for the first time. Follow the steps in order; each one says what it
+does and what you should see. Lines starting with `#` are comments; do not type them.
+
+> **On Windows, type every command in Git Bash** (installed with Git in step 1), not in Command Prompt or
+> PowerShell, so the commands below work exactly as written. To get Git Bash inside VS Code:
+> **Terminal → New Terminal**, then the **⌄** next to **+** → **Git Bash**. To make it the default:
+> `Ctrl+Shift+P` → *Terminal: Select Default Profile* → **Git Bash**.
+> On macOS use *Terminal*, on Linux any terminal. CI runs these steps on Windows and Linux for every pull request.
+
+> **No installs at all?** Open the repository on GitHub → **Code → Codespaces → Create codespace on dev**.
+> Everything below (steps 1–6) is done for you in a browser VS Code; continue at step 7.
+
+### 1. Install the tools (once per laptop)
+
+| Tool | Version | Download | Check it worked |
+|---|---|---|---|
+| Git | any recent | https://git-scm.com/downloads (Windows: keep the default options, they include **Git Bash**) | `git --version` |
+| Python | **3.11 or newer** (3.12 recommended) | https://www.python.org/downloads/ (Windows: tick **"Add python.exe to PATH"** on the first screen) | `python --version` (macOS/Linux may need `python3 --version`) |
+| Node.js | **22 LTS** | https://nodejs.org/ (choose the LTS button) | `node --version` and `npm --version` |
+| VS Code | any recent | https://code.visualstudio.com/ | open it once |
+| GitHub CLI | any recent | https://cli.github.com/ | `gh --version` |
+
+Close and reopen the terminal after installing, so it finds the new programs. If a check command prints a
+version number, that tool is ready.
+
+Windows: if `python --version` opens the Microsoft Store or prints nothing, Windows is using its built-in shortcut
+instead of the real Python. Turn it off: **Settings → Apps → Advanced app settings → App execution aliases** →
+switch off *python.exe* and *python3.exe*, then reopen Git Bash.
+
+### 2. Get access to the repository
+
+1. Accept the invitation e-mail from GitHub (or open https://github.com/notifications). The repository is
+   private, so you cannot see it until you accept.
+2. Turn on two-factor authentication: GitHub → your photo → **Settings → Password and authentication**.
+3. Log the terminal in to GitHub (choose *GitHub.com*, *HTTPS*, *Login with a web browser*):
+   ```bash
+   gh auth login
+   ```
+4. Tell Git who you are (use the e-mail of your GitHub account, so commits show your name):
+   ```bash
+   git config --global user.name "Your Name"
+   git config --global user.email "you@example.com"
+   ```
+
+### 3. Download the code
 
 ```bash
-pip install -e ".[dev,mcp,server]"
-scripts/check.sh
+cd ~                                   # go to your home folder (or any folder you like)
+git clone https://github.com/aaryagodbole/CodeTwin.git
+cd CodeTwin
+git checkout dev                       # all work starts from the dev branch
 ```
 
-Work on `feature/<name>` branches from `dev` and open a pull request into `dev`; see
-[CONTRIBUTING.md](CONTRIBUTING.md). CI runs lint, tests with a coverage gate, a package build with a smoke test,
-type checking, a dependency audit, the extension and dashboard builds and this repository's own Action on every
-pull request. Repository settings: [docs/github-setup.md](docs/github-setup.md). Codespaces: `.devcontainer/`.
-Releases: [docs/releasing.md](docs/releasing.md);
-changes: [CHANGELOG.md](CHANGELOG.md). The repository uses CodeTwin on itself (`.codetwin.toml`).
+You should now have a `CodeTwin` folder. Open it in VS Code: **File → Open Folder… → CodeTwin**
+(VS Code may suggest extensions for Python, Ruff and ESLint; install them).
+
+### 4. Create a Python virtual environment and install the project
+
+A *virtual environment* is a private folder of Python packages for this project only, so it does not clash
+with anything else on your laptop.
+
+```bash
+python -m venv .venv                   # creates the .venv folder (use python3 if python is not found)
+```
+
+Activate it, every time you open a new terminal for this project:
+
+| Your system | Command |
+|---|---|
+| macOS / Linux | `source .venv/bin/activate` |
+| **Windows (Git Bash)** | `source .venv/Scripts/activate` |
+| Windows, PowerShell (not recommended) | `.venv\Scripts\Activate.ps1` |
+
+The prompt now starts with `(.venv)`. Then install CodeTwin and the development tools (takes a few minutes):
+
+```bash
+python -m pip install --upgrade pip
+pip install -e ".[dev,mcp,server]"
+```
+
+`-e` means *editable*: your code changes take effect without reinstalling. Check: `codetwin --version`
+should print `codetwin 0.1.0` (or newer).
+
+### 5. Install the JavaScript parts (VS Code extension and dashboard)
+
+```bash
+cd extensions/vscode && npm ci && cd ../..
+cd dashboard && npm ci && cd ..
+```
+
+`npm ci` installs exactly the versions in `package-lock.json`. You end up back in the `CodeTwin` folder.
+
+### 6. Run all checks
+
+```bash
+bash scripts/check.sh
+```
+
+This runs what CI runs on every pull request: lint (ruff), type check (mypy), the tests with coverage,
+and the extension and dashboard builds. It takes about a minute and must end with:
+
+```
+check: OK
+```
+
+If it does, your setup is complete. If not, see *Common problems* below.
+
+### 7. Try CodeTwin on this repository
+
+```bash
+codetwin record                        # runs the test suite once with coverage and stores the evidence
+echo "# try" >> src/codetwin/selection.py     # make a small change
+codetwin select                        # which tests the change needs, the risk, PROCEED or ABSTAIN
+codetwin graph src/codetwin/selection.py      # who uses this file, which tests run it, what is unknown
+git checkout src/codetwin/selection.py # undo the change
+```
+
+**Dashboard:** run `codetwin serve` and open http://127.0.0.1:8765/api/docs (the API). To work on the
+dashboard pages, keep `codetwin serve` running and in a second terminal run `cd dashboard && npm run dev`,
+then open http://localhost:3000. Stop a running server with **Ctrl+C**.
+
+**VS Code extension:** in VS Code open the folder `extensions/vscode` and press **F5**. A second VS Code
+window opens with the extension loaded. In that window open a Python project (for example this repository),
+select some code, right-click → **CodeTwin: Show impact graph of selection**.
+
+**Optional, AI explanations:** create a free key at https://console.groq.com/keys, then
+`export GROQ_API_KEY=your-key` and `codetwin llm --test` (details in [docs/llm.md](docs/llm.md)).
+Never commit a key.
+
+### 8. Make your first change (the team workflow)
+
+Nobody pushes to `dev` or `main` directly. Every change goes through a pull request (PR):
+
+```bash
+git checkout dev && git pull           # 1. start from the latest dev
+git checkout -b feature/test-gaps      # 2. a new branch for your task (use your task's branch name from Notion)
+# 3. edit the code, add a test for it
+bash scripts/check.sh                  # 4. must end with "check: OK"
+git add -A                             # 5. stage your changes
+git commit -m "Add test-gap report"    # 6. save them with a short message saying what changed
+git push -u origin feature/test-gaps   # 7. upload the branch to GitHub
+```
+
+8. GitHub shows a **Compare & pull request** button: open the PR **into `dev`**, fill in the template
+   (what, how you tested it) and add a line to `CHANGELOG.md` under *Unreleased*.
+9. Wait for the checks on the PR to turn green and for a review. Fix comments by committing again on the same
+   branch and pushing; the PR updates itself.
+10. After it is merged: `git checkout dev && git pull`, then start the next task with a new branch.
+
+Before opening a PR, if `dev` has moved on: `git fetch origin && git rebase origin/dev`, run the checks
+again, then `git push --force-with-lease`.
+
+Where to put new code (one file per feature, so two people never edit the same file):
+[docs/architecture.md → Extension points](docs/architecture.md#extension-points-how-to-add-a-feature-without-editing-shared-files).
+Rules for AI coding assistants: [AGENTS.md](AGENTS.md).
+
+### Common problems
+
+| Problem | Fix |
+|---|---|
+| `python: command not found` | use `python3` (macOS/Linux) or `py` (Windows), or reinstall Python with "Add to PATH" ticked |
+| `codetwin: command not found` | the virtual environment is not active: run the `activate` command from step 4 |
+| PowerShell: *running scripts is disabled* | run `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` once, or use Git Bash |
+| `Permission denied: scripts/check.sh` | run it as `bash scripts/check.sh` |
+| `$'\r': command not found` (Windows) | the file has Windows line endings; run `git config --global core.autocrlf input`, then `git rm -r --cached -q . && git reset --hard` (only with no unsaved changes) |
+| VS Code terminal shows `PS C:\...>` | that is PowerShell; open a **Git Bash** terminal instead (see the note at the top) |
+| `codetwin` works in one terminal but not another (Windows) | every new terminal needs `source .venv/Scripts/activate` first |
+| `Repository not found` when cloning or pushing | accept the GitHub invitation and run `gh auth login` again |
+| `npm ci` fails | check `node --version` is 22 or newer; delete `node_modules` and run `npm ci` again |
+| Tests fail with a *git* error | Git must be installed and `git config --global user.name/user.email` set (step 2) |
+| `codetwin select` says *no recorded run* | run `codetwin record` first, on a clean checkout |
+| Port 8765 already in use | another `codetwin serve` is running; stop it or use `codetwin serve --port 8770` |
+
+More: CI and release details in [docs/releasing.md](docs/releasing.md), repository settings in
+[docs/github-setup.md](docs/github-setup.md), all changes in [CHANGELOG.md](CHANGELOG.md).
 
 ## Roadmap
 

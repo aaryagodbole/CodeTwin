@@ -161,3 +161,30 @@ jobs:
         with:
           package: ".[mcp]"
           run-selected: "false"
+
+  windows:
+    # The team develops on Windows: run the whole definition of done there too (in Git Bash).
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with: { python-version: "3.12", cache: pip }
+      - uses: actions/setup-node@v7
+        with: { node-version: "22" }
+      - run: git config --global user.email ci@example.com && git config --global user.name ci
+      - run: python -m pip install --upgrade pip && pip install -e ".[dev,mcp,server]"
+      - name: Extension and dashboard dependencies
+        run: |
+          (cd extensions/vscode && npm ci)
+          (cd dashboard && npm ci)
+      - run: bash scripts/check.sh
+      - name: Smoke test of the commands in the README
+        run: |
+          codetwin record
+          echo "# try" >> src/codetwin/selection.py
+          codetwin select
+          codetwin graph src/codetwin/selection.py
+          git checkout src/codetwin/selection.py

@@ -7,6 +7,11 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+- README: step-by-step development setup for first-time contributors, with Windows (Git Bash) instructions.
+- CI: `windows` job runs the full checks and the README commands on Windows for every pull request;
+  `.gitattributes` keeps LF line endings so bash scripts work on Windows.
+
 ### Changed
 - Dependabot keeps the minimum versions in `pyproject.toml` and only proposes Python updates when a release
   falls outside the allowed range (CI already tests the latest versions).

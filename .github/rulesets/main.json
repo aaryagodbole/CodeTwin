@@ -72,6 +72,9 @@
           },
           {
             "context": "action"
+          },
+          {
+            "context": "windows"
           }
         ]
       }
