@@ -10,8 +10,8 @@ Student Developer Pack).
 
 | File | Protects | Rules |
 |---|---|---|
-| `.github/rulesets/main.json` | `main` | pull request with 1 approval and code-owner review, conversations resolved, squash merge only, all CI checks green and up to date, linear history, no force push, no deletion |
-| `.github/rulesets/dev.json` | `dev` | same as `main` |
+| `.github/rulesets/main.json` | `main` | pull request (from `dev`) with 1 approval and code-owner review, conversations resolved, **merge commit only**, all CI checks green and up to date, no force push, no deletion |
+| `.github/rulesets/dev.json` | `dev` | same, but **squash merge only** and linear history (one commit per feature) |
 | `.github/rulesets/release-tags.json` | `v*` tags | a published release tag cannot be moved or deleted |
 
 Required checks: `lint`, `typecheck`, `security`, `test (3.11)`, `test (3.12)`, `test (3.13)`, `package`,
@@ -21,7 +21,9 @@ Required checks: `lint`, `typecheck`, `security`, `test (3.11)`, `test (3.12)`, 
 ## 2. General settings
 
 **Settings → General → Pull Requests**
-- Allow **squash merging** only (untick merge commits and rebase merging); default message: pull request title.
+- Allow **squash merging** (feature → `dev`) and **merge commits** (`dev` → `main`); untick rebase merging.
+  The rulesets decide which method each branch accepts. Squashing `dev` into `main` would make the two
+  branches diverge, so `main` only accepts merge commits.
 - Tick **Always suggest updating pull request branches**, **Allow auto-merge**,
   **Automatically delete head branches**.
 

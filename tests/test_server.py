@@ -34,3 +34,6 @@ def test_api_reads_evidence(toy_repo):
     g = c.get("/api/graph", params={"file": "src/shop/price.py", "lines": "1-2"}).json()
     assert g["counts"]["tests"] == 1
     assert c.get("/api/graph", params={"file": "src/shop/price.py", "lines": "x"}).status_code == 400
+    st = c.get("/api/llm").json()
+    assert [p["name"] for p in st["providers"]] == ["groq", "gemini"]
+    assert all("key" not in p or p["key"] is None for p in st["providers"])

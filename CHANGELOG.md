@@ -7,7 +7,7 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
-## [0.1.0] - 2026-11-11
+## [0.1.0] - 2026-11-13
 
 Baseline release: the structure every later pull request is compared against.
 
@@ -31,6 +31,15 @@ Baseline release: the structure every later pull request is compared against.
   the repository's own Action on pull requests, read-only default token permissions.
 - Rulesets for `main`, `dev` and release tags (`.github/rulesets/`), Codespaces dev container, `SECURITY.md`,
   `docs/github-setup.md`, `release` environment for store tokens.
+- LLM settings for explanations: Groq (default) and Gemini (fallback) through their OpenAI-compatible APIs,
+  `[llm]` in `.codetwin.toml`, keys from `GROQ_API_KEY` / `GEMINI_API_KEY`, automatic fallback on a missing key
+  or rate limit, `codetwin llm [--test]`, `GET /api/llm` status for the dashboard (docs/llm.md).
+
+### Changed
+- TypeScript 6.0 for the dashboard and the VS Code extension (TypeScript 7 waits for typescript-eslint support;
+  Dependabot ignores it until then). The extension's tsconfig lists `types: ["node"]`, which TypeScript 6 requires.
+- Dependencies: GitHub Actions on Node 24 versions (checkout v7, setup-python v7, setup-node v7, upload-artifact v7,
+  download-artifact v8); React 19.3.1, Tailwind CSS 4.3.5.
 
 ### Security
 - GitHub Action: event and repository values (branch name, alpha, selected test file names) are passed through
@@ -40,6 +49,9 @@ Baseline release: the structure every later pull request is compared against.
   be set in user or machine settings, so a repository cannot choose which program runs.
 
 ### Fixed (found in review before the release)
+- Release: the tag is pushed before the GitHub release is created (creating both in one API call was refused
+  with HTTP 403); the source package contains only the Python project (it included `dashboard/node_modules`,
+  162 MB, now 0.5 MB).
 - `codetwin learn` refuses to learn twice from the same decision (it counted the change twice in calibration).
 - Budget-mode outcomes no longer move the adaptive level, which tracks the calibrated threshold only.
 - Database connections are closed after every CLI command, MCP call and API request.

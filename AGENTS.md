@@ -34,6 +34,9 @@ builds) and new behaviour has a test.
   a feature. Feature settings: `cfg.section("<name>")`. Table: `docs/architecture.md`.
 - **Output contract.** `Decision.to_dict()` is read by VS Code, the Action and agents (`docs/output.md`). Add data
   as a report section under `extras`; changing top-level keys needs an `OUTPUT_SCHEMA` bump.
+- **LLM explains, never decides.** Code in `llm/` and anything calling it may phrase or summarise evidence, but
+  must not change a selection, a decision, a risk number or the evidence store. API keys come only from the
+  environment; never log or return them.
 - **Resources.** Use `with Engine(root) as eng:` (or `with Store(...)`) so database connections are closed.
 - **Shell safety.** In workflows and `action/`, pass event and repository values through `env:` and quote them;
   never put `${{ ... }}` or file names into shell code.

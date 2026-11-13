@@ -34,10 +34,10 @@ jobs:
     outputs:
       version: ${{ steps.version.outputs.version }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with: { python-version: "3.12" }
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with: { node-version: "22" }
       - name: Run from main only
         if: github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/main'
@@ -63,15 +63,15 @@ jobs:
       - name: Build VS Code extension
         working-directory: extensions/vscode
         run: npm ci && npm run compile && npx --yes @vscode/vsce package --out "../../dist/codetwin-${TAG#v}.vsix"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with: { name: dist, path: dist/ }
 
   github-release:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
         with: { name: dist, path: dist }
       - name: Release notes from CHANGELOG.md
         run: |
@@ -82,13 +82,22 @@ jobs:
           m = re.search(rf"## \[{re.escape(v)}\][^\n]*\n(.*?)(?=\n## \[|\n\[Unreleased\]:|\Z)", text, re.S)
           print(m[1].strip() if m else f"Release {v}")
           PY
+      - name: Create the tag (when started from the Actions tab)
+        run: |
+          if git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null; then
+            echo "tag $TAG exists"
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git tag -a "$TAG" -m "$TAG" "$GITHUB_SHA"
+            git push origin "refs/tags/$TAG"
+          fi
       - name: Publish GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           pre=""; case "$TAG" in v0.*) pre="--prerelease";; esac
-          # --target creates the tag on this commit when the release is started from the Actions tab
-          gh release create "$TAG" dist/* --target "$GITHUB_SHA" --title "CodeTwin AI $TAG" --notes-file notes.md $pre
+          gh release create "$TAG" dist/* --verify-tag --title "CodeTwin AI $TAG" --notes-file notes.md $pre
 
   vscode-marketplace:
     needs: build
@@ -98,7 +107,7 @@ jobs:
       VSCE_PAT: ${{ secrets.VSCE_PAT }}
       OVSX_PAT: ${{ secrets.OVSX_PAT }}
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with: { name: dist, path: dist }
       - name: VS Code Marketplace
         if: env.VSCE_PAT != ''
@@ -118,7 +127,7 @@ jobs:
     permissions:
       id-token: write          # trusted publishing; no token stored in the repository
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with: { name: dist, path: dist }
       - run: rm -f dist/*.vsix
       - uses: pypa/gh-action-pypi-publish@release/v1

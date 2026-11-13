@@ -16,8 +16,8 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with: { python-version: "3.12" }
       - run: pip install ruff actionlint-py shellcheck-py
       - name: Lint Python (style, bugs, security rules; see pyproject.toml)
@@ -28,8 +28,8 @@ jobs:
   typecheck:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with: { python-version: "3.12", cache: pip }
       - run: pip install -e ".[dev,mcp,server]"
       - run: mypy
@@ -37,10 +37,10 @@ jobs:
   security:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with: { python-version: "3.12" }
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with: { node-version: "22" }
       - name: Python dependencies (known vulnerabilities)
         run: |
@@ -61,8 +61,8 @@ jobs:
       matrix:
         python-version: ["3.11", "3.12", "3.13"]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
@@ -77,7 +77,7 @@ jobs:
           r = ET.parse("coverage.xml").getroot()
           print(f"### Coverage: {float(r.get('line-rate')) * 100:.1f}% lines, {float(r.get('branch-rate')) * 100:.1f}% branches")
           PY
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: test-results-py${{ matrix.python-version }}
@@ -88,8 +88,8 @@ jobs:
   package:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with: { python-version: "3.12" }
       - run: pip install build
       - run: python -m build
@@ -114,7 +114,7 @@ jobs:
           print("smoke OK:", d["decision"], f"{d['residual_risk']:.1%}", len(d["selected"]), "tests")
           PY
           /tmp/v/bin/python -c "from codetwin.mcp_server import build_server; build_server('.')"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with: { name: python-dist, path: dist/ }
 
   vscode-extension:
@@ -123,13 +123,13 @@ jobs:
       run:
         working-directory: extensions/vscode
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with: { node-version: "22", cache: npm, cache-dependency-path: extensions/vscode/package-lock.json }
       - run: npm ci
       - run: npm run compile
       - run: npx --yes @vscode/vsce package --out codetwin.vsix
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with: { name: vscode-extension, path: extensions/vscode/codetwin.vsix }
 
   dashboard:
@@ -138,13 +138,13 @@ jobs:
       run:
         working-directory: dashboard
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with: { node-version: "22", cache: npm, cache-dependency-path: dashboard/package-lock.json }
       - run: npm ci
       - run: npm run lint
       - run: npm run build
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with: { name: dashboard, path: dashboard/out }
 
   action:
@@ -152,9 +152,9 @@ jobs:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with: { fetch-depth: 0 }
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with: { python-version: "3.12" }
       - run: git config --global user.email ci@example.com && git config --global user.name ci
       - uses: ./action
