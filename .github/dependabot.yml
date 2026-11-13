@@ -21,6 +21,9 @@ updates:
       # must match the Node.js major that VS Code ships
       - dependency-name: "@types/node"
         update-types: ["version-update:semver-major"]
+      # TypeScript 7 is not supported by typescript-eslint (<6.1) yet; remove when it is
+      - dependency-name: "typescript"
+        versions: [">=7.0.0"]
     groups:
       vscode-extension:
         update-types: [minor, patch]
@@ -33,6 +36,9 @@ updates:
       # must match the Node.js major used in CI (22)
       - dependency-name: "@types/node"
         update-types: ["version-update:semver-major"]
+      # TypeScript 7 is not supported by typescript-eslint (<6.1) yet; remove when it is
+      - dependency-name: "typescript"
+        versions: [">=7.0.0"]
     groups:
       dashboard:
         update-types: [minor, patch]
