@@ -96,6 +96,7 @@ selected 2 test files:
 | `codetwin impact FILE...` | tests reached by files, with how each link is known, and unresolved links |
 | `codetwin graph FILE [--lines 10-24] [--json]` | impact graph around a file or selected lines (importers, dependencies, tests, unknowns) |
 | `codetwin serve` | web dashboard and read-only API on `http://127.0.0.1:8765` |
+| `codetwin llm [--test]` | LLM settings for explanations (Groq, Gemini) and a connection test |
 | `codetwin learn` | run the full suite, record whether the last selection missed a test, update calibration |
 | `codetwin explain` | the numbers and reasons behind the last decision |
 
@@ -117,7 +118,14 @@ alpha = 0.10                     # target miss rate
 budget = 0.25                    # share of full-suite time in budget mode
 aci_gamma = 0.02                 # step size of adaptive calibration
 fallback = "file-coverage"       # broader run on abstention: file-coverage | full
+
+[llm]                            # optional: plain-language explanations; keys from GROQ_API_KEY / GEMINI_API_KEY
+provider = "groq"                # groq | gemini (both have free tiers)
+fallback = "gemini"
 ```
+
+LLM setup and privacy: [docs/llm.md](docs/llm.md). The LLM only explains; decisions and risk come from the
+calibrated engine.
 
 Evidence is stored locally in `.codetwin/` (add it to `.gitignore`). No code leaves your machine.
 

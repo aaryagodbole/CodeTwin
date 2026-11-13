@@ -54,6 +54,12 @@ def create_app(root: str | Path = ".", static_dir: str | Path | None = None) -> 
                 "recorded_commit": base, "test_files": len(run.durations) if run else 0,
                 "suite_seconds": run.wall if run else None, "decisions": n_dec, "labelled_decisions": n_out}
 
+    @app.get("/api/llm")
+    def llm_status(eng: Eng) -> dict:
+        """Whether LLM explanations are available (which providers have keys); never returns the keys."""
+        from ..llm import client_from_config
+        return client_from_config(eng.cfg).status()
+
     @app.get("/api/decisions")
     def decisions(eng: Eng, limit: int = Query(100, ge=1, le=1000)) -> list[dict]:
         rows = eng.store.con.execute(

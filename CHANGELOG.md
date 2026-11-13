@@ -7,6 +7,11 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+- LLM settings for explanations: Groq (default) and Gemini (fallback) through their OpenAI-compatible APIs,
+  `[llm]` in `.codetwin.toml`, keys from `GROQ_API_KEY` / `GEMINI_API_KEY`, automatic fallback on a missing key
+  or rate limit, `codetwin llm [--test]`, `GET /api/llm` status for the dashboard (docs/llm.md).
+
 ### Changed
 - TypeScript 6.0 for the dashboard and the VS Code extension (TypeScript 7 waits for typescript-eslint support;
   Dependabot ignores it until then). The extension's tsconfig lists `types: ["node"]`, which TypeScript 6 requires.
