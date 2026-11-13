@@ -39,6 +39,10 @@ path = "src/codetwin/__init__.py"   # single source of the version
 [tool.hatch.build]
 artifacts = ["src/codetwin/server/static/**"]   # dashboard build (gitignored), added by the release workflow
 
+[tool.hatch.build.targets.sdist]
+# only what is needed to build and test the Python package (not node_modules or front-end builds)
+include = ["/src", "/tests", "/README.md", "/LICENSE", "/CHANGELOG.md", "/pyproject.toml"]
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/codetwin"]
 

@@ -6,7 +6,7 @@ Versions follow [Semantic Versioning](https://semver.org/). `0.x` releases are p
 
 1. On `dev`: move the **Unreleased** entries in `CHANGELOG.md` under a new version heading, and set the same
    version in `src/codetwin/__init__.py` and `extensions/vscode/package.json`.
-2. Merge `dev` into `main` (pull request, CI green).
+2. Open a pull request `dev` → `main` and merge it with a **merge commit** (not squash) once CI is green.
 3. Start the release, either way:
    - **GitHub website:** Actions → **Release** → **Run workflow** → branch `main`, tag `v0.2.0` → Run.
    - **Terminal:** `git checkout main && git pull && git tag -a v0.2.0 -m "v0.2.0" && git push origin v0.2.0`
