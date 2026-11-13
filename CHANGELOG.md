@@ -7,6 +7,10 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Changed
+- TypeScript 6.0 for the dashboard and the VS Code extension (TypeScript 7 waits for typescript-eslint support;
+  Dependabot ignores it until then). The extension's tsconfig lists `types: ["node"]`, which TypeScript 6 requires.
+
 ## [0.1.0] - 2026-11-11
 
 Baseline release: the structure every later pull request is compared against.
