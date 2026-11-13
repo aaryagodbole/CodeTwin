@@ -13,7 +13,7 @@ authors = [{ name = "CodeTwin AI contributors" }]
 dependencies = [
   "networkx>=3.2",
   "numpy>=1.26",
-  "scikit-learn>=1.4",
+  "scikit-learn>=1.9.1",
   "coverage>=7.6",
   "pytest>=8",
   "pytest-cov>=5",
