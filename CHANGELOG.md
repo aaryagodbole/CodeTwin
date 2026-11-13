@@ -7,6 +7,10 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Changed
+- Dependabot keeps the minimum versions in `pyproject.toml` and only proposes Python updates when a release
+  falls outside the allowed range (CI already tests the latest versions).
+
 ## [0.1.0] - 2026-11-13
 
 Baseline release: the structure every later pull request is compared against.
