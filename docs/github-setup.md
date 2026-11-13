@@ -15,7 +15,7 @@ Student Developer Pack).
 | `.github/rulesets/release-tags.json` | `v*` tags | a published release tag cannot be moved or deleted |
 
 Required checks: `lint`, `typecheck`, `security`, `test (3.11)`, `test (3.12)`, `test (3.13)`, `package`,
-`vscode-extension`, `dashboard`, `action`. Repository admins can merge a pull request without the approval
+`vscode-extension`, `dashboard`, `action`, `windows`. Repository admins can merge a pull request without the approval
 (bypass mode *pull request*), but nobody can push directly to `main` or `dev`.
 
 ## 2. General settings
