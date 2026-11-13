@@ -20,6 +20,13 @@ alpha = 0.10                     # target miss rate
 budget = 0.25                    # share of full-suite time in budget mode
 aci_gamma = 0.02                 # step size of adaptive calibration
 fallback = "file-coverage"       # broader run on abstention: file-coverage | full
+
+[llm]
+# Explanations in the dashboard and editor. The LLM never makes the proceed/abstain decision.
+# API keys come from the environment (GROQ_API_KEY, GEMINI_API_KEY), never from this file.
+provider = "groq"                # groq | gemini
+fallback = "gemini"              # used when the provider has no key or hits its rate limit; "" for none
+# model = "openai/gpt-oss-120b"  # optional: override the provider's default model
 """
 
 
