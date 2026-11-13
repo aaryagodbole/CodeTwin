@@ -14,6 +14,12 @@
   "bypass_actors": [],
   "rules": [
     {
+      "type": "deletion"
+    },
+    {
+      "type": "non_fast_forward"
+    },
+    {
       "type": "copilot_code_review",
       "parameters": {
         "review_on_push": true,
