@@ -7,6 +7,9 @@ updates:
     directory: "/"
     schedule: { interval: monthly }
     target-branch: dev
+    # pyproject.toml lists minimum supported versions (>=), not pins; CI always installs the latest.
+    # Only open a pull request when a new release falls outside the allowed range.
+    versioning-strategy: increase-if-necessary
     groups:
       python:
         update-types: [minor, patch]
