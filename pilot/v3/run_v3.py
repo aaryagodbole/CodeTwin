@@ -13,9 +13,11 @@
 Usage:  CT_PILOT=<dir with analyze.py and data/> CT_REPOS=<dir with bare clones> python run_v3.py
 Writes  v3/results/v3.json.
 """
+import ast
 import json
 import math
 import os
+import subprocess
 import sys
 from collections import defaultdict
 from pathlib import Path
@@ -107,12 +109,44 @@ def warm_tau(q, miss, alpha):
 
 
 # ------------------------------------------------------------------ weak-check evidence
-def weak_check(rec, universe):
-    """Mutants on changed lines that ran at least one test: survived => line executed but not checked."""
-    U = set(universe)
+_SIMPLE_SKIP = (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef, ast.If, ast.For, ast.AsyncFor,
+                ast.While, ast.With, ast.AsyncWith, ast.Try)
+
+
+def _executed_lines(run, f):
+    """Lines of file f executed in the new version, by any test or at import time."""
+    lines = set(run["import_lines"].get(f, []))
+    for cov in run["covered"].values():
+        lines |= set(cov.get(f, []))
+    return lines
+
+
+def _line_executed(repo, sha, f, line, ex, cache):
+    """A line counts as executed if it, or the first line of the simple statement containing it, was executed
+    (coverage.py records multi-line statements on their first line)."""
+    if line in ex:
+        return True
+    if (sha, f) not in cache:
+        try:
+            cache[(sha, f)] = ast.parse(subprocess.run(["git", f"--git-dir={repo}", "show", f"{sha}:{f}"],
+                                                       capture_output=True, text=True).stdout)
+        except SyntaxError:
+            cache[(sha, f)] = None
+    tree = cache[(sha, f)]
+    return tree is not None and any(
+        isinstance(n, ast.stmt) and not isinstance(n, _SIMPLE_SKIP)
+        and n.lineno <= line <= (n.end_lineno or n.lineno) and n.lineno in ex for n in ast.walk(tree))
+
+
+def weak_check(rec, run, repo, cache):
+    """Seeded faults on changed lines that some test executed in the new version and that were run against the
+    tests (the test files that executed the mutated file). A surviving such fault = covered but unchecked.
+    Faults on lines that no test executed are not counted: those lines were not covered at all."""
     ran = [m for m in rec.get("mutants", []) if m.get("tests_run", 0) > 0 and m["status"] in ("killed", "survived")]
-    surv = [m for m in ran if m["status"] == "survived"]
-    return {"ran": len(ran), "survived": len(surv), "unchecked": bool(surv), "all_unchecked": bool(ran) and len(surv) == len(ran)}
+    cov = [m for m in ran if _line_executed(repo, rec["sha"], m["file"], m["line"], _executed_lines(run, m["file"]), cache)]
+    surv = [m for m in cov if m["status"] == "survived"]
+    return {"ran": len(cov), "survived": len(surv), "unchecked": bool(surv), "all_unchecked": bool(cov) and len(surv) == len(cov),
+            "ran_incl_uncovered": len(ran), "survived_on_uncovered_lines": sum(m["status"] == "survived" for m in ran) - len(surv)}
 
 
 def ev_summary(evals):
@@ -158,15 +192,35 @@ def main():
                  "intercept": float(prior.intercept_[0]), "n_rows": len(ally), "positives": int(sum(ally))}
     R = {"prior_change_model": prior_out, "protocol": {"change_features": CHANGE_FEATS, "targets": TARGETS, "selection_alphas": SEL_ALPHAS,
                       "gamma": GAMMA, "tau0": 0.5,
-                      "training": "change-level model leave-one-project-out over the history projects; NameRTS projects use all history projects"},
+                      "training": "change-level model leave-one-project-out over the history projects; its training rows come from test-level models that also exclude the evaluated project; NameRTS projects use all history projects"},
          "risk": {}, "selective": {}, "noop": {}, "weak": {}}
     RISK = defaultdict(list)                   # mode -> [(prod, change, observed)]
     SELE = defaultdict(list)                   # key -> per-change dicts (pooled later by group)
 
+    # Rows used to evaluate q(c) on a history project p must not come from test-level models that saw p:
+    # for each training project q, retrain the test-level model without both q and p.
+    rows_excl = {}
+
+    def rows_without(q, p):
+        if (q, p) not in rows_excl:
+            m = A.train([c for r in hist_p if r not in (q, p) for c in data[r]])
+            calib_q, _ = A.split(data[q])
+            rc = A.fit_recalibration(calib_q, m)
+            lm = {a: A.crc_threshold(calib_q, m, a) for a in A.ALPHAS}
+            X, y = [], []
+            for c in data[q]:
+                s = A.scores_of(m, c)
+                for sel in operating_points(c, s, lm):
+                    X.append(vec(change_features(c, s, sel, rc)))
+                    y.append(0 if c["affected"] <= sel else 1)
+            rows_excl[(q, p)] = (X, y)
+        return rows_excl[(q, p)]
+
     for p in hist_p + pair_p:
         others = [q for q in hist_p if q != p]
-        X = [x for q in others for x in rows[q][0]]
-        y = [v for q in others for v in rows[q][1]]
+        src = [rows_without(q, p) for q in others] if p in hist_p else [rows[q] for q in others]
+        X = [x for r in src for x in r[0]]
+        y = [v for r in src for v in r[1]]
         cr = ChangeRisk(X, y)
         calib, test = A.split(data[p])
         k = len(calib)
@@ -219,6 +273,7 @@ def main():
         bysha, meta = recs[p]
         spec = meta["spec"]
         repo = str(REPOS / REPO_DIR.get(p, p))
+        snaps_w, wcache = A.Snaps(p), {}
         for c in test:
             rec = bysha[c["sha"]]
             kind_, files = classify_change(repo, rec["parent"], rec["sha"], rec["diff"], lambda f: A.is_src(f, spec))
@@ -229,7 +284,7 @@ def main():
                                                 "forced": len(A.forced(c)),
                                                 "time_skippable": A.evaluate_set(c, A.forced(c))["time_red"],
                                                 "filecov_time_red": A.evaluate_set(c, fc)["time_red"]})
-            wc = weak_check(rec, c["universe"])
+            wc = weak_check(rec, snaps_w.get(rec["sha"])["run"], repo, wcache)
             wc.update({"sha": c["sha"][:10], "linecov_safe": A.evaluate_set(c, lc)["safe"]})
             R["weak"].setdefault(p, []).append(wc)
 
@@ -291,7 +346,8 @@ def main():
         wsum[g] = {"test_changes": len(lst), "with_executed_mutants": len(withm),
                    "unchecked": sum(r["unchecked"] for r in withm), "all_unchecked": sum(r["all_unchecked"] for r in withm),
                    "linecov_safe_with_mutants": len(safe_), "linecov_safe_but_unchecked": sum(r["unchecked"] for r in safe_),
-                   "mutants_ran": sum(r["ran"] for r in withm), "mutants_survived": sum(r["survived"] for r in withm)}
+                   "mutants_ran": sum(r["ran"] for r in withm), "mutants_survived": sum(r["survived"] for r in withm),
+                   "survived_on_uncovered_lines_excluded": sum(r["survived_on_uncovered_lines"] for r in lst)}
     R["weak_summary"] = wsum
 
     outdir = Path(__file__).resolve().parent / "results"

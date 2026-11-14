@@ -48,7 +48,7 @@
   ],
   "gamma": 0.02,
   "tau0": 0.5,
-  "training": "change-level model leave-one-project-out over the history projects; NameRTS projects use all history projects"
+  "training": "change-level model leave-one-project-out over the history projects; its training rows come from test-level models that also exclude the evaluated project; NameRTS projects use all history projects"
  },
  "risk": {
   "budget25:HIST": {
@@ -61,9 +61,9 @@
     "ece5": 0.05164118547571583
    },
    "change_level": {
-    "mean": 0.6325542183303626,
-    "brier": 0.058688391297104105,
-    "ece5": 0.021746459578317664
+    "mean": 0.6396534437352449,
+    "brier": 0.0580105531581293,
+    "ece5": 0.03129928848695827
    }
   },
   "aci10:HIST": {
@@ -76,9 +76,9 @@
     "ece5": 0.06669462018607819
    },
    "change_level": {
-    "mean": 0.09317042109228349,
-    "brier": 0.06165648883291642,
-    "ece5": 0.03918766859727693
+    "mean": 0.0888821453420724,
+    "brier": 0.06153975829838944,
+    "ece5": 0.03679548192360981
    }
   },
   "linecov:HIST": {
@@ -91,9 +91,9 @@
     "ece5": 0.09895549704908918
    },
    "change_level": {
-    "mean": 0.10602161739464218,
-    "brier": 0.08286358262076356,
-    "ece5": 0.05876239402768737
+    "mean": 0.09698308042684996,
+    "brier": 0.08215665807470986,
+    "ece5": 0.049789029720053966
    }
   },
   "budget25:NRTS": {
@@ -161,14 +161,14 @@
   },
   "qrule:sel0.1:t0.05:HIST": {
    "n": 332,
-   "abstain_rate": 0.2680722891566265,
-   "miss_among_proceeded": 0.02880658436213992,
-   "n_proceeded": 243,
-   "overall_miss": 0.02108433734939763,
-   "time_red": 0.2753607630033644,
+   "abstain_rate": 0.27710843373493976,
+   "miss_among_proceeded": 0.025,
+   "n_proceeded": 240,
+   "overall_miss": 0.01807228915662651,
+   "time_red": 0.274115564906345,
    "mut_rate": 0.9972144846796658,
    "per_project_miss_proceeded": {
-    "click": 0.05555555555555555,
+    "click": 0.047619047619047616,
     "dateutil": 0.0,
     "itsdangerous": 0.034482758620689655,
     "marshmallow": 0.0,
@@ -177,30 +177,30 @@
   },
   "selective:sel0.1:t0.05:HIST": {
    "n": 332,
-   "abstain_rate": 0.03915662650602414,
-   "miss_among_proceeded": 0.06583072100313479,
-   "n_proceeded": 319,
+   "abstain_rate": 0.04216867469879515,
+   "miss_among_proceeded": 0.0660377358490566,
+   "n_proceeded": 318,
    "overall_miss": 0.06325301204819278,
-   "time_red": 0.371352508636074,
+   "time_red": 0.37048059994869287,
    "mut_rate": 0.9972144846796658,
    "per_project_miss_proceeded": {
     "click": 0.0958904109589041,
     "dateutil": 0.06451612903225806,
     "itsdangerous": 0.034482758620689655,
     "marshmallow": 0.03614457831325301,
-    "toolz": 0.03333333333333333
+    "toolz": 0.034482758620689655
    }
   },
   "selective_warm:sel0.1:t0.05:HIST": {
    "n": 332,
-   "abstain_rate": 0.1686746987951807,
-   "miss_among_proceeded": 0.06159420289855073,
-   "n_proceeded": 276,
+   "abstain_rate": 0.17168674698795183,
+   "miss_among_proceeded": 0.06181818181818182,
+   "n_proceeded": 275,
    "overall_miss": 0.051204819277108404,
-   "time_red": 0.3406834212993503,
+   "time_red": 0.33783489363821717,
    "mut_rate": 0.9972144846796658,
    "per_project_miss_proceeded": {
-    "click": 0.08571428571428572,
+    "click": 0.08633093525179857,
     "itsdangerous": 0.034482758620689655,
     "marshmallow": 0.03896103896103896,
     "toolz": 0.03333333333333333
@@ -208,14 +208,14 @@
   },
   "selective_warm_g05:sel0.1:t0.05:HIST": {
    "n": 332,
-   "abstain_rate": 0.17771084337349397,
-   "miss_among_proceeded": 0.06227106227106227,
-   "n_proceeded": 273,
+   "abstain_rate": 0.24397590361445787,
+   "miss_among_proceeded": 0.06772908366533864,
+   "n_proceeded": 251,
    "overall_miss": 0.051204819277108404,
-   "time_red": 0.33909115082315106,
+   "time_red": 0.3323132906775659,
    "mut_rate": 0.9972144846796658,
    "per_project_miss_proceeded": {
-    "click": 0.08823529411764706,
+    "click": 0.10526315789473684,
     "itsdangerous": 0.034482758620689655,
     "marshmallow": 0.038461538461538464,
     "toolz": 0.03333333333333333
@@ -239,14 +239,14 @@
   },
   "qrule:sel0.2:t0.05:HIST": {
    "n": 332,
-   "abstain_rate": 0.44277108433734935,
-   "miss_among_proceeded": 0.021621621621621623,
-   "n_proceeded": 185,
+   "abstain_rate": 0.4487951807228916,
+   "miss_among_proceeded": 0.02185792349726776,
+   "n_proceeded": 183,
    "overall_miss": 0.012048192771084376,
-   "time_red": 0.2733836526640033,
+   "time_red": 0.27249183600449123,
    "mut_rate": 0.9972144846796658,
    "per_project_miss_proceeded": {
-    "click": 0.03614457831325301,
+    "click": 0.037037037037037035,
     "dateutil": 0.0,
     "itsdangerous": 0.04,
     "marshmallow": 0.0,
@@ -255,14 +255,14 @@
   },
   "selective:sel0.2:t0.05:HIST": {
    "n": 332,
-   "abstain_rate": 0.1807228915662651,
-   "miss_among_proceeded": 0.09558823529411764,
-   "n_proceeded": 272,
+   "abstain_rate": 0.1656626506024096,
+   "miss_among_proceeded": 0.09386281588447654,
+   "n_proceeded": 277,
    "overall_miss": 0.07831325301204817,
-   "time_red": 0.39169510128710855,
+   "time_red": 0.4012336573341925,
    "mut_rate": 0.9972144846796658,
    "per_project_miss_proceeded": {
-    "click": 0.13821138211382114,
+    "click": 0.1328125,
     "dateutil": 0.10344827586206896,
     "itsdangerous": 0.04,
     "marshmallow": 0.056338028169014086,
@@ -271,28 +271,28 @@
   },
   "selective_warm:sel0.2:t0.05:HIST": {
    "n": 332,
-   "abstain_rate": 0.4879518072289156,
-   "miss_among_proceeded": 0.08823529411764706,
-   "n_proceeded": 170,
-   "overall_miss": 0.04518072289156627,
-   "time_red": 0.3230830629520191,
+   "abstain_rate": 0.5030120481927711,
+   "miss_among_proceeded": 0.08484848484848485,
+   "n_proceeded": 165,
+   "overall_miss": 0.04216867469879515,
+   "time_red": 0.3130693861420192,
    "mut_rate": 0.9972144846796658,
    "per_project_miss_proceeded": {
-    "click": 0.10909090909090909,
-    "marshmallow": 0.05
+    "click": 0.10576923076923077,
+    "marshmallow": 0.04918032786885246
    }
   },
   "selective_warm_g05:sel0.2:t0.05:HIST": {
    "n": 332,
-   "abstain_rate": 0.5,
-   "miss_among_proceeded": 0.0783132530120482,
-   "n_proceeded": 166,
-   "overall_miss": 0.03915662650602414,
-   "time_red": 0.3183842407172345,
+   "abstain_rate": 0.5120481927710843,
+   "miss_among_proceeded": 0.07407407407407407,
+   "n_proceeded": 162,
+   "overall_miss": 0.03614457831325302,
+   "time_red": 0.31388782280567246,
    "mut_rate": 0.9972144846796658,
    "per_project_miss_proceeded": {
-    "click": 0.09523809523809523,
-    "marshmallow": 0.04918032786885246
+    "click": 0.09,
+    "marshmallow": 0.04838709677419355
    }
   },
   "rprod:sel0.2:t0.1:HIST": {
@@ -313,15 +313,15 @@
   },
   "qrule:sel0.2:t0.1:HIST": {
    "n": 332,
-   "abstain_rate": 0.4036144578313253,
-   "miss_among_proceeded": 0.04040404040404041,
-   "n_proceeded": 198,
-   "overall_miss": 0.02409638554216864,
-   "time_red": 0.2767965105769132,
+   "abstain_rate": 0.4006024096385542,
+   "miss_among_proceeded": 0.04522613065326633,
+   "n_proceeded": 199,
+   "overall_miss": 0.027108433734939763,
+   "time_red": 0.2796849603509139,
    "mut_rate": 0.9972144846796658,
    "per_project_miss_proceeded": {
-    "click": 0.06593406593406594,
-    "dateutil": 0.0,
+    "click": 0.056818181818181816,
+    "dateutil": 0.08695652173913043,
     "itsdangerous": 0.04,
     "marshmallow": 0.022222222222222223,
     "toolz": 0.0
@@ -333,27 +333,27 @@
    "miss_among_proceeded": 0.0989399293286219,
    "n_proceeded": 283,
    "overall_miss": 0.08433734939759041,
-   "time_red": 0.41389523307226156,
+   "time_red": 0.41432445596735734,
    "mut_rate": 0.9972144846796658,
    "per_project_miss_proceeded": {
-    "click": 0.14393939393939395,
+    "click": 0.14285714285714285,
     "dateutil": 0.10344827586206896,
     "itsdangerous": 0.04,
     "marshmallow": 0.056338028169014086,
-    "toolz": 0.038461538461538464
+    "toolz": 0.04
    }
   },
   "selective_warm:sel0.2:t0.1:HIST": {
    "n": 332,
-   "abstain_rate": 0.13855421686746983,
-   "miss_among_proceeded": 0.11188811188811189,
-   "n_proceeded": 286,
+   "abstain_rate": 0.13554216867469882,
+   "miss_among_proceeded": 0.11149825783972125,
+   "n_proceeded": 287,
    "overall_miss": 0.09638554216867468,
-   "time_red": 0.42253248408669747,
+   "time_red": 0.4238243759274304,
    "mut_rate": 0.9972144846796658,
    "per_project_miss_proceeded": {
     "click": 0.145985401459854,
-    "dateutil": 0.09090909090909091,
+    "dateutil": 0.08695652173913043,
     "itsdangerous": 0.04,
     "marshmallow": 0.10666666666666667,
     "toolz": 0.037037037037037035
@@ -361,17 +361,17 @@
   },
   "selective_warm_g05:sel0.2:t0.1:HIST": {
    "n": 332,
-   "abstain_rate": 0.13554216867469882,
-   "miss_among_proceeded": 0.11498257839721254,
-   "n_proceeded": 287,
-   "overall_miss": 0.0993975903614458,
-   "time_red": 0.41940212670568655,
+   "abstain_rate": 0.14457831325301207,
+   "miss_among_proceeded": 0.11267605633802817,
+   "n_proceeded": 284,
+   "overall_miss": 0.09638554216867468,
+   "time_red": 0.41766580627964894,
    "mut_rate": 0.9972144846796658,
    "per_project_miss_proceeded": {
     "click": 0.14925373134328357,
-    "dateutil": 0.11538461538461539,
+    "dateutil": 0.125,
     "itsdangerous": 0.04,
-    "marshmallow": 0.10666666666666667,
+    "marshmallow": 0.0945945945945946,
     "toolz": 0.037037037037037035
    }
   },
@@ -5996,6 +5996,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "b0538dffe8",
     "linecov_safe": true
    },
@@ -6004,31 +6006,19 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "7271763ea3",
     "linecov_safe": true
    },
    {
-    "ran": 2,
-    "survived": 2,
-    "unchecked": true,
-    "all_unchecked": true,
-    "sha": "2de3b31773",
-    "linecov_safe": true
-   },
-   {
-    "ran": 3,
-    "survived": 2,
-    "unchecked": true,
+    "ran": 0,
+    "survived": 0,
+    "unchecked": false,
     "all_unchecked": false,
-    "sha": "d9af5cfa00",
-    "linecov_safe": true
-   },
-   {
-    "ran": 3,
-    "survived": 3,
-    "unchecked": true,
-    "all_unchecked": true,
-    "sha": "b765b12c7c",
+    "ran_incl_uncovered": 2,
+    "survived_on_uncovered_lines": 2,
+    "sha": "2de3b31773",
     "linecov_safe": true
    },
    {
@@ -6036,6 +6026,28 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 1,
+    "sha": "d9af5cfa00",
+    "linecov_safe": true
+   },
+   {
+    "ran": 2,
+    "survived": 2,
+    "unchecked": true,
+    "all_unchecked": true,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 1,
+    "sha": "b765b12c7c",
+    "linecov_safe": true
+   },
+   {
+    "ran": 1,
+    "survived": 0,
+    "unchecked": false,
+    "all_unchecked": false,
+    "ran_incl_uncovered": 2,
+    "survived_on_uncovered_lines": 1,
     "sha": "f5e47a6fc2",
     "linecov_safe": true
    },
@@ -6044,6 +6056,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 2,
+    "survived_on_uncovered_lines": 0,
     "sha": "edcd2dc240",
     "linecov_safe": true
    },
@@ -6052,6 +6066,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "988c683963",
     "linecov_safe": true
    },
@@ -6060,6 +6076,8 @@
     "survived": 3,
     "unchecked": true,
     "all_unchecked": true,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "56db54650f",
     "linecov_safe": true
    },
@@ -6068,6 +6086,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "a3277513d7",
     "linecov_safe": true
    },
@@ -6076,6 +6096,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "b63ace28d5",
     "linecov_safe": true
    },
@@ -6084,6 +6106,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "9c5e989d52",
     "linecov_safe": true
    },
@@ -6092,14 +6116,18 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 2,
+    "survived_on_uncovered_lines": 0,
     "sha": "93b7ab5781",
     "linecov_safe": true
    },
    {
-    "ran": 3,
-    "survived": 2,
+    "ran": 2,
+    "survived": 1,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 1,
     "sha": "1a3baf77d4",
     "linecov_safe": true
    },
@@ -6108,6 +6136,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "cab9483a30",
     "linecov_safe": true
    },
@@ -6116,14 +6146,18 @@
     "survived": 3,
     "unchecked": true,
     "all_unchecked": true,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "15959d92fd",
     "linecov_safe": true
    },
    {
-    "ran": 1,
-    "survived": 1,
-    "unchecked": true,
-    "all_unchecked": true,
+    "ran": 0,
+    "survived": 0,
+    "unchecked": false,
+    "all_unchecked": false,
+    "ran_incl_uncovered": 1,
+    "survived_on_uncovered_lines": 1,
     "sha": "471c20a595",
     "linecov_safe": true
    },
@@ -6132,6 +6166,8 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "99015e1456",
     "linecov_safe": true
    },
@@ -6140,6 +6176,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "1a4d8c1bb1",
     "linecov_safe": true
    },
@@ -6148,14 +6186,18 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": true,
+    "ran_incl_uncovered": 1,
+    "survived_on_uncovered_lines": 0,
     "sha": "a6e0d29368",
     "linecov_safe": true
    },
    {
-    "ran": 3,
-    "survived": 1,
-    "unchecked": true,
+    "ran": 2,
+    "survived": 0,
+    "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 1,
     "sha": "948d7a707a",
     "linecov_safe": true
    },
@@ -6164,6 +6206,8 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "0e0c00324a",
     "linecov_safe": true
    },
@@ -6172,6 +6216,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "1b524bb30d",
     "linecov_safe": false
    },
@@ -6180,6 +6226,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 1,
+    "survived_on_uncovered_lines": 0,
     "sha": "c326df95e9",
     "linecov_safe": false
    },
@@ -6188,6 +6236,8 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "fcd85032cf",
     "linecov_safe": true
    },
@@ -6196,6 +6246,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "380008389b",
     "linecov_safe": true
    },
@@ -6204,6 +6256,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 2,
+    "survived_on_uncovered_lines": 0,
     "sha": "1787497713",
     "linecov_safe": true
    },
@@ -6212,6 +6266,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 1,
+    "survived_on_uncovered_lines": 0,
     "sha": "4271fe283d",
     "linecov_safe": false
    },
@@ -6220,6 +6276,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "d8763b9302",
     "linecov_safe": true
    },
@@ -6228,6 +6286,8 @@
     "survived": 2,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "0ef55fda47",
     "linecov_safe": true
    },
@@ -6236,6 +6296,8 @@
     "survived": 2,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "d791537317",
     "linecov_safe": true
    },
@@ -6244,6 +6306,8 @@
     "survived": 3,
     "unchecked": true,
     "all_unchecked": true,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "0d69b6ce8b",
     "linecov_safe": true
    },
@@ -6252,6 +6316,8 @@
     "survived": 3,
     "unchecked": true,
     "all_unchecked": true,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "2cabbe3175",
     "linecov_safe": false
    },
@@ -6260,14 +6326,18 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 2,
+    "survived_on_uncovered_lines": 0,
     "sha": "3b06e0b75a",
     "linecov_safe": true
    },
    {
-    "ran": 3,
-    "survived": 3,
-    "unchecked": true,
-    "all_unchecked": true,
+    "ran": 0,
+    "survived": 0,
+    "unchecked": false,
+    "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 3,
     "sha": "fde47b4b4f",
     "linecov_safe": true
    },
@@ -6276,6 +6346,8 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "5961d31fb5",
     "linecov_safe": true
    },
@@ -6284,6 +6356,8 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "88328fc874",
     "linecov_safe": true
    },
@@ -6292,6 +6366,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 2,
+    "survived_on_uncovered_lines": 0,
     "sha": "b5464b7e06",
     "linecov_safe": true
    },
@@ -6300,14 +6376,18 @@
     "survived": 3,
     "unchecked": true,
     "all_unchecked": true,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "4ffa1ef3b6",
     "linecov_safe": true
    },
    {
-    "ran": 1,
-    "survived": 1,
-    "unchecked": true,
-    "all_unchecked": true,
+    "ran": 0,
+    "survived": 0,
+    "unchecked": false,
+    "all_unchecked": false,
+    "ran_incl_uncovered": 1,
+    "survived_on_uncovered_lines": 1,
     "sha": "45f89cd5d3",
     "linecov_safe": true
    },
@@ -6316,6 +6396,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "4ece17a107",
     "linecov_safe": true
    },
@@ -6324,6 +6406,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "c9f7d9d8a0",
     "linecov_safe": true
    },
@@ -6332,14 +6416,18 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 1,
+    "survived_on_uncovered_lines": 0,
     "sha": "f84395c517",
     "linecov_safe": true
    },
    {
-    "ran": 3,
-    "survived": 3,
+    "ran": 1,
+    "survived": 1,
     "unchecked": true,
     "all_unchecked": true,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 2,
     "sha": "b7c0ab471c",
     "linecov_safe": true
    },
@@ -6348,6 +6436,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "f14b75063f",
     "linecov_safe": true
    },
@@ -6356,6 +6446,8 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 2,
+    "survived_on_uncovered_lines": 0,
     "sha": "498f882604",
     "linecov_safe": true
    },
@@ -6364,6 +6456,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "af73ce4793",
     "linecov_safe": true
    },
@@ -6372,6 +6466,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "884af5c20f",
     "linecov_safe": true
    },
@@ -6380,6 +6476,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "b7cf06970e",
     "linecov_safe": true
    },
@@ -6388,6 +6486,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 1,
+    "survived_on_uncovered_lines": 0,
     "sha": "cfa6f4ad3e",
     "linecov_safe": true
    },
@@ -6396,14 +6496,18 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 2,
+    "survived_on_uncovered_lines": 0,
     "sha": "262bdf0228",
     "linecov_safe": false
    },
    {
-    "ran": 2,
-    "survived": 2,
+    "ran": 1,
+    "survived": 1,
     "unchecked": true,
     "all_unchecked": true,
+    "ran_incl_uncovered": 2,
+    "survived_on_uncovered_lines": 1,
     "sha": "d1a80aa95c",
     "linecov_safe": true
    },
@@ -6412,6 +6516,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "565f36d5bc",
     "linecov_safe": true
    },
@@ -6420,6 +6526,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "a1235aacb1",
     "linecov_safe": true
    },
@@ -6428,14 +6536,18 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 1,
+    "survived_on_uncovered_lines": 0,
     "sha": "eaf33a9579",
     "linecov_safe": false
    },
    {
-    "ran": 3,
-    "survived": 3,
+    "ran": 2,
+    "survived": 2,
     "unchecked": true,
     "all_unchecked": true,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 1,
     "sha": "7b72bfb8cd",
     "linecov_safe": true
    },
@@ -6444,6 +6556,8 @@
     "survived": 3,
     "unchecked": true,
     "all_unchecked": true,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "737bfbd312",
     "linecov_safe": false
    },
@@ -6452,6 +6566,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 1,
+    "survived_on_uncovered_lines": 0,
     "sha": "0be2bd3850",
     "linecov_safe": true
    },
@@ -6460,14 +6576,18 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "4f936ac198",
     "linecov_safe": true
    },
    {
-    "ran": 3,
-    "survived": 1,
-    "unchecked": true,
+    "ran": 2,
+    "survived": 0,
+    "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 1,
     "sha": "1f40020964",
     "linecov_safe": true
    },
@@ -6476,6 +6596,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 1,
+    "survived_on_uncovered_lines": 0,
     "sha": "701b313160",
     "linecov_safe": true
    },
@@ -6484,6 +6606,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "81a482fbfd",
     "linecov_safe": true
    },
@@ -6492,6 +6616,8 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": true,
+    "ran_incl_uncovered": 1,
+    "survived_on_uncovered_lines": 0,
     "sha": "7d71836041",
     "linecov_safe": true
    },
@@ -6500,6 +6626,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 2,
+    "survived_on_uncovered_lines": 0,
     "sha": "6a1c0d0773",
     "linecov_safe": true
    },
@@ -6508,14 +6636,18 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "27aaed3fe5",
     "linecov_safe": false
    },
    {
-    "ran": 2,
-    "survived": 1,
-    "unchecked": true,
+    "ran": 1,
+    "survived": 0,
+    "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 2,
+    "survived_on_uncovered_lines": 1,
     "sha": "5f86603a84",
     "linecov_safe": true
    },
@@ -6524,6 +6656,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 2,
+    "survived_on_uncovered_lines": 0,
     "sha": "8533c966b8",
     "linecov_safe": true
    },
@@ -6532,6 +6666,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "8d4051e9e5",
     "linecov_safe": true
    },
@@ -6540,6 +6676,8 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": true,
+    "ran_incl_uncovered": 1,
+    "survived_on_uncovered_lines": 0,
     "sha": "e27b307462",
     "linecov_safe": true
    },
@@ -6548,6 +6686,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "b91bb9548a",
     "linecov_safe": true
    },
@@ -6556,6 +6696,8 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": true,
+    "ran_incl_uncovered": 1,
+    "survived_on_uncovered_lines": 0,
     "sha": "ebcd548d50",
     "linecov_safe": true
    },
@@ -6564,6 +6706,8 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "b6afbf05ea",
     "linecov_safe": true
    },
@@ -6572,6 +6716,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "ae46cfd6bc",
     "linecov_safe": true
    },
@@ -6580,6 +6726,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "5850ef9723",
     "linecov_safe": true
    },
@@ -6588,6 +6736,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 1,
+    "survived_on_uncovered_lines": 0,
     "sha": "6c4a77ba24",
     "linecov_safe": true
    },
@@ -6596,6 +6746,8 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "bb7be1f6a9",
     "linecov_safe": false
    },
@@ -6604,6 +6756,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 1,
+    "survived_on_uncovered_lines": 0,
     "sha": "1458800409",
     "linecov_safe": true
    },
@@ -6612,6 +6766,8 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 2,
+    "survived_on_uncovered_lines": 0,
     "sha": "63ea71f9b0",
     "linecov_safe": true
    },
@@ -6620,6 +6776,8 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "ac2dd7aadf",
     "linecov_safe": true
    },
@@ -6628,6 +6786,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "452935115a",
     "linecov_safe": true
    },
@@ -6636,6 +6796,8 @@
     "survived": 2,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "89af4ae2d6",
     "linecov_safe": true
    },
@@ -6644,6 +6806,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "60cad4ad65",
     "linecov_safe": true
    },
@@ -6652,6 +6816,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 1,
+    "survived_on_uncovered_lines": 0,
     "sha": "8c95c73bd5",
     "linecov_safe": true
    },
@@ -6660,6 +6826,8 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "76552ff1e8",
     "linecov_safe": true
    },
@@ -6668,6 +6836,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 2,
+    "survived_on_uncovered_lines": 0,
     "sha": "c7e1ba8448",
     "linecov_safe": true
    },
@@ -6676,6 +6846,8 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "4a352253c9",
     "linecov_safe": false
    },
@@ -6684,6 +6856,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "f1f191ecd2",
     "linecov_safe": true
    },
@@ -6692,6 +6866,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "8bd8b4a074",
     "linecov_safe": true
    },
@@ -6700,6 +6876,8 @@
     "survived": 2,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "8a2b48901a",
     "linecov_safe": true
    },
@@ -6708,6 +6886,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 2,
+    "survived_on_uncovered_lines": 0,
     "sha": "c8da1fcc2c",
     "linecov_safe": false
    },
@@ -6716,6 +6896,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "b03f211e60",
     "linecov_safe": true
    },
@@ -6724,6 +6906,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 1,
+    "survived_on_uncovered_lines": 0,
     "sha": "0cd28d6548",
     "linecov_safe": true
    },
@@ -6732,6 +6916,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "d2e4a42ff4",
     "linecov_safe": true
    },
@@ -6740,30 +6926,38 @@
     "survived": 2,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "ddede2147c",
     "linecov_safe": true
    },
    {
-    "ran": 2,
-    "survived": 1,
-    "unchecked": true,
+    "ran": 1,
+    "survived": 0,
+    "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 2,
+    "survived_on_uncovered_lines": 1,
     "sha": "2468b70997",
     "linecov_safe": true
    },
    {
-    "ran": 3,
-    "survived": 3,
-    "unchecked": true,
-    "all_unchecked": true,
+    "ran": 0,
+    "survived": 0,
+    "unchecked": false,
+    "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 3,
     "sha": "c5cced7b30",
     "linecov_safe": true
    },
    {
-    "ran": 3,
-    "survived": 3,
+    "ran": 1,
+    "survived": 1,
     "unchecked": true,
     "all_unchecked": true,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 2,
     "sha": "c69643b60c",
     "linecov_safe": false
    },
@@ -6772,6 +6966,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "19fd4d6e18",
     "linecov_safe": true
    },
@@ -6780,22 +6976,28 @@
     "survived": 2,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "831c8f0948",
     "linecov_safe": true
    },
    {
-    "ran": 3,
-    "survived": 2,
+    "ran": 2,
+    "survived": 1,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 1,
     "sha": "73e1550065",
     "linecov_safe": true
    },
    {
-    "ran": 3,
-    "survived": 1,
-    "unchecked": true,
+    "ran": 2,
+    "survived": 0,
+    "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 1,
     "sha": "5b9630f50f",
     "linecov_safe": true
    },
@@ -6804,6 +7006,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "fc6c7c47ed",
     "linecov_safe": true
    },
@@ -6812,6 +7016,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "c943271a26",
     "linecov_safe": true
    },
@@ -6820,14 +7026,18 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": true,
+    "ran_incl_uncovered": 1,
+    "survived_on_uncovered_lines": 0,
     "sha": "0039359443",
     "linecov_safe": true
    },
    {
-    "ran": 3,
-    "survived": 1,
-    "unchecked": true,
+    "ran": 2,
+    "survived": 0,
+    "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 1,
     "sha": "3619563d9b",
     "linecov_safe": false
    },
@@ -6836,6 +7046,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "ec8226954e",
     "linecov_safe": true
    },
@@ -6844,6 +7056,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "ba745ac640",
     "linecov_safe": false
    },
@@ -6852,14 +7066,18 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "d959898db2",
     "linecov_safe": true
    },
    {
-    "ran": 3,
-    "survived": 3,
+    "ran": 2,
+    "survived": 2,
     "unchecked": true,
     "all_unchecked": true,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 1,
     "sha": "7c99ebe23b",
     "linecov_safe": false
    },
@@ -6868,6 +7086,8 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "63274a79d0",
     "linecov_safe": true
    },
@@ -6876,6 +7096,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "3bb230dcd5",
     "linecov_safe": false
    },
@@ -6884,14 +7106,18 @@
     "survived": 2,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "e3e69e3bf8",
     "linecov_safe": true
    },
    {
-    "ran": 3,
-    "survived": 2,
+    "ran": 2,
+    "survived": 1,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 1,
     "sha": "dbf4d14c71",
     "linecov_safe": true
    },
@@ -6900,6 +7126,8 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "bc36cd1a2b",
     "linecov_safe": true
    },
@@ -6908,6 +7136,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "c3535905c7",
     "linecov_safe": true
    },
@@ -6916,6 +7146,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "3a40e43e8f",
     "linecov_safe": true
    },
@@ -6924,6 +7156,8 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "6a141c3681",
     "linecov_safe": true
    },
@@ -6932,6 +7166,8 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "1a994adbb1",
     "linecov_safe": true
    },
@@ -6940,6 +7176,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "c48021040a",
     "linecov_safe": true
    },
@@ -6948,6 +7186,8 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "8a1b1a33d7",
     "linecov_safe": true
    },
@@ -6956,6 +7196,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 2,
+    "survived_on_uncovered_lines": 0,
     "sha": "679a7a0ecc",
     "linecov_safe": true
    },
@@ -6964,6 +7206,8 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "240603f240",
     "linecov_safe": true
    },
@@ -6972,6 +7216,8 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 2,
+    "survived_on_uncovered_lines": 0,
     "sha": "fe3ad76e58",
     "linecov_safe": false
    },
@@ -6980,6 +7226,8 @@
     "survived": 2,
     "unchecked": true,
     "all_unchecked": true,
+    "ran_incl_uncovered": 2,
+    "survived_on_uncovered_lines": 0,
     "sha": "16fc00e2f4",
     "linecov_safe": true
    },
@@ -6988,6 +7236,8 @@
     "survived": 2,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "94c191ca6c",
     "linecov_safe": false
    },
@@ -6996,6 +7246,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "a44e9f05ed",
     "linecov_safe": true
    },
@@ -7004,6 +7256,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "8a4ce84256",
     "linecov_safe": true
    },
@@ -7012,6 +7266,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 1,
+    "survived_on_uncovered_lines": 0,
     "sha": "8c1a0a7abb",
     "linecov_safe": true
    },
@@ -7020,6 +7276,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "b67832c216",
     "linecov_safe": false
    },
@@ -7028,6 +7286,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "b551fe8571",
     "linecov_safe": true
    },
@@ -7036,6 +7296,8 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "7df2f82305",
     "linecov_safe": true
    },
@@ -7044,6 +7306,8 @@
     "survived": 3,
     "unchecked": true,
     "all_unchecked": true,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "333c28d79c",
     "linecov_safe": true
    },
@@ -7052,6 +7316,8 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": true,
+    "ran_incl_uncovered": 1,
+    "survived_on_uncovered_lines": 0,
     "sha": "cfa01eeb78",
     "linecov_safe": true
    },
@@ -7060,6 +7326,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 2,
+    "survived_on_uncovered_lines": 0,
     "sha": "5e906a8afb",
     "linecov_safe": true
    },
@@ -7068,6 +7336,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "00e592cea7",
     "linecov_safe": true
    },
@@ -7076,6 +7346,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 2,
+    "survived_on_uncovered_lines": 0,
     "sha": "9c4dfdaebe",
     "linecov_safe": true
    },
@@ -7084,6 +7356,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 1,
+    "survived_on_uncovered_lines": 0,
     "sha": "8b44edfff7",
     "linecov_safe": true
    },
@@ -7092,6 +7366,8 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "150d1071d6",
     "linecov_safe": true
    },
@@ -7100,6 +7376,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 1,
+    "survived_on_uncovered_lines": 0,
     "sha": "fc5c7f45da",
     "linecov_safe": true
    },
@@ -7108,6 +7386,8 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "f36d58bbd7",
     "linecov_safe": true
    },
@@ -7116,6 +7396,8 @@
     "survived": 2,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "61b69e967e",
     "linecov_safe": true
    },
@@ -7124,22 +7406,28 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "2103e15768",
     "linecov_safe": true
    },
    {
-    "ran": 3,
-    "survived": 3,
+    "ran": 1,
+    "survived": 1,
     "unchecked": true,
     "all_unchecked": true,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 2,
     "sha": "e1fd5946ab",
     "linecov_safe": true
    },
    {
-    "ran": 3,
-    "survived": 1,
-    "unchecked": true,
+    "ran": 2,
+    "survived": 0,
+    "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 1,
     "sha": "6aabf099bf",
     "linecov_safe": true
    },
@@ -7148,6 +7436,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 2,
+    "survived_on_uncovered_lines": 0,
     "sha": "3cbaa76b60",
     "linecov_safe": true
    },
@@ -7156,6 +7446,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "06b2a67874",
     "linecov_safe": true
    },
@@ -7164,6 +7456,8 @@
     "survived": 2,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "2247b35ea1",
     "linecov_safe": true
    },
@@ -7172,6 +7466,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "ac0e297ec2",
     "linecov_safe": true
    },
@@ -7180,6 +7476,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "dd149eb312",
     "linecov_safe": false
    },
@@ -7188,6 +7486,8 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "fdb65f4809",
     "linecov_safe": true
    }
@@ -7198,6 +7498,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "bc6220269a",
     "linecov_safe": true
    },
@@ -7206,6 +7508,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "22a49a2c31",
     "linecov_safe": true
    },
@@ -7214,6 +7518,8 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "208f587293",
     "linecov_safe": true
    },
@@ -7222,6 +7528,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "99f6653c01",
     "linecov_safe": true
    },
@@ -7230,22 +7538,28 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "6ba0156c39",
     "linecov_safe": true
    },
    {
-    "ran": 3,
-    "survived": 1,
-    "unchecked": true,
+    "ran": 2,
+    "survived": 0,
+    "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 1,
     "sha": "df91cdd2ed",
     "linecov_safe": true
    },
    {
-    "ran": 1,
-    "survived": 1,
-    "unchecked": true,
-    "all_unchecked": true,
+    "ran": 0,
+    "survived": 0,
+    "unchecked": false,
+    "all_unchecked": false,
+    "ran_incl_uncovered": 1,
+    "survived_on_uncovered_lines": 1,
     "sha": "950abb6d16",
     "linecov_safe": true
    },
@@ -7254,6 +7568,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "68994217fb",
     "linecov_safe": true
    },
@@ -7262,6 +7578,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "21b6862a1e",
     "linecov_safe": false
    },
@@ -7270,6 +7588,8 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "8c11dcfcd6",
     "linecov_safe": true
    },
@@ -7278,6 +7598,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 1,
+    "survived_on_uncovered_lines": 0,
     "sha": "7a727b395d",
     "linecov_safe": true
    },
@@ -7286,6 +7608,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 2,
+    "survived_on_uncovered_lines": 0,
     "sha": "6ef4de0d27",
     "linecov_safe": true
    },
@@ -7294,6 +7618,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 1,
+    "survived_on_uncovered_lines": 0,
     "sha": "4448b02bd1",
     "linecov_safe": true
    },
@@ -7302,6 +7628,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 2,
+    "survived_on_uncovered_lines": 0,
     "sha": "5b3571afd3",
     "linecov_safe": true
    },
@@ -7310,6 +7638,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "58ad91b924",
     "linecov_safe": true
    },
@@ -7318,6 +7648,8 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "a83670eaae",
     "linecov_safe": true
    },
@@ -7326,6 +7658,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "eff1c5c38c",
     "linecov_safe": true
    },
@@ -7334,6 +7668,8 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": true,
+    "ran_incl_uncovered": 1,
+    "survived_on_uncovered_lines": 0,
     "sha": "173b680b07",
     "linecov_safe": true
    },
@@ -7342,6 +7678,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "6c1a11f09e",
     "linecov_safe": true
    },
@@ -7350,22 +7688,28 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "4dd8153fc5",
     "linecov_safe": true
    },
    {
-    "ran": 3,
-    "survived": 3,
-    "unchecked": true,
-    "all_unchecked": true,
+    "ran": 0,
+    "survived": 0,
+    "unchecked": false,
+    "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 3,
     "sha": "2e87730068",
     "linecov_safe": true
    },
    {
-    "ran": 3,
-    "survived": 2,
+    "ran": 2,
+    "survived": 1,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 1,
     "sha": "1614e8fe66",
     "linecov_safe": true
    },
@@ -7374,6 +7718,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 1,
+    "survived_on_uncovered_lines": 0,
     "sha": "fd2d3467fd",
     "linecov_safe": true
    },
@@ -7382,6 +7728,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "c196c1a03d",
     "linecov_safe": true
    },
@@ -7390,6 +7738,8 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "eff40999fe",
     "linecov_safe": true
    },
@@ -7398,6 +7748,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "dee4de4e96",
     "linecov_safe": false
    },
@@ -7406,6 +7758,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "65fc9c3bce",
     "linecov_safe": true
    },
@@ -7414,6 +7768,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "6f13622200",
     "linecov_safe": false
    },
@@ -7422,6 +7778,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 2,
+    "survived_on_uncovered_lines": 0,
     "sha": "5391455e7c",
     "linecov_safe": true
    },
@@ -7430,6 +7788,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 1,
+    "survived_on_uncovered_lines": 0,
     "sha": "d23ff760f8",
     "linecov_safe": true
    },
@@ -7438,6 +7798,8 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "6e1864c7c3",
     "linecov_safe": true
    }
@@ -7448,6 +7810,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "c8542fee57",
     "linecov_safe": true
    },
@@ -7456,6 +7820,8 @@
     "survived": 2,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "4559e76d63",
     "linecov_safe": true
    },
@@ -7464,6 +7830,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "6785c5edf4",
     "linecov_safe": true
    },
@@ -7472,6 +7840,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "c23001855d",
     "linecov_safe": true
    },
@@ -7480,6 +7850,8 @@
     "survived": 2,
     "unchecked": true,
     "all_unchecked": true,
+    "ran_incl_uncovered": 2,
+    "survived_on_uncovered_lines": 0,
     "sha": "a71806e8f7",
     "linecov_safe": true
    },
@@ -7488,6 +7860,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "195e5f7730",
     "linecov_safe": true
    },
@@ -7496,6 +7870,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "5220a78b4d",
     "linecov_safe": true
    },
@@ -7504,6 +7880,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "d101100c39",
     "linecov_safe": true
    },
@@ -7512,6 +7890,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "0f372436f4",
     "linecov_safe": true
    },
@@ -7520,6 +7900,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "d21128d161",
     "linecov_safe": true
    },
@@ -7528,6 +7910,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "b46ebef579",
     "linecov_safe": true
    },
@@ -7536,6 +7920,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "0e13d6613a",
     "linecov_safe": false
    },
@@ -7544,6 +7930,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 1,
+    "survived_on_uncovered_lines": 0,
     "sha": "233527d38b",
     "linecov_safe": true
    },
@@ -7552,6 +7940,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "bfafa6541a",
     "linecov_safe": true
    },
@@ -7560,6 +7950,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 1,
+    "survived_on_uncovered_lines": 0,
     "sha": "3d3dc9f042",
     "linecov_safe": true
    },
@@ -7568,6 +7960,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "2ec0dbb46b",
     "linecov_safe": true
    },
@@ -7576,6 +7970,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "f0daa0833c",
     "linecov_safe": true
    },
@@ -7584,6 +7980,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "4712ab6f5b",
     "linecov_safe": true
    },
@@ -7592,6 +7990,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "fca4d63c1c",
     "linecov_safe": true
    },
@@ -7600,6 +8000,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "6ebe1acaab",
     "linecov_safe": true
    },
@@ -7608,6 +8010,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "05c805fce5",
     "linecov_safe": true
    },
@@ -7616,6 +8020,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "1e9550e9c3",
     "linecov_safe": true
    },
@@ -7624,22 +8030,28 @@
     "survived": 2,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "bc88e945d3",
     "linecov_safe": true
    },
    {
-    "ran": 3,
-    "survived": 2,
+    "ran": 2,
+    "survived": 1,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 1,
     "sha": "385c0eb750",
     "linecov_safe": true
    },
    {
-    "ran": 3,
-    "survived": 3,
+    "ran": 2,
+    "survived": 2,
     "unchecked": true,
     "all_unchecked": true,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 1,
     "sha": "135eb234ed",
     "linecov_safe": true
    },
@@ -7648,6 +8060,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 1,
+    "survived_on_uncovered_lines": 0,
     "sha": "2f69e841d2",
     "linecov_safe": true
    },
@@ -7656,6 +8070,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "d408c5ef2a",
     "linecov_safe": true
    },
@@ -7664,14 +8080,18 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "117218e006",
     "linecov_safe": true
    },
    {
-    "ran": 2,
-    "survived": 1,
-    "unchecked": true,
+    "ran": 1,
+    "survived": 0,
+    "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 2,
+    "survived_on_uncovered_lines": 1,
     "sha": "4dffa1963f",
     "linecov_safe": true
    },
@@ -7680,6 +8100,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "31f46a3469",
     "linecov_safe": true
    }
@@ -7690,6 +8112,8 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": true,
+    "ran_incl_uncovered": 1,
+    "survived_on_uncovered_lines": 0,
     "sha": "f6393c3784",
     "linecov_safe": true
    },
@@ -7698,6 +8122,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 1,
+    "survived_on_uncovered_lines": 0,
     "sha": "fca871ab49",
     "linecov_safe": true
    },
@@ -7706,6 +8132,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "f2836d59aa",
     "linecov_safe": true
    },
@@ -7714,6 +8142,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 1,
+    "survived_on_uncovered_lines": 0,
     "sha": "fd79660afa",
     "linecov_safe": true
    },
@@ -7722,6 +8152,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "bf8bfc2916",
     "linecov_safe": true
    },
@@ -7730,6 +8162,8 @@
     "survived": 2,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "f4ca03fd8f",
     "linecov_safe": true
    },
@@ -7738,6 +8172,8 @@
     "survived": 2,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "c188cdb25c",
     "linecov_safe": true
    },
@@ -7746,6 +8182,8 @@
     "survived": 2,
     "unchecked": true,
     "all_unchecked": true,
+    "ran_incl_uncovered": 2,
+    "survived_on_uncovered_lines": 0,
     "sha": "447eb86c9c",
     "linecov_safe": true
    },
@@ -7754,6 +8192,8 @@
     "survived": 3,
     "unchecked": true,
     "all_unchecked": true,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "560eed7a3c",
     "linecov_safe": true
    },
@@ -7762,14 +8202,18 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": true,
+    "ran_incl_uncovered": 1,
+    "survived_on_uncovered_lines": 0,
     "sha": "71ab95a9c3",
     "linecov_safe": false
    },
    {
-    "ran": 3,
-    "survived": 3,
+    "ran": 2,
+    "survived": 2,
     "unchecked": true,
     "all_unchecked": true,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 1,
     "sha": "8ca596d911",
     "linecov_safe": true
    },
@@ -7778,6 +8222,8 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "84bed79a67",
     "linecov_safe": true
    },
@@ -7786,6 +8232,8 @@
     "survived": 2,
     "unchecked": true,
     "all_unchecked": true,
+    "ran_incl_uncovered": 2,
+    "survived_on_uncovered_lines": 0,
     "sha": "23c6a6733c",
     "linecov_safe": true
    },
@@ -7794,6 +8242,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "61617b2636",
     "linecov_safe": true
    },
@@ -7802,6 +8252,8 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": true,
+    "ran_incl_uncovered": 1,
+    "survived_on_uncovered_lines": 0,
     "sha": "cbf960ba0d",
     "linecov_safe": true
    },
@@ -7810,6 +8262,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "b3193fd061",
     "linecov_safe": true
    },
@@ -7818,6 +8272,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "b3ca7236fc",
     "linecov_safe": true
    },
@@ -7826,6 +8282,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "934defa484",
     "linecov_safe": true
    },
@@ -7834,6 +8292,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "cac2a47c68",
     "linecov_safe": true
    },
@@ -7842,6 +8302,8 @@
     "survived": 2,
     "unchecked": true,
     "all_unchecked": true,
+    "ran_incl_uncovered": 2,
+    "survived_on_uncovered_lines": 0,
     "sha": "7a30b6b0ea",
     "linecov_safe": true
    },
@@ -7850,6 +8312,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 1,
+    "survived_on_uncovered_lines": 0,
     "sha": "640ac5fcce",
     "linecov_safe": true
    },
@@ -7858,6 +8322,8 @@
     "survived": 3,
     "unchecked": true,
     "all_unchecked": true,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "7d2efd483d",
     "linecov_safe": true
    },
@@ -7866,6 +8332,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "324de2b2aa",
     "linecov_safe": true
    },
@@ -7874,6 +8342,8 @@
     "survived": 3,
     "unchecked": true,
     "all_unchecked": true,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "b8a418884d",
     "linecov_safe": true
    },
@@ -7882,6 +8352,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "ec9e5cb1a2",
     "linecov_safe": true
    },
@@ -7890,6 +8362,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "313f91b8ce",
     "linecov_safe": true
    },
@@ -7898,6 +8372,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 1,
+    "survived_on_uncovered_lines": 0,
     "sha": "b1d5f8f797",
     "linecov_safe": true
    },
@@ -7906,6 +8382,8 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": true,
+    "ran_incl_uncovered": 1,
+    "survived_on_uncovered_lines": 0,
     "sha": "701f52c83e",
     "linecov_safe": true
    },
@@ -7914,6 +8392,8 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": true,
+    "ran_incl_uncovered": 1,
+    "survived_on_uncovered_lines": 0,
     "sha": "c4bb15aee0",
     "linecov_safe": true
    },
@@ -7922,6 +8402,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "15f12041ce",
     "linecov_safe": true
    },
@@ -7930,6 +8412,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 1,
+    "survived_on_uncovered_lines": 0,
     "sha": "356e21b9ee",
     "linecov_safe": true
    },
@@ -7938,6 +8422,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "ea1ef47dfd",
     "linecov_safe": true
    },
@@ -7946,6 +8432,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "dc9d85245d",
     "linecov_safe": true
    },
@@ -7954,6 +8442,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "ead65cb18c",
     "linecov_safe": true
    },
@@ -7962,6 +8452,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 1,
+    "survived_on_uncovered_lines": 0,
     "sha": "de5e842aea",
     "linecov_safe": true
    },
@@ -7970,6 +8462,8 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "50b2849cca",
     "linecov_safe": true
    },
@@ -7978,6 +8472,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "61f2e88877",
     "linecov_safe": true
    },
@@ -7986,6 +8482,8 @@
     "survived": 3,
     "unchecked": true,
     "all_unchecked": true,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "01fab376b3",
     "linecov_safe": true
    },
@@ -7994,6 +8492,8 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "8b1d061825",
     "linecov_safe": true
    },
@@ -8002,6 +8502,8 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": true,
+    "ran_incl_uncovered": 1,
+    "survived_on_uncovered_lines": 0,
     "sha": "db43fc00c9",
     "linecov_safe": true
    },
@@ -8010,14 +8512,18 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "6c7b3fe007",
     "linecov_safe": true
    },
    {
-    "ran": 3,
-    "survived": 2,
+    "ran": 2,
+    "survived": 1,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 1,
     "sha": "5a8fa1a95d",
     "linecov_safe": true
    },
@@ -8026,6 +8532,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "944f6de1b7",
     "linecov_safe": true
    },
@@ -8034,6 +8542,8 @@
     "survived": 3,
     "unchecked": true,
     "all_unchecked": true,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "f27918665c",
     "linecov_safe": true
    },
@@ -8042,6 +8552,8 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": true,
+    "ran_incl_uncovered": 1,
+    "survived_on_uncovered_lines": 0,
     "sha": "bc5cde0433",
     "linecov_safe": true
    },
@@ -8050,6 +8562,8 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": true,
+    "ran_incl_uncovered": 1,
+    "survived_on_uncovered_lines": 0,
     "sha": "9cddff67b7",
     "linecov_safe": true
    },
@@ -8058,6 +8572,8 @@
     "survived": 3,
     "unchecked": true,
     "all_unchecked": true,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "ffedbfee64",
     "linecov_safe": true
    },
@@ -8066,6 +8582,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "f0c6afb430",
     "linecov_safe": true
    },
@@ -8074,6 +8592,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "2fc8207da9",
     "linecov_safe": true
    },
@@ -8082,6 +8602,8 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "5c136b11f9",
     "linecov_safe": true
    },
@@ -8090,6 +8612,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "5429f0d4c6",
     "linecov_safe": true
    },
@@ -8098,6 +8622,8 @@
     "survived": 2,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "0c1dd99d9f",
     "linecov_safe": true
    },
@@ -8106,6 +8632,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "2feeda7b22",
     "linecov_safe": true
    },
@@ -8114,6 +8642,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "407c2c5775",
     "linecov_safe": true
    },
@@ -8122,6 +8652,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "d861be73bc",
     "linecov_safe": true
    },
@@ -8130,6 +8662,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 1,
+    "survived_on_uncovered_lines": 0,
     "sha": "2b84b56e9a",
     "linecov_safe": false
    },
@@ -8138,6 +8672,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "ba8058a0d4",
     "linecov_safe": true
    },
@@ -8146,6 +8682,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 1,
+    "survived_on_uncovered_lines": 0,
     "sha": "10fe10be81",
     "linecov_safe": true
    },
@@ -8154,6 +8692,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "d24a0c9df0",
     "linecov_safe": false
    },
@@ -8162,6 +8702,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "692e79df9c",
     "linecov_safe": true
    },
@@ -8170,6 +8712,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "2f877d42f7",
     "linecov_safe": true
    },
@@ -8178,6 +8722,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 1,
+    "survived_on_uncovered_lines": 0,
     "sha": "e8b0d04f6e",
     "linecov_safe": true
    },
@@ -8186,6 +8732,8 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "2bf3ae6ac6",
     "linecov_safe": true
    },
@@ -8194,6 +8742,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "78a94ea0e7",
     "linecov_safe": true
    },
@@ -8202,6 +8752,8 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 2,
+    "survived_on_uncovered_lines": 0,
     "sha": "39e7c833e9",
     "linecov_safe": true
    },
@@ -8210,6 +8762,8 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "19ca8dce2d",
     "linecov_safe": true
    },
@@ -8218,6 +8772,8 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": true,
+    "ran_incl_uncovered": 1,
+    "survived_on_uncovered_lines": 0,
     "sha": "7324d8f356",
     "linecov_safe": true
    },
@@ -8226,6 +8782,8 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": true,
+    "ran_incl_uncovered": 1,
+    "survived_on_uncovered_lines": 0,
     "sha": "fea5428567",
     "linecov_safe": true
    },
@@ -8234,6 +8792,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "3bc191ab3c",
     "linecov_safe": true
    },
@@ -8242,6 +8802,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "c38b48ec3b",
     "linecov_safe": true
    },
@@ -8250,6 +8812,8 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "070dde08ba",
     "linecov_safe": false
    },
@@ -8258,6 +8822,8 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "65374df0c3",
     "linecov_safe": true
    },
@@ -8266,6 +8832,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 1,
+    "survived_on_uncovered_lines": 0,
     "sha": "252090c7c7",
     "linecov_safe": true
    },
@@ -8274,6 +8842,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 2,
+    "survived_on_uncovered_lines": 0,
     "sha": "024b5d09e9",
     "linecov_safe": true
    },
@@ -8282,6 +8852,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 1,
+    "survived_on_uncovered_lines": 0,
     "sha": "72ac4a0420",
     "linecov_safe": true
    },
@@ -8290,14 +8862,18 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "c1e727e16b",
     "linecov_safe": true
    },
    {
-    "ran": 3,
-    "survived": 1,
-    "unchecked": true,
+    "ran": 2,
+    "survived": 0,
+    "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 1,
     "sha": "4acb783c73",
     "linecov_safe": true
    },
@@ -8306,6 +8882,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 1,
+    "survived_on_uncovered_lines": 0,
     "sha": "f07eadc87d",
     "linecov_safe": true
    },
@@ -8314,6 +8892,8 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": true,
+    "ran_incl_uncovered": 1,
+    "survived_on_uncovered_lines": 0,
     "sha": "c847ad47a3",
     "linecov_safe": true
    },
@@ -8322,6 +8902,8 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 2,
+    "survived_on_uncovered_lines": 0,
     "sha": "256f0aabbc",
     "linecov_safe": true
    },
@@ -8330,6 +8912,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 1,
+    "survived_on_uncovered_lines": 0,
     "sha": "cea3d44f40",
     "linecov_safe": true
    },
@@ -8338,6 +8922,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 2,
+    "survived_on_uncovered_lines": 0,
     "sha": "ec2178c26b",
     "linecov_safe": false
    },
@@ -8346,6 +8932,8 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": true,
+    "ran_incl_uncovered": 1,
+    "survived_on_uncovered_lines": 0,
     "sha": "3207be3147",
     "linecov_safe": true
    },
@@ -8354,6 +8942,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "902f99c415",
     "linecov_safe": true
    },
@@ -8362,6 +8952,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "fcb0f9abd6",
     "linecov_safe": true
    },
@@ -8370,6 +8962,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "7dff08fcb7",
     "linecov_safe": true
    },
@@ -8378,6 +8972,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "324f387b02",
     "linecov_safe": true
    },
@@ -8386,6 +8982,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "6ae0965607",
     "linecov_safe": true
    },
@@ -8394,6 +8992,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 1,
+    "survived_on_uncovered_lines": 0,
     "sha": "5761beab39",
     "linecov_safe": true
    },
@@ -8402,6 +9002,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 2,
+    "survived_on_uncovered_lines": 0,
     "sha": "88efe3ea5e",
     "linecov_safe": true
    }
@@ -8412,6 +9014,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 2,
+    "survived_on_uncovered_lines": 0,
     "sha": "020161bd1d",
     "linecov_safe": false
    },
@@ -8420,6 +9024,8 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "1b23ada481",
     "linecov_safe": true
    },
@@ -8428,6 +9034,8 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "c9d69b92b7",
     "linecov_safe": true
    },
@@ -8436,6 +9044,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "0434ddda9f",
     "linecov_safe": true
    },
@@ -8444,6 +9054,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "69bb12cd8a",
     "linecov_safe": true
    },
@@ -8452,6 +9064,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "4edf149e1e",
     "linecov_safe": true
    },
@@ -8460,6 +9074,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "f34a534eab",
     "linecov_safe": true
    },
@@ -8468,6 +9084,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 2,
+    "survived_on_uncovered_lines": 0,
     "sha": "ea3ba0d60a",
     "linecov_safe": true
    },
@@ -8476,6 +9094,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "fd342da320",
     "linecov_safe": true
    },
@@ -8484,6 +9104,8 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 2,
+    "survived_on_uncovered_lines": 0,
     "sha": "e9bc1e150b",
     "linecov_safe": true
    },
@@ -8492,6 +9114,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "10e40cbcfe",
     "linecov_safe": true
    },
@@ -8500,6 +9124,8 @@
     "survived": 2,
     "unchecked": true,
     "all_unchecked": true,
+    "ran_incl_uncovered": 2,
+    "survived_on_uncovered_lines": 0,
     "sha": "55c60e9da0",
     "linecov_safe": true
    },
@@ -8508,6 +9134,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "142e9ee966",
     "linecov_safe": true
    },
@@ -8516,6 +9144,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "03a7efd6f2",
     "linecov_safe": true
    },
@@ -8524,6 +9154,8 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": true,
+    "ran_incl_uncovered": 1,
+    "survived_on_uncovered_lines": 0,
     "sha": "22dc02408c",
     "linecov_safe": true
    },
@@ -8532,6 +9164,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "19edc0828e",
     "linecov_safe": true
    },
@@ -8540,6 +9174,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 1,
+    "survived_on_uncovered_lines": 0,
     "sha": "1aa72df3a7",
     "linecov_safe": true
    },
@@ -8548,6 +9184,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "386c75033d",
     "linecov_safe": true
    },
@@ -8556,6 +9194,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "e78db447eb",
     "linecov_safe": true
    },
@@ -8564,6 +9204,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "85be7adaa0",
     "linecov_safe": true
    },
@@ -8572,6 +9214,8 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": true,
+    "ran_incl_uncovered": 1,
+    "survived_on_uncovered_lines": 0,
     "sha": "40576797a2",
     "linecov_safe": true
    },
@@ -8580,6 +9224,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "037b10a42f",
     "linecov_safe": true
    },
@@ -8588,6 +9234,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "688a812572",
     "linecov_safe": true
    },
@@ -8596,6 +9244,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "a39cd67854",
     "linecov_safe": true
    },
@@ -8604,6 +9254,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 2,
+    "survived_on_uncovered_lines": 0,
     "sha": "5a7e078c94",
     "linecov_safe": true
    },
@@ -8612,6 +9264,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "5eee30eb6c",
     "linecov_safe": true
    },
@@ -8620,6 +9274,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "568c2b8393",
     "linecov_safe": true
    },
@@ -8628,6 +9284,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "d287360581",
     "linecov_safe": true
    },
@@ -8636,6 +9294,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "a1e25cbd2c",
     "linecov_safe": false
    },
@@ -8644,6 +9304,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "55ce42dc3b",
     "linecov_safe": true
    },
@@ -8652,6 +9314,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 2,
+    "survived_on_uncovered_lines": 0,
     "sha": "d2eba0374a",
     "linecov_safe": true
    }
@@ -8662,6 +9326,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "a486a6c004",
     "linecov_safe": true
    },
@@ -8670,6 +9336,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "06e0d3adfe",
     "linecov_safe": true
    },
@@ -8678,6 +9346,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 2,
+    "survived_on_uncovered_lines": 0,
     "sha": "ab33cc0101",
     "linecov_safe": true
    },
@@ -8686,6 +9356,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "ef12cbbaf5",
     "linecov_safe": true
    },
@@ -8694,6 +9366,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 2,
+    "survived_on_uncovered_lines": 0,
     "sha": "dfe9607a23",
     "linecov_safe": true
    },
@@ -8702,6 +9376,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 1,
+    "survived_on_uncovered_lines": 0,
     "sha": "c490ce0534",
     "linecov_safe": false
    },
@@ -8710,6 +9386,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "b64e1d537f",
     "linecov_safe": false
    },
@@ -8718,6 +9396,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "f3830e1cc6",
     "linecov_safe": true
    },
@@ -8726,6 +9406,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 1,
+    "survived_on_uncovered_lines": 0,
     "sha": "3ace6db5a8",
     "linecov_safe": false
    },
@@ -8734,6 +9416,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 1,
+    "survived_on_uncovered_lines": 0,
     "sha": "2f7007afcb",
     "linecov_safe": true
    },
@@ -8742,6 +9426,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "b2a5f7328b",
     "linecov_safe": true
    },
@@ -8750,6 +9436,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "258326b747",
     "linecov_safe": true
    },
@@ -8758,14 +9446,18 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 2,
+    "survived_on_uncovered_lines": 0,
     "sha": "7b6f6e3741",
     "linecov_safe": false
    },
    {
-    "ran": 2,
-    "survived": 1,
-    "unchecked": true,
+    "ran": 1,
+    "survived": 0,
+    "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 2,
+    "survived_on_uncovered_lines": 1,
     "sha": "7748b6cde6",
     "linecov_safe": true
    },
@@ -8774,6 +9466,8 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 2,
+    "survived_on_uncovered_lines": 0,
     "sha": "f64b9e37ab",
     "linecov_safe": false
    },
@@ -8782,6 +9476,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 1,
+    "survived_on_uncovered_lines": 0,
     "sha": "ab794fe877",
     "linecov_safe": false
    },
@@ -8790,6 +9486,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 1,
+    "survived_on_uncovered_lines": 0,
     "sha": "bc2ec9abe9",
     "linecov_safe": true
    },
@@ -8798,6 +9496,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "8854a12c8a",
     "linecov_safe": true
    },
@@ -8806,6 +9506,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "6219f2ffea",
     "linecov_safe": true
    },
@@ -8814,6 +9516,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "7608a014df",
     "linecov_safe": true
    },
@@ -8822,6 +9526,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 1,
+    "survived_on_uncovered_lines": 0,
     "sha": "2e789f7a4b",
     "linecov_safe": true
    },
@@ -8830,6 +9536,8 @@
     "survived": 3,
     "unchecked": true,
     "all_unchecked": true,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "8a4e85993a",
     "linecov_safe": true
    },
@@ -8838,6 +9546,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "92952b912c",
     "linecov_safe": true
    }
@@ -8848,6 +9558,8 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "f33be832ec",
     "linecov_safe": true
    },
@@ -8856,6 +9568,8 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 2,
+    "survived_on_uncovered_lines": 0,
     "sha": "3b352617b6",
     "linecov_safe": true
    },
@@ -8864,22 +9578,28 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "7b7e3c7b25",
     "linecov_safe": true
    },
    {
-    "ran": 3,
-    "survived": 2,
-    "unchecked": true,
+    "ran": 1,
+    "survived": 0,
+    "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 2,
     "sha": "5be6b7f7a0",
     "linecov_safe": true
    },
    {
-    "ran": 3,
-    "survived": 1,
-    "unchecked": true,
+    "ran": 2,
+    "survived": 0,
+    "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 1,
     "sha": "15d09111e2",
     "linecov_safe": true
    },
@@ -8888,14 +9608,18 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 2,
+    "survived_on_uncovered_lines": 0,
     "sha": "3bc67a2389",
     "linecov_safe": true
    },
    {
-    "ran": 3,
-    "survived": 1,
-    "unchecked": true,
+    "ran": 2,
+    "survived": 0,
+    "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 1,
     "sha": "49528aa33d",
     "linecov_safe": true
    },
@@ -8904,6 +9628,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "d7023536c4",
     "linecov_safe": true
    },
@@ -8912,6 +9638,8 @@
     "survived": 2,
     "unchecked": true,
     "all_unchecked": true,
+    "ran_incl_uncovered": 2,
+    "survived_on_uncovered_lines": 0,
     "sha": "e4d3aa4f30",
     "linecov_safe": true
    },
@@ -8920,14 +9648,18 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": true,
+    "ran_incl_uncovered": 1,
+    "survived_on_uncovered_lines": 0,
     "sha": "4ef2813867",
     "linecov_safe": true
    },
    {
-    "ran": 2,
-    "survived": 2,
-    "unchecked": true,
-    "all_unchecked": true,
+    "ran": 0,
+    "survived": 0,
+    "unchecked": false,
+    "all_unchecked": false,
+    "ran_incl_uncovered": 2,
+    "survived_on_uncovered_lines": 2,
     "sha": "62535f8cf5",
     "linecov_safe": true
    },
@@ -8936,6 +9668,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "b8c56c5e72",
     "linecov_safe": true
    },
@@ -8944,6 +9678,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "c1633dfcc4",
     "linecov_safe": true
    },
@@ -8952,6 +9688,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 2,
+    "survived_on_uncovered_lines": 0,
     "sha": "908d3da1f8",
     "linecov_safe": true
    },
@@ -8960,6 +9698,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "59d2e8ed7d",
     "linecov_safe": true
    },
@@ -8968,6 +9708,8 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "ded286719f",
     "linecov_safe": true
    },
@@ -8976,6 +9718,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "39867da0c6",
     "linecov_safe": true
    },
@@ -8984,6 +9728,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 2,
+    "survived_on_uncovered_lines": 0,
     "sha": "2aa17b4f0b",
     "linecov_safe": true
    },
@@ -8992,6 +9738,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "73b828da98",
     "linecov_safe": true
    },
@@ -9000,6 +9748,8 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "41d6022c27",
     "linecov_safe": true
    },
@@ -9008,6 +9758,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "a994fb7e63",
     "linecov_safe": true
    },
@@ -9016,6 +9768,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "72404a872a",
     "linecov_safe": true
    },
@@ -9024,6 +9778,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "74ded02044",
     "linecov_safe": true
    },
@@ -9032,14 +9788,18 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "258f78f61c",
     "linecov_safe": true
    },
    {
-    "ran": 3,
-    "survived": 1,
-    "unchecked": true,
+    "ran": 2,
+    "survived": 0,
+    "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 1,
     "sha": "5953f82f30",
     "linecov_safe": false
    },
@@ -9048,6 +9808,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "90af1f286f",
     "linecov_safe": true
    },
@@ -9056,6 +9818,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "b70fb0f70d",
     "linecov_safe": true
    }
@@ -9066,6 +9830,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "65d8692070",
     "linecov_safe": true
    },
@@ -9074,6 +9840,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 2,
+    "survived_on_uncovered_lines": 0,
     "sha": "9af5cfe3cf",
     "linecov_safe": true
    },
@@ -9082,6 +9850,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "c8459c28da",
     "linecov_safe": true
    },
@@ -9090,6 +9860,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "92c22bc699",
     "linecov_safe": true
    },
@@ -9098,6 +9870,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 1,
+    "survived_on_uncovered_lines": 0,
     "sha": "6b9e2fb93b",
     "linecov_safe": true
    },
@@ -9106,6 +9880,8 @@
     "survived": 3,
     "unchecked": true,
     "all_unchecked": true,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "782b71ee81",
     "linecov_safe": true
    },
@@ -9114,6 +9890,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "4888797c7a",
     "linecov_safe": false
    },
@@ -9122,6 +9900,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "d657c54add",
     "linecov_safe": true
    },
@@ -9130,6 +9910,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "acbb9cf8d4",
     "linecov_safe": true
    },
@@ -9138,6 +9920,8 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "2a469a2f5f",
     "linecov_safe": false
    },
@@ -9146,6 +9930,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "ea51c41b51",
     "linecov_safe": true
    },
@@ -9154,6 +9940,8 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": true,
+    "ran_incl_uncovered": 1,
+    "survived_on_uncovered_lines": 0,
     "sha": "aa3da42a00",
     "linecov_safe": true
    },
@@ -9162,6 +9950,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 2,
+    "survived_on_uncovered_lines": 0,
     "sha": "9a2196d42a",
     "linecov_safe": true
    },
@@ -9170,6 +9960,8 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "7e3da70b6b",
     "linecov_safe": true
    },
@@ -9178,6 +9970,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "2bb945c01a",
     "linecov_safe": false
    },
@@ -9186,6 +9980,8 @@
     "survived": 2,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "03d703b80f",
     "linecov_safe": true
    },
@@ -9194,6 +9990,8 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "056413d739",
     "linecov_safe": true
    },
@@ -9202,6 +10000,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "cfa74b4c1a",
     "linecov_safe": true
    },
@@ -9210,6 +10010,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 1,
+    "survived_on_uncovered_lines": 0,
     "sha": "2c115ed762",
     "linecov_safe": true
    },
@@ -9218,6 +10020,8 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 2,
+    "survived_on_uncovered_lines": 0,
     "sha": "45a098fd25",
     "linecov_safe": true
    },
@@ -9226,6 +10030,8 @@
     "survived": 1,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "785708f4a4",
     "linecov_safe": true
    },
@@ -9234,6 +10040,8 @@
     "survived": 2,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "d00a27df75",
     "linecov_safe": true
    },
@@ -9242,14 +10050,18 @@
     "survived": 2,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 0,
     "sha": "7aed2a044c",
     "linecov_safe": true
    },
    {
-    "ran": 3,
-    "survived": 2,
+    "ran": 2,
+    "survived": 1,
     "unchecked": true,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 1,
     "sha": "877ca7c0d5",
     "linecov_safe": true
    },
@@ -9258,6 +10070,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "d767578ece",
     "linecov_safe": true
    },
@@ -9266,6 +10080,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "f0b48e891a",
     "linecov_safe": false
    },
@@ -9274,14 +10090,18 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 0,
+    "survived_on_uncovered_lines": 0,
     "sha": "385e54676c",
     "linecov_safe": true
    },
    {
-    "ran": 3,
-    "survived": 1,
-    "unchecked": true,
+    "ran": 2,
+    "survived": 0,
+    "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 3,
+    "survived_on_uncovered_lines": 1,
     "sha": "5023f2ee88",
     "linecov_safe": false
    },
@@ -9290,6 +10110,8 @@
     "survived": 0,
     "unchecked": false,
     "all_unchecked": false,
+    "ran_incl_uncovered": 2,
+    "survived_on_uncovered_lines": 0,
     "sha": "eb0b5cc1c3",
     "linecov_safe": true
    }
@@ -9317,23 +10139,25 @@
  "weak_summary": {
   "HIST": {
    "test_changes": 332,
-   "with_executed_mutants": 244,
-   "unchecked": 133,
-   "all_unchecked": 56,
-   "linecov_safe_with_mutants": 216,
-   "linecov_safe_but_unchecked": 122,
-   "mutants_ran": 570,
-   "mutants_survived": 211
+   "with_executed_mutants": 237,
+   "unchecked": 115,
+   "all_unchecked": 49,
+   "linecov_safe_with_mutants": 209,
+   "linecov_safe_but_unchecked": 105,
+   "mutants_ran": 526,
+   "mutants_survived": 167,
+   "survived_on_uncovered_lines_excluded": 44
   },
   "NRTS": {
    "test_changes": 79,
-   "with_executed_mutants": 64,
-   "unchecked": 26,
-   "all_unchecked": 6,
-   "linecov_safe_with_mutants": 53,
-   "linecov_safe_but_unchecked": 22,
-   "mutants_ran": 157,
-   "mutants_survived": 37
+   "with_executed_mutants": 63,
+   "unchecked": 19,
+   "all_unchecked": 5,
+   "linecov_safe_with_mutants": 52,
+   "linecov_safe_but_unchecked": 17,
+   "mutants_ran": 147,
+   "mutants_survived": 27,
+   "survived_on_uncovered_lines_excluded": 10
   }
  }
 }
