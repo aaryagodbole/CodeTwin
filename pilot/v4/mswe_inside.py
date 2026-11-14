@@ -130,6 +130,12 @@ def main():
     n_fail = len({x.split('::')[0] for x in run_b.failing})
     n_cov = sum(1 for t in run_b.covered.values() if t)
     print(f"[inside] base: {n_cov} files with coverage, {n_fail} failing, {log['steps']['base_run']}s", flush=True)
+    if n_cov == 0 or n_fail > len(universe) / 2:
+        rl = repo / ".codetwin" / "runner.log"
+        tail = rl.read_text(errors="replace")[-3000:] if rl.exists() else "(no runner.log)"
+        print("[inside] runner output of a failed run:\n" + "\n".join("[runner] " + x for x in tail.splitlines()[-40:]), flush=True)
+        if n_cov == 0:
+            sys.exit("[inside] no coverage at all on the base commit: giving up on this PR")
     (out / "snap" / f"{base}.json").write_text(json.dumps({
         "sha": base, "date": git(repo, "log", "-1", "--format=%cI").stdout.strip(), "subject": "base",
         "tests_present": all_tests, "static": facts_to_dict(facts_b), "loc": loc_of(repo, facts_b), "run": run_to_dict(run_b)}))
