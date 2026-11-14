@@ -1,0 +1,79 @@
+{
+ "project": "burntsushi_m_ripgrep",
+ "url": "https://github.com/BurntSushi/ripgrep",
+ "mode": "pairs",
+ "language": "rust",
+ "spec": [
+  "https://github.com/BurntSushi/ripgrep",
+  ".",
+  [],
+  ".",
+  [
+   "."
+  ],
+  {
+   "language": "rust"
+  }
+ ],
+ "source": "Multi-SWE-bench (ByteDance-Seed), images mswebench/*",
+ "count": 14,
+ "max_tests": 40,
+ "changes": [
+  [
+   "c50b8b4125dc7f1181944dd92d0aca97c2450421",
+   null
+  ],
+  [
+   "5e73075ef5300fdec03f6c4685750788108b00f4",
+   null
+  ],
+  [
+   "b6177f0459044a7e3fb882ecda9c80e44e4d95de",
+   null
+  ],
+  [
+   "223d7d9846bff4a9aaf6ba84f5662a1ee7ffa900",
+   null
+  ],
+  [
+   "392682d35296bda5c0d0cccf43bae55be3d084df",
+   null
+  ],
+  [
+   "4858267f3b97fe2823d2ce104c1f90ec93eee8d7",
+   null
+  ],
+  [
+   "ffd4c9ccba0ffc74270a8d3ae75f11a7ba7a1a64",
+   null
+  ],
+  [
+   "9b01a8f9ae53ebcd05c27ec21843758c2c1e823f",
+   null
+  ],
+  [
+   "4dc6c73c5a9203c5a8a89ce2161feca542329812",
+   null
+  ],
+  [
+   "1d35859861fa4710cee94cf0e0b2e114b152b946",
+   null
+  ],
+  [
+   "041544853c86dde91c49983e5ddd0aa799bd2831",
+   null
+  ],
+  [
+   "fed4fea217abbc502f2e823465de903c8f2b623d",
+   null
+  ],
+  [
+   "86ef6833085428c21ef1fb7f2de8e5e7f54f1f72",
+   null
+  ],
+  [
+   "7099e174acbcbd940f57e4ab4913fee4040c826e",
+   null
+  ]
+ ]
+}

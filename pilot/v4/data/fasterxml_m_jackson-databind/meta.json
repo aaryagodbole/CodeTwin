@@ -1,0 +1,119 @@
+{
+ "project": "fasterxml_m_jackson-databind",
+ "url": "https://github.com/FasterXML/jackson-databind",
+ "mode": "pairs",
+ "language": "java",
+ "spec": [
+  "https://github.com/FasterXML/jackson-databind",
+  ".",
+  [],
+  ".",
+  [
+   "."
+  ],
+  {
+   "language": "java"
+  }
+ ],
+ "source": "Multi-SWE-bench (ByteDance-Seed), images mswebench/*",
+ "count": 24,
+ "max_tests": 30,
+ "changes": [
+  [
+   "5d4eb514820a7cfc7135e4b515dd9531ebdd523a",
+   null
+  ],
+  [
+   "bfeb1fa9dc4c889f8027b80abb2f77996efd9b70",
+   null
+  ],
+  [
+   "ef6564c5cf03144ad9689b1444d3654c6f18eb15",
+   null
+  ],
+  [
+   "e7ab4559e75c38eae89adcc74b8c54bd053a049f",
+   null
+  ],
+  [
+   "7f1a3db2ddc48addc3f6bddf065f06eedd0ac370",
+   null
+  ],
+  [
+   "7690a33de90f0c24f21fdac071f7cc0c5a94b825",
+   null
+  ],
+  [
+   "070cf688be7ba91446c897f4a9861eb612b2d86b",
+   null
+  ],
+  [
+   "4b03c469e5d28d6e20d3bb4d0b26123ef5c30c19",
+   null
+  ],
+  [
+   "960b91c981fed3ea3ce9901e31954b76809ead2f",
+   null
+  ],
+  [
+   "dd733c4c5c48e49c4ee7f0bebce3ff939d0bcf03",
+   null
+  ],
+  [
+   "0020fcbe578f40810f8e6dea1c89ad48f5e70c15",
+   null
+  ],
+  [
+   "cf7c15a3ddf8fa6df5c8961cb57e97e12ee9728a",
+   null
+  ],
+  [
+   "158a68bf0d03eec407922f1c130816c17e1535ef",
+   null
+  ],
+  [
+   "badad566edcfb91dfb4c2ba7e2d20b23520e6f6c",
+   null
+  ],
+  [
+   "9684204f3073580e711320c3531a95bcaffa63ef",
+   null
+  ],
+  [
+   "5e94cb1b29a5948737d86f5fe7eaeda318b74910",
+   null
+  ],
+  [
+   "035fba39559386e16a5017060a6047e733b18599",
+   null
+  ],
+  [
+   "7d112ec1d74fd50c2ea5a71345e0dedf6e8704a9",
+   null
+  ],
+  [
+   "45e6fa63c412bb47e32693f7b0348b8bc7b246af",
+   null
+  ],
+  [
+   "ebf2a82760fda04fdfd20cb1c3f3e7adf9f6b3b2",
+   null
+  ],
+  [
+   "042cd3d6f95b86583ffb4cfad0ee1cb251c23285",
+   null
+  ],
+  [
+   "8146fa8191176b5d463fb0d445bc313d777a1483",
+   null
+  ],
+  [
+   "b332a4268d25d69ac4603e008d90701cd62d6e4c",
+   null
+  ],
+  [
+   "866f95fc0198a5b8beb4f25976125697b115e236",
+   null
+  ]
+ ]
+}

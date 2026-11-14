@@ -1,0 +1,65 @@
+[inside] pr 954: rust (cargo-llvm-cov), base 223d7d9846
+[inside] 22 test files, using 22; PR touches 2
+[inside] base: 9 files with coverage, 12 failing, 12.9s
+[inside] runner output of a failed run:
+[runner]     integration
+[runner] 
+[runner] error: process didn't exit successfully: `/usr/local/rustup/toolchains/1.85.0-x86_64-unknown-linux-gnu/bin/cargo test --manifest-path /home/ripgrep/Cargo.toml --target-dir /home/ripgrep/target/llvm-cov-target --test tests` (exit status: 101)
+[runner] 
+[runner] 
+[runner] === tests/hay.rs  (exit 101, cwd /home/ripgrep)
+[runner] $ cargo llvm-cov --lcov --output-path /tmp/codetwin-cov-74gqfp2i/lcov.info --test hay
+[runner] files in cov_dir: []
+[runner] info: cargo-llvm-cov currently setting cfg(coverage); you can opt-out it by passing --no-cfg-coverage
+[runner] warning: /home/ripgrep/wincolor/Cargo.toml: no edition set: defaulting to the 2015 edition while the latest is 2024
+[runner] warning: /home/ripgrep/globset/Cargo.toml: no edition set: defaulting to the 2015 edition while the latest is 2024
+[runner] warning: /home/ripgrep/grep/Cargo.toml: no edition set: defaulting to the 2015 edition while the latest is 2024
+[runner] warning: /home/ripgrep/Cargo.toml: An explicit [[test]] section is specified in Cargo.toml which currently
+[runner] disables Cargo from automatically inferring other test targets.
+[runner] This inference behavior will change in the Rust 2018 edition and the following
+[runner] files will be included as a test target:
+[runner] 
+[runner] * tests/hay.rs
+[runner] * tests/workdir.rs
+[runner] 
+[runner] This is likely to break cargo build or cargo test as these files may not be
+[runner] ready to be compiled as a test target today. You can future-proof yourself
+[runner] and disable this warning by adding `autotests = false` to your [package]
+[runner] section. You may also move the files to a location where Cargo would not
+[runner] automatically infer them to be a target, such as in subfolders.
+[runner] 
+[runner] For more information on this warning you can consult
+[runner] https://github.com/rust-lang/cargo/issues/5330
+[runner] warning: /home/ripgrep/Cargo.toml: no edition set: defaulting to the 2015 edition while the latest is 2024
+[runner] warning: /home/ripgrep/termcolor/Cargo.toml: no edition set: defaulting to the 2015 edition while the latest is 2024
+[runner] warning: /home/ripgrep/ignore/Cargo.toml: no edition set: defaulting to the 2015 edition while the latest is 2024
+[runner]     Blocking waiting for file lock on package cache
+[runner]     Blocking waiting for file lock on package cache
+[runner]     Blocking waiting for file lock on package cache
+[runner] error: no test target named `hay`.
+[runner] Available test targets:
+[runner]     integration
+[runner] 
+[runner] error: process didn't exit successfully: `/usr/local/rustup/toolchains/1.85.0-x86_64-unknown-linux-gnu/bin/cargo test --manifest-path /home/ripgrep/Cargo.toml --target-dir /home/ripgrep/target/llvm-cov-target --test hay` (exit status: 101)
+[runner] 
+[inside] new: 2 failing, 0.4s
+[inside] done in 13.4s; f2p files: []
+
+
+[host] pr 954: 48s
+[inside] pr 1980: rust (cargo-llvm-cov), base 9b01a8f9ae
+[inside] 49 test files, using 40; PR touches 1
+[inside] base: 19 files with coverage, 13 failing, 39.0s
+[inside] new: 1 failing, 2.5s
+[inside] done in 41.8s; f2p files: []
+
+
+[host] pr 1980: 75s
+[inside] pr 2576: rust (cargo-llvm-cov), base fed4fea217
+[inside] 50 test files, using 40; PR touches 1
+[inside] base: 15 files with coverage, 10 failing, 49.9s
+[inside] new: 1 failing, 3.4s
+[inside] done in 53.4s; f2p files: []
+
+
+[host] pr 2576: 86s

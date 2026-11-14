@@ -1,0 +1,98 @@
+[inside] pr 5338: javascript (mocha), base 7fbfbbeff6
+[inside] 41 test files, using 41; PR touches 2
+[inside] base: 1 files with coverage, 40 failing, 54.0s
+[inside] runner output of a failed run:
+[runner]     at async exports.handler (/home/axios/node_modules/mocha/lib/cli/run.js:370:5)
+[runner] 
+[runner] 
+[runner] === test/specs/utils/trim.spec.js  (exit 1, cwd /home/axios)
+[runner] $ npx --yes c8@10 --reporter=lcovonly --report-dir=/tmp/codetwin-cov-u6yu7xqm --exclude-after-remap npx --no-install mocha test/specs/utils/trim.spec.js
+[runner] files in cov_dir: ['lcov.info', 'tmp', 'tmp/coverage-7328-1794676894252-0.json', 'tmp/coverage-7329-1794676893284-0.json', 'tmp/coverage-7383-1794676894149-0.json']
+[runner] 
+[runner] Error [ERR_REQUIRE_CYCLE_MODULE]: Cannot require() ES Module /home/axios/test/specs/utils/trim.spec.js in a cycle. (from /home/axios/node_modules/mocha/lib/nodejs/esm-utils.js)
+[runner]     at ModuleLoader.importSyncForRequire (node:internal/modules/esm/loader:309:15)
+[runner]     at loadESMFromCJS (node:internal/modules/cjs/loader:1371:24)
+[runner]     at Module._compile (node:internal/modules/cjs/loader:1511:5)
+[runner]     at Module._extensions..js (node:internal/modules/cjs/loader:1572:16)
+[runner]     at Module.load (node:internal/modules/cjs/loader:1275:32)
+[runner]     at Module._load (node:internal/modules/cjs/loader:1096:12)
+[runner]     at Module.require (node:internal/modules/cjs/loader:1298:19)
+[runner]     at require (node:internal/modules/helpers:182:18)
+[runner]     at exports.requireOrImport (/home/axios/node_modules/mocha/lib/nodejs/esm-utils.js:49:16)
+[runner]     at async exports.loadFilesAsync (/home/axios/node_modules/mocha/lib/nodejs/esm-utils.js:91:20)
+[runner]     at async singleRun (/home/axios/node_modules/mocha/lib/cli/run-helpers.js:125:3)
+[runner]     at async exports.handler (/home/axios/node_modules/mocha/lib/cli/run.js:370:5)
+[runner] 
+[runner] 
+[runner] === test/specs/xsrf.spec.js  (exit 1, cwd /home/axios)
+[runner] $ npx --yes c8@10 --reporter=lcovonly --report-dir=/tmp/codetwin-cov-t7hg6wif --exclude-after-remap npx --no-install mocha test/specs/xsrf.spec.js
+[runner] files in cov_dir: ['lcov.info', 'tmp', 'tmp/coverage-7425-1794676897115-0.json', 'tmp/coverage-7426-1794676896552-0.json', 'tmp/coverage-7444-1794676897072-0.json']
+[runner] 
+[runner] Error [ERR_REQUIRE_CYCLE_MODULE]: Cannot require() ES Module /home/axios/test/specs/xsrf.spec.js in a cycle. (from /home/axios/node_modules/mocha/lib/nodejs/esm-utils.js)
+[runner]     at ModuleLoader.importSyncForRequire (node:internal/modules/esm/loader:309:15)
+[runner]     at loadESMFromCJS (node:internal/modules/cjs/loader:1371:24)
+[runner]     at Module._compile (node:internal/modules/cjs/loader:1511:5)
+[runner]     at Module._extensions..js (node:internal/modules/cjs/loader:1572:16)
+[runner]     at Module.load (node:internal/modules/cjs/loader:1275:32)
+[runner]     at Module._load (node:internal/modules/cjs/loader:1096:12)
+[runner]     at Module.require (node:internal/modules/cjs/loader:1298:19)
+[runner]     at require (node:internal/modules/helpers:182:18)
+[runner]     at exports.requireOrImport (/home/axios/node_modules/mocha/lib/nodejs/esm-utils.js:49:16)
+[runner]     at async exports.loadFilesAsync (/home/axios/node_modules/mocha/lib/nodejs/esm-utils.js:91:20)
+[runner]     at async singleRun (/home/axios/node_modules/mocha/lib/cli/run-helpers.js:125:3)
+[runner]     at async exports.handler (/home/axios/node_modules/mocha/lib/cli/run.js:370:5)
+[runner] 
+[inside] new: 2 failing, 3.1s
+[inside] done in 59.0s; f2p files: []
+
+
+[host] pr 5338: 93s
+[inside] pr 5919: javascript (mocha), base bc9af51b18
+[inside] 41 test files, using 41; PR touches 0
+[inside] base: 1 files with coverage, 40 failing, 53.2s
+[inside] runner output of a failed run:
+[runner]     at async exports.handler (/home/axios/node_modules/mocha/lib/cli/run.js:370:5)
+[runner] 
+[runner] 
+[runner] === test/specs/utils/trim.spec.js  (exit 1, cwd /home/axios)
+[runner] $ npx --yes c8@10 --reporter=lcovonly --report-dir=/tmp/codetwin-cov-isdxjlee --exclude-after-remap npx --no-install mocha test/specs/utils/trim.spec.js
+[runner] files in cov_dir: ['lcov.info', 'tmp', 'tmp/coverage-7336-1794676993320-0.json', 'tmp/coverage-7337-1794676992249-0.json', 'tmp/coverage-7391-1794676993198-0.json']
+[runner] 
+[runner] Error [ERR_REQUIRE_CYCLE_MODULE]: Cannot require() ES Module /home/axios/test/specs/utils/trim.spec.js in a cycle. (from /home/axios/node_modules/mocha/lib/nodejs/esm-utils.js)
+[runner]     at ModuleLoader.importSyncForRequire (node:internal/modules/esm/loader:309:15)
+[runner]     at loadESMFromCJS (node:internal/modules/cjs/loader:1371:24)
+[runner]     at Module._compile (node:internal/modules/cjs/loader:1511:5)
+[runner]     at Module._extensions..js (node:internal/modules/cjs/loader:1572:16)
+[runner]     at Module.load (node:internal/modules/cjs/loader:1275:32)
+[runner]     at Module._load (node:internal/modules/cjs/loader:1096:12)
+[runner]     at Module.require (node:internal/modules/cjs/loader:1298:19)
+[runner]     at require (node:internal/modules/helpers:182:18)
+[runner]     at exports.requireOrImport (/home/axios/node_modules/mocha/lib/nodejs/esm-utils.js:49:16)
+[runner]     at async exports.loadFilesAsync (/home/axios/node_modules/mocha/lib/nodejs/esm-utils.js:91:20)
+[runner]     at async singleRun (/home/axios/node_modules/mocha/lib/cli/run-helpers.js:125:3)
+[runner]     at async exports.handler (/home/axios/node_modules/mocha/lib/cli/run.js:370:5)
+[runner] 
+[runner] 
+[runner] === test/specs/xsrf.spec.js  (exit 1, cwd /home/axios)
+[runner] $ npx --yes c8@10 --reporter=lcovonly --report-dir=/tmp/codetwin-cov-il7x17qv --exclude-after-remap npx --no-install mocha test/specs/xsrf.spec.js
+[runner] files in cov_dir: ['lcov.info', 'tmp', 'tmp/coverage-7425-1794676995820-0.json', 'tmp/coverage-7426-1794676995258-0.json', 'tmp/coverage-7444-1794676995778-0.json']
+[runner] 
+[runner] Error [ERR_REQUIRE_CYCLE_MODULE]: Cannot require() ES Module /home/axios/test/specs/xsrf.spec.js in a cycle. (from /home/axios/node_modules/mocha/lib/nodejs/esm-utils.js)
+[runner]     at ModuleLoader.importSyncForRequire (node:internal/modules/esm/loader:309:15)
+[runner]     at loadESMFromCJS (node:internal/modules/cjs/loader:1371:24)
+[runner]     at Module._compile (node:internal/modules/cjs/loader:1511:5)
+[runner]     at Module._extensions..js (node:internal/modules/cjs/loader:1572:16)
+[runner]     at Module.load (node:internal/modules/cjs/loader:1275:32)
+[runner]     at Module._load (node:internal/modules/cjs/loader:1096:12)
+[runner]     at Module.require (node:internal/modules/cjs/loader:1298:19)
+[runner]     at require (node:internal/modules/helpers:182:18)
+[runner]     at exports.requireOrImport (/home/axios/node_modules/mocha/lib/nodejs/esm-utils.js:49:16)
+[runner]     at async exports.loadFilesAsync (/home/axios/node_modules/mocha/lib/nodejs/esm-utils.js:91:20)
+[runner]     at async singleRun (/home/axios/node_modules/mocha/lib/cli/run-helpers.js:125:3)
+[runner]     at async exports.handler (/home/axios/node_modules/mocha/lib/cli/run.js:370:5)
+[runner] 
+[inside] new: 0 failing, 0.3s
+[inside] done in 54.4s; f2p files: []
+
+
+[host] pr 5919: 88s

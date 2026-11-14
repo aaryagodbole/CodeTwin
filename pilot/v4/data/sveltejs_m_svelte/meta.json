@@ -1,0 +1,119 @@
+{
+ "project": "sveltejs_m_svelte",
+ "url": "https://github.com/sveltejs/svelte",
+ "mode": "pairs",
+ "language": "javascript",
+ "spec": [
+  "https://github.com/sveltejs/svelte",
+  ".",
+  [],
+  ".",
+  [
+   "."
+  ],
+  {
+   "language": "javascript"
+  }
+ ],
+ "source": "Multi-SWE-bench (ByteDance-Seed), images mswebench/*",
+ "count": 24,
+ "max_tests": 50,
+ "changes": [
+  [
+   "6f508a011bc8051ab9f82cafa97c5292a4453b92",
+   null
+  ],
+  [
+   "9abfb52f67bbcdc7b671c3b3dfc3d672c506a24a",
+   null
+  ],
+  [
+   "f5101c0d8cb34cd488af0b56784fb308541d62da",
+   null
+  ],
+  [
+   "73e8820fe724cad5fd7ea3cd5b3faa652f04064e",
+   null
+  ],
+  [
+   "37f249350c414d9a75635bf2993b08f888191ce5",
+   null
+  ],
+  [
+   "ede1edd314452a1bfd729503e990cf06e04da641",
+   null
+  ],
+  [
+   "9926347ad9dbdd0f3324d5538e25dcb7f5e442f8",
+   null
+  ],
+  [
+   "ef68b66dee1ebc126118e5b837c091e110999c81",
+   null
+  ],
+  [
+   "405e9da4ff853c2e8aafde739ba0b2fd406f56b5",
+   null
+  ],
+  [
+   "405e9da4ff853c2e8aafde739ba0b2fd406f56b5",
+   null
+  ],
+  [
+   "bde42d56764337e000ca72df921fb2d168067af1",
+   null
+  ],
+  [
+   "e3dc185a4c3420788ea50863dda50c7820bf6ae4",
+   null
+  ],
+  [
+   "e3dc185a4c3420788ea50863dda50c7820bf6ae4",
+   null
+  ],
+  [
+   "2fa06447cf51893715bfe776f753d1b1f0587d83",
+   null
+  ],
+  [
+   "1108587f1bb65b816ff692161fec1599e7f99c47",
+   null
+  ],
+  [
+   "fd4a52c8944b9e131594d6fc0e00645f12215304",
+   null
+  ],
+  [
+   "10aacfa603d7a7f139ca3c63556c2ef7af071ba1",
+   null
+  ],
+  [
+   "24777c335a85209e344fb2b61a60c7768165c747",
+   null
+  ],
+  [
+   "d5167e75b96e10f0ed8f9b84588079d66dffaec6",
+   null
+  ],
+  [
+   "5797bb34ce96b0d7b4608f934c1f13605143671f",
+   null
+  ],
+  [
+   "388e3e68fc46fd018e58a82572d45f704e6e9c8f",
+   null
+  ],
+  [
+   "4e61db7201c5320c6cf0bb323fa82659c56c2f37",
+   null
+  ],
+  [
+   "092370b43fcb1b76f1c4cf713d1806b8ecb4932b",
+   null
+  ],
+  [
+   "eab690d31a7203ac23334460c9ae68844d43dc26",
+   null
+  ]
+ ]
+}

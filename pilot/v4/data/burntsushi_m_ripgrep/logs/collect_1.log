@@ -1,0 +1,32 @@
+[inside] pr 723: rust (cargo-llvm-cov), base 5e73075ef5
+[inside] 20 test files, using 20; PR touches 1
+[inside] base: 6 files with coverage, 10 failing, 17.0s
+[inside] new: 1 failing, 0.4s
+[inside] done in 17.5s; f2p files: []
+
+
+[host] pr 723: 49s
+[inside] pr 1367: rust (cargo-llvm-cov), base 4858267f3b
+[inside] 49 test files, using 40; PR touches 1
+[inside] base: 11 files with coverage, 15 failing, 38.5s
+[inside] new: 1 failing, 0.6s
+[inside] done in 39.2s; f2p files: []
+
+
+[host] pr 1367: 71s
+[inside] pr 2295: rust (cargo-llvm-cov), base 1d35859861
+[inside] 50 test files, using 40; PR touches 1
+[inside] base: 15 files with coverage, 12 failing, 53.9s
+[inside] new: 1 failing, 2.9s
+[inside] done in 57.0s; f2p files: []
+
+
+[host] pr 2295: 89s
+[inside] pr 2626: rust (cargo-llvm-cov), base 7099e174ac
+[inside] 53 test files, using 40; PR touches 4
+[inside] base: 12 files with coverage, 15 failing, 61.4s
+[inside] new: 4 failing, 17.1s
+[inside] done in 78.9s; f2p files: []
+
+
+[host] pr 2626: 112s

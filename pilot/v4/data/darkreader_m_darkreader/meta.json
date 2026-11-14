@@ -1,0 +1,31 @@
+{
+ "project": "darkreader_m_darkreader",
+ "url": "https://github.com/darkreader/darkreader",
+ "mode": "pairs",
+ "language": "typescript",
+ "spec": [
+  "https://github.com/darkreader/darkreader",
+  ".",
+  [],
+  ".",
+  [
+   "."
+  ],
+  {
+   "language": "typescript"
+  }
+ ],
+ "source": "Multi-SWE-bench (ByteDance-Seed), images mswebench/*",
+ "count": 2,
+ "max_tests": 50,
+ "changes": [
+  [
+   "a787eb511f45159c8869d30e5a6ba1f91cb67709",
+   null
+  ],
+  [
+   "991883df4d5910851130e3dc0e21fcbce604ea7d",
+   null
+  ]
+ ]
+}

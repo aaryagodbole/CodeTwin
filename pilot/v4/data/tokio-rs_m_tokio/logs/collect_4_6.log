@@ -1,0 +1,30 @@
+== tokio-rs/tokio PR 5179 (5/24)
+[inside] pr 5179: rust (cargo-llvm-cov), base 9e3fb1673a
+[inside] 215 test files, using 40; PR touches 1
+[inside] base: 3 files with coverage, 22 failing, 79.4s
+[inside] runner output of a failed run:
+[inside] new: 0 failing, 4.5s
+[inside] done in 88.6s; f2p files: []
+   ok; 1 recorded so far
+== tokio-rs/tokio PR 5583 (11/24)
+[inside] pr 5583: rust (cargo-llvm-cov), base 68b02db154
+[inside] 229 test files, using 40; PR touches 2
+[inside] base: 6 files with coverage, 16 failing, 74.4s
+[inside] new: 0 failing, 5.0s
+[inside] done in 83.2s; f2p files: []
+   ok; 2 recorded so far
+== tokio-rs/tokio PR 6339 (17/24)
+[inside] pr 6339: rust (cargo-llvm-cov), base 84e41d4aff
+[inside] 251 test files, using 40; PR touches 1
+[inside] base: 5 files with coverage, 11 failing, 111.6s
+[inside] new: 0 failing, 4.8s
+[inside] done in 123.1s; f2p files: []
+   ok; 3 recorded so far
+== tokio-rs/tokio PR 6967 (23/24)
+[inside] pr 6967: rust (cargo-llvm-cov), base d4178cf349
+[inside] 259 test files, using 40; PR touches 1
+[inside] base: 3 files with coverage, 16 failing, 126.3s
+[inside] new: 0 failing, 5.1s
+[inside] done in 139.2s; f2p files: []
+   ok; 4 recorded so far
+recorded 4 of 4 PRs of tokio-rs/tokio

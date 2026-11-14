@@ -1,0 +1,32 @@
+[inside] pr 569: javascript (jest), base ffffacffd0
+[inside] 36 test files, using 36; PR touches 1
+[inside] base: 34 files with coverage, 2 failing, 32.4s
+[inside] new: 0 failing, 1.8s
+[inside] done in 38.3s; f2p files: ['test/plugin/weekday.test.js']
+
+
+[host] pr 569: 78s
+[inside] pr 734: javascript (jest), base 9ad2e47e05
+[inside] 39 test files, using 39; PR touches 1
+[inside] base: 37 files with coverage, 2 failing, 34.2s
+[inside] new: 0 failing, 1.9s
+[inside] done in 40.4s; f2p files: ['test/plugin/localeData.test.js']
+
+
+[host] pr 734: 80s
+[inside] pr 873: javascript (jest), base 62b092d9f9
+[inside] 55 test files, using 50; PR touches 1
+[inside] base: 48 files with coverage, 2 failing, 43.7s
+[inside] new: 0 failing, 2.5s
+[inside] done in 50.8s; f2p files: ['test/plugin/customParseFormat.test.js']
+
+
+[host] pr 873: 90s
+[inside] pr 957: javascript (jest), base 14ab808a7b
+[inside] 56 test files, using 50; PR touches 1
+[inside] base: 48 files with coverage, 2 failing, 44.4s
+[inside] new: 1 failing, 30.5s
+[inside] done in 79.5s; f2p files: ['test/plugin/utc-utcOffset.test.js']
+
+
+[host] pr 957: 119s

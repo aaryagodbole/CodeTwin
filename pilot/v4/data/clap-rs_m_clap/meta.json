@@ -1,0 +1,119 @@
+{
+ "project": "clap-rs_m_clap",
+ "url": "https://github.com/clap-rs/clap",
+ "mode": "pairs",
+ "language": "rust",
+ "spec": [
+  "https://github.com/clap-rs/clap",
+  ".",
+  [],
+  ".",
+  [
+   "."
+  ],
+  {
+   "language": "rust"
+  }
+ ],
+ "source": "Multi-SWE-bench (ByteDance-Seed), images mswebench/*",
+ "count": 24,
+ "max_tests": 40,
+ "changes": [
+  [
+   "dd485ebc6a13075dfb7773dd81a6c11f7d0a3a6e",
+   null
+  ],
+  [
+   "1c3958c56eca35235ed6837c666adb8ede979961",
+   null
+  ],
+  [
+   "c192f5effbb9655964630952e530255462174f44",
+   null
+  ],
+  [
+   "deb14c853740ebc82feb12a9af61c30726627622",
+   null
+  ],
+  [
+   "2da492e4dc1eedf4f7d666ecb38158d2d8c6528f",
+   null
+  ],
+  [
+   "055568d3fe9fd3e96366035e4129975001c7e01c",
+   null
+  ],
+  [
+   "81457178fa7e055775867ca659b37798b5ae9584",
+   null
+  ],
+  [
+   "1dd3fcb954355198193a793d2983db383829ec2f",
+   null
+  ],
+  [
+   "dc363d0b91cd0545fbc25b651fe4b593a130247b",
+   null
+  ],
+  [
+   "da92a32d10fbae3b76dbb3d733a7f28d3335b664",
+   null
+  ],
+  [
+   "ddd55e57dc4b0205e02c121f1116704bd1b51956",
+   null
+  ],
+  [
+   "be27f41f8354bfbdf0e4eb43236759b799e7816a",
+   null
+  ],
+  [
+   "6a56a82629d1a990efb37dae9c75a76e943f22a0",
+   null
+  ],
+  [
+   "49f857166fe7b2d8abf9ccf8d4d89be072fce550",
+   null
+  ],
+  [
+   "6ce1e4fda211a7373ce7c4167964e6ca073bdfc1",
+   null
+  ],
+  [
+   "4f90f3e4bb09cc596aa10243fc1791fc574a5d0e",
+   null
+  ],
+  [
+   "9d2ef79512121c7b79eecea150403eaa49f54c3a",
+   null
+  ],
+  [
+   "4f90f3e4bb09cc596aa10243fc1791fc574a5d0e",
+   null
+  ],
+  [
+   "fad3d9632ebde36004455084df2c9052afe40855",
+   null
+  ],
+  [
+   "d51c0b5a55030f826b302441d6eb2864b2e91ff1",
+   null
+  ],
+  [
+   "be6e1f764763b0f0b4a5cbc497d745251307a4c4",
+   null
+  ],
+  [
+   "5b73699825fddc805be58c2719503b114e00ea61",
+   null
+  ],
+  [
+   "76effbd8f9d76df99b87826a2e8ec1b9960851b2",
+   null
+  ],
+  [
+   "50fb4ca63dc7e8fb8aa2914de5c8a5b4413f2c62",
+   null
+  ]
+ ]
+}

@@ -1,0 +1,32 @@
+[inside] pr 1017: rust (cargo-llvm-cov), base cb1dd95b8a
+[inside] 69 test files, using 40; PR touches 6
+[inside] base: 23 files with coverage, 9 failing, 62.4s
+[inside] new: 2 failing, 7.6s
+[inside] done in 79.4s; f2p files: ['tracing-core/tests/global_dispatch.rs']
+
+
+[host] pr 1017: 140s
+[inside] pr 1252: rust (cargo-llvm-cov), base d8a46edafd
+[inside] 74 test files, using 40; PR touches 1
+[inside] base: 20 files with coverage, 8 failing, 61.3s
+[inside] new: 0 failing, 4.7s
+[inside] done in 73.7s; f2p files: ['tracing/tests/span.rs']
+
+
+[host] pr 1252: 135s
+[inside] pr 1853: rust (cargo-llvm-cov), base 9d8d366b15
+[inside] 77 test files, using 40; PR touches 1
+[inside] base: 21 files with coverage, 4 failing, 67.2s
+[inside] new: 0 failing, 5.3s
+[inside] done in 80.6s; f2p files: ['tracing-opentelemetry/tests/trace_state_propagation.rs']
+
+
+[host] pr 1853: 143s
+[inside] pr 2090: rust (cargo-llvm-cov), base 465f10adc1
+[inside] 87 test files, using 40; PR touches 1
+[inside] base: 22 files with coverage, 5 failing, 62.8s
+[inside] new: 0 failing, 5.0s
+[inside] done in 72.1s; f2p files: ['tracing-attributes/tests/async_fn.rs']
+
+
+[host] pr 2090: 138s

@@ -1,0 +1,87 @@
+{
+ "project": "grpc_m_grpc-go",
+ "url": "https://github.com/grpc/grpc-go",
+ "mode": "pairs",
+ "language": "go",
+ "spec": [
+  "https://github.com/grpc/grpc-go",
+  ".",
+  [],
+  ".",
+  [
+   "."
+  ],
+  {
+   "language": "go"
+  }
+ ],
+ "source": "Multi-SWE-bench (ByteDance-Seed), images mswebench/*",
+ "count": 16,
+ "max_tests": 40,
+ "changes": [
+  [
+   "c1fc9faff6114b92549bd2145ac77cabff68740d",
+   null
+  ],
+  [
+   "32559e2175a5c793c47df0b214775affde5ac35e",
+   null
+  ],
+  [
+   "5878d965b2234619fe67d256d0cd582553e7fff1",
+   null
+  ],
+  [
+   "914c52b240b05e4562b1d09e5e7cf3c57495d442",
+   null
+  ],
+  [
+   "b03f6fd5e3dfa7663a225c36a15d623159f6724b",
+   null
+  ],
+  [
+   "b03f6fd5e3dfa7663a225c36a15d623159f6724b",
+   null
+  ],
+  [
+   "e33051174bc15b756823131f1161f46a4b265c3a",
+   null
+  ],
+  [
+   "61f27c14152c7551d5cc657c31e81a3597c82e48",
+   null
+  ],
+  [
+   "aa4eae656c8137762f4cb0065e80178b77acf2dc",
+   null
+  ],
+  [
+   "45bd2846a34b039c5f1e69b7202f118687156b34",
+   null
+  ],
+  [
+   "ff5f0e93f53629c7f9b27f8bfe99e60fcfbeefcb",
+   null
+  ],
+  [
+   "7c1d326729dc9b0a07135f8902ddcc050ff8ab64",
+   null
+  ],
+  [
+   "f7b39d80aa97614c0b4420d120b59dd192d1d521",
+   null
+  ],
+  [
+   "b88d2d74656f2b9833cc78c088ebf899d2189230",
+   null
+  ],
+  [
+   "648cf9b00e25b3af7839d6678a8fe319505c3b80",
+   null
+  ],
+  [
+   "192c8a2a3506bb69336f5c135733a3435a04fb30",
+   null
+  ]
+ ]
+}

@@ -1,0 +1,82 @@
+== anuraghazra/github-readme-stats PR 58 (1/19)
+[inside] pr 58: javascript (jest), base 2efb399f33
+[inside] 8 test files, using 8; PR touches 2
+[inside] base: 8 files with coverage, 0 failing, 7.6s
+[inside] new: 0 failing, 7.2s
+[inside] done in 18.3s; f2p files: ['tests/fetchStats.test.js', 'tests/retryer.test.js']
+   ok; 1 recorded so far
+== anuraghazra/github-readme-stats PR 117 (5/19)
+[inside] pr 117: javascript (jest), base 9fb28c9112
+[inside] 9 test files, using 9; PR touches 1
+[inside] base: 9 files with coverage, 0 failing, 9.2s
+[inside] new: 0 failing, 6.4s
+[inside] done in 17.6s; f2p files: ['tests/api.test.js']
+   ok; 2 recorded so far
+== anuraghazra/github-readme-stats PR 1041 (9/19)
+[inside] pr 1041: javascript (jest), base fef8bc3a4a
+[inside] 15 test files, using 15; PR touches 0
+[inside] base: 15 files with coverage, 1 failing, 15.5s
+[inside] new: 0 failing, 0.1s
+[inside] done in 20.3s; f2p files: []
+   ok; 3 recorded so far
+== anuraghazra/github-readme-stats PR 1608 (13/19)
+[inside] pr 1608: javascript (jest), base d57251cdf1
+[inside] 16 test files, using 16; PR touches 1
+[inside] base: 16 files with coverage, 1 failing, 16.6s
+[inside] new: 0 failing, 1.7s
+[inside] done in 25.5s; f2p files: ['tests/fetchWakatime.test.js']
+   ok; 4 recorded so far
+== anuraghazra/github-readme-stats PR 2491 (17/19)
+[inside] pr 2491: javascript (jest), base 112000667c
+[inside] 19 test files, using 19; PR touches 1
+[inside] base: 0 files with coverage, 19 failing, 12.1s
+[inside] runner output of a failed run:
+[host] pr 2491 failed (1):
+[inside] pr 2491: javascript (jest), base 112000667c
+[inside] 19 test files, using 19; PR touches 1
+[inside] base: 0 files with coverage, 19 failing, 12.1s
+[inside] runner output of a failed run:
+[runner] files in cov_dir: ['lcov-report', 'lcov-report/base.css', 'lcov-report/block-navigation.js', 'lcov-report/favicon.png', 'lcov-report/index.html', 'lcov-report/prettify.css', 'lcov-report/prettify.js', 'lcov-report/sort-arrow-sprite.png', 'lcov-report/sorter.js', 'lcov.info']
+[runner] FAIL tests/top-langs.test.js
+[runner]   ● Test suite failed to run
+[runner] 
+[runner]     Jest encountered an unexpected token
+[runner] 
+[runner]     Jest failed to parse a file. This happens e.g. when your code or its dependencies use non-standard JavaScript syntax, or when Jest is not configured to support such syntax.
+[runner] 
+[runner]     Out of the box Jest supports Babel, which will be used to transform your files into valid JS based on your Babel configuration.
+[runner] 
+[runner]     By default "node_modules" folder is ignored by transformers.
+[runner] 
+[runner]     Here's what you can do:
+[runner]      • If you are trying to use ECMAScript Modules, see https://jestjs.io/docs/ecmascript-modules for how to enable it.
+[runner]      • If you are trying to use TypeScript, see https://jestjs.io/docs/getting-started#using-typescript
+[runner]      • To have some of your "node_modules" files transformed, you can specify a custom "transformIgnorePatterns" in your config.
+[runner]      • If you need a custom transformation specify a "transform" option in your config.
+[runner]      • If you simply want to mock your non-JS modules (e.g. binary assets) you can stub them out with the "moduleNameMapper" config option.
+[runner] 
+[runner]     You'll find more details and examples of these config options in the docs:
+[runner]     https://jestjs.io/docs/configuration
+[runner]     For information about custom transformations, see:
+[runner]     https://jestjs.io/docs/code-transformation
+[runner] 
+[runner]     Details:
+[runner] 
+[runner]     /home/github-readme-stats/tests/top-langs.test.js:1
+[runner]     ({"Object.<anonymous>":function(module,exports,require,__dirname,__filename,jest){import { jest } from "@jest/globals";
+[runner]                                                                                       ^^^^^^
+[runner] 
+[runner]     SyntaxError: Cannot use import statement outside a module
+[runner] 
+[runner]       at Runtime.createScriptFromCode (node_modules/jest-runtime/build/index.js:1678:14)
+[runner] 
+[runner] Test Suites: 1 failed, 1 total
+[runner] Tests:       0 total
+[runner] Snapshots:   0 total
+[runner] Time:        0.647 s
+[runner] Ran all test suites within paths "tests/top-langs.test.js".
+[runner] 
+[inside] no coverage at all on the base commit: giving up on this PR
+
+   failed; 4 recorded so far
+recorded 4 of 5 PRs of anuraghazra/github-readme-stats

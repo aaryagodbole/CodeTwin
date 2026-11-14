@@ -157,8 +157,12 @@ def main():
     if r2.returncode != 0:
         log["fix_patch_error"] = r2.stderr[-500:]
     git(repo, "add", "-A")
-    git(repo, "commit", "-qm", f"PR {args.pr}: tests + fix")
+    # --no-verify: projects with husky / simple-git-hooks would otherwise run their lint hooks and refuse
+    # the commit, leaving new == base and an empty diff
+    c = git(repo, "commit", "-q", "--no-verify", "-m", f"PR {args.pr}: tests + fix")
     new = git(repo, "rev-parse", "HEAD").stdout.strip()
+    if new == base:
+        sys.exit(f"[inside] could not commit the patched tree: {(c.stdout + c.stderr)[-800:]}")
     diff = changed_lines(repo, base, new, adapter.extensions)
     t0 = time.time()
     facts_n = adapter.facts()

@@ -1,0 +1,1 @@
+{"language": "rust", "extensions": [".rs"], "runner": "rust (cargo-llvm-cov)"}

@@ -1,0 +1,82 @@
+== mockito/mockito PR 3129 (1/6)
+[inside] pr 3129: java (gradle), base edc6243710
+[inside] 429 test files, using 30; PR touches 1
+[host] pr 3129 failed (1):
+[inside] pr 3129: java (gradle), base edc6243710
+[inside] 429 test files, using 30; PR touches 1
+Traceback (most recent call last):
+  File "/home/mswe_inside.py", line 212, in <module>
+    main()
+  File "/home/mswe_inside.py", line 128, in main
+    run_b = adapter.run_suite(base, universe, timeout=args.timeout * len(universe) + 600)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ctenv/lib/python3.12/site-packages/codetwin/lang/generic.py", line 391, in run_suite
+    self._setup(self.root / pdir, self.runner_for(pdir), timeout)  # type: ignore[arg-type]
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ctenv/lib/python3.12/site-packages/codetwin/lang/generic.py", line 306, in _setup
+    subprocess.run(self._argv(r.setup_command, {}), cwd=cwd, capture_output=True, text=True,
+  File "/usr/lib/python3.12/subprocess.py", line 548, in run
+    with Popen(*popenargs, **kwargs) as process:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/subprocess.py", line 1026, in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+  File "/usr/lib/python3.12/subprocess.py", line 1955, in _execute_child
+    raise child_exception_type(errno_num, err_msg, err_filename)
+FileNotFoundError: [Errno 2] No such file or directory: 'gradle'
+
+   failed; 0 recorded so far
+== mockito/mockito PR 3167 (3/6)
+[inside] pr 3167: java (gradle), base b6554b29ed
+[inside] 431 test files, using 28; PR touches 2
+[host] pr 3167 failed (1):
+[inside] pr 3167: java (gradle), base b6554b29ed
+[inside] 431 test files, using 28; PR touches 2
+Traceback (most recent call last):
+  File "/home/mswe_inside.py", line 212, in <module>
+    main()
+  File "/home/mswe_inside.py", line 128, in main
+    run_b = adapter.run_suite(base, universe, timeout=args.timeout * len(universe) + 600)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ctenv/lib/python3.12/site-packages/codetwin/lang/generic.py", line 391, in run_suite
+    self._setup(self.root / pdir, self.runner_for(pdir), timeout)  # type: ignore[arg-type]
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ctenv/lib/python3.12/site-packages/codetwin/lang/generic.py", line 306, in _setup
+    subprocess.run(self._argv(r.setup_command, {}), cwd=cwd, capture_output=True, text=True,
+  File "/usr/lib/python3.12/subprocess.py", line 548, in run
+    with Popen(*popenargs, **kwargs) as process:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/subprocess.py", line 1026, in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+  File "/usr/lib/python3.12/subprocess.py", line 1955, in _execute_child
+    raise child_exception_type(errno_num, err_msg, err_filename)
+FileNotFoundError: [Errno 2] No such file or directory: 'gradle'
+
+   failed; 0 recorded so far
+== mockito/mockito PR 3220 (5/6)
+[inside] pr 3220: java (gradle), base a0214364c3
+[inside] 433 test files, using 30; PR touches 3
+[host] pr 3220 failed (1):
+[inside] pr 3220: java (gradle), base a0214364c3
+[inside] 433 test files, using 30; PR touches 3
+Traceback (most recent call last):
+  File "/home/mswe_inside.py", line 212, in <module>
+    main()
+  File "/home/mswe_inside.py", line 128, in main
+    run_b = adapter.run_suite(base, universe, timeout=args.timeout * len(universe) + 600)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ctenv/lib/python3.12/site-packages/codetwin/lang/generic.py", line 391, in run_suite
+    self._setup(self.root / pdir, self.runner_for(pdir), timeout)  # type: ignore[arg-type]
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ctenv/lib/python3.12/site-packages/codetwin/lang/generic.py", line 306, in _setup
+    subprocess.run(self._argv(r.setup_command, {}), cwd=cwd, capture_output=True, text=True,
+  File "/usr/lib/python3.12/subprocess.py", line 548, in run
+    with Popen(*popenargs, **kwargs) as process:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/subprocess.py", line 1026, in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+  File "/usr/lib/python3.12/subprocess.py", line 1955, in _execute_child
+    raise child_exception_type(errno_num, err_msg, err_filename)
+FileNotFoundError: [Errno 2] No such file or directory: 'gradle'
+
+   failed; 0 recorded so far
+recorded 0 of 3 PRs of mockito/mockito

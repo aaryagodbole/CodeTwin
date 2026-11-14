@@ -1,0 +1,119 @@
+{
+ "project": "vuejs_m_core",
+ "url": "https://github.com/vuejs/core",
+ "mode": "pairs",
+ "language": "typescript",
+ "spec": [
+  "https://github.com/vuejs/core",
+  ".",
+  [],
+  ".",
+  [
+   "."
+  ],
+  {
+   "language": "typescript"
+  }
+ ],
+ "source": "Multi-SWE-bench (ByteDance-Seed), images mswebench/*",
+ "count": 24,
+ "max_tests": 50,
+ "changes": [
+  [
+   "0e8bbe873e579f3d3a74c44af28f7df9e7a06978",
+   null
+  ],
+  [
+   "020851e57d9a9f727c6ea07e9c1575430af02b73",
+   null
+  ],
+  [
+   "020851e57d9a9f727c6ea07e9c1575430af02b73",
+   null
+  ],
+  [
+   "a9893458ec519aae442e1b99e64e6d74685cd22c",
+   null
+  ],
+  [
+   "634519720a21fb5a6871454e1cadad7053a568b8",
+   null
+  ],
+  [
+   "6277cb994acecf56f5f0745f5e2dac9785a34957",
+   null
+  ],
+  [
+   "0e63cbfaf57979e2c6fcfa986281c7521d82d893",
+   null
+  ],
+  [
+   "fc772dbf7398e8ce961025556594b4a7d3f64871",
+   null
+  ],
+  [
+   "7cbcee3d831241a8bd3588ae92d3f27e3641e25f",
+   null
+  ],
+  [
+   "3be4e3cbe34b394096210897c1be8deeb6d748d8",
+   null
+  ],
+  [
+   "dadb3632a0f824f6e6a1c246ed8788bea5cbcad6",
+   null
+  ],
+  [
+   "4162311efdb0db5ca458542e1604b19efa2fae0e",
+   null
+  ],
+  [
+   "edf2572615d0b065bb7ae49de4c3b71086771310",
+   null
+  ],
+  [
+   "fc772dbf7398e8ce961025556594b4a7d3f64871",
+   null
+  ],
+  [
+   "a93bcc4e29be0db6c310f717db3687feb3e4287c",
+   null
+  ],
+  [
+   "f6babf32363185ff3ab3512d952a8a9aa9603762",
+   null
+  ],
+  [
+   "c3e2c556b532656b50b8ab5cd2d9eabc26622d63",
+   null
+  ],
+  [
+   "0275dd329d241bdd84ce3ca0c7fc07211cb21751",
+   null
+  ],
+  [
+   "68e5cc6ac8fc289372831c5fbdff09e63728fc00",
+   null
+  ],
+  [
+   "ffd0473e0f56de0f0d16b05b85d6b6f2e46bf10e",
+   null
+  ],
+  [
+   "07922dacc7422e828eb4238eac58dd11cd2cdb5c",
+   null
+  ],
+  [
+   "f1068fc60ca511f68ff0aaedcc18b39124791d29",
+   null
+  ],
+  [
+   "f1068fc60ca511f68ff0aaedcc18b39124791d29",
+   null
+  ],
+  [
+   "d276a4f3e914aaccc291f7b2513e5d978919d0f9",
+   null
+  ]
+ ]
+}

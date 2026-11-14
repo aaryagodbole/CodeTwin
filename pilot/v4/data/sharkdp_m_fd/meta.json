@@ -1,0 +1,79 @@
+{
+ "project": "sharkdp_m_fd",
+ "url": "https://github.com/sharkdp/fd",
+ "mode": "pairs",
+ "language": "rust",
+ "spec": [
+  "https://github.com/sharkdp/fd",
+  ".",
+  [],
+  ".",
+  [
+   "."
+  ],
+  {
+   "language": "rust"
+  }
+ ],
+ "source": "Multi-SWE-bench (ByteDance-Seed), images mswebench/*",
+ "count": 14,
+ "max_tests": 40,
+ "changes": [
+  [
+   "0f2429cabcb591df74fc2ab3e32b3ac967264f6d",
+   null
+  ],
+  [
+   "d05e7171d4e2f8feb7d5402026b02aa67a9f9b91",
+   null
+  ],
+  [
+   "ee673c92d375d9e5a6c126480a0383bbe3042b96",
+   null
+  ],
+  [
+   "e44f2f854084c1e69f334ce1a99188f8b960ed4f",
+   null
+  ],
+  [
+   "2bab4a22494e3f10da0b708da7a1eebaa483b727",
+   null
+  ],
+  [
+   "65b65b32be0cb987cf8bbed5fed9f7202deefa06",
+   null
+  ],
+  [
+   "a851570b15bbca91f1f4ef230c6d8939f2459ecc",
+   null
+  ],
+  [
+   "c06c9952b61f35a7881b399cd21d0a4f821e7055",
+   null
+  ],
+  [
+   "7b5b3ec47b98984121e2665c7bad5274cb8db796",
+   null
+  ],
+  [
+   "3e201de9b06e4587781eaf4fe7e755d4f9d8c6df",
+   null
+  ],
+  [
+   "218d475cb21763deaf0ecc8d46078b8f289d03a7",
+   null
+  ],
+  [
+   "ee2396b57a2590a9e534e407d45fa454b32df799",
+   null
+  ],
+  [
+   "cbd11d8a45dc80392c5f1be9679051085e6a3376",
+   null
+  ],
+  [
+   "93cdb2628e89dd5831eee22b8df697aea00eca3b",
+   null
+  ]
+ ]
+}

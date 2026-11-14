@@ -1,0 +1,43 @@
+[inside] pr 6747: javascript (jest), base a787eb511f
+[inside] 2 test files, using 2; PR touches 0
+[inside] base: 0 files with coverage, 2 failing, 2.6s
+[inside] runner output of a failed run:
+[runner] 
+[runner] === tests/test-utils.ts  (exit 1, cwd /home/darkreader)
+[runner] $ npx --no-install jest --ci --coverage --coverageReporters=lcov --coverageDirectory=/tmp/codetwin-cov-lo52fs22 --runTestsByPath tests/test-utils.ts
+[runner] files in cov_dir: []
+[runner] No tests found, exiting with code 1
+[runner] Run with `--passWithNoTests` to exit with code 0
+[runner] No files found in /home/darkreader.
+[runner] Make sure Jest's configuration does not exclude this directory.
+[runner] To set up Jest, make sure a package.json file exists.
+[runner] Jest Documentation: https://jestjs.io/docs/configuration
+[runner] Files: "tests/test-utils.ts"
+[runner] npm notice
+[runner] npm notice New major version of npm available! 10.8.2 -> 12.2.2
+[runner] npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.2
+[runner] npm notice To update run: npm install -g npm@12.2.2
+[runner] npm notice
+[runner] 
+[runner] 
+[runner] === tests/jest.config.js  (exit 1, cwd /home/darkreader)
+[runner] $ npx --no-install jest --ci --coverage --coverageReporters=lcov --coverageDirectory=/tmp/codetwin-cov-mg8dx3i4 --runTestsByPath tests/jest.config.js
+[runner] files in cov_dir: []
+[runner] No tests found, exiting with code 1
+[runner] Run with `--passWithNoTests` to exit with code 0
+[runner] No files found in /home/darkreader.
+[runner] Make sure Jest's configuration does not exclude this directory.
+[runner] To set up Jest, make sure a package.json file exists.
+[runner] Jest Documentation: https://jestjs.io/docs/configuration
+[runner] Files: "tests/jest.config.js"
+[runner] npm notice
+[runner] npm notice New major version of npm available! 10.8.2 -> 12.2.2
+[runner] npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.2
+[runner] npm notice To update run: npm install -g npm@12.2.2
+[runner] npm notice
+[runner] 
+
+[inside] no coverage at all on the base commit: giving up on this PR
+
+[host] pr 6747 failed (1)
+[host] pr 6747: 39s

@@ -1,0 +1,29 @@
+== tokio-rs/tracing PR 1233 (5/21)
+[inside] pr 1233: rust (cargo-llvm-cov), base 881091a1dd
+[inside] 72 test files, using 40; PR touches 2
+[inside] base: 20 files with coverage, 12 failing, 86.8s
+[inside] new: 0 failing, 5.1s
+[inside] done in 98.2s; f2p files: ['tracing-attributes/tests/err.rs']
+   ok; 1 recorded so far
+== tokio-rs/tracing PR 1523 (10/21)
+[inside] pr 1523: rust (cargo-llvm-cov), base ac4a8dd27c
+[inside] 73 test files, using 35; PR touches 7
+[inside] base: 21 files with coverage, 8 failing, 77.5s
+[inside] new: 1 failing, 22.9s
+[inside] done in 120.6s; f2p files: ['tracing-subscriber/tests/hinted_layer_filters_dont_break_other_layers.rs', 'tracing-subscriber/tests/layer_filter_interests_are_cached.rs', 'tracing-subscriber/tests/multiple_layer_filter_interests_cached.rs', 'tracing-subscriber/tests/unhinted_layer_filters_dont_break_other_layers.rs']
+   ok; 2 recorded so far
+== tokio-rs/tracing PR 2008 (15/21)
+[inside] pr 2008: rust (cargo-llvm-cov), base 201d21ac03
+[inside] 89 test files, using 39; PR touches 1
+[inside] base: 29 files with coverage, 6 failing, 82.3s
+[inside] new: 2 failing, 13.7s
+[inside] done in 108.5s; f2p files: ['tracing-subscriber/tests/event_enabling.rs']
+   ok; 3 recorded so far
+== tokio-rs/tracing PR 2892 (20/21)
+[inside] pr 2892: rust (cargo-llvm-cov), base 0e4a4bef5e
+[inside] 95 test files, using 40; PR touches 1
+[inside] base: 23 files with coverage, 7 failing, 100.8s
+[inside] new: 1 failing, 10.5s
+[inside] done in 118.5s; f2p files: []
+   ok; 4 recorded so far
+recorded 4 of 4 PRs of tokio-rs/tracing

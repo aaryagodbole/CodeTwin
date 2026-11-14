@@ -1,0 +1,30 @@
+== BurntSushi/ripgrep PR 454 (1/14)
+[inside] pr 454: rust (cargo-llvm-cov), base c50b8b4125
+[inside] 18 test files, using 18; PR touches 1
+[inside] base: 4 files with coverage, 14 failing, 15.8s
+[inside] runner output of a failed run:
+[inside] new: 1 failing, 0.3s
+[inside] done in 16.3s; f2p files: []
+   ok; 1 recorded so far
+== BurntSushi/ripgrep PR 1294 (5/14)
+[inside] pr 1294: rust (cargo-llvm-cov), base 392682d352
+[inside] 49 test files, using 40; PR touches 1
+[inside] base: 13 files with coverage, 16 failing, 30.2s
+[inside] new: 1 failing, 0.5s
+[inside] done in 31.0s; f2p files: []
+   ok; 2 recorded so far
+== BurntSushi/ripgrep PR 2209 (9/14)
+[inside] pr 2209: rust (cargo-llvm-cov), base 4dc6c73c5a
+[inside] 50 test files, using 40; PR touches 1
+[inside] base: 15 files with coverage, 16 failing, 37.0s
+[inside] new: 1 failing, 2.5s
+[inside] done in 39.7s; f2p files: []
+   ok; 3 recorded so far
+== BurntSushi/ripgrep PR 2610 (13/14)
+[inside] pr 2610: rust (cargo-llvm-cov), base 86ef683308
+[inside] 50 test files, using 40; PR touches 1
+[inside] base: 17 files with coverage, 13 failing, 47.0s
+[inside] new: 1 failing, 8.1s
+[inside] done in 55.3s; f2p files: []
+   ok; 4 recorded so far
+recorded 4 of 4 PRs of BurntSushi/ripgrep

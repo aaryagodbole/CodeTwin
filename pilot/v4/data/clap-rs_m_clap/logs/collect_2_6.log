@@ -1,0 +1,29 @@
+== clap-rs/clap PR 1710 (3/24)
+[inside] pr 1710: rust (cargo-llvm-cov), base c192f5effb
+[inside] 67 test files, using 40; PR touches 1
+[inside] base: 34 files with coverage, 1 failing, 409.4s
+[inside] new: 0 failing, 111.0s
+[inside] done in 522.6s; f2p files: ['tests/subcommands.rs']
+   ok; 1 recorded so far
+== clap-rs/clap PR 2027 (9/24)
+[inside] pr 2027: rust (cargo-llvm-cov), base dc363d0b91
+[inside] 71 test files, using 40; PR touches 5
+[inside] base: 32 files with coverage, 1 failing, 278.0s
+[inside] new: 0 failing, 140.3s
+[inside] done in 420.8s; f2p files: ['tests/app_from_crate.rs', 'tests/cargo.rs', 'tests/help.rs', 'tests/subcommands.rs', 'tests/version.rs']
+   ok; 2 recorded so far
+== clap-rs/clap PR 2154 (15/24)
+[inside] pr 2154: rust (cargo-llvm-cov), base 6ce1e4fda2
+[inside] 73 test files, using 40; PR touches 4
+[inside] base: 31 files with coverage, 2 failing, 259.5s
+[inside] new: 0 failing, 96.3s
+[inside] done in 362.2s; f2p files: ['tests/flags.rs', 'tests/groups.rs', 'tests/opts.rs', 'tests/subcommands.rs']
+   ok; 3 recorded so far
+== clap-rs/clap PR 2203 (21/24)
+[inside] pr 2203: rust (cargo-llvm-cov), base be6e1f7647
+[inside] 73 test files, using 40; PR touches 1
+[inside] base: 34 files with coverage, 0 failing, 281.0s
+[inside] new: 0 failing, 122.6s
+[inside] done in 406.2s; f2p files: ['tests/subcommands.rs']
+   ok; 4 recorded so far
+recorded 4 of 4 PRs of clap-rs/clap

@@ -1,0 +1,39 @@
+{
+ "project": "axios_m_axios",
+ "url": "https://github.com/axios/axios",
+ "mode": "pairs",
+ "language": "javascript",
+ "spec": [
+  "https://github.com/axios/axios",
+  ".",
+  [],
+  ".",
+  [
+   "."
+  ],
+  {
+   "language": "javascript"
+  }
+ ],
+ "source": "Multi-SWE-bench (ByteDance-Seed), images mswebench/*",
+ "count": 4,
+ "max_tests": 50,
+ "changes": [
+  [
+   "85740c3e7a1fa48346dfcbd4497f463ccb1c1b05",
+   null
+  ],
+  [
+   "7fbfbbeff69904cd64e8ac62da8969a1e633ee23",
+   null
+  ],
+  [
+   "0abc70564746496eb211bbd951041b4655aec268",
+   null
+  ],
+  [
+   "bc9af51b1886d1b3529617702f2a21a6c0ed5d92",
+   null
+  ]
+ ]
+}

@@ -1,0 +1,57 @@
+== sveltejs/svelte PR 9456 (2/24)
+[inside] pr 9456: javascript (vitest), base 9abfb52f67
+[inside] 0 test files, using 0; PR touches 0
+[inside] base: 0 files with coverage, 0 failing, 1.9s
+[inside] runner output of a failed run:
+[host] pr 9456 failed (1):
+[inside] pr 9456: javascript (vitest), base 9abfb52f67
+[inside] 0 test files, using 0; PR touches 0
+[inside] base: 0 files with coverage, 0 failing, 1.9s
+[inside] runner output of a failed run:
+[runner] (no runner.log)
+[inside] no coverage at all on the base commit: giving up on this PR
+
+   failed; 0 recorded so far
+== sveltejs/svelte PR 9626 (8/24)
+[inside] pr 9626: javascript (vitest), base ef68b66dee
+[inside] 0 test files, using 0; PR touches 0
+[inside] base: 0 files with coverage, 0 failing, 1.9s
+[inside] runner output of a failed run:
+[host] pr 9626 failed (1):
+[inside] pr 9626: javascript (vitest), base ef68b66dee
+[inside] 0 test files, using 0; PR touches 0
+[inside] base: 0 files with coverage, 0 failing, 1.9s
+[inside] runner output of a failed run:
+[runner] (no runner.log)
+[inside] no coverage at all on the base commit: giving up on this PR
+
+   failed; 0 recorded so far
+== sveltejs/svelte PR 9723 (14/24)
+[inside] pr 9723: javascript (vitest), base 2fa06447cf
+[inside] 0 test files, using 0; PR touches 0
+[inside] base: 0 files with coverage, 0 failing, 2.0s
+[inside] runner output of a failed run:
+[host] pr 9723 failed (1):
+[inside] pr 9723: javascript (vitest), base 2fa06447cf
+[inside] 0 test files, using 0; PR touches 0
+[inside] base: 0 files with coverage, 0 failing, 2.0s
+[inside] runner output of a failed run:
+[runner] (no runner.log)
+[inside] no coverage at all on the base commit: giving up on this PR
+
+   failed; 0 recorded so far
+== sveltejs/svelte PR 9824 (20/24)
+[inside] pr 9824: javascript (vitest), base 5797bb34ce
+[inside] 0 test files, using 0; PR touches 0
+[inside] base: 0 files with coverage, 0 failing, 1.9s
+[inside] runner output of a failed run:
+[host] pr 9824 failed (1):
+[inside] pr 9824: javascript (vitest), base 5797bb34ce
+[inside] 0 test files, using 0; PR touches 0
+[inside] base: 0 files with coverage, 0 failing, 1.9s
+[inside] runner output of a failed run:
+[runner] (no runner.log)
+[inside] no coverage at all on the base commit: giving up on this PR
+
+   failed; 0 recorded so far
+recorded 0 of 4 PRs of sveltejs/svelte

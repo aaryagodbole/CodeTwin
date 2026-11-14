@@ -1,0 +1,213 @@
+== vuejs/core PR 8535 (6/24)
+[inside] pr 8535: javascript (vitest), base 6277cb994a
+[inside] 188 test files, using 50; PR touches 3
+[inside] base: 0 files with coverage, 50 failing, 3.1s
+[inside] runner output of a failed run:
+[host] pr 8535 failed (1):
+[inside] pr 8535: javascript (vitest), base 6277cb994a
+[inside] 188 test files, using 50; PR touches 3
+[inside] base: 0 files with coverage, 50 failing, 3.1s
+[inside] runner output of a failed run:
+[runner] 
+[runner] === packages/shared/__tests__/normalizeProp.spec.ts  (exit 1, cwd /home/core/packages/shared)
+[runner] $ node --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=/tmp/codetwin-cov-va3jpjav/lcov.info __tests__/normalizeProp.spec.ts
+[runner] files in cov_dir: ['lcov.info']
+[runner] 
+[runner] 
+[runner] === packages/vue-compat/__tests__/filters.spec.ts  (exit 1, cwd /home/core/packages/vue-compat)
+[runner] $ node --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=/tmp/codetwin-cov-kzqhe_k4/lcov.info __tests__/filters.spec.ts
+[runner] files in cov_dir: ['lcov.info']
+[runner] 
+[runner] 
+[runner] === packages/vue-compat/__tests__/global.spec.ts  (exit 1, cwd /home/core/packages/vue-compat)
+[runner] $ node --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=/tmp/codetwin-cov-47u1pf5j/lcov.info __tests__/global.spec.ts
+[runner] files in cov_dir: ['lcov.info']
+[runner] 
+[runner] 
+[runner] === packages/vue-compat/__tests__/globalConfig.spec.ts  (exit 1, cwd /home/core/packages/vue-compat)
+[runner] $ node --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=/tmp/codetwin-cov-bdld17kx/lcov.info __tests__/globalConfig.spec.ts
+[runner] files in cov_dir: ['lcov.info']
+[runner] 
+[runner] 
+[runner] === packages/vue-compat/__tests__/utils.ts  (exit 1, cwd /home/core/packages/vue-compat)
+[runner] $ node --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=/tmp/codetwin-cov-0fgezwx4/lcov.info __tests__/utils.ts
+[runner] files in cov_dir: ['lcov.info']
+[runner] 
+[runner] 
+[runner] === packages/vue/__tests__/customElementCasing.spec.ts  (exit 1, cwd /home/core/packages/vue)
+[runner] $ node --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=/tmp/codetwin-cov-lq2wasxf/lcov.info __tests__/customElementCasing.spec.ts
+[runner] files in cov_dir: ['lcov.info']
+[runner] 
+[runner] 
+[runner] === packages/vue/__tests__/e2e/markdown.spec.ts  (exit 1, cwd /home/core/packages/vue)
+[runner] $ node --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=/tmp/codetwin-cov-8natn60k/lcov.info __tests__/e2e/markdown.spec.ts
+[runner] files in cov_dir: ['lcov.info']
+[runner] 
+[runner] 
+[runner] === packages/vue/__tests__/runtimeCompilerOptions.spec.ts  (exit 1, cwd /home/core/packages/vue)
+[runner] $ node --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=/tmp/codetwin-cov-akqhnebv/lcov.info __tests__/runtimeCompilerOptions.spec.ts
+[runner] files in cov_dir: ['lcov.info']
+[runner] 
+[inside] no coverage at all on the base commit: giving up on this PR
+
+   failed; 0 recorded so far
+== vuejs/core PR 9442 (12/24)
+[inside] pr 9442: javascript (vitest), base 4162311efd
+[inside] 188 test files, using 50; PR touches 1
+[inside] base: 0 files with coverage, 50 failing, 3.1s
+[inside] runner output of a failed run:
+[host] pr 9442 failed (1):
+[inside] pr 9442: javascript (vitest), base 4162311efd
+[inside] 188 test files, using 50; PR touches 1
+[inside] base: 0 files with coverage, 50 failing, 3.1s
+[inside] runner output of a failed run:
+[runner] 
+[runner] === packages/server-renderer/__tests__/ssrWatch.spec.ts  (exit 1, cwd /home/core/packages/server-renderer)
+[runner] $ node --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=/tmp/codetwin-cov-bfuhmlfi/lcov.info __tests__/ssrWatch.spec.ts
+[runner] files in cov_dir: ['lcov.info']
+[runner] 
+[runner] 
+[runner] === packages/server-renderer/__tests__/webStream.spec.ts  (exit 1, cwd /home/core/packages/server-renderer)
+[runner] $ node --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=/tmp/codetwin-cov-v2w31eba/lcov.info __tests__/webStream.spec.ts
+[runner] files in cov_dir: ['lcov.info']
+[runner] 
+[runner] 
+[runner] === packages/vue-compat/__tests__/componentVModel.spec.ts  (exit 1, cwd /home/core/packages/vue-compat)
+[runner] $ node --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=/tmp/codetwin-cov-cxa7s335/lcov.info __tests__/componentVModel.spec.ts
+[runner] files in cov_dir: ['lcov.info']
+[runner] 
+[runner] 
+[runner] === packages/vue-compat/__tests__/options.spec.ts  (exit 1, cwd /home/core/packages/vue-compat)
+[runner] $ node --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=/tmp/codetwin-cov-fpizclyy/lcov.info __tests__/options.spec.ts
+[runner] files in cov_dir: ['lcov.info']
+[runner] 
+[runner] 
+[runner] === packages/vue-compat/__tests__/instance.spec.ts  (exit 1, cwd /home/core/packages/vue-compat)
+[runner] $ node --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=/tmp/codetwin-cov-e3761h7t/lcov.info __tests__/instance.spec.ts
+[runner] files in cov_dir: ['lcov.info']
+[runner] 
+[runner] 
+[runner] === packages/vue/__tests__/e2e/TransitionGroup.spec.ts  (exit 1, cwd /home/core/packages/vue)
+[runner] $ node --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=/tmp/codetwin-cov-khze8ps8/lcov.info __tests__/e2e/TransitionGroup.spec.ts
+[runner] files in cov_dir: ['lcov.info']
+[runner] 
+[runner] 
+[runner] === packages/vue/__tests__/e2e/e2eUtils.ts  (exit 1, cwd /home/core/packages/vue)
+[runner] $ node --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=/tmp/codetwin-cov-_8a9tqk2/lcov.info __tests__/e2e/e2eUtils.ts
+[runner] files in cov_dir: ['lcov.info']
+[runner] 
+[runner] 
+[runner] === packages/vue/__tests__/e2e/grid.spec.ts  (exit 1, cwd /home/core/packages/vue)
+[runner] $ node --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=/tmp/codetwin-cov-_cx0c_zq/lcov.info __tests__/e2e/grid.spec.ts
+[runner] files in cov_dir: ['lcov.info']
+[runner] 
+[inside] no coverage at all on the base commit: giving up on this PR
+
+   failed; 0 recorded so far
+== vuejs/core PR 10004 (18/24)
+[inside] pr 10004: javascript (vitest), base 0275dd329d
+[inside] 196 test files, using 50; PR touches 1
+[inside] base: 0 files with coverage, 50 failing, 3.1s
+[inside] runner output of a failed run:
+[host] pr 10004 failed (1):
+[inside] pr 10004: javascript (vitest), base 0275dd329d
+[inside] 196 test files, using 50; PR touches 1
+[inside] base: 0 files with coverage, 50 failing, 3.1s
+[inside] runner output of a failed run:
+[runner] 
+[runner] === packages/server-renderer/__tests__/ssrSuspense.spec.ts  (exit 1, cwd /home/core/packages/server-renderer)
+[runner] $ node --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=/tmp/codetwin-cov-o4dte0us/lcov.info __tests__/ssrSuspense.spec.ts
+[runner] files in cov_dir: ['lcov.info']
+[runner] 
+[runner] 
+[runner] === packages/shared/__tests__/escapeHtml.spec.ts  (exit 1, cwd /home/core/packages/shared)
+[runner] $ node --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=/tmp/codetwin-cov-ovy0tkn5/lcov.info __tests__/escapeHtml.spec.ts
+[runner] files in cov_dir: ['lcov.info']
+[runner] 
+[runner] 
+[runner] === packages/shared/__tests__/normalizeProp.spec.ts  (exit 1, cwd /home/core/packages/shared)
+[runner] $ node --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=/tmp/codetwin-cov-h6631om3/lcov.info __tests__/normalizeProp.spec.ts
+[runner] files in cov_dir: ['lcov.info']
+[runner] 
+[runner] 
+[runner] === packages/vue-compat/__tests__/compiler.spec.ts  (exit 1, cwd /home/core/packages/vue-compat)
+[runner] $ node --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=/tmp/codetwin-cov-04zpdwy7/lcov.info __tests__/compiler.spec.ts
+[runner] files in cov_dir: ['lcov.info']
+[runner] 
+[runner] 
+[runner] === packages/vue-compat/__tests__/misc.spec.ts  (exit 1, cwd /home/core/packages/vue-compat)
+[runner] $ node --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=/tmp/codetwin-cov-vyi8z6q9/lcov.info __tests__/misc.spec.ts
+[runner] files in cov_dir: ['lcov.info']
+[runner] 
+[runner] 
+[runner] === packages/vue/__tests__/customElementCasing.spec.ts  (exit 1, cwd /home/core/packages/vue)
+[runner] $ node --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=/tmp/codetwin-cov-rwhssaev/lcov.info __tests__/customElementCasing.spec.ts
+[runner] files in cov_dir: ['lcov.info']
+[runner] 
+[runner] 
+[runner] === packages/vue/__tests__/e2e/todomvc.spec.ts  (exit 1, cwd /home/core/packages/vue)
+[runner] $ node --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=/tmp/codetwin-cov-5l1c2q83/lcov.info __tests__/e2e/todomvc.spec.ts
+[runner] files in cov_dir: ['lcov.info']
+[runner] 
+[runner] 
+[runner] === packages/vue/__tests__/runtimeCompilerOptions.spec.ts  (exit 1, cwd /home/core/packages/vue)
+[runner] $ node --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=/tmp/codetwin-cov-j0t89vcx/lcov.info __tests__/runtimeCompilerOptions.spec.ts
+[runner] files in cov_dir: ['lcov.info']
+[runner] 
+[inside] no coverage at all on the base commit: giving up on this PR
+
+   failed; 0 recorded so far
+== vuejs/core PR 10250 (24/24)
+[inside] pr 10250: javascript (vitest), base d276a4f3e9
+[inside] 197 test files, using 50; PR touches 1
+[inside] base: 0 files with coverage, 50 failing, 3.1s
+[inside] runner output of a failed run:
+[host] pr 10250 failed (1):
+[inside] pr 10250: javascript (vitest), base d276a4f3e9
+[inside] 197 test files, using 50; PR touches 1
+[inside] base: 0 files with coverage, 50 failing, 3.1s
+[inside] runner output of a failed run:
+[runner] 
+[runner] === packages/vue-compat/__tests__/compiler.spec.ts  (exit 1, cwd /home/core/packages/vue-compat)
+[runner] $ node --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=/tmp/codetwin-cov-mekikm07/lcov.info __tests__/compiler.spec.ts
+[runner] files in cov_dir: ['lcov.info']
+[runner] 
+[runner] 
+[runner] === packages/vue-compat/__tests__/componentAsync.spec.ts  (exit 1, cwd /home/core/packages/vue-compat)
+[runner] $ node --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=/tmp/codetwin-cov-qxi0cppe/lcov.info __tests__/componentAsync.spec.ts
+[runner] files in cov_dir: ['lcov.info']
+[runner] 
+[runner] 
+[runner] === packages/vue-compat/__tests__/componentVModel.spec.ts  (exit 1, cwd /home/core/packages/vue-compat)
+[runner] $ node --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=/tmp/codetwin-cov-jlr74piz/lcov.info __tests__/componentVModel.spec.ts
+[runner] files in cov_dir: ['lcov.info']
+[runner] 
+[runner] 
+[runner] === packages/vue-compat/__tests__/global.spec.ts  (exit 1, cwd /home/core/packages/vue-compat)
+[runner] $ node --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=/tmp/codetwin-cov-5ql_s3qm/lcov.info __tests__/global.spec.ts
+[runner] files in cov_dir: ['lcov.info']
+[runner] 
+[runner] 
+[runner] === packages/vue-compat/__tests__/globalConfig.spec.ts  (exit 1, cwd /home/core/packages/vue-compat)
+[runner] $ node --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=/tmp/codetwin-cov-p42km_dr/lcov.info __tests__/globalConfig.spec.ts
+[runner] files in cov_dir: ['lcov.info']
+[runner] 
+[runner] 
+[runner] === packages/vue-compat/__tests__/renderFn.spec.ts  (exit 1, cwd /home/core/packages/vue-compat)
+[runner] $ node --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=/tmp/codetwin-cov-_hqndkn6/lcov.info __tests__/renderFn.spec.ts
+[runner] files in cov_dir: ['lcov.info']
+[runner] 
+[runner] 
+[runner] === packages/vue-compat/__tests__/utils.ts  (exit 1, cwd /home/core/packages/vue-compat)
+[runner] $ node --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=/tmp/codetwin-cov-bacqslg_/lcov.info __tests__/utils.ts
+[runner] files in cov_dir: ['lcov.info']
+[runner] 
+[runner] 
+[runner] === packages/vue/__tests__/svgNamespace.spec.ts  (exit 1, cwd /home/core/packages/vue)
+[runner] $ node --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=/tmp/codetwin-cov-vb6csi8b/lcov.info __tests__/svgNamespace.spec.ts
+[runner] files in cov_dir: ['lcov.info']
+[runner] 
+[inside] no coverage at all on the base commit: giving up on this PR
+
+   failed; 0 recorded so far
+recorded 0 of 4 PRs of vuejs/core

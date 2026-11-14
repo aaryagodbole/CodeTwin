@@ -1,0 +1,79 @@
+[inside] pr 9328: javascript (npm-test), base 6f508a011b
+[inside] 18 test files, using 18; PR touches 0
+[inside] base: 4 files with coverage, 18 failing, 3.5s
+[inside] runner output of a failed run:
+[runner] 
+[runner] === packages/svelte/test/server-side-rendering/ssr-1.test.js  (exit 1, cwd /home/svelte/packages/svelte/test)
+[runner] $ node --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=/tmp/codetwin-cov-2bcwh_ai/lcov.info server-side-rendering/ssr-1.test.js
+[runner] files in cov_dir: ['lcov.info']
+[runner] 
+[runner] 
+[runner] === packages/svelte/test/sourcemaps/sourcemaps.test.js  (exit 1, cwd /home/svelte/packages/svelte/test)
+[runner] $ node --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=/tmp/codetwin-cov-pgnhquud/lcov.info sourcemaps/sourcemaps.test.js
+[runner] files in cov_dir: ['lcov.info']
+[runner] 
+[runner] 
+[runner] === packages/svelte/test/stats/stats.test.js  (exit 1, cwd /home/svelte/packages/svelte/test)
+[runner] $ node --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=/tmp/codetwin-cov-xums5ttd/lcov.info stats/stats.test.js
+[runner] files in cov_dir: ['lcov.info']
+[runner] 
+[runner] 
+[runner] === packages/svelte/test/validator/validator.test.js  (exit 1, cwd /home/svelte/packages/svelte/test)
+[runner] $ node --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=/tmp/codetwin-cov-0j_3fdzf/lcov.info validator/validator.test.js
+[runner] files in cov_dir: ['lcov.info']
+[runner] 
+[runner] 
+[runner] === packages/svelte/test/vars/vars.test.js  (exit 1, cwd /home/svelte/packages/svelte/test)
+[runner] $ node --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=/tmp/codetwin-cov-1ip_hu2o/lcov.info vars/vars.test.js
+[runner] files in cov_dir: ['lcov.info']
+[runner] 
+[runner] 
+[runner] === packages/svelte/test/store/store.test.js  (exit 1, cwd /home/svelte/packages/svelte/test)
+[runner] $ node --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=/tmp/codetwin-cov-1fpio4ld/lcov.info store/store.test.js
+[runner] files in cov_dir: ['lcov.info']
+[runner] 
+[runner] 
+[runner] === packages/svelte/test/utils/utils.test.js  (exit 1, cwd /home/svelte/packages/svelte/test)
+[runner] $ node --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=/tmp/codetwin-cov-jcq8skhh/lcov.info utils/utils.test.js
+[runner] files in cov_dir: ['lcov.info']
+[runner] 
+[runner] 
+[runner] === packages/svelte/test/version/version.test.js  (exit 1, cwd /home/svelte/packages/svelte/test)
+[runner] $ node --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=/tmp/codetwin-cov-7uferojp/lcov.info version/version.test.js
+[runner] files in cov_dir: ['lcov.info']
+[runner] 
+[inside] new: 3 failing, 1.5s
+[inside] done in 6.9s; f2p files: []
+
+
+[host] pr 9328: 56s
+[inside] pr 9550: javascript (vitest), base 9926347ad9
+[inside] 0 test files, using 0; PR touches 0
+[inside] base: 0 files with coverage, 0 failing, 2.6s
+[inside] runner output of a failed run:
+[runner] (no runner.log)
+
+[inside] no coverage at all on the base commit: giving up on this PR
+
+[host] pr 9550 failed (1)
+[host] pr 9550: 46s
+[inside] pr 9718: javascript (vitest), base e3dc185a4c
+[inside] 0 test files, using 0; PR touches 0
+[inside] base: 0 files with coverage, 0 failing, 2.6s
+[inside] runner output of a failed run:
+[runner] (no runner.log)
+
+[inside] no coverage at all on the base commit: giving up on this PR
+
+[host] pr 9718 failed (1)
+[host] pr 9718: 46s
+[inside] pr 9811: javascript (vitest), base d5167e75b9
+[inside] 0 test files, using 0; PR touches 0
+[inside] base: 0 files with coverage, 0 failing, 2.6s
+[inside] runner output of a failed run:
+[runner] (no runner.log)
+
+[inside] no coverage at all on the base commit: giving up on this PR
+
+[host] pr 9811 failed (1)
+[host] pr 9811: 47s

@@ -1,0 +1,32 @@
+[inside] pr 352: go (go-test), base ca7a9364fd
+[inside] 23 test files, using 23; PR touches 1
+[inside] base: 21 files with coverage, 2 failing, 8.9s
+[inside] new: 0 failing, 4.6s
+[inside] done in 14.4s; f2p files: ['command/pr_test.go']
+
+
+[host] pr 352: 40s
+[inside] pr 495: go (go-test), base 02b4ab5be3
+[inside] 19 test files, using 19; PR touches 1
+[inside] base: 17 files with coverage, 2 failing, 7.7s
+[inside] new: 0 failing, 2.5s
+[inside] done in 10.8s; f2p files: ['utils/table_printer_test.go']
+
+
+[host] pr 495: 34s
+[inside] pr 617: go (go-test), base 115b4b5ee9
+[inside] 23 test files, using 23; PR touches 1
+[inside] base: 21 files with coverage, 2 failing, 9.0s
+[inside] new: 0 failing, 5.1s
+[inside] done in 14.5s; f2p files: ['api/queries_repo_test.go']
+
+
+[host] pr 617: 38s
+[inside] pr 668: go (go-test), base cb06812d19
+[inside] 24 test files, using 24; PR touches 1
+[inside] base: 22 files with coverage, 2 failing, 10.3s
+[inside] new: 0 failing, 4.7s
+[inside] done in 16.0s; f2p files: ['command/pr_create_test.go']
+
+
+[host] pr 668: 41s

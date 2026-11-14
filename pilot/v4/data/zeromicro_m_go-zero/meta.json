@@ -1,0 +1,83 @@
+{
+ "project": "zeromicro_m_go-zero",
+ "url": "https://github.com/zeromicro/go-zero",
+ "mode": "pairs",
+ "language": "go",
+ "spec": [
+  "https://github.com/zeromicro/go-zero",
+  ".",
+  [],
+  ".",
+  [
+   "."
+  ],
+  {
+   "language": "go"
+  }
+ ],
+ "source": "Multi-SWE-bench (ByteDance-Seed), images mswebench/*",
+ "count": 15,
+ "max_tests": 40,
+ "changes": [
+  [
+   "68acfb1891837ec2e401588173cdd16ca1b9a9c4",
+   null
+  ],
+  [
+   "c26c187e11fa35d1ed4bfbb38222cc6118ad5466",
+   null
+  ],
+  [
+   "272a3f347d97c48a97dcc68e689c48e5aa955b77",
+   null
+  ],
+  [
+   "ba8ac974aaa16ebcf00f17c653d131a3b6d74a30",
+   null
+  ],
+  [
+   "ec3e02624c0b6ea726b34de08d9192d4edaacb6b",
+   null
+  ],
+  [
+   "95282edb78f9ea1f70ce210de8b4fc58c636c458",
+   null
+  ],
+  [
+   "87800419f561aad044b0a46bbd4897fb5d54f620",
+   null
+  ],
+  [
+   "af05219b70c5e18542ebb499b18a1dff6ffacc6d",
+   null
+  ],
+  [
+   "93b3f5030fbf5cad686d552ab22b0d2506124a44",
+   null
+  ],
+  [
+   "74c41e8c5e927e6b8aa0b04744fdb6d50fb6fc70",
+   null
+  ],
+  [
+   "4cd065f4f40fce20be33bae6a4c457d22559701e",
+   null
+  ],
+  [
+   "6078bf1a049acc7b95ca2cecef6944269509f88e",
+   null
+  ],
+  [
+   "63cfe60f1a7583865757780ebfe2a5309a542134",
+   null
+  ],
+  [
+   "de5c59aad38eb28eb3328b8845ad61c820b3fbc8",
+   null
+  ],
+  [
+   "b2571883cae4290b4ef0dd0a583d22c14116c4a3",
+   null
+  ]
+ ]
+}

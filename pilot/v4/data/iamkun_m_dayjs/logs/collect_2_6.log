@@ -1,0 +1,29 @@
+== iamkun/dayjs PR 379 (3/24)
+[inside] pr 379: javascript (jest), base 142b763ffa
+[inside] 26 test files, using 26; PR touches 1
+[inside] base: 24 files with coverage, 3 failing, 23.4s
+[inside] new: 0 failing, 2.1s
+[inside] done in 29.2s; f2p files: ['test/manipulate.test.js']
+   ok; 1 recorded so far
+== iamkun/dayjs PR 658 (9/24)
+[inside] pr 658: javascript (jest), base 95e70b41e3
+[inside] 38 test files, using 38; PR touches 1
+[inside] base: 36 files with coverage, 2 failing, 33.7s
+[inside] new: 0 failing, 1.9s
+[inside] done in 39.9s; f2p files: ['test/plugin/weekOfYear.test.js']
+   ok; 2 recorded so far
+== iamkun/dayjs PR 867 (15/24)
+[inside] pr 867: javascript (jest), base 3188e158ed
+[inside] 55 test files, using 50; PR touches 1
+[inside] base: 48 files with coverage, 2 failing, 44.4s
+[inside] new: 0 failing, 2.2s
+[inside] done in 51.2s; f2p files: ['test/plugin/duration.test.js']
+   ok; 3 recorded so far
+== iamkun/dayjs PR 938 (21/24)
+[inside] pr 938: javascript (jest), base 72cdb20552
+[inside] 56 test files, using 50; PR touches 1
+[inside] base: 48 files with coverage, 2 failing, 43.3s
+[inside] new: 0 failing, 2.0s
+[inside] done in 49.8s; f2p files: ['test/plugin/localeData.test.js']
+   ok; 4 recorded so far
+recorded 4 of 4 PRs of iamkun/dayjs

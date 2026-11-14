@@ -1,0 +1,71 @@
+[inside] pr 5179: rust (cargo-llvm-cov), base 9e3fb1673a
+[inside] 215 test files, using 40; PR touches 1
+[inside] base: 3 files with coverage, 22 failing, 79.4s
+[inside] runner output of a failed run:
+[runner] n name: `loom`
+[runner]  --> tokio-test/src/io.rs:1:12
+[runner]   |
+[runner] 1 | #![cfg(not(loom))]
+[runner]   |            ^^^^
+[runner]   |
+[runner]   = help: expected names are: `clippy`, `debug_assertions`, `doc`, `docsrs`, `doctest`, `feature`, `fmt_debug`, `miri`, `overflow_checks`, `panic`, `proc_macro`, `relocation_model`, `rustfmt`, `sanitize`, `sanitizer_cfi_generalize_pointers`, `sanitizer_cfi_normalize_integers`, `target_abi`, `target_arch`, `target_endian`, `target_env`, `target_family`, `target_feature`, `target_has_atomic`, `target_has_atomic_equal_alignment`, `target_has_atomic_load_store`, `target_os`, `target_pointer_width`, `target_thread_local`, `target_vendor`, `test`, `ub_checks`, `unix`, and `windows`
+[runner]   = help: consider using a Cargo feature instead
+[runner]   = help: or consider adding in `Cargo.toml` the `check-cfg` lint config for the lint:
+[runner]            [lints.rust]
+[runner]            unexpected_cfgs = { level = "warn", check-cfg = ['cfg(loom)'] }
+[runner]   = help: or consider adding `println!("cargo::rustc-check-cfg=cfg(loom)");` to the top of the `build.rs`
+[runner]   = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+[runner]   = note: `#[warn(unexpected_cfgs)]` on by default
+[runner] 
+[runner] warning: `tokio-test` (lib) generated 1 warning
+[runner]    Compiling tokio v1.21.2 (/home/tokio/tokio)
+[runner] warning: unexpected `cfg` condition name: `tokio_wasi`
+[runner]  --> tokio/tests/unwindsafe.rs:2:34
+[runner]   |
+[runner] 2 | #![cfg(all(feature = "full", not(tokio_wasi)))] // Wasi does not support panic recovery
+[runner]   |                                  ^^^^^^^^^^
+[runner]   |
+[runner]   = help: expected names are: `clippy`, `debug_assertions`, `doc`, `docsrs`, `doctest`, `feature`, `fmt_debug`, `miri`, `overflow_checks`, `panic`, `proc_macro`, `relocation_model`, `rustfmt`, `sanitize`, `sanitizer_cfi_generalize_pointers`, `sanitizer_cfi_normalize_integers`, `target_abi`, `target_arch`, `target_endian`, `target_env`, `target_family`, `target_feature`, `target_has_atomic`, `target_has_atomic_equal_alignment`, `target_has_atomic_load_store`, `target_os`, `target_pointer_width`, `target_thread_local`, `target_vendor`, `test`, `ub_checks`, `unix`, and `windows`
+[runner]   = help: consider using a Cargo feature instead
+[runner]   = help: or consider adding in `Cargo.toml` the `check-cfg` lint config for the lint:
+[runner]            [lints.rust]
+[runner]            unexpected_cfgs = { level = "warn", check-cfg = ['cfg(tokio_wasi)'] }
+[runner]   = help: or consider adding `println!("cargo::rustc-check-cfg=cfg(tokio_wasi)");` to the top of the `build.rs`
+[runner]   = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+[runner]   = note: `#[warn(unexpected_cfgs)]` on by default
+[runner] 
+[runner] warning: `tokio` (test "unwindsafe") generated 1 warning
+[runner]     Finished `test` profile [unoptimized + debuginfo] target(s) in 3.16s
+[runner]      Running tests/unwindsafe.rs (/home/tokio/target/llvm-cov-target/debug/deps/unwindsafe-82db29ff79db66ea)
+[runner] 
+[runner]     Finished report saved to /tmp/codetwin-cov-kw_bxeka/lcov.info
+[runner] 
+[inside] new: 0 failing, 4.5s
+[inside] done in 88.6s; f2p files: []
+
+
+[host] pr 5179: 156s
+[inside] pr 5583: rust (cargo-llvm-cov), base 68b02db154
+[inside] 229 test files, using 40; PR touches 2
+[inside] base: 6 files with coverage, 16 failing, 74.4s
+[inside] new: 0 failing, 5.0s
+[inside] done in 83.2s; f2p files: []
+
+
+[host] pr 5583: 148s
+[inside] pr 6339: rust (cargo-llvm-cov), base 84e41d4aff
+[inside] 251 test files, using 40; PR touches 1
+[inside] base: 5 files with coverage, 11 failing, 111.6s
+[inside] new: 0 failing, 4.8s
+[inside] done in 123.1s; f2p files: []
+
+
+[host] pr 6339: 194s
+[inside] pr 6967: rust (cargo-llvm-cov), base d4178cf349
+[inside] 259 test files, using 40; PR touches 1
+[inside] base: 3 files with coverage, 16 failing, 126.3s
+[inside] new: 0 failing, 5.1s
+[inside] done in 139.2s; f2p files: []
+
+
+[host] pr 6967: 214s

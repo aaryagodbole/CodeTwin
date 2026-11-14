@@ -1,0 +1,1 @@
+{"language": "javascript", "extensions": [".ts", ".mts", ".cts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"], "runner": "javascript (npm-test)"}

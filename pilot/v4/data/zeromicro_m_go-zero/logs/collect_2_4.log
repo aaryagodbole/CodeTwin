@@ -1,0 +1,29 @@
+== zeromicro/go-zero PR 1456 (3/15)
+[inside] pr 1456: go (go-test), base 272a3f347d
+[inside] 274 test files, using 40; PR touches 3
+[inside] base: 39 files with coverage, 0 failing, 66.1s
+[inside] new: 0 failing, 28.5s
+[inside] done in 95.5s; f2p files: ['core/logx/durationlogger_test.go', 'core/logx/logs_test.go', 'core/logx/tracelogger_test.go']
+   ok; 1 recorded so far
+== zeromicro/go-zero PR 1964 (7/15)
+[inside] pr 1964: go (go-test), base 87800419f5
+[inside] 308 test files, using 40; PR touches 1
+[inside] base: 39 files with coverage, 0 failing, 84.0s
+[inside] new: 0 failing, 12.3s
+[inside] done in 96.8s; f2p files: ['rest/server_test.go']
+   ok; 2 recorded so far
+== zeromicro/go-zero PR 2283 (11/15)
+[inside] pr 2283: go (go-test), base 4cd065f4f4
+[inside] 317 test files, using 40; PR touches 1
+[inside] base: 40 files with coverage, 1 failing, 104.6s
+[inside] new: 0 failing, 12.7s
+[inside] done in 117.9s; f2p files: ['rest/server_test.go']
+   ok; 3 recorded so far
+== zeromicro/go-zero PR 2787 (15/15)
+[inside] pr 2787: go (go-test), base b2571883ca
+[inside] 324 test files, using 40; PR touches 1
+[inside] base: 40 files with coverage, 0 failing, 119.6s
+[inside] new: 0 failing, 20.0s
+[inside] done in 140.2s; f2p files: ['core/collection/timingwheel_test.go']
+   ok; 4 recorded so far
+recorded 4 of 4 PRs of zeromicro/go-zero

@@ -1,0 +1,32 @@
+[inside] pr 1972: rust (cargo-llvm-cov), base 055568d3fe
+[inside] 69 test files, using 40; PR touches 2
+[inside] base: 35 files with coverage, 0 failing, 393.6s
+[inside] new: 0 failing, 16.7s
+[inside] done in 413.0s; f2p files: ['tests/cargo.rs', 'tests/version.rs']
+
+
+[host] pr 1972: 477s
+[inside] pr 2085: rust (cargo-llvm-cov), base be27f41f83
+[inside] 72 test files, using 40; PR touches 2
+[inside] base: 35 files with coverage, 1 failing, 226.4s
+[inside] new: 0 failing, 61.8s
+[inside] done in 292.5s; f2p files: ['tests/help.rs', 'tests/hidden_args.rs']
+
+
+[host] pr 2085: 352s
+[inside] pr 2168: rust (cargo-llvm-cov), base 4f90f3e4bb
+[inside] 73 test files, using 40; PR touches 1
+[inside] base: 30 files with coverage, 2 failing, 223.1s
+[inside] new: 0 failing, 74.7s
+[inside] done in 300.0s; f2p files: ['tests/app_settings.rs']
+
+
+[host] pr 2168: 377s
+[inside] pr 2296: rust (cargo-llvm-cov), base 50fb4ca63d
+[inside] 73 test files, using 40; PR touches 1
+[inside] base: 32 files with coverage, 0 failing, 214.5s
+[inside] new: 0 failing, 99.2s
+[inside] done in 315.6s; f2p files: ['tests/default_vals.rs']
+
+
+[host] pr 2296: 385s

@@ -1,0 +1,25 @@
+== sharkdp/fd PR 558 (4/14)
+[inside] pr 558: rust (cargo-llvm-cov), base e44f2f8540
+[inside] 7 test files, using 7; PR touches 1
+[inside] base: 1 files with coverage, 6 failing, 43.1s
+[inside] runner output of a failed run:
+[inside] new: 0 failing, 3.1s
+[inside] done in 48.3s; f2p files: ['tests/tests.rs']
+   ok; 1 recorded so far
+== sharkdp/fd PR 813 (8/14)
+[inside] pr 813: rust (cargo-llvm-cov), base c06c9952b6
+[inside] 8 test files, using 8; PR touches 1
+[inside] base: 1 files with coverage, 7 failing, 43.9s
+[inside] runner output of a failed run:
+[inside] new: 0 failing, 3.4s
+[inside] done in 49.7s; f2p files: ['tests/tests.rs']
+   ok; 2 recorded so far
+== sharkdp/fd PR 1121 (12/14)
+[inside] pr 1121: rust (cargo-llvm-cov), base ee2396b57a
+[inside] 8 test files, using 8; PR touches 1
+[inside] base: 1 files with coverage, 7 failing, 56.6s
+[inside] runner output of a failed run:
+[inside] new: 0 failing, 4.1s
+[inside] done in 63.4s; f2p files: ['tests/tests.rs']
+   ok; 3 recorded so far
+recorded 3 of 3 PRs of sharkdp/fd

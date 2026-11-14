@@ -1,0 +1,32 @@
+[inside] pr 318: javascript (jest), base b14bdd1649
+[inside] 17 test files, using 17; PR touches 1
+[inside] base: 15 files with coverage, 2 failing, 10.0s
+[inside] new: 0 failing, 7.2s
+[inside] done in 19.3s; f2p files: ['test/display.test.js']
+
+
+[host] pr 318: 56s
+[inside] pr 591: javascript (jest), base de14682fa5
+[inside] 38 test files, using 38; PR touches 1
+[inside] base: 36 files with coverage, 2 failing, 25.3s
+[inside] new: 0 failing, 1.3s
+[inside] done in 29.7s; f2p files: ['test/plugin/quarterOfYear.test.js']
+
+
+[host] pr 591: 65s
+[inside] pr 857: javascript (jest), base c39fb96e2a
+[inside] 51 test files, using 47; PR touches 3
+[inside] base: 46 files with coverage, 2 failing, 30.3s
+[inside] new: 0 failing, 1.9s
+[inside] done in 37.3s; f2p files: ['test/plugin/isToday.test.js', 'test/plugin/isTomorrow.test.js', 'test/plugin/isYesterday.test.js']
+
+
+[host] pr 857: 72s
+[inside] pr 889: javascript (jest), base db642ac73e
+[inside] 55 test files, using 50; PR touches 2
+[inside] base: 48 files with coverage, 2 failing, 31.8s
+[inside] new: 0 failing, 1.6s
+[inside] done in 37.8s; f2p files: ['test/plugin/duration.test.js']
+
+
+[host] pr 889: 71s

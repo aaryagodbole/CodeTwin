@@ -1,0 +1,40 @@
+[inside] pr 9471: javascript (vitest), base 73e8820fe7
+[inside] 0 test files, using 0; PR touches 0
+[inside] base: 0 files with coverage, 0 failing, 2.2s
+[inside] runner output of a failed run:
+[runner] (no runner.log)
+
+[inside] no coverage at all on the base commit: giving up on this PR
+
+[host] pr 9471 failed (1)
+[host] pr 9471: 31s
+[inside] pr 9665: javascript (vitest), base 405e9da4ff
+[inside] 0 test files, using 0; PR touches 0
+[inside] base: 0 files with coverage, 0 failing, 2.0s
+[inside] runner output of a failed run:
+[runner] (no runner.log)
+
+[inside] no coverage at all on the base commit: giving up on this PR
+
+[host] pr 9665 failed (1)
+[host] pr 9665: 31s
+[inside] pr 9754: javascript (vitest), base fd4a52c894
+[inside] 0 test files, using 0; PR touches 0
+[inside] base: 0 files with coverage, 0 failing, 2.1s
+[inside] runner output of a failed run:
+[runner] (no runner.log)
+
+[inside] no coverage at all on the base commit: giving up on this PR
+
+[host] pr 9754 failed (1)
+[host] pr 9754: 31s
+[inside] pr 9904: javascript (vitest), base 4e61db7201
+[inside] 0 test files, using 0; PR touches 0
+[inside] base: 0 files with coverage, 0 failing, 2.0s
+[inside] runner output of a failed run:
+[runner] (no runner.log)
+
+[inside] no coverage at all on the base commit: giving up on this PR
+
+[host] pr 9904 failed (1)
+[host] pr 9904: 31s

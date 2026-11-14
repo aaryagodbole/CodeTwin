@@ -1,0 +1,32 @@
+[inside] pr 1045: rust (cargo-llvm-cov), base 0dc8ef2da9
+[inside] 70 test files, using 40; PR touches 2
+[inside] base: 20 files with coverage, 10 failing, 110.0s
+[inside] new: 1 failing, 5.8s
+[inside] done in 116.4s; f2p files: ['tracing-core/tests/dispatch.rs']
+
+
+[host] pr 1045: 166s
+[inside] pr 1291: rust (cargo-llvm-cov), base 4ad1e62a2d
+[inside] 73 test files, using 40; PR touches 1
+[inside] base: 19 files with coverage, 12 failing, 102.4s
+[inside] new: 0 failing, 9.6s
+[inside] done in 118.6s; f2p files: ['tracing-attributes/tests/async_fn.rs']
+
+
+[host] pr 1291: 169s
+[inside] pr 1983: rust (cargo-llvm-cov), base df9666bdeb
+[inside] 88 test files, using 40; PR touches 0
+[inside] base: 21 files with coverage, 4 failing, 104.8s
+[inside] new: 0 failing, 0.6s
+[inside] done in 105.6s; f2p files: []
+
+
+[host] pr 1983: 165s
+[inside] pr 2335: rust (cargo-llvm-cov), base 330dacfa71
+[inside] 94 test files, using 40; PR touches 2
+[inside] base: 21 files with coverage, 8 failing, 127.2s
+[inside] new: 2 failing, 12.2s
+[inside] done in 153.8s; f2p files: []
+
+
+[host] pr 2335: 209s

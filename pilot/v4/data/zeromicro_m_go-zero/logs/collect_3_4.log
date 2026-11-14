@@ -1,0 +1,22 @@
+== zeromicro/go-zero PR 1783 (4/15)
+[inside] pr 1783: go (go-test), base ba8ac974aa
+[inside] 293 test files, using 40; PR touches 1
+[inside] base: 40 files with coverage, 1 failing, 60.7s
+[inside] new: 0 failing, 21.5s
+[inside] done in 82.9s; f2p files: ['core/mapping/unmarshaler_test.go']
+   ok; 1 recorded so far
+== zeromicro/go-zero PR 1969 (8/15)
+[inside] pr 1969: go (go-test), base af05219b70
+[inside] 308 test files, using 40; PR touches 1
+[inside] base: 40 files with coverage, 0 failing, 61.7s
+[inside] new: 0 failing, 22.8s
+[inside] done in 85.2s; f2p files: ['core/mapping/unmarshaler_test.go']
+   ok; 2 recorded so far
+== zeromicro/go-zero PR 2363 (12/15)
+[inside] pr 2363: go (go-test), base 6078bf1a04
+[inside] 317 test files, using 40; PR touches 1
+[inside] base: 40 files with coverage, 0 failing, 79.2s
+[inside] new: 0 failing, 12.1s
+[inside] done in 91.7s; f2p files: ['rest/handler/tracinghandler_test.go']
+   ok; 3 recorded so far
+recorded 3 of 3 PRs of zeromicro/go-zero

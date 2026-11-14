@@ -1,0 +1,33 @@
+== sharkdp/fd PR 497 (1/14)
+[inside] pr 497: rust (cargo-llvm-cov), base 0f2429cabc
+[inside] 7 test files, using 7; PR touches 1
+[inside] base: 1 files with coverage, 6 failing, 38.5s
+[inside] runner output of a failed run:
+[inside] new: 0 failing, 3.2s
+[inside] done in 44.1s; f2p files: ['tests/tests.rs']
+   ok; 1 recorded so far
+== sharkdp/fd PR 569 (5/14)
+[inside] pr 569: rust (cargo-llvm-cov), base 2bab4a2249
+[inside] 7 test files, using 7; PR touches 1
+[inside] base: 1 files with coverage, 6 failing, 38.8s
+[inside] runner output of a failed run:
+[inside] new: 0 failing, 2.9s
+[inside] done in 43.9s; f2p files: ['tests/tests.rs']
+   ok; 2 recorded so far
+== sharkdp/fd PR 866 (9/14)
+[inside] pr 866: rust (cargo-llvm-cov), base 7b5b3ec47b
+[inside] 8 test files, using 8; PR touches 1
+[inside] base: 1 files with coverage, 7 failing, 40.1s
+[inside] runner output of a failed run:
+[inside] new: 0 failing, 3.4s
+[inside] done in 45.8s; f2p files: ['tests/tests.rs']
+   ok; 3 recorded so far
+== sharkdp/fd PR 1162 (13/14)
+[inside] pr 1162: rust (cargo-llvm-cov), base cbd11d8a45
+[inside] 8 test files, using 8; PR touches 1
+[inside] base: 1 files with coverage, 7 failing, 52.2s
+[inside] runner output of a failed run:
+[inside] new: 0 failing, 5.1s
+[inside] done in 61.0s; f2p files: ['tests/tests.rs']
+   ok; 4 recorded so far
+recorded 4 of 4 PRs of sharkdp/fd

@@ -1,0 +1,30 @@
+== tokio-rs/tokio PR 4519 (1/24)
+[inside] pr 4519: rust (cargo-llvm-cov), base 43c224ff47
+[inside] 203 test files, using 40; PR touches 1
+[inside] base: 3 files with coverage, 20 failing, 81.0s
+[inside] new: 0 failing, 3.6s
+[inside] done in 87.5s; f2p files: []
+   ok; 1 recorded so far
+== tokio-rs/tokio PR 5244 (7/24)
+[inside] pr 5244: rust (cargo-llvm-cov), base 766f22fae3
+[inside] 217 test files, using 40; PR touches 1
+[inside] base: 4 files with coverage, 19 failing, 77.4s
+[inside] new: 0 failing, 4.0s
+[inside] done in 86.2s; f2p files: []
+   ok; 2 recorded so far
+== tokio-rs/tokio PR 6205 (13/24)
+[inside] pr 6205: rust (cargo-llvm-cov), base c029771247
+[inside] 249 test files, using 40; PR touches 1
+[inside] base: 2 files with coverage, 21 failing, 72.5s
+[inside] runner output of a failed run:
+[inside] new: 1 failing, 4.1s
+[inside] done in 82.8s; f2p files: []
+   ok; 3 recorded so far
+== tokio-rs/tokio PR 6409 (19/24)
+[inside] pr 6409: rust (cargo-llvm-cov), base 8342e4b524
+[inside] 251 test files, using 40; PR touches 1
+[inside] base: 2 files with coverage, 17 failing, 95.0s
+[inside] new: 0 failing, 7.8s
+[inside] done in 111.3s; f2p files: ['tokio-stream/tests/stream_stream_map.rs']
+   ok; 4 recorded so far
+recorded 4 of 4 PRs of tokio-rs/tokio

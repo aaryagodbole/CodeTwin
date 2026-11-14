@@ -1,0 +1,32 @@
+[inside] pr 2371: go (go-test), base c1fc9faff6
+[inside] 73 test files, using 40; PR touches 1
+[inside] base: 37 files with coverage, 1 failing, 32.0s
+[inside] new: 0 failing, 28.2s
+[inside] done in 78.3s; f2p files: []
+
+
+[host] pr 2371: 107s
+[inside] pr 2735: go (go-test), base b03f6fd5e3
+[inside] 87 test files, using 39; PR touches 2
+[inside] base: 38 files with coverage, 1 failing, 26.3s
+[inside] new: 0 failing, 23.4s
+[inside] done in 50.3s; f2p files: ['clientconn_test.go', 'internal/backoff/backoff_test.go']
+
+
+[host] pr 2735: 77s
+[inside] pr 2951: go (go-test), base aa4eae656c
+[inside] 99 test files, using 39; PR touches 11
+[inside] base: 38 files with coverage, 1 failing, 30.9s
+[inside] new: 0 failing, 31.5s
+[inside] done in 64.3s; f2p files: ['balancer/grpclb/grpclb_test.go', 'balancer_conn_wrappers_test.go', 'balancer_switching_test.go', 'clientconn_test.go', 'resolver/dns/dns_resolver_test.go', 'resolver_conn_wrapper_test.go', 'service_config_test.go', 'test/channelz_test.go', 'test/end2end_test.go', 'test/healthcheck_test.go', 'xds/internal/resolver/xds_resolver_test.go']
+
+
+[host] pr 2951: 90s
+[inside] pr 3258: go (go-test), base f7b39d80aa
+[inside] 115 test files, using 40; PR touches 1
+[inside] base: 38 files with coverage, 0 failing, 29.2s
+[inside] new: 0 failing, 27.0s
+[inside] done in 58.7s; f2p files: ['internal/resolver/dns/dns_resolver_test.go']
+
+
+[host] pr 3258: 84s

@@ -1,0 +1,107 @@
+{
+ "project": "tokio-rs_m_tracing",
+ "url": "https://github.com/tokio-rs/tracing",
+ "mode": "pairs",
+ "language": "rust",
+ "spec": [
+  "https://github.com/tokio-rs/tracing",
+  ".",
+  [],
+  ".",
+  [
+   "."
+  ],
+  {
+   "language": "rust"
+  }
+ ],
+ "source": "Multi-SWE-bench (ByteDance-Seed), images mswebench/*",
+ "count": 21,
+ "max_tests": 40,
+ "changes": [
+  [
+   "0dc8ef2da97f605689fff17f6c38b69e105a5281",
+   null
+  ],
+  [
+   "cb1dd95b8a67c3c69450882e8f8818546330a8ff",
+   null
+  ],
+  [
+   "0dc8ef2da97f605689fff17f6c38b69e105a5281",
+   null
+  ],
+  [
+   "fe59f7720342b3d313fe11bd3c7490b0e10aef2c",
+   null
+  ],
+  [
+   "881091a1dd5d3126faeabbca9e3779f1d16c3cce",
+   null
+  ],
+  [
+   "4609f22aff1ad88b81e749e2536761d6ee364d1f",
+   null
+  ],
+  [
+   "d8a46edafd0a51ee20e1d0e38e42274c7ca270ee",
+   null
+  ],
+  [
+   "4ad1e62a2dd9f3e97a06ead14285993a9df99ea5",
+   null
+  ],
+  [
+   "ba57971f2c424b89338e39a5443575fd78b09bb6",
+   null
+  ],
+  [
+   "ac4a8dd27c0b28c36b9cf77cdc52b595168d1c5f",
+   null
+  ],
+  [
+   "7dda7f5e90a649aee36eaa51c11b59f62470d456",
+   null
+  ],
+  [
+   "9d8d366b15e282ee7767c52e68df299673151587",
+   null
+  ],
+  [
+   "df9666bdeb8da3e120af15e3c86f4655cb6b29de",
+   null
+  ],
+  [
+   "63015eb8d9c5261d9a384e11dc84552f23a5209c",
+   null
+  ],
+  [
+   "201d21ac034f6121c4495dfa96acc18622f913e4",
+   null
+  ],
+  [
+   "f58019e1a67cc98e87ad15bf42269fddbc271e36",
+   null
+  ],
+  [
+   "465f10adc1b744c2e7446ebe2a6f49d5f408df0f",
+   null
+  ],
+  [
+   "330dacfa71c9ad664bbb73f6898aaaa5caa70fb6",
+   null
+  ],
+  [
+   "0e3577f6f3995b92accee21e0737c25ef0f1953c",
+   null
+  ],
+  [
+   "0e4a4bef5e4e8b7435e9e50e8bae25afba25d7d7",
+   null
+  ],
+  [
+   "908cc432a5994f6e17c8f36e13c217dc40085704",
+   null
+  ]
+ ]
+}

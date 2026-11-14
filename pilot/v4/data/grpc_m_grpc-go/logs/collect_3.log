@@ -1,0 +1,32 @@
+[inside] pr 2631: go (go-test), base 914c52b240
+[inside] 85 test files, using 40; PR touches 1
+[inside] base: 36 files with coverage, 1 failing, 29.1s
+[inside] new: 0 failing, 17.2s
+[inside] done in 55.6s; f2p files: ['balancer/grpclb/grpclb_test.go']
+
+
+[host] pr 2631: 88s
+[inside] pr 2932: go (go-test), base 61f27c1415
+[inside] 96 test files, using 40; PR touches 1
+[inside] base: 37 files with coverage, 1 failing, 35.3s
+[inside] new: 0 failing, 14.6s
+[inside] done in 50.8s; f2p files: ['stats/stats_test.go']
+
+
+[host] pr 2932: 81s
+[inside] pr 3201: go (go-test), base 7c1d326729
+[inside] 110 test files, using 40; PR touches 1
+[inside] base: 37 files with coverage, 1 failing, 34.9s
+[inside] new: 0 failing, 35.8s
+[inside] done in 73.4s; f2p files: ['internal/resolver/dns/dns_resolver_test.go']
+
+
+[host] pr 3201: 105s
+[inside] pr 3476: go (go-test), base 192c8a2a35
+[inside] 129 test files, using 40; PR touches 1
+[inside] base: 39 files with coverage, 1 failing, 43.9s
+[inside] new: 0 failing, 9.3s
+[inside] done in 53.8s; f2p files: ['balancer/rls/internal/keys/builder_test.go']
+
+
+[host] pr 3476: 84s

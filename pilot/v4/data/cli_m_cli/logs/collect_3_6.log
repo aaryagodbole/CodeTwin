@@ -1,0 +1,29 @@
+== cli/cli PR 362 (4/24)
+[inside] pr 362: go (go-test), base c27d7807a0
+[inside] 19 test files, using 19; PR touches 1
+[inside] base: 17 files with coverage, 2 failing, 10.2s
+[inside] new: 0 failing, 5.2s
+[inside] done in 16.3s; f2p files: ['command/pr_create_test.go']
+   ok; 1 recorded so far
+== cli/cli PR 513 (10/24)
+[inside] pr 513: go (go-test), base cc96ddd551
+[inside] 20 test files, using 20; PR touches 1
+[inside] base: 18 files with coverage, 2 failing, 11.1s
+[inside] new: 0 failing, 5.6s
+[inside] done in 17.6s; f2p files: ['command/pr_test.go']
+   ok; 2 recorded so far
+== cli/cli PR 624 (16/24)
+[inside] pr 624: go (go-test), base 115b4b5ee9
+[inside] 23 test files, using 23; PR touches 1
+[inside] base: 21 files with coverage, 2 failing, 12.0s
+[inside] new: 0 failing, 6.4s
+[inside] done in 19.4s; f2p files: ['command/pr_test.go']
+   ok; 3 recorded so far
+== cli/cli PR 683 (22/24)
+[inside] pr 683: go (go-test), base bc3f964621
+[inside] 24 test files, using 24; PR touches 1
+[inside] base: 22 files with coverage, 2 failing, 13.7s
+[inside] new: 0 failing, 7.0s
+[inside] done in 21.8s; f2p files: ['command/pr_test.go']
+   ok; 4 recorded so far
+recorded 4 of 4 PRs of cli/cli

@@ -1,0 +1,165 @@
+== FasterXML/jackson-databind PR 1923 (1/24)
+[host] pr 1923: docker exec 47b844430107b35f8f0f2f2bb104c9314f31c160af30aa02bd7117c8ed1f47b5 sh /home/setup.sh java -> 1
+
+Removing debian:Comodo_AAA_Services_root.pem
+Removing debian:DigiCert_Assured_ID_Root_CA.pem
+Removing debian:DigiCert_Global_Root_CA.pem
+Removing debian:DigiCert_High_Assurance_EV_Root_CA.pem
+Removing debian:Entrust.net_Premium_2048_Secure_Server_CA.pem
+Removing debian:Entrust_Root_Certification_Authority.pem
+Removing debian:Entrust_Root_Certification_Authority_-_EC1.pem
+Removing debian:Entrust_Root_Certification_Authority_-_G2.pem
+Removing debian:Entrust_Root_Certification_Authority_-_G4.pem
+Removing debian:GLOBALTRUST_2020.pem
+Removing debian:GTS_Root_R2.pem
+Removing debian:GlobalSign_Root_CA.pem
+Removing debian:Go_Daddy_Class_2_CA.pem
+Removing debian:QuoVadis_Root_CA_2.pem
+Removing debian:QuoVadis_Root_CA_3.pem
+Removing debian:SecureSign_RootCA11.pem
+Removing debian:SecureTrust_CA.pem
+Removing debian:Secure_Global_CA.pem
+Removing debian:Security_Communication_RootCA3.pem
+Removing debian:Security_Communication_Root_CA.pem
+Removing debian:Starfield_Class_2_CA.pem
+Removing debian:SwissSign_Gold_CA_-_G2.pem
+Removing debian:SwissSign_Silver_CA_-_G2.pem
+Removing debian:TeliaSonera_Root_CA_v1.pem
+Removing debian:Trustwave_Global_Certification_Authority.pem
+Removing debian:Trustwave_Global_ECC_P256_Certification_Authority.pem
+Removing debian:Trustwave_Global_ECC_P384_Certification_Authority.pem
+Removing debian:XRamp_Global_CA_Root.pem
+Removing debian:certSIGN_ROOT_CA.pem
+Removing debian:ePKI_Root_Certification_Authority.pem
+Removing debian:emSign_ECC_Root_CA_-_G3.pem
+done.
+done.
+
+debconf: delaying package configuration, since apt-utils is not installed
+ERROR: Package 'codetwin' requires a different Python: 3.10.12 not in '>=3.11'
+
+   failed; 0 recorded so far
+== FasterXML/jackson-databind PR 3625 (7/24)
+[host] pr 3625: docker exec ed49d0fdc12ba177df8848f1a1741eb8d54f9a644d117255c25b9f6343fb6a21 sh /home/setup.sh java -> 1
+
+Removing debian:Comodo_AAA_Services_root.pem
+Removing debian:DigiCert_Assured_ID_Root_CA.pem
+Removing debian:DigiCert_Global_Root_CA.pem
+Removing debian:DigiCert_High_Assurance_EV_Root_CA.pem
+Removing debian:Entrust.net_Premium_2048_Secure_Server_CA.pem
+Removing debian:Entrust_Root_Certification_Authority.pem
+Removing debian:Entrust_Root_Certification_Authority_-_EC1.pem
+Removing debian:Entrust_Root_Certification_Authority_-_G2.pem
+Removing debian:Entrust_Root_Certification_Authority_-_G4.pem
+Removing debian:GLOBALTRUST_2020.pem
+Removing debian:GTS_Root_R2.pem
+Removing debian:GlobalSign_Root_CA.pem
+Removing debian:Go_Daddy_Class_2_CA.pem
+Removing debian:QuoVadis_Root_CA_2.pem
+Removing debian:QuoVadis_Root_CA_3.pem
+Removing debian:SecureSign_RootCA11.pem
+Removing debian:SecureTrust_CA.pem
+Removing debian:Secure_Global_CA.pem
+Removing debian:Security_Communication_RootCA3.pem
+Removing debian:Security_Communication_Root_CA.pem
+Removing debian:Starfield_Class_2_CA.pem
+Removing debian:SwissSign_Gold_CA_-_G2.pem
+Removing debian:SwissSign_Silver_CA_-_G2.pem
+Removing debian:TeliaSonera_Root_CA_v1.pem
+Removing debian:Trustwave_Global_Certification_Authority.pem
+Removing debian:Trustwave_Global_ECC_P256_Certification_Authority.pem
+Removing debian:Trustwave_Global_ECC_P384_Certification_Authority.pem
+Removing debian:XRamp_Global_CA_Root.pem
+Removing debian:certSIGN_ROOT_CA.pem
+Removing debian:ePKI_Root_Certification_Authority.pem
+Removing debian:emSign_ECC_Root_CA_-_G3.pem
+done.
+done.
+
+debconf: delaying package configuration, since apt-utils is not installed
+ERROR: Package 'codetwin' requires a different Python: 3.10.12 not in '>=3.11'
+
+   failed; 0 recorded so far
+== FasterXML/jackson-databind PR 3860 (13/24)
+[host] pr 3860: docker exec 19a5ac4e21ce31b798ee71baca01965240a2721fa5a302600ccb3ad2e9945f77 sh /home/setup.sh java -> 1
+
+Removing debian:Comodo_AAA_Services_root.pem
+Removing debian:DigiCert_Assured_ID_Root_CA.pem
+Removing debian:DigiCert_Global_Root_CA.pem
+Removing debian:DigiCert_High_Assurance_EV_Root_CA.pem
+Removing debian:Entrust.net_Premium_2048_Secure_Server_CA.pem
+Removing debian:Entrust_Root_Certification_Authority.pem
+Removing debian:Entrust_Root_Certification_Authority_-_EC1.pem
+Removing debian:Entrust_Root_Certification_Authority_-_G2.pem
+Removing debian:Entrust_Root_Certification_Authority_-_G4.pem
+Removing debian:GLOBALTRUST_2020.pem
+Removing debian:GTS_Root_R2.pem
+Removing debian:GlobalSign_Root_CA.pem
+Removing debian:Go_Daddy_Class_2_CA.pem
+Removing debian:QuoVadis_Root_CA_2.pem
+Removing debian:QuoVadis_Root_CA_3.pem
+Removing debian:SecureSign_RootCA11.pem
+Removing debian:SecureTrust_CA.pem
+Removing debian:Secure_Global_CA.pem
+Removing debian:Security_Communication_RootCA3.pem
+Removing debian:Security_Communication_Root_CA.pem
+Removing debian:Starfield_Class_2_CA.pem
+Removing debian:SwissSign_Gold_CA_-_G2.pem
+Removing debian:SwissSign_Silver_CA_-_G2.pem
+Removing debian:TeliaSonera_Root_CA_v1.pem
+Removing debian:Trustwave_Global_Certification_Authority.pem
+Removing debian:Trustwave_Global_ECC_P256_Certification_Authority.pem
+Removing debian:Trustwave_Global_ECC_P384_Certification_Authority.pem
+Removing debian:XRamp_Global_CA_Root.pem
+Removing debian:certSIGN_ROOT_CA.pem
+Removing debian:ePKI_Root_Certification_Authority.pem
+Removing debian:emSign_ECC_Root_CA_-_G3.pem
+done.
+done.
+
+debconf: delaying package configuration, since apt-utils is not installed
+ERROR: Package 'codetwin' requires a different Python: 3.10.12 not in '>=3.11'
+
+   failed; 0 recorded so far
+== FasterXML/jackson-databind PR 4087 (19/24)
+[host] pr 4087: docker exec 2fc1a1503c2c0b2f8cc3422cc01cf65ee7564c44e57dffb5f8c994c526271076 sh /home/setup.sh java -> 1
+
+Removing debian:Comodo_AAA_Services_root.pem
+Removing debian:DigiCert_Assured_ID_Root_CA.pem
+Removing debian:DigiCert_Global_Root_CA.pem
+Removing debian:DigiCert_High_Assurance_EV_Root_CA.pem
+Removing debian:Entrust.net_Premium_2048_Secure_Server_CA.pem
+Removing debian:Entrust_Root_Certification_Authority.pem
+Removing debian:Entrust_Root_Certification_Authority_-_EC1.pem
+Removing debian:Entrust_Root_Certification_Authority_-_G2.pem
+Removing debian:Entrust_Root_Certification_Authority_-_G4.pem
+Removing debian:GLOBALTRUST_2020.pem
+Removing debian:GTS_Root_R2.pem
+Removing debian:GlobalSign_Root_CA.pem
+Removing debian:Go_Daddy_Class_2_CA.pem
+Removing debian:QuoVadis_Root_CA_2.pem
+Removing debian:QuoVadis_Root_CA_3.pem
+Removing debian:SecureSign_RootCA11.pem
+Removing debian:SecureTrust_CA.pem
+Removing debian:Secure_Global_CA.pem
+Removing debian:Security_Communication_RootCA3.pem
+Removing debian:Security_Communication_Root_CA.pem
+Removing debian:Starfield_Class_2_CA.pem
+Removing debian:SwissSign_Gold_CA_-_G2.pem
+Removing debian:SwissSign_Silver_CA_-_G2.pem
+Removing debian:TeliaSonera_Root_CA_v1.pem
+Removing debian:Trustwave_Global_Certification_Authority.pem
+Removing debian:Trustwave_Global_ECC_P256_Certification_Authority.pem
+Removing debian:Trustwave_Global_ECC_P384_Certification_Authority.pem
+Removing debian:XRamp_Global_CA_Root.pem
+Removing debian:certSIGN_ROOT_CA.pem
+Removing debian:ePKI_Root_Certification_Authority.pem
+Removing debian:emSign_ECC_Root_CA_-_G3.pem
+done.
+done.
+
+debconf: delaying package configuration, since apt-utils is not installed
+ERROR: Package 'codetwin' requires a different Python: 3.10.12 not in '>=3.11'
+
+   failed; 0 recorded so far
+recorded 0 of 4 PRs of FasterXML/jackson-databind
