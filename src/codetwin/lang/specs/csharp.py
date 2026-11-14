@@ -1,4 +1,5 @@
-"""C#: `dotnet test` with the coverlet collector (Cobertura XML), one test class per run.
+"""C#: `dotnet test` with the coverlet collector (Cobertura XML), one test class per run, from the folder
+of the test project (`*.csproj`), so no solution file is needed.
 
 `using` directives resolve to every file that declares the namespace, and a file depends on files of its own
 namespace whose type names it mentions. Reflection (`Type.GetType`, `Activator.CreateInstance`, `Invoke`,
@@ -99,7 +100,7 @@ SPEC = Spec(
     name="csharp",
     grammars={".cs": "csharp"},
     test_globs=["*Tests.cs", "*Test.cs"],
-    markers=["global.json", "Directory.Build.props"],
+    markers=["*.sln", "*.csproj", "global.json", "Directory.Build.props"],   # each test project runs on its own
     source_dirs=["src", "."],
     tests_dirs=["tests", "test"],
     function_types={"method_declaration", "constructor_declaration", "local_function_statement", "lambda_expression"},

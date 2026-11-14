@@ -68,7 +68,8 @@ SAMPLE_DIRS = {"examples", "example", "samples", "sample", "fixtures", "fixture"
 def repo_files(root: Path, extensions: tuple[str, ...], dirs: list[str] | None = None,
                skip: set[str] | frozenset[str] = frozenset()) -> list[str]:
     """Repository-relative paths of files with one of `extensions`, skipping build and dependency folders
-    (and the folder names in `skip`)."""
+    (and, directly under the repository root, the folder names in `skip`: a Java package `com/example` deeper
+    down is code, a top-level `examples/` is not)."""
     out: list[str] = []
     bases = [root / d for d in (dirs or ["."]) if (root / d).exists()]
     seen: set[Path] = set()
@@ -83,7 +84,8 @@ def repo_files(root: Path, extensions: tuple[str, ...], dirs: list[str] | None =
             d = stack.pop()
             for p in sorted(d.iterdir()):
                 if p.is_dir():
-                    if p.name not in SKIP_DIRS and p.name not in skip and not p.name.startswith("."):
+                    top = p.parent == root
+                    if p.name not in SKIP_DIRS and not (top and p.name in skip) and not p.name.startswith("."):
                         stack.append(p)
                 elif p.name.endswith(extensions) and p not in seen:
                     seen.add(p)

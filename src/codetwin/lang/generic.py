@@ -114,10 +114,14 @@ class Generic(Language):
             return ""
         d = posixpath.dirname(path.split("::", 1)[0])
         while d:
-            if any((self.root / d / m).exists() for m in self.spec.markers):
+            if any(self._has_marker(self.root / d, m) for m in self.spec.markers):
                 return d
             d = posixpath.dirname(d)
         return ""
+
+    @staticmethod
+    def _has_marker(folder: Path, marker: str) -> bool:
+        return any(folder.glob(marker)) if "*" in marker else (folder / marker).exists()
 
     def runner_for(self, path_or_dir: str, is_dir: bool = True) -> Runner | None:
         d = path_or_dir if is_dir else self.project_dir(path_or_dir)

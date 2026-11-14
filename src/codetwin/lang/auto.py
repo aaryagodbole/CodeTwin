@@ -48,7 +48,8 @@ def _ext_grammars(root: Path, max_files: int = 20000) -> dict[str, tuple[str, in
             continue
         for p in entries:
             if p.is_dir():
-                if p.name not in SKIP_DIRS and p.name not in SAMPLE_DIRS and not p.name.startswith("."):
+                if p.name not in SKIP_DIRS and not (p.parent == root and p.name in SAMPLE_DIRS) \
+                        and not p.name.startswith("."):
                     stack.append(p)
             elif p.suffix:
                 counts[p.suffix] = counts.get(p.suffix, 0) + 1
