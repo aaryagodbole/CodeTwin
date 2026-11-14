@@ -6,7 +6,8 @@
     "ref_name": {
       "include": [
         "refs/heads/dev",
-        "~DEFAULT_BRANCH"
+        "~DEFAULT_BRANCH",
+        "refs/heads/main"
       ],
       "exclude": []
     }
