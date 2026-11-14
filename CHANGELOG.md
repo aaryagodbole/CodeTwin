@@ -18,8 +18,11 @@ All notable changes to this project are documented here. The format follows
 - Report section `promise`: observed miss rate of the last 50 labelled calibrated decisions with a 95% Wilson
   interval, and an alert when even its lower end is above the target.
 - Command `codetwin weakcheck`: extreme mutation of each changed function, run against the tests that executed it,
-  to find functions that are executed but not checked.
-- `codetwin learn` labels the change-level features of the decision it learns from (`change_points`).
+  to find functions that are executed but not checked. Test files that already fail without the mutation are
+  run first and left out (`baseline_failures`); functions in added files are reported as `untested`; one-line
+  functions keep their header; an unrecorded `--base` is a clear error.
+- `codetwin learn` labels the change-level features of the decision it learns from (`change_points`), and only
+  when they were computed for that saved decision.
 
 ### Changed
 - Dependabot keeps the minimum versions in `pyproject.toml` and only proposes Python updates when a release

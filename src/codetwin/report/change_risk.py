@@ -22,7 +22,10 @@ def contribute(ctx) -> dict:
     z = features(ctx.rows, ctx.scores, set(d.selected), recal, trig)
     model = ChangeRiskModel.fit(ctx.store.get_state("change_points", []))
     q = model(z)
-    ctx.store.set_state("pending_change_features", z)    # labelled by `codetwin learn` (commands/learn.py)
+    if d.mode != "no-source-change":   # no-source decisions are not saved, so there is nothing to label
+        # labelled by `codetwin learn` (commands/learn.py) only if it matches the saved last decision
+        ctx.store.set_state("pending_change_features", {"base": ctx.base, "mode": d.mode,
+                                                        "selected": sorted(d.selected), "features": z})
     alpha = ctx.cfg.alpha
     return {"q": round(q, 4), "r_product": round(z["r_prod"], 4), "alpha": alpha, "model": model.source,
             "features": {k: round(v, 4) for k, v in z.items()}, "triggers": trig,

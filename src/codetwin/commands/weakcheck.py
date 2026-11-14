@@ -17,11 +17,14 @@ def run(args) -> int:
         if not base:
             raise SystemExit("no recorded run yet; run `codetwin record` first")
         prev = eng.store.get_run(base)
+        if prev is None:
+            raise SystemExit(f"no recorded run for {base}; run `codetwin record` at that commit first")
         diff = diffmod.changed_lines(eng.root, base)
         now = eng.facts_now()
         checks = changed_functions(diff, prev, eng.store.get_static(base), now, eng.is_source)
         run_checks(eng.root, eng.cfg.src_root, checks, now, args.timeout)
-    res = [{"file": c.file, "line": c.start, "status": c.status, "tests": c.tests, "killers": c.killers} for c in checks]
+    res = [{"file": c.file, "line": c.start, "status": c.status, "tests": c.tests, "killers": c.killers,
+            "baseline_failures": c.baseline_failures} for c in checks]
     if args.json:
         print_json({"functions": res, "unchecked": sum(c.status == "unchecked" for c in checks)})
         return 0
@@ -29,6 +32,8 @@ def run(args) -> int:
         print("no changed functions")
     for c in checks:
         print(f"{c.status:9} {c.file}:{c.start}  ({len(c.tests)} test files execute it)")
+        if c.baseline_failures:
+            print(f"          ignored {len(c.baseline_failures)} test file(s) that already fail without the mutation")
     n = sum(c.status == "unchecked" for c in checks)
     if n:
         print(f"{n} changed function(s) are executed but not checked by any test: coverage overstates safety here")
