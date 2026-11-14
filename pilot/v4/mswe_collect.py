@@ -89,8 +89,10 @@ def run_one(image: str, pr: int, index: int, repo_name: str, language: str, whee
                "--language", language, "--runner", runner]
         r = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
         log.write(r.stdout[-6000:] + "\n" + r.stderr[-4000:] + "\n")
+        print("\n".join(l for l in r.stdout.splitlines() if l.startswith("[inside]")), flush=True)
         if r.returncode != 0:
             log.write(f"[host] pr {pr} failed ({r.returncode})\n")
+            print(f"[host] pr {pr} failed ({r.returncode}):\n" + (r.stdout + r.stderr)[-3000:], flush=True)
             return False
         tmp = out_dir / "_out"
         shutil.rmtree(tmp, ignore_errors=True)
@@ -104,6 +106,7 @@ def run_one(image: str, pr: int, index: int, repo_name: str, language: str, whee
         return True
     except Exception as e:  # noqa: BLE001
         log.write(f"[host] pr {pr}: {e}\n")
+        print(f"[host] pr {pr}: {str(e)[-3000:]}", flush=True)
         return False
     finally:
         log.write(f"[host] pr {pr}: {time.time() - t0:.0f}s\n")
