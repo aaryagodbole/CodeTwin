@@ -69,9 +69,12 @@ def _show(root: Path, rev: str, path: str) -> str | None:
 
 
 def classify_change(root: str | Path, base: str, diff: dict[str, FileDiff],
-                    is_source: Callable[[str], bool]) -> tuple[str, dict[str, str]]:
+                    is_source: Callable[[str], bool],
+                    classify: Callable[[str, str, str], str] | None = None) -> tuple[str, dict[str, str]]:
     """Kind of the whole change ('noop', 'annotation', 'semantic' or 'no-source') and per-file kinds,
-    comparing `base` with the working tree."""
+    comparing `base` with the working tree. `classify(old, new, path)` compares one file (default: Python;
+    other languages pass their adapter's `classify_source`)."""
+    classify = classify or (lambda old, new, _path: classify_source(old, new))
     root = Path(root)
     files: dict[str, str] = {}
     for f, d in diff.items():
@@ -83,7 +86,7 @@ def classify_change(root: str | Path, base: str, diff: dict[str, FileDiff],
         old = _show(root, base, d.old_path or f)
         p = root / f
         new = p.read_text(encoding="utf-8", errors="replace") if p.exists() else None
-        files[f] = "unavailable" if old is None or new is None else classify_source(old, new)
+        files[f] = "unavailable" if old is None or new is None else classify(old, new, f)
     kinds = set(files.values())
     if not files:
         return "no-source", files

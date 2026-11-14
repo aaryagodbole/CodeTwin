@@ -8,7 +8,7 @@ from __future__ import annotations
 from collections import Counter
 
 from ..evidence.model import FileDiff, FileFacts, TestRun
-from ..evidence.static import module_of
+from ..graph.impact import file_deps
 
 FEATURES = ["cov_line", "cov_func", "cov_file", "static_inv_dist", "name_match", "cochange", "test_changed"]
 
@@ -21,48 +21,37 @@ def _innermost(defs, line):
     return best
 
 
-def _import_graph(static: dict[str, FileFacts], src_root: str):
-    known = {module_of(f, src_root): f for f in static}
-    g = {}
-    for f, facts in static.items():
-        tg = set()
-        for imp in facts.imports:
-            parts = imp.split(".")
-            for k in range(len(parts), 0, -1):
-                if ".".join(parts[:k]) in known:
-                    tg.add(".".join(parts[:k]))
-                    break
-        g[f] = tg
-    return g, known
-
-
-def _distance(test, changed_mods, graph, known, max_depth=6):
-    frontier, seen = set(graph.get(test, ())), set()
+def _distance(test: str, changed: set[str], deps: dict[str, list[str]], max_depth: int = 6) -> int | None:
+    """Length of the shortest import path from `test` to a changed file (None beyond `max_depth`)."""
+    frontier, seen = set(deps.get(test, ())), set()
     for d in range(1, max_depth + 1):
-        if frontier & changed_mods:
+        if frontier & changed:
             return d
         seen |= frontier
-        nxt = set()
-        for m in frontier:
-            f = known.get(m)
-            if f:
-                nxt |= graph.get(f, set())
+        nxt: set[str] = set()
+        for f in frontier:
+            nxt |= set(deps.get(f, ()))
         frontier = nxt - seen
         if not frontier:
             return None
     return None
 
 
+def _py_stem(path: str) -> str:
+    return path.rsplit("/", 1)[-1][:-3]
+
+
 def compute(diff: dict[str, FileDiff], prev_run: TestRun, prev_static: dict[str, FileFacts],
             new_static: dict[str, FileFacts], tests: list[str], src_root: str, is_source,
-            history: list[list[str]] | None = None) -> dict[str, dict]:
+            history: list[list[str]] | None = None, stem=_py_stem) -> dict[str, dict]:
     """Feature rows for every test file. `is_source(path)` tells source files from tests;
-    `history` is a list of file lists of earlier commits (for co-change)."""
+    `history` is a list of file lists of earlier commits (for co-change); `stem(path)` gives the module name
+    used by the name-match feature."""
     changed = [(f, d) for f, d in diff.items() if is_source(f)]
     changed_tests = {f for f, d in diff.items() if not is_source(f) and d.status != "D"}
-    graph, known = _import_graph(new_static, src_root)
-    changed_mods = {module_of(f, src_root) for f, _ in changed}
-    stems = {f.rsplit("/", 1)[-1][:-3] for f, _ in changed} - {"__init__"}
+    deps = file_deps(new_static, src_root)
+    changed_files = {f for f, _ in changed}
+    stems = {stem(f) for f, _ in changed} - {"__init__"}
     co: Counter[str] = Counter()
     base = 0
     for files in (history or [])[-300:]:
@@ -91,7 +80,7 @@ def compute(diff: dict[str, FileDiff], prev_run: TestRun, prev_static: dict[str,
                 cl = 1
             if func_lines[d.old_path] & lines or outside[d.old_path] & (lines | imp):
                 cfn = 1
-        dist = _distance(t, changed_mods, graph, known)
+        dist = _distance(t, changed_files, deps)
         rows[t] = {"cov_line": cl, "cov_func": cfn, "cov_file": cf,
                    "static_inv_dist": 0.0 if dist is None else 1.0 / dist,
                    "name_match": int(any(s and s in t.rsplit("/", 1)[-1] for s in stems)),

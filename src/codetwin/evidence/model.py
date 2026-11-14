@@ -30,6 +30,7 @@ class FileFacts:
     dyn_lines: list[int] = field(default_factory=list)
     defs: list[list[int]] = field(default_factory=list)    # [start (incl. decorators), end, first body line]
     mod_lines: list[int] = field(default_factory=list)     # statements that run at import time
+    deps: list[str] = field(default_factory=list)          # project files this file depends on (resolved imports)
 
 
 @dataclass

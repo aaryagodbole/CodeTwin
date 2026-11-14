@@ -1,4 +1,3 @@
-from ..evidence import diff as diffmod
 from ..evidence.weakcheck import changed_functions, run_checks
 from ._util import engine, print_json
 
@@ -19,10 +18,10 @@ def run(args) -> int:
         prev = eng.store.get_run(base)
         if prev is None:
             raise SystemExit(f"no recorded run for {base}; run `codetwin record` at that commit first")
-        diff = diffmod.changed_lines(eng.root, base)
+        diff = eng.changed(base)
         now = eng.facts_now()
         checks = changed_functions(diff, prev, eng.store.get_static(base), now, eng.is_source)
-        run_checks(eng.root, eng.cfg.src_root, checks, now, args.timeout)
+        run_checks(eng.root, eng.cfg.src_root, checks, now, args.timeout, eng.lang)
     res = [{"file": c.file, "line": c.start, "status": c.status, "tests": c.tests, "killers": c.killers,
             "baseline_failures": c.baseline_failures} for c in checks]
     if args.json:

@@ -30,6 +30,7 @@ class Context:
     is_source: Any                # callable(path) -> bool
     facts_now: Any = None         # callable() -> static facts of the working tree
     impact: Any = None            # callable(files) -> Impact
+    lang: Any = None              # codetwin.lang.base.Language of the project
     extra: dict = field(default_factory=dict)
 
 

@@ -41,6 +41,43 @@ function relPath(cwd: string, doc: vscode.TextDocument): string {
 }
 
 /** The block of a `def`/`class` starting at `line` (0-based), found by indentation. */
+/** Languages CodeTwin has an adapter for (VS Code language ids). */
+export const LANGUAGES = [
+  "python", "javascript", "typescript", "javascriptreact", "typescriptreact", "go", "java", "kotlin", "rust",
+  "csharp", "ruby", "php", "c", "cpp",
+];
+
+const BLOCK_KINDS = new Set([
+  vscode.SymbolKind.Function, vscode.SymbolKind.Method, vscode.SymbolKind.Constructor, vscode.SymbolKind.Class,
+  vscode.SymbolKind.Interface, vscode.SymbolKind.Struct, vscode.SymbolKind.Enum,
+]);
+
+/** Function or class declared on `line`, from the language's own symbol provider (any language). */
+export async function symbolBlockAt(doc: vscode.TextDocument, line: number): Promise<vscode.Range | undefined> {
+  if (doc.languageId === "python") {
+    return blockAt(doc, line);
+  }
+  let symbols: vscode.DocumentSymbol[] | undefined;
+  try {
+    symbols = await vscode.commands.executeCommand<vscode.DocumentSymbol[]>("vscode.executeDocumentSymbolProvider", doc.uri);
+  } catch {
+    return undefined;
+  }
+  let best: vscode.DocumentSymbol | undefined;
+  const visit = (list: vscode.DocumentSymbol[] | undefined) => {
+    for (const s of list ?? []) {
+      if (s.range.start.line <= line && line <= s.range.end.line) {
+        if (BLOCK_KINDS.has(s.kind) && s.selectionRange.start.line === line) {
+          best = s;
+        }
+        visit(s.children);
+      }
+    }
+  };
+  visit(symbols);
+  return best?.range;
+}
+
 export function blockAt(doc: vscode.TextDocument, line: number): vscode.Range | undefined {
   const text = doc.lineAt(line).text;
   const m = /^(\s*)(async\s+)?(def|class)\s/.exec(text);
@@ -62,11 +99,12 @@ export function blockAt(doc: vscode.TextDocument, line: number): vscode.Range | 
   return new vscode.Range(line, 0, end, doc.lineAt(end).text.length);
 }
 
-function targetFor(cwd: string, editor: vscode.TextEditor): GraphTarget {
+async function targetFor(cwd: string, editor: vscode.TextEditor): Promise<GraphTarget> {
   const sel = editor.selection;
   let range: vscode.Range = sel;
   if (sel.isEmpty) {
-    range = blockAt(editor.document, sel.active.line) ?? new vscode.Range(sel.active.line, 0, sel.active.line, 0);
+    range = (await symbolBlockAt(editor.document, sel.active.line)) ??
+      new vscode.Range(sel.active.line, 0, sel.active.line, 0);
   }
   return { file: relPath(cwd, editor.document), start: range.start.line + 1, end: range.end.line + 1 };
 }
@@ -126,7 +164,7 @@ export const impactPanel: Feature = {
     const panel = new ImpactPanel(ctx);
     const showFor = (editor: vscode.TextEditor | undefined, t?: GraphTarget) =>
       ctx.withRoot(async (cwd) => {
-        const target = t ?? (editor ? targetFor(cwd, editor) : undefined);
+        const target = t ?? (editor ? await targetFor(cwd, editor) : undefined);
         if (target) {
           await panel.show(cwd, target);
         }
@@ -136,7 +174,7 @@ export const impactPanel: Feature = {
 
     // Hover a function/class or a selection: one-line summary with a link that opens the graph beside.
     ctx.extension.subscriptions.push(
-      vscode.languages.registerHoverProvider({ language: "python", scheme: "file" }, {
+      vscode.languages.registerHoverProvider(LANGUAGES.map((language) => ({ language, scheme: "file" })), {
         async provideHover(doc, pos) {
           const cwd = ctx.root();
           const editor = vscode.window.activeTextEditor;
@@ -147,7 +185,7 @@ export const impactPanel: Feature = {
           if (editor && editor.document === doc && !editor.selection.isEmpty && editor.selection.contains(pos)) {
             range = editor.selection;
           } else {
-            range = blockAt(doc, pos.line);
+            range = await symbolBlockAt(doc, pos.line);
           }
           if (!range) {
             return undefined;
@@ -172,7 +210,7 @@ export const impactPanel: Feature = {
     let timer: NodeJS.Timeout | undefined;
     ctx.extension.subscriptions.push(
       vscode.window.onDidChangeTextEditorSelection((e) => {
-        if (!panel.open || e.textEditor.document.languageId !== "python") {
+        if (!panel.open || !LANGUAGES.includes(e.textEditor.document.languageId)) {
           return;
         }
         if (!vscode.workspace.getConfiguration("codetwin").get<boolean>("graph.followSelection", true)) {
@@ -182,7 +220,7 @@ export const impactPanel: Feature = {
         timer = setTimeout(() => {
           const cwd = ctx.root();
           if (cwd) {
-            panel.show(cwd, targetFor(cwd, e.textEditor), false).catch(() => undefined);
+            targetFor(cwd, e.textEditor).then((tg) => panel.show(cwd, tg, false)).catch(() => undefined);
           }
         }, 600);
       }),

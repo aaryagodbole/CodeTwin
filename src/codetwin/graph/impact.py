@@ -1,12 +1,11 @@
 """Typed impact graph: which tests and modules a change reaches, and how each link is known."""
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 
 import networkx as nx
 
 from ..evidence.model import EvidenceType, FileFacts, TestRun
-from ..evidence.static import module_of
 
 
 @dataclass
@@ -15,20 +14,25 @@ class Impact:
     unknowns: list[str] = field(default_factory=list)              # what the analysis could not see
 
 
-def build_graph(static: dict[str, FileFacts], run: TestRun | None, src_root: str) -> nx.MultiDiGraph:
+def file_deps(static: dict[str, FileFacts], src_root: str | None = None) -> dict[str, list[str]]:
+    """Dependencies of every file as file paths. Language adapters fill `FileFacts.deps`; facts without it
+    (older stored snapshots, direct callers of `evidence.static`) are resolved as Python imports."""
+    if src_root is not None and any(f.imports and not f.deps for f in static.values()):
+        from ..lang.python import resolve_deps
+        static = {f: replace(v, deps=list(v.deps)) for f, v in static.items()}
+        resolve_deps(static, src_root)
+    return {f: list(v.deps) for f, v in static.items()}
+
+
+def build_graph(static: dict[str, FileFacts], run: TestRun | None, src_root: str | None = None) -> nx.MultiDiGraph:
     """Nodes are files; an edge u -> v means "u depends on v", labelled with its evidence type."""
     g: nx.MultiDiGraph = nx.MultiDiGraph()
-    known = {module_of(f, src_root): f for f in static}
+    deps = file_deps(static, src_root)
     for f, facts in static.items():
         g.add_node(f)
-        for imp in facts.imports:
-            parts = imp.split(".")
-            for k in range(len(parts), 0, -1):
-                tgt = known.get(".".join(parts[:k]))
-                if tgt:
-                    if tgt != f:
-                        g.add_edge(f, tgt, type=EvidenceType.STATIC.value)
-                    break
+        for tgt in deps[f]:
+            if tgt != f:
+                g.add_edge(f, tgt, type=EvidenceType.STATIC.value)
         if facts.dynamic:
             g.add_edge(f, "?", type=EvidenceType.UNRESOLVED.value, detail=",".join(facts.dynamic))
     if run:

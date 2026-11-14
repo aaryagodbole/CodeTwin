@@ -8,14 +8,7 @@ from pathlib import Path
 CONFIG_FILE = ".codetwin.toml"
 STATE_DIR = ".codetwin"
 
-TEMPLATE = """# CodeTwin AI configuration
-[project]
-src_root = "{src_root}"          # directory added to PYTHONPATH (\".\" or \"src\")
-packages = {packages}            # packages measured by coverage
-source_dirs = {source_dirs}      # directories that contain source files
-tests_dir = "{tests_dir}"
-
-[selection]
+SELECTION = """[selection]
 alpha = 0.10                     # target miss rate
 budget = 0.25                    # share of full-suite time in budget mode
 aci_gamma = 0.02                 # step size of adaptive calibration
@@ -29,10 +22,37 @@ fallback = "gemini"              # used when the provider has no key or hits its
 # model = "openai/gpt-oss-120b"  # optional: override the provider's default model
 """
 
+GENERIC_TEMPLATE = """# CodeTwin AI configuration
+[project]
+language = "{language}"
+source_dirs = {source_dirs}      # directories that contain source files ("." = whole repository)
+tests_dir = "{tests_dir}"
+
+[runner]
+# Detected test runner: {runner}. Each test file runs on its own with coverage; override here if needed
+# (placeholders: {{test}}, {{cov_dir}}; formats: lcov | gocover | jacoco | cobertura | clover). See docs/languages.md.
+# test_command = ""
+# coverage_format = "lcov"
+# workers = 1
+# timeout = 600
+
+""" + SELECTION
+
+TEMPLATE = """# CodeTwin AI configuration
+[project]
+language = "python"
+src_root = "{src_root}"          # directory added to PYTHONPATH (\".\" or \"src\")
+packages = {packages}            # packages measured by coverage
+source_dirs = {source_dirs}      # directories that contain source files
+tests_dir = "{tests_dir}"
+
+""" + SELECTION
+
 
 @dataclass
 class Config:
     root: Path
+    language: str = "auto"
     src_root: str = "."
     packages: list[str] = field(default_factory=list)
     source_dirs: list[str] = field(default_factory=list)
@@ -65,7 +85,7 @@ def load(root: str | Path = ".") -> Config:
         raise FileNotFoundError(f"{path} not found; run `codetwin init` first")
     data = tomllib.loads(path.read_text())
     p, s = data.get("project", {}), data.get("selection", {})
-    return Config(root=root, src_root=p.get("src_root", "."), packages=list(p.get("packages", [])),
+    return Config(root=root, language=str(p.get("language", "auto")), src_root=p.get("src_root", "."), packages=list(p.get("packages", [])),
                   source_dirs=list(p.get("source_dirs", [])), tests_dir=p.get("tests_dir", "tests"),
                   alpha=float(s.get("alpha", 0.10)), budget=float(s.get("budget", 0.25)),
                   aci_gamma=float(s.get("aci_gamma", 0.02)), fallback=s.get("fallback", "file-coverage"), raw=data)
@@ -83,11 +103,19 @@ def guess(root: str | Path = ".") -> dict:
     return {"src_root": src_root, "packages": pkgs, "source_dirs": dirs, "tests_dir": tests_dir}
 
 
-def write_template(root: str | Path = ".") -> Path:
+def write_template(root: str | Path = ".", language: str | None = None) -> Path:
+    from . import lang
     root = Path(root).resolve()
-    g = guess(root)
-    text = TEMPLATE.format(src_root=g["src_root"], packages=_toml_list(g["packages"]),
-                           source_dirs=_toml_list(g["source_dirs"]), tests_dir=g["tests_dir"])
+    name = lang.ALIASES.get((language or "").lower(), (language or "").lower()) or lang.detect(root)
+    if name == "python":
+        g = guess(root)
+        text = TEMPLATE.format(src_root=g["src_root"], packages=_toml_list(g["packages"]),
+                               source_dirs=_toml_list(g["source_dirs"]), tests_dir=g["tests_dir"])
+    else:
+        adapter = lang.get(Config(root=root, language=name))
+        g = adapter.guess_config()
+        text = GENERIC_TEMPLATE.format(language=name, source_dirs=_toml_list(g["source_dirs"]),
+                                       tests_dir=g["tests_dir"], runner=g.get("runner") or "none found, set test_command")
     path = root / CONFIG_FILE
     path.write_text(text)
     return path

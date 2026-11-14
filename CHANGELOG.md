@@ -8,6 +8,14 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Added
+- Language adapters (`src/codetwin/lang/`): any language, not only Python. A generic tree-sitter adapter gives
+  static facts (dependencies, dynamic constructs, function spans, load-time code), semantic no-op detection and
+  weakcheck mutants; each test file runs on its own with the project's test runner and any of five coverage
+  formats (LCOV, Go, JaCoCo, Cobertura, Clover). Specs with import resolution and runner presets for
+  JavaScript/TypeScript, Go, Java, Kotlin, Rust, C#, Ruby, PHP and C/C++; other languages via `[language]` and
+  `[runner]` in `.codetwin.toml`. `codetwin init` detects the language and runner (`--language` to choose).
+  Python results are unchanged (same decisions, selections and report sections as before). Optional
+  dependency group `languages`. Guide: docs/languages.md.
 - README: step-by-step development setup for first-time contributors, with Windows (Git Bash) instructions.
 - CI: `windows` job runs the full checks and the README commands on Windows for every pull request;
   `.gitattributes` keeps LF line endings so bash scripts work on Windows.

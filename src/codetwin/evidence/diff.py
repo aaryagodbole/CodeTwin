@@ -17,23 +17,24 @@ def git(repo: Path, *args: str) -> str:
     return r.stdout
 
 
-def changed_lines(repo: str | Path, base: str, head: str | None = None) -> dict[str, FileDiff]:
-    """Python files changed between `base` and `head` (the working tree if head is None)."""
+def changed_lines(repo: str | Path, base: str, head: str | None = None,
+                  extensions: tuple[str, ...] = (".py",)) -> dict[str, FileDiff]:
+    """Files with one of `extensions` changed between `base` and `head` (the working tree if head is None)."""
     repo = Path(repo)
     rng = [base] + ([head] if head else [])
     out: dict[str, FileDiff] = {}
     for line in git(repo, "diff", "--name-status", "-M", *rng).splitlines():
         parts = line.split("\t")
         st, path = parts[0][0], parts[-1]
-        if path.endswith(".py"):
+        if path.endswith(extensions):
             out[path] = FileDiff(status=st, old_path=parts[1] if st == "R" else path)
     if head is None:   # untracked new files in the working tree
         for path in git(repo, "ls-files", "--others", "--exclude-standard").splitlines():
-            if path.endswith(".py"):
+            if path.endswith(extensions):
                 n = len((repo / path).read_text(encoding="utf-8", errors="replace").splitlines())
                 out[path] = FileDiff(status="A", old_path=path, new=list(range(1, n + 1)))
     cur = None
-    for line in git(repo, "diff", "-U0", "-M", *rng, "--", "*.py").splitlines():
+    for line in git(repo, "diff", "-U0", "-M", *rng, "--", *[f"*{e}" for e in extensions]).splitlines():
         if line.startswith("+++ "):
             p = line[4:]
             cur = p[2:] if p.startswith("b/") else None
