@@ -3,3 +3,5 @@ pilot/repos/
 pilot/results/
 __pycache__/
 *.pyc
+pilot/v4/data/
+pilot/v4/results*/
