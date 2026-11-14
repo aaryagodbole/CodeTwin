@@ -1,0 +1,161 @@
+name: CodeTwin study v4 (multi-language, Multi-SWE-bench)
+
+# Records real pull requests of Go, JavaScript, TypeScript, Rust and Java projects from Multi-SWE-bench
+# (ByteDance-Seed) as CodeTwin study changes: each job pulls the benchmark's Docker image for a PR, runs
+# CodeTwin's per-test-file coverage inside it on the base commit and on base + fix, and records which of the
+# PR's test files fail on the base commit. Results are published to the study-v4-results branch.
+on:
+  workflow_dispatch:
+    inputs:
+      count:
+        description: PRs per repository
+        default: "24"
+      max_tests:
+        description: test files per run (cap)
+        default: "60"
+      repos:
+        description: only these repositories (comma-separated org/repo); empty = all
+        default: ""
+
+permissions:
+  contents: write
+
+concurrency:
+  group: study-v4-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        include:
+          # Go
+          - {repo: cli/cli,                     lang: go,         shard: 0, of: 4}
+          - {repo: cli/cli,                     lang: go,         shard: 1, of: 4}
+          - {repo: cli/cli,                     lang: go,         shard: 2, of: 4}
+          - {repo: cli/cli,                     lang: go,         shard: 3, of: 4}
+          - {repo: grpc/grpc-go,                lang: go,         shard: 0, of: 3}
+          - {repo: grpc/grpc-go,                lang: go,         shard: 1, of: 3}
+          - {repo: grpc/grpc-go,                lang: go,         shard: 2, of: 3}
+          - {repo: zeromicro/go-zero,           lang: go,         shard: 0, of: 3}
+          - {repo: zeromicro/go-zero,           lang: go,         shard: 1, of: 3}
+          - {repo: zeromicro/go-zero,           lang: go,         shard: 2, of: 3}
+          # JavaScript
+          - {repo: sveltejs/svelte,             lang: javascript, shard: 0, of: 4}
+          - {repo: sveltejs/svelte,             lang: javascript, shard: 1, of: 4}
+          - {repo: sveltejs/svelte,             lang: javascript, shard: 2, of: 4}
+          - {repo: sveltejs/svelte,             lang: javascript, shard: 3, of: 4}
+          - {repo: iamkun/dayjs,                lang: javascript, shard: 0, of: 4}
+          - {repo: iamkun/dayjs,                lang: javascript, shard: 1, of: 4}
+          - {repo: iamkun/dayjs,                lang: javascript, shard: 2, of: 4}
+          - {repo: iamkun/dayjs,                lang: javascript, shard: 3, of: 4}
+          - {repo: anuraghazra/github-readme-stats, lang: javascript, shard: 0, of: 3}
+          - {repo: anuraghazra/github-readme-stats, lang: javascript, shard: 1, of: 3}
+          - {repo: anuraghazra/github-readme-stats, lang: javascript, shard: 2, of: 3}
+          # TypeScript
+          - {repo: vuejs/core,                  lang: typescript, shard: 0, of: 4}
+          - {repo: vuejs/core,                  lang: typescript, shard: 1, of: 4}
+          - {repo: vuejs/core,                  lang: typescript, shard: 2, of: 4}
+          - {repo: vuejs/core,                  lang: typescript, shard: 3, of: 4}
+          - {repo: mui/material-ui,             lang: typescript, shard: 0, of: 4}
+          - {repo: mui/material-ui,             lang: typescript, shard: 1, of: 4}
+          - {repo: mui/material-ui,             lang: typescript, shard: 2, of: 4}
+          - {repo: mui/material-ui,             lang: typescript, shard: 3, of: 4}
+          # Rust
+          - {repo: clap-rs/clap,                lang: rust,       shard: 0, of: 4}
+          - {repo: clap-rs/clap,                lang: rust,       shard: 1, of: 4}
+          - {repo: clap-rs/clap,                lang: rust,       shard: 2, of: 4}
+          - {repo: clap-rs/clap,                lang: rust,       shard: 3, of: 4}
+          - {repo: tokio-rs/tokio,              lang: rust,       shard: 0, of: 4}
+          - {repo: tokio-rs/tokio,              lang: rust,       shard: 1, of: 4}
+          - {repo: tokio-rs/tokio,              lang: rust,       shard: 2, of: 4}
+          - {repo: tokio-rs/tokio,              lang: rust,       shard: 3, of: 4}
+          - {repo: tokio-rs/tracing,            lang: rust,       shard: 0, of: 4}
+          - {repo: tokio-rs/tracing,            lang: rust,       shard: 1, of: 4}
+          - {repo: tokio-rs/tracing,            lang: rust,       shard: 2, of: 4}
+          - {repo: tokio-rs/tracing,            lang: rust,       shard: 3, of: 4}
+          # Java
+          - {repo: FasterXML/jackson-databind,  lang: java,       shard: 0, of: 4, max_tests: 40}
+          - {repo: FasterXML/jackson-databind,  lang: java,       shard: 1, of: 4, max_tests: 40}
+          - {repo: FasterXML/jackson-databind,  lang: java,       shard: 2, of: 4, max_tests: 40}
+          - {repo: FasterXML/jackson-databind,  lang: java,       shard: 3, of: 4, max_tests: 40}
+          - {repo: FasterXML/jackson-core,      lang: java,       shard: 0, of: 4, max_tests: 40}
+          - {repo: FasterXML/jackson-core,      lang: java,       shard: 1, of: 4, max_tests: 40}
+          - {repo: FasterXML/jackson-core,      lang: java,       shard: 2, of: 4, max_tests: 40}
+          - {repo: FasterXML/jackson-core,      lang: java,       shard: 3, of: 4, max_tests: 40}
+    env:
+      REPO: ${{ matrix.repo }}
+      LANG_: ${{ matrix.lang }}
+      SHARD: ${{ matrix.shard }}/${{ matrix.of }}
+      COUNT: ${{ inputs.count || '24' }}
+      MAX_TESTS: ${{ matrix.max_tests || inputs.max_tests || '60' }}
+    if: inputs.repos == '' || contains(inputs.repos, matrix.repo)
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - name: Free disk space (images are large)
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+          docker system prune -af >/dev/null 2>&1 || true
+          df -h / | tail -1
+      - name: Download the Multi-SWE-bench dataset (JSONL)
+        run: |
+          pip install -q huggingface_hub
+          python - <<'PY'
+          import os
+          from huggingface_hub import snapshot_download
+          org, repo = os.environ["REPO"].split("/")
+          snapshot_download("ByteDance-Seed/Multi-SWE-bench", repo_type="dataset", local_dir="pilot/v4/data/mswe",
+                            allow_patterns=["*.jsonl", "*.json"])
+          PY
+          find pilot/v4/data/mswe -name "*.jsonl" | head -30; du -sh pilot/v4/data/mswe
+      - name: Collect
+        working-directory: pilot/v4
+        run: |
+          set -o pipefail
+          python mswe_collect.py --repo "$REPO" --language "$LANG_" --dataset data/mswe --count "$COUNT" \
+            --shard "$SHARD" --max-tests "$MAX_TESTS" --timeout 4800 2>&1 | tee "collect_$(echo "$SHARD" | tr / _).log"
+      - name: Package
+        if: always()
+        working-directory: pilot/v4
+        run: |
+          P=$(echo "$REPO" | tr '[:upper:]' '[:lower:]' | sed 's#/#_m_#'); S=$(echo "$SHARD" | tr / _)
+          mkdir -p "data/$P/logs"; cp collect_*.log "data/$P/logs/" 2>/dev/null || true
+          rm -rf "data/$P/_out" "data/$P/_setup.sh"
+          tar -czf "data_${P}_${S}.tar.gz" -C data "$P"
+          echo "ART=data_${P}_${S}" >> "$GITHUB_ENV"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ${{ env.ART }}
+          path: pilot/v4/${{ env.ART }}.tar.gz
+
+  publish:
+    needs: collect
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with: { path: artifacts }
+      - name: Merge shards
+        run: |
+          mkdir -p out/data
+          for f in artifacts/*/*.tar.gz; do tar -xzf "$f" -C out/data; done
+          for p in out/data/*/; do echo "$(basename "$p"): $(ls "$p"/commits 2>/dev/null | wc -l) PRs"; done
+          cd out && tar -czf ../study-v4-data.tar.gz data
+      - name: Publish to the study-v4-results branch
+        run: |
+          mkdir -p pub && cp study-v4-data.tar.gz pub/
+          cd pub
+          git init -q -b study-v4-results
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          echo "Data of the CodeTwin study v4 (Multi-SWE-bench PRs). Run: ${{ github.run_id }} (commit ${{ github.sha }})" > README.md
+          git add -A && git commit -qm "study v4 data, run ${{ github.run_id }}"
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}" study-v4-results
