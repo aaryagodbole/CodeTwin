@@ -1,0 +1,10 @@
+[project]
+language = "cpp"
+source_dirs = ["src"]
+tests_dir = "tests"
+
+[runner]
+test_command = "./run_test.sh {test} {cov_dir}"
+run_command = "./run_test.sh {test}"
+coverage_format = "lcov"
+test_globs = ["tests/test_*.cpp"]

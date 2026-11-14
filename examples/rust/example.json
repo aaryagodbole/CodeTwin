@@ -1,0 +1,2 @@
+{"language": "rust", "file": "src/calc.rs", "edit": ["    a * b\n", "    a * b * 1\n"],
+ "noop": ["    a * b\n", "    a * b // product\n"], "covering_test": "tests/cart.rs"}

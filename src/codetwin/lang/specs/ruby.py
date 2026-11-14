@@ -35,6 +35,17 @@ def dynamic(n, src: bytes) -> str | None:
     return None
 
 
+def mutant(fn, src: bytes, path: str) -> tuple[int, int, str] | None:
+    """`return nil` before the first statement of a method."""
+    if fn.type not in ("method", "singleton_method"):
+        return None
+    body = fn.child_by_field_name("body")
+    if body is None or not body.named_children:
+        return None
+    at = body.start_byte
+    return at, at, "return nil; "
+
+
 def resolve(spec: str, from_file: str, idx) -> list[str]:
     kind, _, path = spec.partition(":")
     path = path if path.endswith(".rb") else path + ".rb"
@@ -47,13 +58,24 @@ def resolve(spec: str, from_file: str, idx) -> list[str]:
     return []
 
 
+def _rspec(root: Path) -> bool:
+    return (root / ".rspec").exists() or (root / "spec").is_dir()
+
+
+def _bundler(root: Path) -> bool:
+    return (root / "Gemfile").exists()
+
+
+ENV = {"CODETWIN_COV_DIR": "{cov_dir}"}
 RUNNERS = [
     Runner("rspec", f"bundle exec ruby -r{HELPER} -S rspec {{test}}", "lcov", "lcov.info",
-           run_command="bundle exec rspec {test}", env={"CODETWIN_COV_DIR": "{cov_dir}"},
-           detect=lambda root: (root / ".rspec").exists() or (root / "spec").is_dir()),
+           run_command="bundle exec rspec {test}", env=ENV, detect=lambda root: _rspec(root) and _bundler(root)),
+    Runner("rspec-no-bundler", f"ruby -r{HELPER} -S rspec {{test}}", "lcov", "lcov.info",
+           run_command="rspec {test}", env=ENV, detect=_rspec),
     Runner("minitest", f"bundle exec ruby -r{HELPER} -Ilib -Itest {{test}}", "lcov", "lcov.info",
-           run_command="bundle exec ruby -Ilib -Itest {test}", env={"CODETWIN_COV_DIR": "{cov_dir}"},
-           detect=lambda root: (root / "test").is_dir()),
+           run_command="bundle exec ruby -Ilib -Itest {test}", env=ENV, detect=_bundler),
+    Runner("minitest-no-bundler", f"ruby -r{HELPER} -Ilib -Itest {{test}}", "lcov", "lcov.info",
+           run_command="ruby -Ilib -Itest {test}", env=ENV, detect=lambda root: True),
 ]
 
 SPEC = Spec(
@@ -65,5 +87,5 @@ SPEC = Spec(
     tests_dirs=["spec", "test"],
     function_types={"method", "singleton_method", "lambda", "block", "do_block"},
     decl_types={"method", "singleton_method", "comment"},
-    imports=imports, dynamic=dynamic, resolve=resolve, runners=RUNNERS,
+    imports=imports, dynamic=dynamic, resolve=resolve, mutant=mutant, runners=RUNNERS,
 )

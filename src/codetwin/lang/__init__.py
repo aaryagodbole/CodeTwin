@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from ..plugins import discover
-from .base import Language, repo_files
+from .base import SAMPLE_DIRS, Language, glob_match, repo_files
 from .spec import Spec
 
 if TYPE_CHECKING:
@@ -35,41 +35,108 @@ def names() -> list[str]:
     return ["python", *sorted(load_specs())]
 
 
+PY_MARKERS = ["pyproject.toml", "setup.py", "setup.cfg"]
+
+
+def _candidates(root: Path) -> dict[str, tuple[tuple[str, ...], list[str], list[str]]]:
+    """Every language with files in the repository: name -> (extensions, markers, test globs)."""
+    from . import auto
+    out: dict[str, tuple[tuple[str, ...], list[str], list[str]]] = {"python": ((".py",), PY_MARKERS, ["test_*.py", "*_test.py", "**/tests/**/*.py", "**/test/**/*.py"])}
+    known_exts = {".py"}
+    for name, sp in load_specs().items():
+        out[name] = (tuple(sp.grammars), sp.markers, sp.test_globs)
+        known_exts |= set(sp.grammars)
+    for grammar, exts in auto.detect(root).items():       # languages without a spec file
+        rest = tuple(e for e in exts if e not in known_exts)
+        if rest and grammar not in out:
+            out[grammar] = (rest, [], auto.TEST_GLOBS)
+    return out
+
+
+def _census(root: Path) -> dict[str, tuple[int, int, bool]]:
+    """name -> (source files, test files, build marker present)."""
+    out = {}
+    for name, (exts, markers, globs) in _candidates(root).items():
+        files = repo_files(root, exts, skip=SAMPLE_DIRS)
+        if not files:
+            continue
+        tests = sum(glob_match(f, globs) for f in files)
+        out[name] = (len(files) - tests, tests, any((root / m).exists() for m in markers))
+    return out
+
+
+def detect_all(root: str | Path) -> list[str]:
+    """Languages CodeTwin should handle in this repository, most files first. A language counts when it has
+    both source and test files (a few helper scripts in another language do not make a repository
+    multi-language); if none has tests, the language with the most files (preferring one with a build file)."""
+    census = _census(Path(root))
+    tested = [n for n, (src, tst, _) in census.items() if src and tst]
+    if tested:
+        return sorted(tested, key=lambda n: (-(census[n][0] + census[n][1]), n))
+    if not census:
+        return ["python"]
+    return [max(census, key=lambda n: (census[n][2], census[n][0] + census[n][1], n == "python"))]
+
+
 def detect(root: str | Path) -> str:
-    """Most likely language of a repository: build markers first, then the most common source extension."""
-    root = Path(root)
-    all_specs = load_specs()
-    markers = {"python": ["pyproject.toml", "setup.py", "setup.cfg"]}
-    exts: dict[str, tuple[str, ...]] = {"python": (".py",)}
-    for name, sp in all_specs.items():
-        markers[name], exts[name] = sp.markers, tuple(sp.grammars)
-    counts = {name: len(repo_files(root, e)) for name, e in exts.items()}
-    # A repository often carries a second build file for tooling (package.json in a Python project), so a
-    # marker only makes a language a candidate; among candidates the one with the most source files wins.
-    marked = [n for n, ms in markers.items() if any((root / m).exists() for m in ms) and counts[n]]
-    pool = marked or [n for n in counts if counts[n]]
-    return max(pool, key=lambda n: (counts[n], n == "python")) if pool else "python"
+    """The main language of a repository (the first of `detect_all`)."""
+    return detect_all(root)[0]
 
 
-def get(cfg: Config) -> Language:
-    name = (cfg.language or "auto").lower()
-    name = ALIASES.get(name, name)
-    if name == "auto":
-        # configurations written before languages were pluggable list Python packages and no language
-        name = "python" if cfg.packages else detect(cfg.root)
+def sub_config(cfg: Config, name: str) -> Config:
+    """The configuration of one language in a multi-language repository: its `[lang.<name>]` table
+    (source_dirs, tests_dir, src_root, packages, runner, language) over the project's defaults."""
+    from dataclasses import replace
+    t = cfg.raw.get("lang", {}).get(name, {}) if isinstance(cfg.raw.get("lang"), dict) else {}
+    raw = dict(cfg.raw)
+    for key in ("runner", "language"):
+        if key in t:
+            raw[key] = t[key]
+        elif len(cfg.raw.get("lang", {})) > 0:
+            raw.pop(key, None)
+    return replace(cfg, language=name, src_root=t.get("src_root", cfg.src_root),
+                   packages=list(t.get("packages", cfg.packages if name == "python" else [])),
+                   source_dirs=list(t.get("source_dirs", cfg.source_dirs)), tests_dir=t.get("tests_dir", cfg.tests_dir),
+                   raw=raw)
+
+
+def adapter(cfg: Config, name: str) -> Language:
+    name = ALIASES.get(name.lower(), name.lower())
     if name == "python":
         from .python import Python
         return Python(cfg)
-    all_specs = load_specs()
     from .generic import Generic
+    all_specs = load_specs()
     if name in all_specs:
         return Generic(cfg, all_specs[name])
     custom = custom_spec(name, cfg.section("language"))
-    if custom is None:
-        raise ValueError(f"unknown language {cfg.language!r}; built in: {', '.join(names())}. For any other "
-                         "language with a tree-sitter grammar, add a [language] table with grammar, extensions and "
-                         "test_globs (docs/languages.md)")
-    return Generic(cfg, custom)
+    if custom is not None:
+        return Generic(cfg, custom)
+    from . import auto
+    exts = auto.detect(cfg.root).get(name)
+    if exts:
+        return Generic(cfg, auto.spec_for(name, exts))
+    raise ValueError(f"unknown language {name!r}: no spec ({', '.join(names())}), no [language] table and no "
+                     "files with a tree-sitter grammar of that name in the repository (docs/languages.md)")
+
+
+def get(cfg: Config) -> Language:
+    langs = cfg.raw.get("project", {}).get("languages") if isinstance(cfg.raw.get("project"), dict) else None
+    if isinstance(langs, list) and langs:
+        names_ = [str(x) for x in langs]
+    else:
+        name = (cfg.language or "auto").lower()
+        if name != "auto":
+            names_ = [name]
+        elif cfg.packages:
+            # configurations written before languages were pluggable list Python packages and no language
+            names_ = ["python"]
+        else:
+            names_ = detect_all(cfg.root)
+    if len(names_) == 1:
+        return adapter(cfg, names_[0])
+    from .multi import Multi
+    return Multi(cfg, [adapter(sub_config(cfg, n), n) for n in names_])
 
 
 def custom_spec(name: str, opts) -> Spec | None:

@@ -26,6 +26,7 @@ Settings in `.codetwin.toml` (all optional when a runner preset matches the proj
 from __future__ import annotations
 
 import os
+import posixpath
 import shlex
 import subprocess
 import tempfile
@@ -37,6 +38,7 @@ from pathlib import Path
 from xml.etree import ElementTree as ET  # noqa: S405
 
 from ..evidence.model import FileFacts, TestRun
+from . import auto
 from . import coverage_formats as covfmt
 from .base import Language, glob_match, repo_files, under
 from .spec import Runner, Spec
@@ -99,24 +101,45 @@ class Generic(Language):
         r = cfg.raw.get("runner", {}) if isinstance(cfg.raw.get("runner", {}), dict) else {}
         self.opts = r
         self.test_globs = list(r.get("test_globs", spec.test_globs))
-        self.runner = self._runner()
+        self._runners: dict[str, Runner | None] = {}
+        self._mappers: dict[str, covfmt.PathMapper] = {}
+        self.runner = self.runner_for("")
 
     # --------------------------------------------------------------- configuration
-    def _runner(self) -> Runner | None:
+    def project_dir(self, path: str) -> str:
+        """The folder a test runs from: the nearest one above it with a build file of this language
+        (`web/` with its package.json in a monorepo, a Go module, a Maven module), else the repository root.
+        A configured `test_command` always runs from the repository root."""
+        if self.opts.get("test_command") or not self.spec.markers:
+            return ""
+        d = posixpath.dirname(path.split("::", 1)[0])
+        while d:
+            if any((self.root / d / m).exists() for m in self.spec.markers):
+                return d
+            d = posixpath.dirname(d)
+        return ""
+
+    def runner_for(self, path_or_dir: str, is_dir: bool = True) -> Runner | None:
+        d = path_or_dir if is_dir else self.project_dir(path_or_dir)
+        if d not in self._runners:
+            self._runners[d] = self._runner(self.root / d)
+        return self._runners[d]
+
+    def _runner(self, base: Path) -> Runner | None:
         r = self.opts
         preset = next((x for x in self.spec.runners if (r.get("preset") or "") == x.name), None)
         if preset is None and not r.get("test_command"):
-            preset = next((x for x in self.spec.runners if x.detect(self.root)), None)
+            preset = next((x for x in self.spec.runners if x.detect(base)), None)
         if r.get("test_command"):
-            base = preset or Runner("custom", "", r.get("coverage_format", "lcov"))
-            return Runner(name=base.name if preset else "custom", test_command=r["test_command"],
-                          coverage_format=r.get("coverage_format", base.coverage_format),
-                          coverage_file=r.get("coverage_file", base.coverage_file),
-                          run_command=r.get("run_command", base.run_command if preset else None),
-                          setup_command=r.get("setup_command", base.setup_command),
-                          build_command=r.get("build_command", base.build_command),
-                          result_glob=r.get("result_glob", base.result_glob), vars=base.vars,
-                          env={**(base.env or {}), **r.get("env", {})})
+            tpl = preset or Runner("custom", "", r.get("coverage_format", "lcov"))
+            return Runner(name=tpl.name if preset else "custom", test_command=r["test_command"],
+                          coverage_format=r.get("coverage_format", tpl.coverage_format),
+                          coverage_file=r.get("coverage_file", tpl.coverage_file),
+                          run_command=r.get("run_command", tpl.run_command if preset else None),
+                          setup_command=r.get("setup_command", tpl.setup_command),
+                          build_command=r.get("build_command", tpl.build_command),
+                          result_glob=r.get("result_glob", tpl.result_glob), vars=tpl.vars,
+                          env={**(tpl.env or {}), **r.get("env", {})})
         if preset is None:
             return None
         # presets are shared module-level objects: override on a copy
@@ -124,7 +147,7 @@ class Generic(Language):
                                                     "result_glob") if k in r})
 
     def describe(self) -> str:
-        return f"{self.name} ({self.runner.name if self.runner else 'no test runner configured'})"
+        return f"{self.name} ({self.runner.name if self.runner else 'no test runner: static evidence only'})"
 
     def grammar(self, path: str) -> str | None:
         for ext, g in self.spec.grammars.items():
@@ -143,6 +166,8 @@ class Generic(Language):
         return path.endswith(self.extensions) and not self.is_test(path) and under(path, self.cfg.source_dirs)
 
     def _all_files(self) -> list[str]:
+        if not self.cfg.source_dirs:            # nothing configured: the whole repository
+            return repo_files(self.root, self.extensions)
         dirs = sorted(set(self.cfg.source_dirs + ([self.cfg.tests_dir] if self.cfg.tests_dir else [])))
         return repo_files(self.root, self.extensions, [d for d in dirs if d] or ["."])
 
@@ -182,7 +207,7 @@ class Generic(Language):
                 nm = sp.names(n, src)
                 if nm:
                     names.add(nm)
-            if n.type in sp.function_types:
+            if n.type in sp.function_types or (sp.auto and auto.is_function(n.type)):
                 body = n.child_by_field_name("body") or next(
                     (c for c in n.named_children if c.type in BODY_TYPES), None)
                 if body is not None:
@@ -201,6 +226,9 @@ class Generic(Language):
                 stack.extend(reversed(ch.named_children))
                 continue
             if ch.type in sp.comment_types or ch.type in sp.decl_types or ch.type in sp.function_types:
+                continue
+            if sp.auto and (auto.is_function(ch.type) or auto.IMPORT.search(ch.type)
+                            or any(k in ch.type for k in ("class", "module", "struct", "interface", "type", "package"))):
                 continue
             mod_lines.update(range(line(ch), end_line(ch) + 1))
         return (FileFacts(imports=sorted(set(raw)), dynamic=sorted(dyn), dyn_lines=sorted(dyn_lines),
@@ -231,18 +259,19 @@ class Generic(Language):
         return out
 
     # --------------------------------------------------------------- running tests
-    def _require_runner(self) -> Runner:
-        if self.runner is None:
+    def _require_runner(self, test: str = "") -> Runner:
+        r = self.runner_for(test, is_dir=False) if test else self.runner
+        if r is None:
             raise RuntimeError(f"no test runner preset matched this {self.name} project; set [runner] test_command "
                                "and coverage_format in .codetwin.toml (see docs/languages.md)")
-        return self.runner
+        return r
 
-    def _vars(self, test: str, cwd: Path) -> dict[str, str | list[str]]:
-        """Template values for one test id. Ids are file paths, or `path::name` for tests inside a source file."""
+    def _vars(self, test: str, cwd: Path, r: Runner) -> dict[str, str | list[str]]:
+        """Template values for one test id, relative to the folder the test runs from (`cwd`). Ids are file
+        paths, or `path::name` for tests inside a source file."""
         path = test.split("::", 1)[0]
         v: dict[str, str | list[str]] = {"test": test, "test_file": path, "test_stem": self.stem(path),
                                          "test_dir": os.path.dirname(path) or "."}
-        r = self._require_runner()
         if r.vars:
             try:
                 src = (cwd / path).read_text(encoding="utf-8", errors="replace")
@@ -266,8 +295,7 @@ class Generic(Language):
     def _timeout(self, default: int) -> int:
         return int(self.opts.get("timeout", default))
 
-    def _setup(self, cwd: Path, timeout: int) -> None:
-        r = self._require_runner()
+    def _setup(self, cwd: Path, r: Runner, timeout: int) -> None:
         if r.setup_command:
             subprocess.run(self._argv(r.setup_command, {}), cwd=cwd, capture_output=True, text=True,
                            timeout=timeout, check=False)
@@ -286,12 +314,20 @@ class Generic(Language):
                 return True
         return False if seen else None
 
-    def _run_one(self, test: str, cwd: Path, timeout: int, coverage: bool,
-                 mapper: covfmt.PathMapper | None = None) -> tuple[str, float, bool | None, dict]:
-        r = self._require_runner()
+    def _mapper(self, pdir: str) -> covfmt.PathMapper:
+        if pdir not in self._mappers:
+            known = [f for f in repo_files(self.root, self.extensions) if not self.is_test(f)]
+            self._mappers[pdir] = covfmt.PathMapper(self.root, known, self.root / pdir)
+        return self._mappers[pdir]
+
+    def _run_one(self, test: str, base: Path, timeout: int, coverage: bool) -> tuple[str, float, bool | None, dict]:
+        r = self._require_runner(test)
+        pdir = self.project_dir(test)
+        cwd = base / pdir
+        local = test[len(pdir) + 1:] if pdir else test        # the test id as seen from its project folder
         with tempfile.TemporaryDirectory(prefix="codetwin-cov-") as tmp:
             cov = Path(tmp)
-            values = dict(self._vars(test, cwd), cov_dir=str(cov))
+            values = dict(self._vars(local, cwd, r), cov_dir=str(cov))
             template = r.test_command if coverage or not r.run_command else r.run_command
             if r.result_glob:
                 for old in cwd.glob(r.result_glob):
@@ -310,20 +346,26 @@ class Generic(Language):
                 if jf is not None:
                     ok = not jf
             lines: dict = {}
-            if coverage and mapper is not None:
-                lines = covfmt.read_dir(r.coverage_format, cov, r.coverage_file, mapper)
+            if coverage:
+                lines = covfmt.read_dir(r.coverage_format, cov, r.coverage_file, self._mapper(pdir))
             return test, dt, ok, lines
 
     def run_suite(self, sha: str, tests: list[str] | None = None, timeout: int = 3600) -> TestRun:
         tests = tests if tests is not None else self.list_tests()
+        # Static-evidence mode for tests whose project has no known test runner: listed, not run, no coverage;
+        # decisions on files without runtime evidence say so and run everything.
+        runnable = [t for t in tests if self.runner_for(t, is_dir=False) is not None]
+        run = TestRun(sha=sha, durations={t: 1.0 for t in tests if t not in runnable})
+        if not runnable:
+            run.returncode = "no-runner"
+            return run
         per = self._timeout(min(timeout, 600))
         t0 = time.time()
-        self._setup(self.root, timeout)
-        run = TestRun(sha=sha)
+        for pdir in sorted({self.project_dir(t) for t in runnable}):
+            self._setup(self.root / pdir, self.runner_for(pdir), timeout)  # type: ignore[arg-type]
         workers = max(1, int(self.opts.get("workers", 1)))
-        mapper = covfmt.PathMapper(self.root, [f for f in repo_files(self.root, self.extensions) if not self.is_test(f)])
         with ThreadPoolExecutor(workers) as ex:
-            results = list(ex.map(lambda t: self._run_one(t, self.root, per, True, mapper), tests))
+            results = list(ex.map(lambda t: self._run_one(t, self.root, per, True), runnable))
         for test, dt, ok, lines in results:
             run.durations[test] = dt
             if ok is not True:
@@ -334,18 +376,30 @@ class Generic(Language):
         return run
 
     def run_tests(self, work: Path, tests: list[str], timeout: int) -> dict[str, bool | None]:
-        return {t: self._run_one(t, work, self._timeout(timeout), False)[2] for t in tests}
+        return {t: (self._run_one(t, work, self._timeout(timeout), False)[2]
+                    if self.runner_for(t, is_dir=False) is not None else None) for t in tests}
+
+    def has_runtime_evidence(self, path: str) -> bool:
+        return self.runner_for(path, is_dir=False) is not None
+
+    def run_all(self, work: Path, tests: list[str], timeout: int) -> bool:
+        for t in tests:
+            self._require_runner(t)
+        return super().run_all(work, tests, timeout)
 
     def build_ok(self, work: Path, timeout: int) -> bool:
-        r = self._require_runner()
-        if not r.build_command:
-            return True
-        try:
-            p = subprocess.run(self._argv(r.build_command, {}), cwd=work, capture_output=True, text=True,
-                               timeout=timeout, check=False)
-        except subprocess.TimeoutExpired:
-            return False
-        return p.returncode == 0
+        for pdir in sorted({self.project_dir(t) for t in self.list_tests()}):
+            r = self.runner_for(pdir)
+            if r is None or not r.build_command:
+                continue
+            try:
+                p = subprocess.run(self._argv(r.build_command, {}), cwd=work / pdir, capture_output=True, text=True,
+                                   timeout=timeout, check=False)
+            except subprocess.TimeoutExpired:
+                return False
+            if p.returncode != 0:
+                return False
+        return True
 
     # --------------------------------------------------------------- no-ops and mutants
     def _tokens(self, path: str, src: str, strip_annotations: bool) -> list[tuple[str, str]] | None:
@@ -387,7 +441,8 @@ class Generic(Language):
         tree = parse(g, b)
         best = None
         for n in walk(tree.root_node):
-            if n.type in self.spec.function_types and line(n) == fn[0] and end_line(n) == fn[1]:
+            if (n.type in self.spec.function_types or (self.spec.auto and auto.is_function(n.type))) \
+                    and line(n) == fn[0] and end_line(n) == fn[1]:
                 best = n
         if best is None:
             return None

@@ -10,7 +10,7 @@ import posixpath
 import re
 
 from ..spec import Runner, Spec
-from ._util import txt
+from ._util import leading_insert, txt
 
 NAMESPACE = re.compile(r"^\s*namespace\s+([\w.]+)", re.M)
 REFLECT = {"GetType", "CreateInstance", "Invoke", "GetMethod", "GetProperty", "GetField", "Load", "LoadFrom"}
@@ -66,6 +66,22 @@ def extra_deps(f: str, idx) -> list[str]:
     return sorted(x for x in files if posixpath.splitext(posixpath.basename(x))[0] in used)
 
 
+def mutant(fn, src: bytes, path: str) -> tuple[int, int, str] | None:
+    """`if (true) return default;` (C# `default` is the zero value of every type); expression bodies return
+    `default` directly. Constructors and lambdas are left alone."""
+    if fn.type not in ("method_declaration", "local_function_statement"):
+        return None
+    body = fn.child_by_field_name("body")
+    ret = fn.child_by_field_name("returns") or fn.child_by_field_name("type")
+    if body is None or ret is None:
+        return None
+    void = txt(ret, src) == "void"
+    if body.type == "arrow_expression_clause":
+        expr = body.named_children[-1] if body.named_children else None
+        return None if expr is None or void else (expr.start_byte, expr.end_byte, "default")
+    return leading_insert(body, src, "if (true) return;" if void else "if (true) return default;")
+
+
 def _vars(test: str, text: str) -> dict:
     m = NAMESPACE.search(text)
     cls = posixpath.splitext(posixpath.basename(test))[0]
@@ -91,5 +107,5 @@ SPEC = Spec(
                 "interface_declaration", "struct_declaration", "enum_declaration", "record_declaration",
                 "delegate_declaration", "extern_alias_directive", "attribute_list"},
     imports=imports, dynamic=dynamic, names=names, prepare=prepare, resolve=resolve, extra_deps=extra_deps,
-    runners=RUNNERS,
+    mutant=mutant, runners=RUNNERS,
 )

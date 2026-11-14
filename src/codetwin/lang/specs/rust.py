@@ -2,7 +2,7 @@
 
 Test ids are the integration test files (`tests/*.rs`) and, for unit tests, `path::tests` for every source
 file with a `#[cfg(test)]` module. `mod x;` and `use crate::...`/`use <crate name>::...` paths resolve to
-files. Mutants are not built (a neutral return value needs `Default`, which not every type has).
+files. Weakcheck mutants return `Default::default()` early (types without `Default` are reported as errors).
 """
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ import re
 from pathlib import Path
 
 from ..spec import Runner, Spec
-from ._util import txt
+from ._util import leading_insert, txt
 
 CFG_TEST = re.compile(r"#\[cfg\(test\)\]")
 
@@ -84,6 +84,16 @@ def resolve(spec: str, from_file: str, idx) -> list[str]:
     return found
 
 
+def mutant(fn, src: bytes, path: str) -> tuple[int, int, str] | None:
+    """`return Default::default();` first (`return;` for functions without a result). A type without
+    `Default` does not compile; weakcheck then reports an error instead of a verdict."""
+    if fn.type != "function_item":
+        return None
+    body = fn.child_by_field_name("body")
+    ret = fn.child_by_field_name("return_type")
+    return leading_insert(body, src, "return;" if ret is None or txt(ret, src) == "()" else "return Default::default();")
+
+
 def test_ids(root: Path, f: str) -> list[str]:
     try:
         return [f + "::tests"] if CFG_TEST.search((root / f).read_text(encoding="utf-8", errors="replace")) else []
@@ -115,5 +125,5 @@ SPEC = Spec(
     decl_types={"use_declaration", "mod_item", "function_item", "struct_item", "enum_item", "impl_item", "trait_item",
                 "const_item", "static_item", "type_item", "macro_definition", "attribute_item", "inner_attribute_item",
                 "extern_crate_declaration", "union_item", "foreign_mod_item", "macro_invocation"},
-    imports=imports, prepare=prepare, resolve=resolve, test_ids=test_ids, runners=RUNNERS,
+    imports=imports, prepare=prepare, resolve=resolve, test_ids=test_ids, mutant=mutant, runners=RUNNERS,
 )

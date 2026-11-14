@@ -1,0 +1,2 @@
+{"language": "ruby", "file": "lib/calc.rb", "edit": ["a * b", "a * b * 1"],
+ "noop": ["    a * b", "    a * b # product"], "covering_test": "test/test_cart.rb"}

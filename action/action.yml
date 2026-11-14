@@ -27,7 +27,7 @@ runs:
       shell: bash
       env:
         CODETWIN_PACKAGE: ${{ inputs.package }}
-      run: python -m pip install "$CODETWIN_PACKAGE" "tree-sitter>=0.23" "tree-sitter-language-pack>=0.9"
+      run: python -m pip install "$CODETWIN_PACKAGE"
 
     - name: Record evidence on the base commit
       shell: bash

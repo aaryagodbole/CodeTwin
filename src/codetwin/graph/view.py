@@ -10,9 +10,10 @@ from .impact import build_graph, impact_of
 
 
 def label(path: str) -> str:
-    """Short node label; package files keep their folder (`risk/__init__.py`)."""
+    """Short node label; package entry files keep their folder (`risk/__init__.py`, `ui/index.ts`, `net/mod.rs`)."""
     parts = path.split("/")
-    return "/".join(parts[-2:]) if parts[-1] == "__init__.py" and len(parts) > 1 else parts[-1]
+    entry = parts[-1].split(".", 1)[0] in ("__init__", "index", "mod", "lib", "main")
+    return "/".join(parts[-2:]) if entry and len(parts) > 1 else parts[-1]
 
 
 def impact_view(static: dict[str, FileFacts], run: TestRun | None, src_root: str, tests: list[str], file: str,

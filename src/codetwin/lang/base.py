@@ -60,8 +60,15 @@ def glob_match(path: str, patterns: list[str]) -> bool:
     return any(_glob_re(p).match(path if "/" in p else name) for p in patterns)
 
 
-def repo_files(root: Path, extensions: tuple[str, ...], dirs: list[str] | None = None) -> list[str]:
-    """Repository-relative paths of files with one of `extensions`, skipping build and dependency folders."""
+# folders of sample or fixture code: real code of their own language, but not what the repository is about
+SAMPLE_DIRS = {"examples", "example", "samples", "sample", "fixtures", "fixture", "testdata", "test_data",
+               "third_party", "third-party", "docs", "doc"}
+
+
+def repo_files(root: Path, extensions: tuple[str, ...], dirs: list[str] | None = None,
+               skip: set[str] | frozenset[str] = frozenset()) -> list[str]:
+    """Repository-relative paths of files with one of `extensions`, skipping build and dependency folders
+    (and the folder names in `skip`)."""
     out: list[str] = []
     bases = [root / d for d in (dirs or ["."]) if (root / d).exists()]
     seen: set[Path] = set()
@@ -76,7 +83,7 @@ def repo_files(root: Path, extensions: tuple[str, ...], dirs: list[str] | None =
             d = stack.pop()
             for p in sorted(d.iterdir()):
                 if p.is_dir():
-                    if p.name not in SKIP_DIRS and not p.name.startswith("."):
+                    if p.name not in SKIP_DIRS and p.name not in skip and not p.name.startswith("."):
                         stack.append(p)
                 elif p.name.endswith(extensions) and p not in seen:
                     seen.add(p)
@@ -142,6 +149,10 @@ class Language:
                         target = dst / p.relative_to(self.root)
                         if not target.exists() and target.parent.exists():
                             target.symlink_to(p.resolve(), target_is_directory=True)
+
+    def has_runtime_evidence(self, path: str) -> bool:
+        """Can tests of this file's language be run with coverage (is a test runner known)?"""
+        return True
 
     def run_all(self, work: Path, tests: list[str], timeout: int) -> bool:
         """Run `tests` and say whether all passed (output goes to the terminal where the runner prints it)."""

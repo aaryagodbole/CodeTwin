@@ -41,18 +41,13 @@ function relPath(cwd: string, doc: vscode.TextDocument): string {
 }
 
 /** The block of a `def`/`class` starting at `line` (0-based), found by indentation. */
-/** Languages CodeTwin has an adapter for (VS Code language ids). */
-export const LANGUAGES = [
-  "python", "javascript", "typescript", "javascriptreact", "typescriptreact", "go", "java", "kotlin", "rust",
-  "csharp", "ruby", "php", "c", "cpp",
-];
-
 const BLOCK_KINDS = new Set([
   vscode.SymbolKind.Function, vscode.SymbolKind.Method, vscode.SymbolKind.Constructor, vscode.SymbolKind.Class,
   vscode.SymbolKind.Interface, vscode.SymbolKind.Struct, vscode.SymbolKind.Enum,
 ]);
 
-/** Function or class declared on `line`, from the language's own symbol provider (any language). */
+/** Function or class declared on `line`, from the language's own symbol provider (any language that has one;
+ * otherwise the cursor line is the target). */
 export async function symbolBlockAt(doc: vscode.TextDocument, line: number): Promise<vscode.Range | undefined> {
   if (doc.languageId === "python") {
     return blockAt(doc, line);
@@ -174,11 +169,11 @@ export const impactPanel: Feature = {
 
     // Hover a function/class or a selection: one-line summary with a link that opens the graph beside.
     ctx.extension.subscriptions.push(
-      vscode.languages.registerHoverProvider(LANGUAGES.map((language) => ({ language, scheme: "file" })), {
+      vscode.languages.registerHoverProvider({ scheme: "file" }, {
         async provideHover(doc, pos) {
           const cwd = ctx.root();
           const editor = vscode.window.activeTextEditor;
-          if (!cwd || !vscode.workspace.getConfiguration("codetwin").get<boolean>("graph.hover", true)) {
+          if (!cwd || !ctx.configured() || !vscode.workspace.getConfiguration("codetwin").get<boolean>("graph.hover", true)) {
             return undefined;
           }
           let range: vscode.Range | undefined;
@@ -210,7 +205,7 @@ export const impactPanel: Feature = {
     let timer: NodeJS.Timeout | undefined;
     ctx.extension.subscriptions.push(
       vscode.window.onDidChangeTextEditorSelection((e) => {
-        if (!panel.open || !LANGUAGES.includes(e.textEditor.document.languageId)) {
+        if (!panel.open || e.textEditor.document.uri.scheme !== "file") {
           return;
         }
         if (!vscode.workspace.getConfiguration("codetwin").get<boolean>("graph.followSelection", true)) {

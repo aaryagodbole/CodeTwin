@@ -14,8 +14,21 @@ All notable changes to this project are documented here. The format follows
   formats (LCOV, Go, JaCoCo, Cobertura, Clover). Specs with import resolution and runner presets for
   JavaScript/TypeScript, Go, Java, Kotlin, Rust, C#, Ruby, PHP and C/C++; other languages via `[language]` and
   `[runner]` in `.codetwin.toml`. `codetwin init` detects the language and runner (`--language` to choose).
-  Python results are unchanged (same decisions, selections and report sections as before). Optional
-  dependency group `languages`. Guide: docs/languages.md.
+  Python results are unchanged (same decisions, selections and report sections as before). Guide:
+  docs/languages.md.
+- Any repository: languages without a spec get rules built from their tree-sitter grammar; repositories with
+  several languages are handled together (`languages = [...]`, one `[lang.<name>]` table each); each test runs
+  from its nearest project folder with that folder's runner (monorepos); Python inside a larger repository
+  finds its import roots; without a test runner CodeTwin works on static evidence and every affected
+  decision abstains and says why. Weakcheck mutants for C#, Ruby, PHP, Rust, C/C++ and Kotlin.
+- VS Code extension: activates in every folder, works on every file type, and offers to set up a repository
+  that has no `.codetwin.toml` (`codetwin init` + `codetwin record`).
+- CI job `languages`: every feature on sample repositories (`examples/`) for Python, JavaScript, TypeScript,
+  Go, Java, C#, Rust, Ruby, PHP, C++, an unknown language (Lua) and a mixed repository, each with its real
+  toolchain (`scripts/language_smoke.py`).
+
+### Changed
+- tree-sitter and its grammars are regular dependencies, so `pip install codetwin` supports every language.
 - README: step-by-step development setup for first-time contributors, with Windows (Git Bash) instructions.
 - CI: `windows` job runs the full checks and the README commands on Windows for every pull request;
   `.gitattributes` keeps LF line endings so bash scripts work on Windows.

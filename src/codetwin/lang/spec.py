@@ -56,3 +56,4 @@ class Spec:
     mutant: Callable[[Node, bytes, str], tuple[int, int, str] | None] | None = None
     runners: list[Runner] = field(default_factory=list)
     test_ids: Callable[[Path, str], list[str]] | None = None  # extra test ids in a source file (Rust unit tests)
+    auto: bool = False                                        # built by lang/auto.py: generic node-type rules

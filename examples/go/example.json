@@ -1,0 +1,2 @@
+{"language": "go", "file": "calc/calc.go", "edit": ["return a * b", "return a * b * 1"],
+ "noop": ["return a * b", "return a * b // product"], "covering_test": "cart/cart_test.go"}

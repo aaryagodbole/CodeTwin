@@ -7,7 +7,7 @@ and `eval` are reported as dynamic.
 from __future__ import annotations
 
 from ..spec import Runner, Spec
-from ._util import rel_join, txt
+from ._util import leading_insert, rel_join, txt
 
 DYNAMIC = {"call_user_func", "call_user_func_array", "eval", "create_function"}
 
@@ -35,6 +35,30 @@ def dynamic(n, src: bytes) -> str | None:
         if fn is not None and (fn.type == "variable_name" or txt(fn, src) in DYNAMIC):
             return "dynamic-call"
     return None
+
+
+PHP_DEFAULTS = {"int": "0", "float": "0.0", "string": "''", "bool": "false", "array": "[]", "iterable": "[]"}
+
+
+def mutant(fn, src: bytes, path: str) -> tuple[int, int, str] | None:
+    """`if (true) return <zero value of the declared type>;` (null when nullable or untyped)."""
+    if fn.type not in ("function_definition", "method_declaration"):
+        return None
+    name = fn.child_by_field_name("name")
+    if name is not None and txt(name, src).startswith("__"):
+        return None                      # constructors and magic methods
+    body = fn.child_by_field_name("body")
+    ret = fn.child_by_field_name("return_type")
+    t = txt(ret, src).strip() if ret is not None else ""
+    if t in ("void", "never"):
+        value = ""
+    elif not t or t.startswith("?") or "null" in t or t == "mixed":
+        value = " null"
+    elif t in PHP_DEFAULTS:
+        value = " " + PHP_DEFAULTS[t]
+    else:
+        return None                      # an object type has no neutral value
+    return leading_insert(body, src, f"if (true) return{value};")
 
 
 def prepare(idx) -> None:
@@ -73,5 +97,5 @@ SPEC = Spec(
     function_types={"function_definition", "method_declaration", "anonymous_function", "arrow_function"},
     decl_types={"php_tag", "namespace_definition", "namespace_use_declaration", "function_definition",
                 "class_declaration", "interface_declaration", "trait_declaration", "enum_declaration", "text"},
-    imports=imports, dynamic=dynamic, prepare=prepare, resolve=resolve, runners=RUNNERS,
+    imports=imports, dynamic=dynamic, prepare=prepare, resolve=resolve, mutant=mutant, runners=RUNNERS,
 )

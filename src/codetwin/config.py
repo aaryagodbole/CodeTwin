@@ -103,19 +103,46 @@ def guess(root: str | Path = ".") -> dict:
     return {"src_root": src_root, "packages": pkgs, "source_dirs": dirs, "tests_dir": tests_dir}
 
 
+MULTI_HEAD = """# CodeTwin AI configuration
+[project]
+languages = {languages}          # every language of this repository; each has its own table below
+
+"""
+
+
+def _lang_table(root: Path, name: str) -> str:
+    from . import lang
+    if name == "python":
+        g = guess(root)
+        return (f'[lang.python]\nsrc_root = "{g["src_root"]}"\npackages = {_toml_list(g["packages"])}\n'
+                f'source_dirs = {_toml_list(g["source_dirs"] or ["."])}\ntests_dir = "{g["tests_dir"]}"\n')
+    a = lang.adapter(Config(root=root, language=name), name)
+    g = a.guess_config()
+    runner = g.get("runner") or "none found: static evidence only until you set test_command"
+    return (f"[lang.{name}]\nsource_dirs = {_toml_list(g['source_dirs'])}\ntests_dir = \"{g['tests_dir']}\"\n"
+            f"# test runner: {runner}; override with a [lang.{name}.runner] table (docs/languages.md)\n")
+
+
 def write_template(root: str | Path = ".", language: str | None = None) -> Path:
     from . import lang
     root = Path(root).resolve()
-    name = lang.ALIASES.get((language or "").lower(), (language or "").lower()) or lang.detect(root)
-    if name == "python":
+    if language:
+        names = [lang.ALIASES.get(x.strip().lower(), x.strip().lower()) for x in language.split(",") if x.strip()]
+    else:
+        names = lang.detect_all(root)
+    name = names[0]
+    if len(names) > 1:
+        text = MULTI_HEAD.format(languages=_toml_list(names)) + "\n".join(_lang_table(root, n) for n in names) \
+            + "\n" + SELECTION
+    elif name == "python":
         g = guess(root)
         text = TEMPLATE.format(src_root=g["src_root"], packages=_toml_list(g["packages"]),
                                source_dirs=_toml_list(g["source_dirs"]), tests_dir=g["tests_dir"])
     else:
-        adapter = lang.get(Config(root=root, language=name))
-        g = adapter.guess_config()
+        g = lang.adapter(Config(root=root, language=name), name).guess_config()
         text = GENERIC_TEMPLATE.format(language=name, source_dirs=_toml_list(g["source_dirs"]),
-                                       tests_dir=g["tests_dir"], runner=g.get("runner") or "none found, set test_command")
+                                       tests_dir=g["tests_dir"],
+                                       runner=g.get("runner") or "none found (static evidence only until you set test_command)")
     path = root / CONFIG_FILE
     path.write_text(text)
     return path

@@ -4,7 +4,7 @@ NAME, HELP, ORDER = "init", "write .codetwin.toml with guessed settings", 10
 
 
 def add_arguments(p) -> None:
-    p.add_argument("--language", help="python, javascript, go, java, ... (default: detected from the files)")
+    p.add_argument("--language", help="python, javascript, go, java, ... or a comma-separated list (default: detected)")
 
 
 def run(args) -> int:

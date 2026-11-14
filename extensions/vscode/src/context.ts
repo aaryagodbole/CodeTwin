@@ -1,4 +1,6 @@
 // Shared state handed to every feature: output channel, status bar, workspace root and the last decision.
+import * as fs from "fs";
+import * as path from "path";
 import * as vscode from "vscode";
 import { Decision } from "./cli";
 
@@ -16,6 +18,12 @@ export class Ctx {
 
   root(): string | undefined {
     return vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+  }
+
+  /** Has this repository been set up (`codetwin init` wrote .codetwin.toml)? */
+  configured(): boolean {
+    const r = this.root();
+    return !!r && fs.existsSync(path.join(r, ".codetwin.toml"));
   }
 
   setDecision(d: Decision): void {

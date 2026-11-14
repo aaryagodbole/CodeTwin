@@ -112,6 +112,14 @@ class Engine:
             d.reasons = note + d.reasons
         unknowns = self.impact([f for f in diff if self.is_source(f)]).unknowns
         d.reasons += unknowns
+        blind = sorted(f for f in diff if self.is_source(f) and not self.lang.has_runtime_evidence(f))
+        if blind:
+            # Unknown is not "no dependency": without a test runner there is no coverage for these files, so
+            # the risk of skipping a test cannot be estimated. Run everything and say why.
+            d.decision, d.selected = "abstain", set(rows)
+            d.reasons.append(f"no test runner configured for {', '.join(blind[:5])}"
+                             f"{' and others' if len(blind) > 5 else ''}: static evidence only, running every test "
+                             "(set [runner] test_command, see docs/languages.md)")
         self._with_report(d, base, prev, diff, rows, scores)
         did = self.store.save_decision(base=base, head="working-tree", mode=d.mode, alpha=alpha,
                                        alpha_t=self.store.get_state("alpha_t", alpha), threshold=d.threshold,
@@ -143,6 +151,10 @@ class Engine:
             raise RuntimeError(f"decision {last['id']} already has an outcome; run `codetwin select` for a new change "
                                "(learning twice from one change would count it twice in the calibration set)")
         _base, _prev, diff, rows = self.analyse(last["base"])
+        blind = sorted(f for f in diff if self.is_source(f) and not self.lang.has_runtime_evidence(f))
+        if blind:
+            raise RuntimeError(f"cannot learn from this change: no test runner for {', '.join(blind[:5])}, so which "
+                               "tests it affects is unknown (set [runner] test_command, see docs/languages.md)")
         new = self.lang.run_suite("working-tree")
         affected = set()
         for f, d in diff.items():

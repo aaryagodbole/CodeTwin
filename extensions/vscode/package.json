@@ -13,21 +13,7 @@
     "Other"
   ],
   "activationEvents": [
-    "workspaceContains:.codetwin.toml",
-    "onLanguage:python",
-    "onLanguage:javascript",
-    "onLanguage:typescript",
-    "onLanguage:javascriptreact",
-    "onLanguage:typescriptreact",
-    "onLanguage:go",
-    "onLanguage:java",
-    "onLanguage:kotlin",
-    "onLanguage:rust",
-    "onLanguage:csharp",
-    "onLanguage:ruby",
-    "onLanguage:php",
-    "onLanguage:c",
-    "onLanguage:cpp"
+    "onStartupFinished"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -57,12 +43,12 @@
       "editor/context": [
         {
           "command": "codetwin.showImpactGraph",
-          "when": "resourceLangId =~ /^(python|javascript|typescript|javascriptreact|typescriptreact|go|java|kotlin|rust|csharp|ruby|php|c|cpp)$/",
+          "when": "resourceScheme == file",
           "group": "navigation@1"
         },
         {
           "command": "codetwin.impact",
-          "when": "resourceLangId =~ /^(python|javascript|typescript|javascriptreact|typescriptreact|go|java|kotlin|rust|csharp|ruby|php|c|cpp)$/",
+          "when": "resourceScheme == file",
           "group": "navigation@2"
         }
       ]
@@ -104,7 +90,7 @@
         "command": "codetwin.showImpactGraph",
         "key": "ctrl+alt+i",
         "mac": "cmd+alt+i",
-        "when": "editorLangId =~ /^(python|javascript|typescript|javascriptreact|typescriptreact|go|java|kotlin|rust|csharp|ruby|php|c|cpp)$/"
+        "when": "editorTextFocus"
       }
     ]
   },

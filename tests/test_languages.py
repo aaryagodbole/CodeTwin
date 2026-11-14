@@ -259,7 +259,7 @@ def test_rust_unit_test_ids(tmp_path):
                       "src/a.rs": "#[cfg(test)]\nmod tests {}\n", "tests/it.rs": ""})
     a = _adapter(tmp_path, "rust", source_dirs=["src"], tests_dir="tests")
     assert a.list_tests() == ["src/a.rs::tests", "tests/it.rs"]
-    assert a._vars("src/a.rs::tests", tmp_path)["target"] == ["--lib", "--", "a::tests::"]
+    assert a._vars("src/a.rs::tests", tmp_path, a.runner)["target"] == ["--lib", "--", "a::tests::"]
     assert a._argv("cargo test {target}", {"target": ["--test", "it"]}) == ["cargo", "test", "--test", "it"]
 
 
@@ -267,3 +267,79 @@ def test_python_projects_still_use_the_python_adapter(tmp_path):
     cfg = Config(root=tmp_path, packages=["pkg"], source_dirs=["pkg"])          # old config: no language key
     assert lang.get(cfg).name == "python"
     assert json.dumps(lang.names()).startswith('["python"')
+
+
+# ------------------------------------------------------------------ any repository
+def test_unknown_language_gets_an_automatic_spec(tmp_path):
+    _write(tmp_path, {"src/calc.lua": "local M = {}\nfunction M.mul(a, b)\n  return a * b\nend\nreturn M\n",
+                      "src/cart.lua": 'local calc = require("src.calc")\nreturn calc\n',
+                      "spec/cart_spec.lua": 'local cart = require("src.cart")\n'})
+    assert lang.detect_all(tmp_path) == ["lua"]
+    a = lang.get(Config(root=tmp_path))
+    assert a.name == "lua" and a.runner is None and not a.has_runtime_evidence("src/calc.lua")
+    facts = a.facts()
+    assert facts["src/cart.lua"].deps == ["src/calc.lua"] and facts["spec/cart_spec.lua"].deps == ["src/cart.lua"]
+    assert facts["src/calc.lua"].defs == [[2, 4, 3]]
+    run = a.run_suite("x")
+    assert run.returncode == "no-runner" and not run.covered and list(run.durations) == ["spec/cart_spec.lua"]
+    old = (tmp_path / "src/calc.lua").read_text()
+    assert a.classify_source(old, old.replace("a * b", "a * b -- x"), "src/calc.lua") == "noop"
+
+
+def test_mixed_repository_combines_languages(tmp_path):
+    _write(tmp_path, {"backend/pyproject.toml": "", "backend/src/shop/__init__.py": "",
+                      "backend/src/shop/calc.py": "def mul(a, b):\n    return a * b\n",
+                      "backend/src/shop/cart.py": "from shop.calc import mul\n",
+                      "backend/tests/test_cart.py": "from shop.cart import mul\n",
+                      "web/package.json": '{"name": "web", "devDependencies": {"vitest": "1"}}',
+                      "web/src/a.ts": "export const a = 1;\n", "web/test/a.test.ts": "import { a } from '../src/a';\n",
+                      "tools/x.js": "module.exports = 1;\n"})
+    assert lang.detect_all(tmp_path) == ["python", "javascript"]
+    a = lang.get(Config(root=tmp_path, raw={"project": {"languages": ["python", "javascript"]}}))
+    assert a.name == "python+javascript"
+    assert a.list_tests() == ["backend/tests/test_cart.py", "web/test/a.test.ts"]
+    assert a.is_source("backend/src/shop/calc.py") and a.is_source("web/src/a.ts") and not a.is_test("web/src/a.ts")
+    facts = a.facts()
+    assert facts["backend/src/shop/cart.py"].deps == ["backend/src/shop/calc.py"]       # import roots found
+    assert facts["web/test/a.test.ts"].deps == ["web/src/a.ts"]
+    js = a.adapters[1]
+    assert js.project_dir("web/test/a.test.ts") == "web" and js.runner_for("web").name == "vitest"
+    assert js.project_dir("tools/x.js") == ""
+
+
+def test_select_abstains_without_runtime_evidence(tmp_path, monkeypatch):
+    _write(tmp_path, {"src/calc.lua": "return 1\n", "spec/calc_spec.lua": 'require("src.calc")\n'})
+    _git(tmp_path, "init", "-q")
+    _git(tmp_path, "add", "-A")
+    _git(tmp_path, "commit", "-qm", "init")
+    monkeypatch.chdir(tmp_path)
+    assert main(["init"]) == 0 and main(["record"]) == 0
+    (tmp_path / "src/calc.lua").write_text("return 2\n")
+    from codetwin.engine import Engine
+    with Engine(tmp_path) as eng:
+        d = eng.select()
+        assert d.decision == "abstain" and d.selected == {"spec/calc_spec.lua"}
+        assert any("no test runner" in r for r in d.reasons)
+        with pytest.raises(RuntimeError, match="no test runner"):
+            eng.learn()
+
+
+@pytest.mark.parametrize("name,path,src,fn,expected", [
+    ("csharp", "A.cs", "class A {\n    int M(int a) {\n        return a;\n    }\n}\n", [2, 4, 3],
+     "{ if (true) return default; "),
+    ("ruby", "a.rb", "def m(a)\n  a + 1\nend\n", [1, 3, 2], "return nil; a + 1"),
+    ("php", "a.php", "<?php\nfunction f(int $a): int {\n    return $a;\n}\n", [2, 4, 3], "{ if (true) return 0; "),
+    ("rust", "a.rs", "fn f(a: i64) -> i64 {\n    a\n}\n", [1, 3, 2], "{ return Default::default(); "),
+    ("cpp", "a.cpp", "int f(int a) {\n    return a;\n}\n", [1, 3, 2], "{ return 0; "),
+    ("cpp", "a.cpp", "std::string f() {\n    return \"\";\n}\n", [1, 3, 2], "{ return {}; "),
+    ("kotlin", "a.kt", "fun f(a: Int): Int {\n    return a\n}\n", [1, 3, 2], "{ if (true) return 0; "),
+])
+def test_weakcheck_mutants_for_more_languages(tmp_path, name, path, src, fn, expected):
+    a = _adapter(tmp_path, name, source_dirs=["."], tests_dir=".")
+    assert expected in a.extreme_mutant(src, fn, path)
+
+
+def test_python_inside_a_larger_repository_finds_import_roots(tmp_path):
+    from codetwin.lang.python import import_roots
+    _write(tmp_path, {"svc/src/app/__init__.py": "", "svc/src/app/core/__init__.py": "", "lib/util/__init__.py": ""})
+    assert import_roots(tmp_path) == ["lib", "svc/src"]

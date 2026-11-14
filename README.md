@@ -52,13 +52,14 @@ Using CodeTwin in your own project. To work **on** CodeTwin, follow
 
 Requires Python 3.11+ and `git`. The project you analyse can be in Python (pytest), JavaScript/TypeScript, Go, Java,
 Kotlin, Rust, C#, Ruby, PHP, C/C++ or any language with a tree-sitter grammar and a test runner that writes coverage;
-see [docs/languages.md](docs/languages.md). For languages other than Python install `codetwin[languages]`.
+mixed repositories (for example a Python service with a TypeScript front end) included; see
+[docs/languages.md](docs/languages.md).
 
 From a release (recommended): download the wheel and the `.vsix` from the
 [Releases](../../releases) page, then
 
 ```bash
-pip install "codetwin-X.Y.Z-py3-none-any.whl[mcp,server,languages]"   # CLI, MCP server, dashboard, all languages
+pip install "codetwin-X.Y.Z-py3-none-any.whl[mcp,server]"   # CLI, MCP server, dashboard (all languages)
 code --install-extension codetwin-X.Y.Z.vsix                  # VS Code extension
 ```
 

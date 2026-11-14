@@ -1,0 +1,3 @@
+{"language": "php", "file": "src/Calc.php", "edit": ["return $a * $b;", "return $a * $b * 1;"],
+ "noop": ["return $a * $b;", "return $a * $b; // product"], "covering_test": "tests/CartTest.php",
+ "setup": ["composer", "install", "--no-interaction", "--no-progress"]}
