@@ -333,8 +333,9 @@ class Generic(Language):
             cov = Path(tmp)
             values = dict(self._vars(local, cwd, r), cov_dir=str(cov))
             template = r.test_command if coverage or not r.run_command else r.run_command
-            if r.result_glob:
-                for old in cwd.glob(r.result_glob):
+            in_project = r.coverage_file.startswith("./") if r.coverage_file else False
+            for pattern in [r.result_glob, r.coverage_file[2:] if in_project and r.coverage_file else None]:
+                for old in (cwd.glob(pattern) if pattern else []):      # stale reports of an earlier run
                     old.unlink(missing_ok=True)
             env = dict(os.environ, **{k: v.format(**values) for k, v in (r.env or {}).items()})
             argv = self._argv(template, values)
@@ -355,7 +356,8 @@ class Generic(Language):
                     ok = not jf
             lines: dict = {}
             if coverage:
-                lines = covfmt.read_dir(r.coverage_format, cov, r.coverage_file, self._mapper(pdir))
+                where, pattern = (cwd, r.coverage_file[2:]) if in_project and r.coverage_file else (cov, r.coverage_file)
+                lines = covfmt.read_dir(r.coverage_format, where, pattern, self._mapper(pdir))
             if ok is not True or (coverage and not lines):
                 self._log(test, argv, cwd, rc, output, sorted(str(p.relative_to(cov)) for p in cov.rglob("*")))
             return test, dt, ok, lines

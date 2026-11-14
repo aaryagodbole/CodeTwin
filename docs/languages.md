@@ -74,7 +74,7 @@ a runner CodeTwin has no preset for:
 [runner]
 test_command = "npx vitest run --coverage.enabled --coverage.reporter=lcov --coverage.reportsDirectory={cov_dir} {test}"
 coverage_format = "lcov"         # lcov | gocover | jacoco | cobertura | clover
-coverage_file = "lcov.info"      # glob under {cov_dir}
+coverage_file = "lcov.info"      # glob under {cov_dir}; "./target/**/report.xml" for a tool that ignores {cov_dir}
 run_command = "npx vitest run {test}"      # without coverage, for weakcheck
 setup_command = ""               # once before a recorded run (install, compile)
 build_command = ""               # weakcheck: does a mutated copy still compile?

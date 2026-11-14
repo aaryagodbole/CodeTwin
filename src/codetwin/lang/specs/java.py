@@ -135,8 +135,8 @@ MAVEN_FLAGS = ("-B -q -Dmaven.test.failure.ignore=true -DfailIfNoTests=false -Ds
 RUNNERS = [
     Runner("maven",
            f"mvn {MAVEN_FLAGS} -Djacoco.destFile={{cov_dir}}/jacoco.exec -Djacoco.dataFile={{cov_dir}}/jacoco.exec "
-           f"-Djacoco.outputDirectory={{cov_dir}} {JACOCO}:prepare-agent surefire:test {JACOCO}:report",
-           "jacoco", "**/jacoco.xml",
+           f"{JACOCO}:prepare-agent surefire:test {JACOCO}:report",
+           "jacoco", "./**/target/site/jacoco/jacoco.xml",       # the report goal has no output-directory property
            run_command=f"mvn {MAVEN_FLAGS} test",
            setup_command=f"mvn -B -q -DskipTests {JACOCO}:prepare-agent test-compile",
            build_command="mvn -B -q -DskipTests test-compile",

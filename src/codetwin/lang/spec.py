@@ -23,7 +23,8 @@ class Runner:
     name: str
     test_command: str
     coverage_format: str                         # lcov | gocover | jacoco | cobertura | clover
-    coverage_file: str | None = None             # glob under {cov_dir}; default per format
+    coverage_file: str | None = None             # glob under {cov_dir}; "./<glob>" is under the project folder
+                                                 # (tools that ignore an output option); default per format
     run_command: str | None = None               # without coverage (weakcheck); default: test_command
     setup_command: str | None = None             # once per recorded run (e.g. compile)
     build_command: str | None = None             # does a mutated copy still compile? (weakcheck)
