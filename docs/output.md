@@ -17,6 +17,9 @@
 
 Rules:
 
+- Built-in sections: `changed_files`, `semantic_noop` (`kind`: noop | annotation | semantic | no-source,
+  `sufficient_tests` for no-ops), `change_risk` (`q`, `r_product`, `features`, `triggers`, `above_target`) and
+  `promise` (`observed`, `ci95`, `alert`).
 - `extras` holds one object per report section (`src/codetwin/report/<name>.py`). Each has a one-line `summary`;
   the rest is section-specific and documented in the section's module docstring.
 - Adding a section or a key is **not** a breaking change. Renaming or removing a top-level key is: bump
