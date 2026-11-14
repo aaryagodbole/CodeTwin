@@ -32,9 +32,14 @@ def codetwin(cwd: Path, *args: str, check: bool = True) -> subprocess.CompletedP
     return sh([sys.executable, "-m", "codetwin.cli", *args], cwd, check)
 
 
+REPO: Path | None = None
+
+
 def expect(cond: bool, what: str, detail: object = "") -> None:
     if not cond:
-        sys.exit(f"FAILED: {what}\n{json.dumps(detail, indent=1, default=str)[:4000] if detail != '' else ''}")
+        log = REPO / ".codetwin" / "runner.log" if REPO else None
+        tail = f"\n--- runner.log ---\n{log.read_text()[-8000:]}" if log and log.exists() else ""
+        sys.exit(f"FAILED: {what}\n{json.dumps(detail, indent=1, default=str)[:4000] if detail != '' else ''}{tail}")
     print(f"  ok  {what}")
 
 
@@ -51,7 +56,8 @@ def main(sample: Path) -> None:
     static_only = spec.get("static_only", False)
     print(f"== {sample.name} ({spec.get('language') or ' + '.join(spec['languages'])})")
     with tempfile.TemporaryDirectory(prefix="codetwin-smoke-") as tmp:
-        repo = Path(tmp) / sample.name
+        global REPO
+        repo = REPO = Path(tmp) / sample.name
         shutil.copytree(sample, repo, ignore=shutil.ignore_patterns("example.json", "node_modules", "target", "vendor"))
         setup = spec.get("setup", [])
         for cmd in ([setup] if setup and isinstance(setup[0], str) else setup):

@@ -337,13 +337,17 @@ class Generic(Language):
                 for old in cwd.glob(r.result_glob):
                     old.unlink(missing_ok=True)
             env = dict(os.environ, **{k: v.format(**values) for k, v in (r.env or {}).items()})
+            argv = self._argv(template, values)
             t0 = time.time()
+            output, rc = "", "timeout"
             try:
-                proc = subprocess.run(self._argv(template, values), cwd=cwd, capture_output=True, text=True,
-                                      timeout=timeout, check=False, stdin=subprocess.DEVNULL, env=env)
+                proc = subprocess.run(argv, cwd=cwd, capture_output=True, text=True, timeout=timeout, check=False,
+                                      stdin=subprocess.DEVNULL, env=env)
                 ok: bool | None = proc.returncode == 0
-            except subprocess.TimeoutExpired:
+                output, rc = proc.stdout + proc.stderr, str(proc.returncode)
+            except subprocess.TimeoutExpired as e:
                 ok = None
+                output = (e.stdout or b"").decode("utf-8", "replace") if isinstance(e.stdout, bytes) else str(e.stdout or "")
             dt = time.time() - t0
             if r.result_glob and ok is not None:
                 jf = self._junit_failed(sorted(cwd.glob(r.result_glob)))
@@ -352,7 +356,21 @@ class Generic(Language):
             lines: dict = {}
             if coverage:
                 lines = covfmt.read_dir(r.coverage_format, cov, r.coverage_file, self._mapper(pdir))
+            if ok is not True or (coverage and not lines):
+                self._log(test, argv, cwd, rc, output, sorted(str(p.relative_to(cov)) for p in cov.rglob("*")))
             return test, dt, ok, lines
+
+    def _log(self, test: str, argv: list[str], cwd: Path, rc: str, output: str, produced: list[str]) -> None:
+        """Append a failed or coverage-less run to .codetwin/runner.log (the output of the test runner is the
+        only way to see why a runner preset did not fit a project)."""
+        try:
+            d = self.root / ".codetwin"
+            d.mkdir(exist_ok=True)
+            with (d / "runner.log").open("a", encoding="utf-8") as f:
+                f.write(f"\n=== {test}  (exit {rc}, cwd {cwd})\n$ {shlex.join(argv)}\nfiles in cov_dir: {produced[:20]}\n"
+                        f"{output[-6000:]}\n")
+        except OSError:
+            pass
 
     def run_suite(self, sha: str, tests: list[str] | None = None, timeout: int = 3600) -> TestRun:
         tests = tests if tests is not None else self.list_tests()
