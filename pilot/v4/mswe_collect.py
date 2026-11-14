@@ -68,7 +68,7 @@ def _read(dataset: Path, org: str, repo: str) -> list[dict]:
             if not line.strip():
                 continue
             d = json.loads(line)
-            if d.get("org") == org and d.get("repo") == repo:
+            if (d.get("org") or "").lower() == org.lower() and (d.get("repo") or "").lower() == repo.lower():
                 out.append({"number": d["number"], "created_at": d.get("created_at", ""),
                             "base": d.get("base", {}).get("sha", "")})
     return out
