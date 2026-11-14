@@ -93,17 +93,25 @@ jobs:
       SHARD: ${{ matrix.shard }}/${{ matrix.of }}
       COUNT: ${{ inputs.count || '24' }}
       MAX_TESTS: ${{ matrix.max_tests || inputs.max_tests || '60' }}
-    if: inputs.repos == '' || contains(inputs.repos, matrix.repo)
     steps:
+      - name: Selected?
+        id: gate
+        env: { ONLY: "${{ inputs.repos }}" }
+        run: |
+          if [ -n "$ONLY" ] && ! echo ",$ONLY," | grep -q ",$REPO,"; then echo "skip=true" >> "$GITHUB_OUTPUT"; echo "not selected"; fi
       - uses: actions/checkout@v4
+        if: steps.gate.outputs.skip != 'true'
       - uses: actions/setup-python@v5
+        if: steps.gate.outputs.skip != 'true'
         with: { python-version: "3.12" }
       - name: Free disk space (images are large)
+        if: steps.gate.outputs.skip != 'true'
         run: |
           sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
           docker system prune -af >/dev/null 2>&1 || true
           df -h / | tail -1
       - name: Download the Multi-SWE-bench dataset (JSONL)
+        if: steps.gate.outputs.skip != 'true'
         run: |
           pip install -q huggingface_hub
           python - <<'PY'
@@ -115,13 +123,14 @@ jobs:
           PY
           find pilot/v4/data/mswe -name "*.jsonl" | head -30; du -sh pilot/v4/data/mswe
       - name: Collect
+        if: steps.gate.outputs.skip != 'true'
         working-directory: pilot/v4
         run: |
           set -o pipefail
           python mswe_collect.py --repo "$REPO" --language "$LANG_" --dataset data/mswe --count "$COUNT" \
             --shard "$SHARD" --max-tests "$MAX_TESTS" --timeout 4800 2>&1 | tee "collect_$(echo "$SHARD" | tr / _).log"
       - name: Package
-        if: always()
+        if: always() && steps.gate.outputs.skip != 'true'
         working-directory: pilot/v4
         run: |
           P=$(echo "$REPO" | tr '[:upper:]' '[:lower:]' | sed 's#/#_m_#'); S=$(echo "$SHARD" | tr / _)
@@ -130,7 +139,7 @@ jobs:
           tar -czf "data_${P}_${S}.tar.gz" -C data "$P"
           echo "ART=data_${P}_${S}" >> "$GITHUB_ENV"
       - uses: actions/upload-artifact@v4
-        if: always()
+        if: always() && steps.gate.outputs.skip != 'true'
         with:
           name: ${{ env.ART }}
           path: pilot/v4/${{ env.ART }}.tar.gz
@@ -147,7 +156,7 @@ jobs:
         run: |
           mkdir -p out/data
           for f in artifacts/*/*.tar.gz; do tar -xzf "$f" -C out/data; done
-          for p in out/data/*/; do echo "$(basename "$p"): $(ls "$p"/commits 2>/dev/null | wc -l) PRs"; done
+          for p in out/data/*/; do echo "$(basename "$p"): $(find "$p/commits" -name '*.json' 2>/dev/null | wc -l) PRs"; done
           cd out && tar -czf ../study-v4-data.tar.gz data
       - name: Publish to the study-v4-results branch
         run: |
