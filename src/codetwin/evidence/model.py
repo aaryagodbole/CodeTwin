@@ -2,10 +2,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from enum import StrEnum
+from enum import Enum
 
 
-class EvidenceType(StrEnum):
+class EvidenceType(str, Enum):  # noqa: UP042  (Python 3.10 inside benchmark images)
     """How a link between code and tests was found (Section IV-C of the paper)."""
     STATIC = "static"            # found in the syntax tree (imports)
     RUNTIME = "runtime"          # observed by per-test coverage

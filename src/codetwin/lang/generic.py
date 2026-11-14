@@ -25,6 +25,7 @@ Settings in `.codetwin.toml` (all optional when a runner preset matches the proj
 """
 from __future__ import annotations
 
+import inspect
 import os
 import posixpath
 import shlex
@@ -114,7 +115,9 @@ class Generic(Language):
             return ""
         d = posixpath.dirname(path.split("::", 1)[0])
         while d:
-            if any(self._has_marker(self.root / d, m) for m in self.spec.markers):
+            # a folder with a build file whose own runner is known (a workspace package without a test
+            # runner of its own is run from the workspace root, as pnpm/npm workspaces do)
+            if any(self._has_marker(self.root / d, m) for m in self.spec.markers) and self.runner_for(d) is not None:
                 return d
             d = posixpath.dirname(d)
         return ""
@@ -163,8 +166,12 @@ class Generic(Language):
     def is_test(self, path: str) -> bool:
         td = self.cfg.tests_dir.strip("/")
         in_tests = td not in ("", ".") and (path.startswith(td + "/"))
-        return path.endswith(self.extensions) and (glob_match(path, self.test_globs) or
-                                                   (in_tests and not self.test_globs))
+        if not path.endswith(self.extensions) or glob_match(path, self.spec.exclude_globs):
+            return False
+        if not (glob_match(path, self.test_globs) or (in_tests and not self.test_globs)):
+            return False
+        named_test = glob_match(path, ["*.test.*", "*.spec.*", "*_test.*", "test_*", "*Test.*", "*Tests.*", "*_spec.*"])
+        return named_test or not glob_match(path, self.spec.helper_globs)
 
     def is_source(self, path: str) -> bool:
         return path.endswith(self.extensions) and not self.is_test(path) and under(path, self.cfg.source_dirs)
@@ -281,7 +288,9 @@ class Generic(Language):
                 src = (cwd / path).read_text(encoding="utf-8", errors="replace")
             except OSError:
                 src = ""
-            v.update(r.vars(test, src))
+            # vars(test, text) or vars(test, text, project_folder)
+            n_params = len(inspect.signature(r.vars).parameters)
+            v.update(r.vars(test, src, cwd) if n_params >= 3 else r.vars(test, src))
         return v
 
     @staticmethod

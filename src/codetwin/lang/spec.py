@@ -30,7 +30,7 @@ class Runner:
     build_command: str | None = None             # does a mutated copy still compile? (weakcheck)
     result_glob: str | None = None               # JUnit XML written by the run (pass/fail per test case)
     detect: Callable[[Path], bool] = lambda root: True
-    vars: Callable[[str, str], dict[str, str | list[str]]] | None = None   # (test id, file text) -> values
+    vars: Callable[..., dict[str, str | list[str]]] | None = None   # (test id, file text[, project folder]) -> values
     env: dict[str, str] | None = None            # extra environment variables (placeholders allowed)
 
 
@@ -39,6 +39,8 @@ class Spec:
     name: str
     grammars: dict[str, str]                     # file extension -> tree-sitter grammar name
     test_globs: list[str]
+    exclude_globs: list[str] = field(default_factory=list)   # never tests even when a test glob matches
+    helper_globs: list[str] = field(default_factory=list)    # not tests unless the name itself says test/spec
     markers: list[str] = field(default_factory=list)          # files whose presence suggests this language
     source_dirs: list[str] = field(default_factory=list)      # candidates for `codetwin init`
     tests_dirs: list[str] = field(default_factory=list)

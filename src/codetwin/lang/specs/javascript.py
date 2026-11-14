@@ -147,6 +147,25 @@ def _has_dep(root: Path, name: str) -> bool:
     return name in json.dumps(data.get("scripts", {}))
 
 
+def _jest_config(root: Path) -> list[str]:
+    """`--config <file>` when the Jest configuration is not where Jest looks for it by default."""
+    if any((root / f"jest.config.{e}").exists() for e in ("js", "ts", "mjs", "cjs", "json")):
+        return []
+    try:
+        if "jest" in json.loads((root / "package.json").read_text(encoding="utf-8")):
+            return []
+    except (OSError, ValueError):
+        pass
+    for p in sorted(root.glob("*/jest.config.*")) + sorted(root.glob("*/*/jest.config.*")):
+        if "node_modules" not in p.parts:
+            return ["--config", p.relative_to(root).as_posix()]
+    return []
+
+
+def _jest_vars(test: str, text: str, cwd: Path) -> dict:
+    return {"jest_config": _jest_config(cwd)}
+
+
 def _script(root: Path) -> str:
     try:
         return str(json.loads((root / "package.json").read_text(encoding="utf-8")).get("scripts", {}).get("test", ""))
@@ -163,15 +182,15 @@ RUNNERS = [
            detect=lambda root: _has_dep(root, "vitest")),
     Runner("jest",
            "npx --no-install jest --ci --coverage --coverageReporters=lcov --coverageDirectory={cov_dir} "
-           "--runTestsByPath {test}",
-           "lcov", "lcov.info", run_command="npx --no-install jest --ci --runTestsByPath {test}",
-           detect=lambda root: _has_dep(root, "jest")),
+           "{jest_config} --runTestsByPath {test}",
+           "lcov", "lcov.info", run_command="npx --no-install jest --ci {jest_config} --runTestsByPath {test}",
+           detect=lambda root: _has_dep(root, "jest"), vars=_jest_vars),
     Runner("mocha", f"{C8} npx --no-install mocha {{test}}", "lcov", "lcov.info",
            run_command="npx --no-install mocha {test}", detect=lambda root: _has_dep(root, "mocha")),
     Runner("node-test", "node --test --experimental-test-coverage --test-reporter=lcov "
            "--test-reporter-destination={cov_dir}/lcov.info {test}", "lcov", "lcov.info",
            run_command="node --test {test}",
-           detect=lambda root: "node --test" in _script(root) or not _script(root)),
+           detect=lambda root: "node --test" in _script(root)),
     Runner("npm-test", f"{C8} npm test --silent -- {{test}}", "lcov", "lcov.info",
            run_command="npm test --silent -- {test}", detect=lambda root: bool(_script(root))),
 ]
@@ -180,8 +199,11 @@ SPEC = Spec(
     name="javascript",
     grammars={".ts": "typescript", ".mts": "typescript", ".cts": "typescript", ".tsx": "tsx",
               ".js": "javascript", ".jsx": "javascript", ".mjs": "javascript", ".cjs": "javascript"},
-    test_globs=["*.test.*", "*.spec.*", "**/__tests__/**/*.*", "test/*.*", "tests/*.*", "test/**/*.test.*",
-                "test/**/*.spec.*"],
+    test_globs=["*.test.*", "*.spec.*", "**/__tests__/**/*.*", "test/*.*", "tests/*.*", "**/test/**/*.test.*",
+                "**/test/**/*.spec.*", "**/tests/**/*.test.*", "**/tests/**/*.spec.*", "**/tests/**/test.ts",
+                "**/tests/**/test.js", "**/tests/**/test.mjs"],
+    exclude_globs=["*.config.*", "*.d.ts", "*.mock.*", "*.snap", "**/fixtures/**", "**/e2e/**", "**/__snapshots__/**"],
+    helper_globs=["*setup*", "*helper*", "*util*", "*fixture*", "*mock*", "**/samples/**", "**/shared/**"],
     markers=["package.json", "tsconfig.json"],
     source_dirs=["src", "lib", "packages", "app"],
     tests_dirs=["test", "tests", "__tests__"],
