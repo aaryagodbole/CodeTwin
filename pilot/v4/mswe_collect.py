@@ -30,7 +30,7 @@ elif command -v apk >/dev/null 2>&1; then
 fi
 python3 -m venv /home/ctenv || python3 -m venv --without-pip /home/ctenv
 if [ ! -x /home/ctenv/bin/pip ]; then curl -sS https://bootstrap.pypa.io/get-pip.py | /home/ctenv/bin/python; fi
-/home/ctenv/bin/pip install -q --disable-pip-version-check /home/codetwin-0.1.0-py3-none-any.whl --no-deps "tree-sitter>=0.23" "tree-sitter-language-pack>=0.9"
+/home/ctenv/bin/pip install -q --disable-pip-version-check --ignore-requires-python /home/codetwin-0.1.0-py3-none-any.whl --no-deps "tree-sitter>=0.23" "tree-sitter-language-pack>=0.9" tomli
 if [ "$1" = "javascript" ] || [ "$1" = "typescript" ]; then
   cd /home/* 2>/dev/null || true
   VV=$(node -p "require('vitest/package.json').version" 2>/dev/null || true)
