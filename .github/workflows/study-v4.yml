@@ -11,8 +11,8 @@ on:
         description: PRs per repository
         default: "24"
       max_tests:
-        description: test files per run (cap)
-        default: "60"
+        description: test files per run (cap); empty = per-repository default
+        default: ""
       repos:
         description: only these repositories (comma-separated org/repo); empty = all
         default: ""
@@ -33,66 +33,92 @@ jobs:
       max-parallel: 20
       matrix:
         include:
-          # Go
-          - {repo: cli/cli,                     lang: go,         shard: 0, of: 4}
-          - {repo: cli/cli,                     lang: go,         shard: 1, of: 4}
-          - {repo: cli/cli,                     lang: go,         shard: 2, of: 4}
-          - {repo: cli/cli,                     lang: go,         shard: 3, of: 4}
-          - {repo: grpc/grpc-go,                lang: go,         shard: 0, of: 3}
-          - {repo: grpc/grpc-go,                lang: go,         shard: 1, of: 3}
-          - {repo: grpc/grpc-go,                lang: go,         shard: 2, of: 3}
-          - {repo: zeromicro/go-zero,           lang: go,         shard: 0, of: 3}
-          - {repo: zeromicro/go-zero,           lang: go,         shard: 1, of: 3}
-          - {repo: zeromicro/go-zero,           lang: go,         shard: 2, of: 3}
-          # JavaScript
-          - {repo: sveltejs/svelte,             lang: javascript, shard: 0, of: 4}
-          - {repo: sveltejs/svelte,             lang: javascript, shard: 1, of: 4}
-          - {repo: sveltejs/svelte,             lang: javascript, shard: 2, of: 4}
-          - {repo: sveltejs/svelte,             lang: javascript, shard: 3, of: 4}
-          - {repo: iamkun/dayjs,                lang: javascript, shard: 0, of: 4}
-          - {repo: iamkun/dayjs,                lang: javascript, shard: 1, of: 4}
-          - {repo: iamkun/dayjs,                lang: javascript, shard: 2, of: 4}
-          - {repo: iamkun/dayjs,                lang: javascript, shard: 3, of: 4}
-          - {repo: anuraghazra/github-readme-stats, lang: javascript, shard: 0, of: 3}
-          - {repo: anuraghazra/github-readme-stats, lang: javascript, shard: 1, of: 3}
-          - {repo: anuraghazra/github-readme-stats, lang: javascript, shard: 2, of: 3}
-          # TypeScript
-          - {repo: vuejs/core,                  lang: typescript, shard: 0, of: 4}
-          - {repo: vuejs/core,                  lang: typescript, shard: 1, of: 4}
-          - {repo: vuejs/core,                  lang: typescript, shard: 2, of: 4}
-          - {repo: vuejs/core,                  lang: typescript, shard: 3, of: 4}
-          - {repo: mui/material-ui,             lang: typescript, shard: 0, of: 4}
-          - {repo: mui/material-ui,             lang: typescript, shard: 1, of: 4}
-          - {repo: mui/material-ui,             lang: typescript, shard: 2, of: 4}
-          - {repo: mui/material-ui,             lang: typescript, shard: 3, of: 4}
-          # Rust
-          - {repo: clap-rs/clap,                lang: rust,       shard: 0, of: 4}
-          - {repo: clap-rs/clap,                lang: rust,       shard: 1, of: 4}
-          - {repo: clap-rs/clap,                lang: rust,       shard: 2, of: 4}
-          - {repo: clap-rs/clap,                lang: rust,       shard: 3, of: 4}
-          - {repo: tokio-rs/tokio,              lang: rust,       shard: 0, of: 4}
-          - {repo: tokio-rs/tokio,              lang: rust,       shard: 1, of: 4}
-          - {repo: tokio-rs/tokio,              lang: rust,       shard: 2, of: 4}
-          - {repo: tokio-rs/tokio,              lang: rust,       shard: 3, of: 4}
-          - {repo: tokio-rs/tracing,            lang: rust,       shard: 0, of: 4}
-          - {repo: tokio-rs/tracing,            lang: rust,       shard: 1, of: 4}
-          - {repo: tokio-rs/tracing,            lang: rust,       shard: 2, of: 4}
-          - {repo: tokio-rs/tracing,            lang: rust,       shard: 3, of: 4}
-          # Java
-          - {repo: FasterXML/jackson-databind,  lang: java,       shard: 0, of: 4, max_tests: 40}
-          - {repo: FasterXML/jackson-databind,  lang: java,       shard: 1, of: 4, max_tests: 40}
-          - {repo: FasterXML/jackson-databind,  lang: java,       shard: 2, of: 4, max_tests: 40}
-          - {repo: FasterXML/jackson-databind,  lang: java,       shard: 3, of: 4, max_tests: 40}
-          - {repo: FasterXML/jackson-core,      lang: java,       shard: 0, of: 4, max_tests: 40}
-          - {repo: FasterXML/jackson-core,      lang: java,       shard: 1, of: 4, max_tests: 40}
-          - {repo: FasterXML/jackson-core,      lang: java,       shard: 2, of: 4, max_tests: 40}
-          - {repo: FasterXML/jackson-core,      lang: java,       shard: 3, of: 4, max_tests: 40}
+          - {repo: cli/cli, lang: go, shard: 0, of: 6, max_tests: 40}
+          - {repo: cli/cli, lang: go, shard: 1, of: 6, max_tests: 40}
+          - {repo: cli/cli, lang: go, shard: 2, of: 6, max_tests: 40}
+          - {repo: cli/cli, lang: go, shard: 3, of: 6, max_tests: 40}
+          - {repo: cli/cli, lang: go, shard: 4, of: 6, max_tests: 40}
+          - {repo: cli/cli, lang: go, shard: 5, of: 6, max_tests: 40}
+          - {repo: grpc/grpc-go, lang: go, shard: 0, of: 4, max_tests: 40}
+          - {repo: grpc/grpc-go, lang: go, shard: 1, of: 4, max_tests: 40}
+          - {repo: grpc/grpc-go, lang: go, shard: 2, of: 4, max_tests: 40}
+          - {repo: grpc/grpc-go, lang: go, shard: 3, of: 4, max_tests: 40}
+          - {repo: zeromicro/go-zero, lang: go, shard: 0, of: 4, max_tests: 40}
+          - {repo: zeromicro/go-zero, lang: go, shard: 1, of: 4, max_tests: 40}
+          - {repo: zeromicro/go-zero, lang: go, shard: 2, of: 4, max_tests: 40}
+          - {repo: zeromicro/go-zero, lang: go, shard: 3, of: 4, max_tests: 40}
+          - {repo: sveltejs/svelte, lang: javascript, shard: 0, of: 6, max_tests: 50}
+          - {repo: sveltejs/svelte, lang: javascript, shard: 1, of: 6, max_tests: 50}
+          - {repo: sveltejs/svelte, lang: javascript, shard: 2, of: 6, max_tests: 50}
+          - {repo: sveltejs/svelte, lang: javascript, shard: 3, of: 6, max_tests: 50}
+          - {repo: sveltejs/svelte, lang: javascript, shard: 4, of: 6, max_tests: 50}
+          - {repo: sveltejs/svelte, lang: javascript, shard: 5, of: 6, max_tests: 50}
+          - {repo: iamkun/dayjs, lang: javascript, shard: 0, of: 6, max_tests: 50}
+          - {repo: iamkun/dayjs, lang: javascript, shard: 1, of: 6, max_tests: 50}
+          - {repo: iamkun/dayjs, lang: javascript, shard: 2, of: 6, max_tests: 50}
+          - {repo: iamkun/dayjs, lang: javascript, shard: 3, of: 6, max_tests: 50}
+          - {repo: iamkun/dayjs, lang: javascript, shard: 4, of: 6, max_tests: 50}
+          - {repo: iamkun/dayjs, lang: javascript, shard: 5, of: 6, max_tests: 50}
+          - {repo: anuraghazra/github-readme-stats, lang: javascript, shard: 0, of: 4, max_tests: 50}
+          - {repo: anuraghazra/github-readme-stats, lang: javascript, shard: 1, of: 4, max_tests: 50}
+          - {repo: anuraghazra/github-readme-stats, lang: javascript, shard: 2, of: 4, max_tests: 50}
+          - {repo: anuraghazra/github-readme-stats, lang: javascript, shard: 3, of: 4, max_tests: 50}
+          - {repo: axios/axios, lang: javascript, shard: 0, of: 2, max_tests: 50}
+          - {repo: axios/axios, lang: javascript, shard: 1, of: 2, max_tests: 50}
+          - {repo: vuejs/core, lang: typescript, shard: 0, of: 6, max_tests: 50}
+          - {repo: vuejs/core, lang: typescript, shard: 1, of: 6, max_tests: 50}
+          - {repo: vuejs/core, lang: typescript, shard: 2, of: 6, max_tests: 50}
+          - {repo: vuejs/core, lang: typescript, shard: 3, of: 6, max_tests: 50}
+          - {repo: vuejs/core, lang: typescript, shard: 4, of: 6, max_tests: 50}
+          - {repo: vuejs/core, lang: typescript, shard: 5, of: 6, max_tests: 50}
+          - {repo: darkreader/darkreader, lang: typescript, shard: 0, of: 2, max_tests: 50}
+          - {repo: darkreader/darkreader, lang: typescript, shard: 1, of: 2, max_tests: 50}
+          - {repo: clap-rs/clap, lang: rust, shard: 0, of: 6, max_tests: 40}
+          - {repo: clap-rs/clap, lang: rust, shard: 1, of: 6, max_tests: 40}
+          - {repo: clap-rs/clap, lang: rust, shard: 2, of: 6, max_tests: 40}
+          - {repo: clap-rs/clap, lang: rust, shard: 3, of: 6, max_tests: 40}
+          - {repo: clap-rs/clap, lang: rust, shard: 4, of: 6, max_tests: 40}
+          - {repo: clap-rs/clap, lang: rust, shard: 5, of: 6, max_tests: 40}
+          - {repo: tokio-rs/tokio, lang: rust, shard: 0, of: 6, max_tests: 40}
+          - {repo: tokio-rs/tokio, lang: rust, shard: 1, of: 6, max_tests: 40}
+          - {repo: tokio-rs/tokio, lang: rust, shard: 2, of: 6, max_tests: 40}
+          - {repo: tokio-rs/tokio, lang: rust, shard: 3, of: 6, max_tests: 40}
+          - {repo: tokio-rs/tokio, lang: rust, shard: 4, of: 6, max_tests: 40}
+          - {repo: tokio-rs/tokio, lang: rust, shard: 5, of: 6, max_tests: 40}
+          - {repo: tokio-rs/tracing, lang: rust, shard: 0, of: 5, max_tests: 40}
+          - {repo: tokio-rs/tracing, lang: rust, shard: 1, of: 5, max_tests: 40}
+          - {repo: tokio-rs/tracing, lang: rust, shard: 2, of: 5, max_tests: 40}
+          - {repo: tokio-rs/tracing, lang: rust, shard: 3, of: 5, max_tests: 40}
+          - {repo: tokio-rs/tracing, lang: rust, shard: 4, of: 5, max_tests: 40}
+          - {repo: BurntSushi/ripgrep, lang: rust, shard: 0, of: 4, max_tests: 40}
+          - {repo: BurntSushi/ripgrep, lang: rust, shard: 1, of: 4, max_tests: 40}
+          - {repo: BurntSushi/ripgrep, lang: rust, shard: 2, of: 4, max_tests: 40}
+          - {repo: BurntSushi/ripgrep, lang: rust, shard: 3, of: 4, max_tests: 40}
+          - {repo: sharkdp/fd, lang: rust, shard: 0, of: 4, max_tests: 40}
+          - {repo: sharkdp/fd, lang: rust, shard: 1, of: 4, max_tests: 40}
+          - {repo: sharkdp/fd, lang: rust, shard: 2, of: 4, max_tests: 40}
+          - {repo: sharkdp/fd, lang: rust, shard: 3, of: 4, max_tests: 40}
+          - {repo: FasterXML/jackson-databind, lang: java, shard: 0, of: 6, max_tests: 30}
+          - {repo: FasterXML/jackson-databind, lang: java, shard: 1, of: 6, max_tests: 30}
+          - {repo: FasterXML/jackson-databind, lang: java, shard: 2, of: 6, max_tests: 30}
+          - {repo: FasterXML/jackson-databind, lang: java, shard: 3, of: 6, max_tests: 30}
+          - {repo: FasterXML/jackson-databind, lang: java, shard: 4, of: 6, max_tests: 30}
+          - {repo: FasterXML/jackson-databind, lang: java, shard: 5, of: 6, max_tests: 30}
+          - {repo: FasterXML/jackson-core, lang: java, shard: 0, of: 5, max_tests: 30}
+          - {repo: FasterXML/jackson-core, lang: java, shard: 1, of: 5, max_tests: 30}
+          - {repo: FasterXML/jackson-core, lang: java, shard: 2, of: 5, max_tests: 30}
+          - {repo: FasterXML/jackson-core, lang: java, shard: 3, of: 5, max_tests: 30}
+          - {repo: FasterXML/jackson-core, lang: java, shard: 4, of: 5, max_tests: 30}
+          - {repo: mockito/mockito, lang: java, shard: 0, of: 2, max_tests: 30}
+          - {repo: mockito/mockito, lang: java, shard: 1, of: 2, max_tests: 30}
+          - {repo: google/gson, lang: java, shard: 0, of: 2, max_tests: 30}
+          - {repo: google/gson, lang: java, shard: 1, of: 2, max_tests: 30}
     env:
       REPO: ${{ matrix.repo }}
       LANG_: ${{ matrix.lang }}
       SHARD: ${{ matrix.shard }}/${{ matrix.of }}
       COUNT: ${{ inputs.count || '24' }}
-      MAX_TESTS: ${{ matrix.max_tests || inputs.max_tests || '60' }}
+      MAX_TESTS: ${{ inputs.max_tests != '' && inputs.max_tests || matrix.max_tests }}
     steps:
       - name: Selected?
         id: gate
@@ -128,7 +154,7 @@ jobs:
         run: |
           set -o pipefail
           python mswe_collect.py --repo "$REPO" --language "$LANG_" --dataset data/mswe --count "$COUNT" \
-            --shard "$SHARD" --max-tests "$MAX_TESTS" --timeout 4800 2>&1 | tee "collect_$(echo "$SHARD" | tr / _).log"
+            --shard "$SHARD" --max-tests "$MAX_TESTS" --timeout 3600 2>&1 | tee "collect_$(echo "$SHARD" | tr / _).log"
       - name: Package
         if: always() && steps.gate.outputs.skip != 'true'
         working-directory: pilot/v4

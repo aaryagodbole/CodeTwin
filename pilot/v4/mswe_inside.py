@@ -80,8 +80,8 @@ def main():
     ap.add_argument("--pr", type=int, required=True)
     ap.add_argument("--index", type=int, required=True)
     ap.add_argument("--max-tests", type=int, default=80)
-    ap.add_argument("--timeout", type=int, default=300, help="seconds per test file")
-    ap.add_argument("--workers", type=int, default=2)
+    ap.add_argument("--timeout", type=int, default=120, help="seconds per test file")
+    ap.add_argument("--workers", type=int, default=4)
     ap.add_argument("--language", default="auto")
     ap.add_argument("--runner", default="", help="JSON for the [runner] table (test_command etc.)")
     ap.add_argument("--patches", default="/home", help="folder with test.patch and fix.patch")
@@ -157,10 +157,21 @@ def main():
     t0 = time.time()
     facts_n = adapter.facts()
     new_tests = adapter.list_tests()
-    universe_n = sorted(set(universe) | ({t for t in fail_on_base} & set(new_tests)))
+    # Only tests that can be affected run again: those whose base coverage touched a changed or deleted
+    # file, plus the PR's own test files. File-level coverage was safe on every change of the Python study,
+    # so the remaining tests are recorded as unaffected without a second run (their base record is reused).
+    changed_files = set(diff)
+    candidates = {t for t, files in run_b.covered.items() if changed_files & set(files)}
+    universe_n = sorted((candidates | {t for t in fail_on_base}) & set(new_tests))
+    log["tests_rerun"] = len(universe_n)
     run_n = adapter.run_suite(new, universe_n, timeout=args.timeout * len(universe_n) + 600)
     log["steps"]["new_run"] = round(time.time() - t0, 1)
     print(f"[inside] new: {len({x.split('::')[0] for x in run_n.failing})} failing, {log['steps']['new_run']}s", flush=True)
+    for t in universe:                                    # tests not rerun keep their base record
+        if t not in run_n.durations and t in run_b.durations and t in new_tests:
+            run_n.durations[t] = run_b.durations[t]
+            run_n.covered[t] = run_b.covered.get(t, {})
+            run_n.failing += [x for x in run_b.failing if x.split("::", 1)[0] == t]
     (out / "snap" / f"{new}.json").write_text(json.dumps({
         "sha": new, "date": git(repo, "log", "-1", "--format=%cI").stdout.strip(), "subject": f"PR {args.pr}",
         "tests_present": new_tests, "static": facts_to_dict(facts_n), "loc": loc_of(repo, facts_n), "run": run_to_dict(run_n)}))
