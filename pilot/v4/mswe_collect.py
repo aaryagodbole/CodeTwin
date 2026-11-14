@@ -99,6 +99,8 @@ def run_one(image: str, pr: int, index: int, repo_name: str, language: str, whee
             (out_dir / sub).mkdir(parents=True, exist_ok=True)
             for p in (tmp / sub).glob("*.json"):
                 shutil.move(str(p), out_dir / sub / p.name)
+        if (tmp / "lang.json").exists():
+            shutil.move(str(tmp / "lang.json"), out_dir / "lang.json")
         return True
     except Exception as e:  # noqa: BLE001
         log.write(f"[host] pr {pr}: {e}\n")

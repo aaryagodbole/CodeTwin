@@ -97,6 +97,8 @@ def main():
     log = {"pr": args.pr, "steps": {}}
     t_all = time.time()
 
+    with (repo / ".git" / "info" / "exclude").open("a") as f:
+        f.write("\n.codetwin/\n")
     git(repo, "reset", "--hard", "-q")
     git(repo, "clean", "-fdq", "-e", "node_modules", "-e", "target", "-e", "vendor")
     base = git(repo, "rev-parse", "HEAD").stdout.strip()
@@ -165,7 +167,21 @@ def main():
 
     failing_new = {x.split("::", 1)[0] for x in run_n.failing}
     f2p = sorted(t for t, fob in fail_on_base.items() if fob is True and t not in failing_new)
-    rec = {"index": args.index, "sha": new, "parent": base, "pr": args.pr,
+    # co-change history: the 300 commits before the base commit, as {sha, files}
+    history, cur_sha, cur_files = [], None, []
+    for line in git(repo, "log", "-n", "300", "--format=@%H", "--name-only", base).stdout.splitlines():
+        if line.startswith("@"):
+            if cur_sha:
+                history.append({"sha": cur_sha, "files": cur_files})
+            cur_sha, cur_files = line[1:], []
+        elif line.strip():
+            cur_files.append(line.strip())
+    if cur_sha:
+        history.append({"sha": cur_sha, "files": cur_files})
+    history.reverse()                                     # oldest first, as the Python study stores it
+    (out / "lang.json").write_text(json.dumps({"language": adapter.name, "extensions": list(adapter.extensions),
+                                               "runner": adapter.describe()}))
+    rec = {"index": args.index, "sha": new, "parent": base, "pr": args.pr, "history": history,
            "date": git(repo, "log", "-1", "--format=%cI").stdout.strip(), "subject": f"PR {args.pr}",
            "diff": {f: asdict(d) for f, d in diff.items()},
            "pr_tests": sorted(fail_on_base), "fail_on_base": fail_on_base, "f2p": f2p,
