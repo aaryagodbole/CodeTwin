@@ -23,17 +23,19 @@ SETUP = r"""#!/bin/sh
 set -e
 export DEBIAN_FRONTEND=noninteractive
 if command -v apt-get >/dev/null 2>&1; then
-  (python3 -c "import venv, ensurepip" >/dev/null 2>&1) || { apt-get update -qq >/dev/null; apt-get install -y -qq python3 python3-venv python3-pip ca-certificates >/dev/null; }
+  apt-get update -qq || true
+  apt-get install -y -qq --no-install-recommends python3 python3-venv python3-pip ca-certificates curl
 elif command -v apk >/dev/null 2>&1; then
-  apk add --no-cache python3 py3-pip >/dev/null
+  apk add --no-cache python3 py3-pip
 fi
-python3 -m venv /home/ctenv
+python3 -m venv /home/ctenv || python3 -m venv --without-pip /home/ctenv
+if [ ! -x /home/ctenv/bin/pip ]; then curl -sS https://bootstrap.pypa.io/get-pip.py | /home/ctenv/bin/python; fi
 /home/ctenv/bin/pip install -q --disable-pip-version-check /home/codetwin.whl --no-deps "tree-sitter>=0.23" "tree-sitter-language-pack>=0.9"
 if [ "$1" = "rust" ]; then
-  rustup component add llvm-tools-preview >/dev/null 2>&1 || true
+  rustup component add llvm-tools-preview || true
   curl -sSL https://github.com/taiki-e/cargo-llvm-cov/releases/latest/download/cargo-llvm-cov-x86_64-unknown-linux-gnu.tar.gz | tar xz -C "$(dirname "$(command -v cargo)")"
 fi
-echo setup-ok
+/home/ctenv/bin/python -c "import codetwin.lang, tree_sitter_language_pack; print('setup-ok')"
 """
 
 
