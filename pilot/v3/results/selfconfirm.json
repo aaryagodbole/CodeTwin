@@ -1,0 +1,5924 @@
+{
+ "changes": {
+  "click": [
+   {
+    "sha": "b0538dffe8",
+    "co_changed": [
+     "tests/test_arguments.py",
+     "tests/test_utils.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_arguments.py": "pass-on-base",
+     "tests/test_utils.py": "fail-on-base"
+    },
+    "mutants": []
+   },
+   {
+    "sha": "7271763ea3",
+    "co_changed": [
+     "tests/test_shell_completion.py",
+     "tests/test_termui.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_shell_completion.py": "fail-on-base",
+     "tests/test_termui.py": "pass-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_context.py"
+      ],
+      "by_fob": false,
+      "by_pob": false,
+      "by_other": true
+     },
+     {
+      "killers": [
+       "tests/test_context.py"
+      ],
+      "by_fob": false,
+      "by_pob": false,
+      "by_other": true
+     }
+    ]
+   },
+   {
+    "sha": "d9af5cfa00",
+    "co_changed": [
+     "tests/test_arguments.py",
+     "tests/test_command_decorators.py",
+     "tests/test_commands.py",
+     "tests/test_defaults.py",
+     "tests/test_formatting.py",
+     "tests/test_options.py",
+     "tests/test_types.py",
+     "tests/test_utils.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_arguments.py": "fail-on-base",
+     "tests/test_command_decorators.py": "fail-on-base",
+     "tests/test_commands.py": "fail-on-base",
+     "tests/test_defaults.py": "fail-on-base",
+     "tests/test_formatting.py": "fail-on-base",
+     "tests/test_options.py": "pass-on-base",
+     "tests/test_types.py": "fail-on-base",
+     "tests/test_utils.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_termui.py"
+      ],
+      "by_fob": false,
+      "by_pob": false,
+      "by_other": true
+     }
+    ]
+   },
+   {
+    "sha": "edcd2dc240",
+    "co_changed": [
+     "tests/test_chain.py",
+     "tests/test_commands.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_chain.py": "pass-on-base",
+     "tests/test_commands.py": "pass-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_commands.py",
+       "tests/test_shell_completion.py"
+      ],
+      "by_fob": false,
+      "by_pob": true,
+      "by_other": true
+     },
+     {
+      "killers": [
+       "tests/test_chain.py",
+       "tests/test_commands.py"
+      ],
+      "by_fob": false,
+      "by_pob": true,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "988c683963",
+    "co_changed": [
+     "tests/test_parser.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_parser.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_parser.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "tests/test_arguments.py",
+       "tests/test_basic.py",
+       "tests/test_chain.py",
+       "tests/test_commands.py",
+       "tests/test_context.py",
+       "tests/test_defaults.py",
+       "tests/test_formatting.py",
+       "tests/test_normalization.py",
+       "tests/test_options.py",
+       "tests/test_shell_completion.py",
+       "tests/test_termui.py",
+       "tests/test_testing.py"
+      ],
+      "by_fob": false,
+      "by_pob": false,
+      "by_other": true
+     },
+     {
+      "killers": [
+       "tests/test_options.py"
+      ],
+      "by_fob": false,
+      "by_pob": false,
+      "by_other": true
+     }
+    ]
+   },
+   {
+    "sha": "56db54650f",
+    "co_changed": [
+     "tests/test_imports.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_imports.py": "pass-on-base"
+    },
+    "mutants": []
+   },
+   {
+    "sha": "9c5e989d52",
+    "co_changed": [
+     "tests/test_command_decorators.py",
+     "tests/test_commands.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_command_decorators.py": "fail-on-base",
+     "tests/test_commands.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_chain.py",
+       "tests/test_formatting.py"
+      ],
+      "by_fob": false,
+      "by_pob": false,
+      "by_other": true
+     },
+     {
+      "killers": [
+       "tests/test_arguments.py",
+       "tests/test_basic.py",
+       "tests/test_chain.py",
+       "tests/test_command_decorators.py",
+       "tests/test_commands.py",
+       "tests/test_context.py",
+       "tests/test_custom_classes.py",
+       "tests/test_formatting.py",
+       "tests/test_normalization.py",
+       "tests/test_options.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     },
+     {
+      "killers": [
+       "tests/test_arguments.py",
+       "tests/test_basic.py",
+       "tests/test_chain.py",
+       "tests/test_command_decorators.py",
+       "tests/test_commands.py",
+       "tests/test_context.py",
+       "tests/test_custom_classes.py",
+       "tests/test_defaults.py",
+       "tests/test_formatting.py",
+       "tests/test_normalization.py",
+       "tests/test_options.py",
+       "tests/test_termui.py",
+       "tests/test_testing.py",
+       "tests/test_utils.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     }
+    ]
+   },
+   {
+    "sha": "1a3baf77d4",
+    "co_changed": [
+     "tests/test_defaults.py",
+     "tests/test_imports.py",
+     "tests/test_normalization.py",
+     "tests/test_testing.py",
+     "tests/test_utils.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_defaults.py": "pass-on-base",
+     "tests/test_imports.py": "pass-on-base",
+     "tests/test_normalization.py": "pass-on-base",
+     "tests/test_testing.py": "pass-on-base",
+     "tests/test_utils.py": "pass-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_options.py"
+      ],
+      "by_fob": false,
+      "by_pob": false,
+      "by_other": true
+     }
+    ]
+   },
+   {
+    "sha": "471c20a595",
+    "co_changed": [
+     "tests/test_testing.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_testing.py": "pass-on-base"
+    },
+    "mutants": []
+   },
+   {
+    "sha": "99015e1456",
+    "co_changed": [
+     "tests/test_defaults.py",
+     "tests/test_options.py",
+     "tests/test_testing.py",
+     "tests/test_types.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_defaults.py": "fail-on-base",
+     "tests/test_options.py": "fail-on-base",
+     "tests/test_testing.py": "pass-on-base",
+     "tests/test_types.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_defaults.py",
+       "tests/test_options.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "tests/test_basic.py",
+       "tests/test_context.py",
+       "tests/test_formatting.py",
+       "tests/test_options.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     }
+    ]
+   },
+   {
+    "sha": "1a4d8c1bb1",
+    "co_changed": [
+     "tests/test_options.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_options.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_basic.py",
+       "tests/test_options.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     },
+     {
+      "killers": [
+       "tests/test_basic.py",
+       "tests/test_options.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     },
+     {
+      "killers": [
+       "tests/test_options.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "a6e0d29368",
+    "co_changed": [
+     "tests/test_termui.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_termui.py": "fail-on-base"
+    },
+    "mutants": []
+   },
+   {
+    "sha": "948d7a707a",
+    "co_changed": [
+     "tests/test_options.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_options.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_basic.py",
+       "tests/test_context.py",
+       "tests/test_defaults.py",
+       "tests/test_formatting.py",
+       "tests/test_options.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     },
+     {
+      "killers": [
+       "tests/test_arguments.py",
+       "tests/test_basic.py",
+       "tests/test_chain.py",
+       "tests/test_commands.py",
+       "tests/test_context.py",
+       "tests/test_custom_classes.py",
+       "tests/test_defaults.py",
+       "tests/test_formatting.py",
+       "tests/test_options.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     }
+    ]
+   },
+   {
+    "sha": "0e0c00324a",
+    "co_changed": [
+     "tests/test_termui.py",
+     "tests/test_testing.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_termui.py": "fail-on-base",
+     "tests/test_testing.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_arguments.py",
+       "tests/test_basic.py",
+       "tests/test_chain.py",
+       "tests/test_command_decorators.py",
+       "tests/test_commands.py",
+       "tests/test_context.py",
+       "tests/test_custom_classes.py",
+       "tests/test_defaults.py",
+       "tests/test_formatting.py",
+       "tests/test_normalization.py",
+       "tests/test_options.py",
+       "tests/test_shell_completion.py",
+       "tests/test_termui.py",
+       "tests/test_testing.py",
+       "tests/test_types.py",
+       "tests/test_utils.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     },
+     {
+      "killers": [
+       "tests/test_arguments.py",
+       "tests/test_basic.py",
+       "tests/test_chain.py",
+       "tests/test_command_decorators.py",
+       "tests/test_commands.py",
+       "tests/test_context.py",
+       "tests/test_defaults.py",
+       "tests/test_formatting.py",
+       "tests/test_normalization.py",
+       "tests/test_options.py",
+       "tests/test_shell_completion.py",
+       "tests/test_termui.py",
+       "tests/test_testing.py",
+       "tests/test_utils.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     }
+    ]
+   },
+   {
+    "sha": "1b524bb30d",
+    "co_changed": [
+     "tests/test_options.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_options.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_basic.py",
+       "tests/test_options.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     },
+     {
+      "killers": [
+       "tests/test_basic.py",
+       "tests/test_options.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     },
+     {
+      "killers": [
+       "tests/test_options.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "c326df95e9",
+    "co_changed": [
+     "tests/test_context.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_context.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_context.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "fcd85032cf",
+    "co_changed": [
+     "tests/test_termui.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_termui.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_termui.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "tests/test_termui.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "380008389b",
+    "co_changed": [
+     "tests/test_arguments.py",
+     "tests/test_options.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_arguments.py": "fail-on-base",
+     "tests/test_options.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_arguments.py",
+       "tests/test_options.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "tests/test_arguments.py",
+       "tests/test_basic.py",
+       "tests/test_chain.py",
+       "tests/test_command_decorators.py",
+       "tests/test_commands.py",
+       "tests/test_context.py",
+       "tests/test_custom_classes.py",
+       "tests/test_defaults.py",
+       "tests/test_formatting.py",
+       "tests/test_info_dict.py",
+       "tests/test_normalization.py",
+       "tests/test_options.py",
+       "tests/test_shell_completion.py",
+       "tests/test_termui.py",
+       "tests/test_testing.py",
+       "tests/test_types.py",
+       "tests/test_utils.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     },
+     {
+      "killers": [
+       "tests/test_arguments.py",
+       "tests/test_options.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "1787497713",
+    "co_changed": [
+     "tests/test_arguments.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_arguments.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_arguments.py",
+       "tests/test_options.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     },
+     {
+      "killers": [
+       "tests/test_arguments.py",
+       "tests/test_options.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     }
+    ]
+   },
+   {
+    "sha": "4271fe283d",
+    "co_changed": [
+     "tests/test_types.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_types.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_basic.py",
+       "tests/test_options.py"
+      ],
+      "by_fob": false,
+      "by_pob": false,
+      "by_other": true
+     }
+    ]
+   },
+   {
+    "sha": "d8763b9302",
+    "co_changed": [
+     "tests/test_commands.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_commands.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_commands.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "tests/test_commands.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "tests/test_commands.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "0ef55fda47",
+    "co_changed": [
+     "tests/test_shell_completion.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_shell_completion.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_shell_completion.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "d791537317",
+    "co_changed": [
+     "tests/test_testing.py",
+     "tests/test_utils.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_testing.py": "pass-on-base",
+     "tests/test_utils.py": "pass-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_context.py",
+       "tests/test_formatting.py"
+      ],
+      "by_fob": false,
+      "by_pob": false,
+      "by_other": true
+     }
+    ]
+   },
+   {
+    "sha": "0d69b6ce8b",
+    "co_changed": [
+     "tests/test_termui.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_termui.py": "pass-on-base"
+    },
+    "mutants": []
+   },
+   {
+    "sha": "3b06e0b75a",
+    "co_changed": [
+     "tests/test_utils.py"
+    ],
+    "excluded_not_passing_on_new": [
+     "tests/test_utils.py"
+    ],
+    "kinds": {},
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_utils.py"
+      ],
+      "by_fob": false,
+      "by_pob": false,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "tests/test_utils.py"
+      ],
+      "by_fob": false,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "5961d31fb5",
+    "co_changed": [
+     "tests/test_arguments.py",
+     "tests/test_commands.py",
+     "tests/test_options.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_arguments.py": "fail-on-base",
+     "tests/test_commands.py": "fail-on-base",
+     "tests/test_options.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_info_dict.py"
+      ],
+      "by_fob": false,
+      "by_pob": false,
+      "by_other": true
+     },
+     {
+      "killers": [
+       "tests/test_commands.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "88328fc874",
+    "co_changed": [
+     "tests/test_testing.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_testing.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_arguments.py",
+       "tests/test_commands.py",
+       "tests/test_context.py",
+       "tests/test_options.py",
+       "tests/test_testing.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     },
+     {
+      "killers": [
+       "tests/test_arguments.py",
+       "tests/test_commands.py",
+       "tests/test_context.py",
+       "tests/test_options.py",
+       "tests/test_testing.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     }
+    ]
+   },
+   {
+    "sha": "b5464b7e06",
+    "co_changed": [
+     "tests/test_info_dict.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_info_dict.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_info_dict.py",
+       "tests/test_options.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     },
+     {
+      "killers": [
+       "tests/test_info_dict.py",
+       "tests/test_options.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     }
+    ]
+   },
+   {
+    "sha": "4ece17a107",
+    "co_changed": [
+     "tests/test_basic.py",
+     "tests/test_formatting.py",
+     "tests/test_info_dict.py",
+     "tests/test_normalization.py",
+     "tests/test_types.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_basic.py": "fail-on-base",
+     "tests/test_formatting.py": "fail-on-base",
+     "tests/test_info_dict.py": "pass-on-base",
+     "tests/test_normalization.py": "fail-on-base",
+     "tests/test_types.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_basic.py",
+       "tests/test_context.py",
+       "tests/test_custom_classes.py",
+       "tests/test_formatting.py",
+       "tests/test_normalization.py",
+       "tests/test_options.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     },
+     {
+      "killers": [
+       "tests/test_basic.py",
+       "tests/test_normalization.py",
+       "tests/test_options.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     },
+     {
+      "killers": [
+       "tests/test_normalization.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "c9f7d9d8a0",
+    "co_changed": [
+     "tests/test_options.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_options.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_arguments.py",
+       "tests/test_basic.py",
+       "tests/test_chain.py",
+       "tests/test_command_decorators.py",
+       "tests/test_commands.py",
+       "tests/test_context.py",
+       "tests/test_custom_classes.py",
+       "tests/test_defaults.py",
+       "tests/test_formatting.py",
+       "tests/test_info_dict.py",
+       "tests/test_normalization.py",
+       "tests/test_options.py",
+       "tests/test_shell_completion.py",
+       "tests/test_termui.py",
+       "tests/test_testing.py",
+       "tests/test_types.py",
+       "tests/test_utils.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     },
+     {
+      "killers": [
+       "tests/test_arguments.py",
+       "tests/test_basic.py",
+       "tests/test_chain.py",
+       "tests/test_commands.py",
+       "tests/test_context.py",
+       "tests/test_defaults.py",
+       "tests/test_formatting.py",
+       "tests/test_info_dict.py",
+       "tests/test_normalization.py",
+       "tests/test_options.py",
+       "tests/test_shell_completion.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     },
+     {
+      "killers": [
+       "tests/test_basic.py",
+       "tests/test_commands.py",
+       "tests/test_formatting.py",
+       "tests/test_info_dict.py",
+       "tests/test_options.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     }
+    ]
+   },
+   {
+    "sha": "b7c0ab471c",
+    "co_changed": [
+     "tests/test_commands.py",
+     "tests/test_imports.py",
+     "tests/test_utils.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_commands.py": "fail-on-base",
+     "tests/test_imports.py": "pass-on-base",
+     "tests/test_utils.py": "pass-on-base"
+    },
+    "mutants": []
+   },
+   {
+    "sha": "f14b75063f",
+    "co_changed": [
+     "tests/test_arguments.py",
+     "tests/test_utils.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_arguments.py": "pass-on-base",
+     "tests/test_utils.py": "pass-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_command_decorators.py"
+      ],
+      "by_fob": false,
+      "by_pob": false,
+      "by_other": true
+     },
+     {
+      "killers": [
+       "tests/test_command_decorators.py"
+      ],
+      "by_fob": false,
+      "by_pob": false,
+      "by_other": true
+     },
+     {
+      "killers": [
+       "tests/test_formatting.py",
+       "tests/test_options.py"
+      ],
+      "by_fob": false,
+      "by_pob": false,
+      "by_other": true
+     }
+    ]
+   },
+   {
+    "sha": "498f882604",
+    "co_changed": [
+     "tests/test_utils.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_utils.py": "pass-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_options.py"
+      ],
+      "by_fob": false,
+      "by_pob": false,
+      "by_other": true
+     }
+    ]
+   },
+   {
+    "sha": "884af5c20f",
+    "co_changed": [
+     "tests/test_options.py",
+     "tests/test_utils.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_options.py": "fail-on-base",
+     "tests/test_utils.py": "pass-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_basic.py",
+       "tests/test_commands.py",
+       "tests/test_info_dict.py",
+       "tests/test_options.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     },
+     {
+      "killers": [
+       "tests/test_arguments.py",
+       "tests/test_basic.py",
+       "tests/test_chain.py",
+       "tests/test_commands.py",
+       "tests/test_context.py",
+       "tests/test_defaults.py",
+       "tests/test_formatting.py",
+       "tests/test_info_dict.py",
+       "tests/test_normalization.py",
+       "tests/test_options.py",
+       "tests/test_utils.py"
+      ],
+      "by_fob": true,
+      "by_pob": true,
+      "by_other": true
+     },
+     {
+      "killers": [
+       "tests/test_info_dict.py",
+       "tests/test_options.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     }
+    ]
+   },
+   {
+    "sha": "b7cf06970e",
+    "co_changed": [
+     "tests/test_shell_completion.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_shell_completion.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_shell_completion.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "tests/test_shell_completion.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "tests/test_shell_completion.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "cfa6f4ad3e",
+    "co_changed": [
+     "tests/test_testing.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_testing.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_testing.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "262bdf0228",
+    "co_changed": [
+     "tests/test_chain.py",
+     "tests/test_termui.py",
+     "tests/test_utils.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_chain.py": "fail-on-base",
+     "tests/test_termui.py": "fail-on-base",
+     "tests/test_utils.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_chain.py",
+       "tests/test_options.py",
+       "tests/test_termui.py",
+       "tests/test_testing.py",
+       "tests/test_utils.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     },
+     {
+      "killers": [
+       "tests/test_chain.py",
+       "tests/test_options.py",
+       "tests/test_termui.py",
+       "tests/test_testing.py",
+       "tests/test_utils.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     }
+    ]
+   },
+   {
+    "sha": "565f36d5bc",
+    "co_changed": [
+     "tests/test_arguments.py",
+     "tests/test_basic.py",
+     "tests/test_imports.py",
+     "tests/test_options.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_arguments.py": "pass-on-base",
+     "tests/test_basic.py": "fail-on-base",
+     "tests/test_imports.py": "pass-on-base",
+     "tests/test_options.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_options.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "tests/test_arguments.py",
+       "tests/test_context.py",
+       "tests/test_options.py"
+      ],
+      "by_fob": true,
+      "by_pob": true,
+      "by_other": true
+     },
+     {
+      "killers": [
+       "tests/test_basic.py",
+       "tests/test_defaults.py",
+       "tests/test_info_dict.py",
+       "tests/test_options.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     }
+    ]
+   },
+   {
+    "sha": "a1235aacb1",
+    "co_changed": [
+     "tests/test_shell_completion.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_shell_completion.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_shell_completion.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "tests/test_shell_completion.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "tests/test_shell_completion.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "eaf33a9579",
+    "co_changed": [
+     "tests/test_options.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_options.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_options.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "737bfbd312",
+    "co_changed": [
+     "tests/test_testing.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_testing.py": "pass-on-base"
+    },
+    "mutants": []
+   },
+   {
+    "sha": "0be2bd3850",
+    "co_changed": [
+     "tests/test_options.py",
+     "tests/test_types.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_options.py": "fail-on-base",
+     "tests/test_types.py": "pass-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_options.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "4f936ac198",
+    "co_changed": [
+     "tests/test_arguments.py",
+     "tests/test_options.py",
+     "tests/test_shell_completion.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_arguments.py": "pass-on-base",
+     "tests/test_options.py": "pass-on-base",
+     "tests/test_shell_completion.py": "fail-on-base"
+    },
+    "mutants": []
+   },
+   {
+    "sha": "1f40020964",
+    "co_changed": [
+     "tests/test_imports.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_imports.py": "pass-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_utils.py"
+      ],
+      "by_fob": false,
+      "by_pob": false,
+      "by_other": true
+     },
+     {
+      "killers": [
+       "tests/test_arguments.py",
+       "tests/test_basic.py",
+       "tests/test_chain.py",
+       "tests/test_commands.py",
+       "tests/test_context.py",
+       "tests/test_custom_classes.py",
+       "tests/test_defaults.py",
+       "tests/test_formatting.py",
+       "tests/test_normalization.py",
+       "tests/test_options.py"
+      ],
+      "by_fob": false,
+      "by_pob": false,
+      "by_other": true
+     }
+    ]
+   },
+   {
+    "sha": "701b313160",
+    "co_changed": [
+     "tests/test_shell_completion.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_shell_completion.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_shell_completion.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "81a482fbfd",
+    "co_changed": [
+     "tests/test_arguments.py",
+     "tests/test_basic.py",
+     "tests/test_chain.py",
+     "tests/test_context.py",
+     "tests/test_options.py",
+     "tests/test_termui.py",
+     "tests/test_utils.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_arguments.py": "fail-on-base",
+     "tests/test_basic.py": "fail-on-base",
+     "tests/test_chain.py": "fail-on-base",
+     "tests/test_context.py": "fail-on-base",
+     "tests/test_options.py": "fail-on-base",
+     "tests/test_termui.py": "fail-on-base",
+     "tests/test_utils.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_utils.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "tests/test_info_dict.py"
+      ],
+      "by_fob": false,
+      "by_pob": false,
+      "by_other": true
+     },
+     {
+      "killers": [
+       "tests/test_options.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "6a1c0d0773",
+    "co_changed": [
+     "tests/test_commands.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_commands.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_commands.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "tests/test_commands.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "27aaed3fe5",
+    "co_changed": [
+     "tests/test_defaults.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_defaults.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_basic.py",
+       "tests/test_defaults.py",
+       "tests/test_options.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     },
+     {
+      "killers": [
+       "tests/test_arguments.py",
+       "tests/test_basic.py",
+       "tests/test_chain.py",
+       "tests/test_command_decorators.py",
+       "tests/test_commands.py",
+       "tests/test_defaults.py",
+       "tests/test_normalization.py",
+       "tests/test_options.py",
+       "tests/test_termui.py",
+       "tests/test_testing.py",
+       "tests/test_types.py",
+       "tests/test_utils.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     },
+     {
+      "killers": [
+       "tests/test_arguments.py",
+       "tests/test_basic.py",
+       "tests/test_chain.py",
+       "tests/test_command_decorators.py",
+       "tests/test_commands.py",
+       "tests/test_defaults.py",
+       "tests/test_normalization.py",
+       "tests/test_options.py",
+       "tests/test_termui.py",
+       "tests/test_testing.py",
+       "tests/test_types.py",
+       "tests/test_utils.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     }
+    ]
+   },
+   {
+    "sha": "8533c966b8",
+    "co_changed": [
+     "tests/test_utils.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_utils.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_termui.py",
+       "tests/test_utils.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     },
+     {
+      "killers": [
+       "tests/test_options.py",
+       "tests/test_termui.py",
+       "tests/test_testing.py",
+       "tests/test_utils.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     }
+    ]
+   },
+   {
+    "sha": "8d4051e9e5",
+    "co_changed": [
+     "tests/test_arguments.py",
+     "tests/test_options.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_arguments.py": "fail-on-base",
+     "tests/test_options.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_arguments.py",
+       "tests/test_options.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "tests/test_arguments.py",
+       "tests/test_basic.py",
+       "tests/test_chain.py",
+       "tests/test_commands.py",
+       "tests/test_context.py",
+       "tests/test_defaults.py",
+       "tests/test_formatting.py",
+       "tests/test_normalization.py",
+       "tests/test_options.py",
+       "tests/test_termui.py",
+       "tests/test_testing.py",
+       "tests/test_types.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     },
+     {
+      "killers": [
+       "tests/test_arguments.py",
+       "tests/test_options.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "e27b307462",
+    "co_changed": [
+     "tests/test_termui.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_termui.py": "pass-on-base"
+    },
+    "mutants": []
+   },
+   {
+    "sha": "b91bb9548a",
+    "co_changed": [
+     "tests/test_context.py",
+     "tests/test_utils.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_context.py": "fail-on-base",
+     "tests/test_utils.py": "pass-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_context.py",
+       "tests/test_options.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     },
+     {
+      "killers": [
+       "tests/test_context.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "tests/test_context.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "ebcd548d50",
+    "co_changed": [
+     "tests/test_options.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_options.py": "fail-on-base"
+    },
+    "mutants": []
+   },
+   {
+    "sha": "b6afbf05ea",
+    "co_changed": [
+     "tests/test_arguments.py",
+     "tests/test_basic.py",
+     "tests/test_defaults.py",
+     "tests/test_options.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_arguments.py": "pass-on-base",
+     "tests/test_basic.py": "pass-on-base",
+     "tests/test_defaults.py": "fail-on-base",
+     "tests/test_options.py": "pass-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_defaults.py",
+       "tests/test_options.py"
+      ],
+      "by_fob": true,
+      "by_pob": true,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "tests/test_arguments.py",
+       "tests/test_basic.py",
+       "tests/test_chain.py",
+       "tests/test_command_decorators.py",
+       "tests/test_commands.py",
+       "tests/test_context.py",
+       "tests/test_custom_classes.py",
+       "tests/test_defaults.py",
+       "tests/test_formatting.py",
+       "tests/test_normalization.py",
+       "tests/test_options.py",
+       "tests/test_shell_completion.py",
+       "tests/test_termui.py",
+       "tests/test_testing.py",
+       "tests/test_types.py",
+       "tests/test_utils.py"
+      ],
+      "by_fob": true,
+      "by_pob": true,
+      "by_other": true
+     }
+    ]
+   },
+   {
+    "sha": "ae46cfd6bc",
+    "co_changed": [
+     "tests/test_stream_lifecycle.py"
+    ],
+    "excluded_not_passing_on_new": [
+     "tests/test_stream_lifecycle.py"
+    ],
+    "kinds": {},
+    "mutants": []
+   },
+   {
+    "sha": "5850ef9723",
+    "co_changed": [
+     "tests/test_defaults.py",
+     "tests/test_options.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_defaults.py": "fail-on-base",
+     "tests/test_options.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_basic.py",
+       "tests/test_commands.py",
+       "tests/test_context.py",
+       "tests/test_defaults.py",
+       "tests/test_formatting.py",
+       "tests/test_options.py",
+       "tests/test_termui.py",
+       "tests/test_testing.py",
+       "tests/test_types.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     },
+     {
+      "killers": [
+       "tests/test_arguments.py",
+       "tests/test_basic.py",
+       "tests/test_chain.py",
+       "tests/test_command_decorators.py",
+       "tests/test_commands.py",
+       "tests/test_context.py",
+       "tests/test_custom_classes.py",
+       "tests/test_defaults.py",
+       "tests/test_formatting.py",
+       "tests/test_normalization.py",
+       "tests/test_options.py",
+       "tests/test_shell_completion.py",
+       "tests/test_stream_lifecycle.py",
+       "tests/test_termui.py",
+       "tests/test_testing.py",
+       "tests/test_types.py",
+       "tests/test_utils.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     },
+     {
+      "killers": [
+       "tests/test_basic.py",
+       "tests/test_commands.py",
+       "tests/test_defaults.py",
+       "tests/test_options.py",
+       "tests/test_termui.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     }
+    ]
+   },
+   {
+    "sha": "1458800409",
+    "co_changed": [
+     "tests/test_imports.py",
+     "tests/test_options.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_imports.py": "pass-on-base",
+     "tests/test_options.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_basic.py",
+       "tests/test_context.py",
+       "tests/test_defaults.py",
+       "tests/test_formatting.py",
+       "tests/test_options.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     }
+    ]
+   },
+   {
+    "sha": "63ea71f9b0",
+    "co_changed": [
+     "tests/test_termui.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_termui.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_termui.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "ac2dd7aadf",
+    "co_changed": [
+     "tests/test_testing.py",
+     "tests/test_utils.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_testing.py": "fail-on-base",
+     "tests/test_utils.py": "pass-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_testing.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "tests/test_testing.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "452935115a",
+    "co_changed": [
+     "tests/test_termui.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_termui.py": "pass-on-base"
+    },
+    "mutants": []
+   },
+   {
+    "sha": "89af4ae2d6",
+    "co_changed": [
+     "tests/test_testing.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_testing.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_testing.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "8c95c73bd5",
+    "co_changed": [
+     "tests/test_options.py",
+     "tests/test_termui.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_options.py": "fail-on-base",
+     "tests/test_termui.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_basic.py",
+       "tests/test_defaults.py",
+       "tests/test_options.py",
+       "tests/test_termui.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     }
+    ]
+   },
+   {
+    "sha": "76552ff1e8",
+    "co_changed": [
+     "tests/test_options.py",
+     "tests/test_termui.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_options.py": "fail-on-base",
+     "tests/test_termui.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_termui.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "tests/test_options.py",
+       "tests/test_termui.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "4a352253c9",
+    "co_changed": [
+     "tests/test_defaults.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_defaults.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_commands.py",
+       "tests/test_defaults.py",
+       "tests/test_options.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     },
+     {
+      "killers": [
+       "tests/test_commands.py",
+       "tests/test_context.py",
+       "tests/test_defaults.py",
+       "tests/test_options.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     }
+    ]
+   },
+   {
+    "sha": "8bd8b4a074",
+    "co_changed": [
+     "tests/test_defaults.py",
+     "tests/test_options.py",
+     "tests/test_termui.py",
+     "tests/test_types.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_defaults.py": "pass-on-base",
+     "tests/test_options.py": "pass-on-base",
+     "tests/test_termui.py": "pass-on-base",
+     "tests/test_types.py": "pass-on-base"
+    },
+    "mutants": []
+   },
+   {
+    "sha": "8a2b48901a",
+    "co_changed": [
+     "tests/test_imports.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_imports.py": "pass-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_types.py"
+      ],
+      "by_fob": false,
+      "by_pob": false,
+      "by_other": true
+     }
+    ]
+   },
+   {
+    "sha": "c8da1fcc2c",
+    "co_changed": [
+     "tests/test_defaults.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_defaults.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_defaults.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "tests/test_commands.py",
+       "tests/test_defaults.py",
+       "tests/test_options.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     }
+    ]
+   },
+   {
+    "sha": "b03f211e60",
+    "co_changed": [
+     "tests/test_options.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_options.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_basic.py",
+       "tests/test_defaults.py",
+       "tests/test_options.py",
+       "tests/test_termui.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     },
+     {
+      "killers": [
+       "tests/test_basic.py",
+       "tests/test_defaults.py",
+       "tests/test_options.py",
+       "tests/test_termui.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     },
+     {
+      "killers": [
+       "tests/test_options.py",
+       "tests/test_termui.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     }
+    ]
+   },
+   {
+    "sha": "0cd28d6548",
+    "co_changed": [
+     "tests/test_formatting.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_formatting.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_arguments.py",
+       "tests/test_basic.py",
+       "tests/test_commands.py",
+       "tests/test_formatting.py",
+       "tests/test_normalization.py",
+       "tests/test_options.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     }
+    ]
+   },
+   {
+    "sha": "d2e4a42ff4",
+    "co_changed": [
+     "tests/test_compat.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_compat.py": "pass-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_commands.py",
+       "tests/test_options.py"
+      ],
+      "by_fob": false,
+      "by_pob": false,
+      "by_other": true
+     },
+     {
+      "killers": [
+       "tests/test_arguments.py",
+       "tests/test_basic.py",
+       "tests/test_chain.py",
+       "tests/test_commands.py",
+       "tests/test_context.py",
+       "tests/test_defaults.py",
+       "tests/test_info_dict.py",
+       "tests/test_options.py",
+       "tests/test_stream_lifecycle.py",
+       "tests/test_termui.py",
+       "tests/test_testing.py",
+       "tests/test_utils.py"
+      ],
+      "by_fob": false,
+      "by_pob": false,
+      "by_other": true
+     },
+     {
+      "killers": [
+       "tests/test_arguments.py",
+       "tests/test_basic.py",
+       "tests/test_chain.py",
+       "tests/test_commands.py",
+       "tests/test_defaults.py",
+       "tests/test_formatting.py",
+       "tests/test_info_dict.py",
+       "tests/test_normalization.py",
+       "tests/test_options.py",
+       "tests/test_shell_completion.py",
+       "tests/test_stream_lifecycle.py",
+       "tests/test_termui.py",
+       "tests/test_testing.py",
+       "tests/test_types.py",
+       "tests/test_utils.py"
+      ],
+      "by_fob": false,
+      "by_pob": false,
+      "by_other": true
+     }
+    ]
+   },
+   {
+    "sha": "2468b70997",
+    "co_changed": [
+     "tests/test_utils.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_utils.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_utils.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "19fd4d6e18",
+    "co_changed": [
+     "tests/test_shell_completion.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_shell_completion.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_shell_completion.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "tests/test_shell_completion.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "tests/test_shell_completion.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "831c8f0948",
+    "co_changed": [
+     "tests/test_commands.py",
+     "tests/test_options.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_commands.py": "fail-on-base",
+     "tests/test_options.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_commands.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "fc6c7c47ed",
+    "co_changed": [
+     "tests/test_types.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_types.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_types.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "tests/test_types.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "tests/test_types.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "c943271a26",
+    "co_changed": [
+     "tests/test_termui.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_termui.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_options.py",
+       "tests/test_termui.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     },
+     {
+      "killers": [
+       "tests/test_termui.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "tests/test_options.py",
+       "tests/test_termui.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     }
+    ]
+   },
+   {
+    "sha": "ec8226954e",
+    "co_changed": [
+     "tests/test_options.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_options.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_basic.py",
+       "tests/test_defaults.py",
+       "tests/test_options.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     },
+     {
+      "killers": [
+       "tests/test_basic.py",
+       "tests/test_defaults.py",
+       "tests/test_options.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     },
+     {
+      "killers": [
+       "tests/test_arguments.py",
+       "tests/test_basic.py",
+       "tests/test_chain.py",
+       "tests/test_command_decorators.py",
+       "tests/test_commands.py",
+       "tests/test_context.py",
+       "tests/test_defaults.py",
+       "tests/test_normalization.py",
+       "tests/test_options.py",
+       "tests/test_stream_lifecycle.py",
+       "tests/test_termui.py",
+       "tests/test_testing.py",
+       "tests/test_types.py",
+       "tests/test_utils.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     }
+    ]
+   },
+   {
+    "sha": "d959898db2",
+    "co_changed": [
+     "tests/test_testing.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_testing.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_testing.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "tests/test_testing.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "7c99ebe23b",
+    "co_changed": [
+     "tests/test_formatting.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_formatting.py": "fail-on-base"
+    },
+    "mutants": []
+   },
+   {
+    "sha": "63274a79d0",
+    "co_changed": [
+     "tests/test_termui.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_termui.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_termui.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "tests/test_termui.py",
+       "tests/test_utils.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     }
+    ]
+   },
+   {
+    "sha": "3bb230dcd5",
+    "co_changed": [
+     "tests/test_formatting.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_formatting.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_formatting.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "tests/test_arguments.py",
+       "tests/test_basic.py",
+       "tests/test_chain.py",
+       "tests/test_commands.py",
+       "tests/test_context.py",
+       "tests/test_formatting.py",
+       "tests/test_options.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     },
+     {
+      "killers": [
+       "tests/test_formatting.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "dbf4d14c71",
+    "co_changed": [
+     "tests/test_shell_completion.py",
+     "tests/test_utils.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_shell_completion.py": "fail-on-base",
+     "tests/test_utils.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_shell_completion.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "bc36cd1a2b",
+    "co_changed": [
+     "tests/test_defaults.py",
+     "tests/test_options.py",
+     "tests/test_termui.py",
+     "tests/test_testing.py",
+     "tests/test_utils.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_defaults.py": "fail-on-base",
+     "tests/test_options.py": "pass-on-base",
+     "tests/test_termui.py": "pass-on-base",
+     "tests/test_testing.py": "fail-on-base",
+     "tests/test_utils.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_termui.py",
+       "tests/test_testing.py"
+      ],
+      "by_fob": true,
+      "by_pob": true,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "tests/test_arguments.py",
+       "tests/test_basic.py",
+       "tests/test_chain.py",
+       "tests/test_commands.py",
+       "tests/test_defaults.py",
+       "tests/test_options.py",
+       "tests/test_utils.py"
+      ],
+      "by_fob": true,
+      "by_pob": true,
+      "by_other": true
+     }
+    ]
+   },
+   {
+    "sha": "c3535905c7",
+    "co_changed": [
+     "tests/test_shell_completion.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_shell_completion.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_shell_completion.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "tests/test_shell_completion.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "tests/test_shell_completion.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "3a40e43e8f",
+    "co_changed": [
+     "tests/test_shell_completion.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_shell_completion.py": "pass-on-base"
+    },
+    "mutants": []
+   },
+   {
+    "sha": "6a141c3681",
+    "co_changed": [
+     "tests/test_utils.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_utils.py": "pass-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_arguments.py",
+       "tests/test_basic.py",
+       "tests/test_chain.py",
+       "tests/test_command_decorators.py",
+       "tests/test_commands.py",
+       "tests/test_context.py",
+       "tests/test_defaults.py",
+       "tests/test_formatting.py",
+       "tests/test_normalization.py",
+       "tests/test_options.py",
+       "tests/test_stream_lifecycle.py",
+       "tests/test_termui.py",
+       "tests/test_testing.py",
+       "tests/test_utils.py"
+      ],
+      "by_fob": false,
+      "by_pob": true,
+      "by_other": true
+     },
+     {
+      "killers": [
+       "tests/test_arguments.py",
+       "tests/test_basic.py",
+       "tests/test_chain.py",
+       "tests/test_command_decorators.py",
+       "tests/test_commands.py",
+       "tests/test_context.py",
+       "tests/test_custom_classes.py",
+       "tests/test_defaults.py",
+       "tests/test_formatting.py",
+       "tests/test_normalization.py",
+       "tests/test_options.py",
+       "tests/test_stream_lifecycle.py",
+       "tests/test_termui.py",
+       "tests/test_testing.py",
+       "tests/test_utils.py"
+      ],
+      "by_fob": false,
+      "by_pob": true,
+      "by_other": true
+     }
+    ]
+   },
+   {
+    "sha": "1a994adbb1",
+    "co_changed": [
+     "tests/test_arguments.py",
+     "tests/test_commands.py",
+     "tests/test_options.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_arguments.py": "pass-on-base",
+     "tests/test_commands.py": "fail-on-base",
+     "tests/test_options.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_arguments.py",
+       "tests/test_basic.py",
+       "tests/test_commands.py",
+       "tests/test_formatting.py",
+       "tests/test_normalization.py",
+       "tests/test_options.py"
+      ],
+      "by_fob": true,
+      "by_pob": true,
+      "by_other": true
+     },
+     {
+      "killers": [
+       "tests/test_arguments.py",
+       "tests/test_basic.py",
+       "tests/test_chain.py",
+       "tests/test_command_decorators.py",
+       "tests/test_commands.py",
+       "tests/test_context.py",
+       "tests/test_custom_classes.py",
+       "tests/test_defaults.py",
+       "tests/test_formatting.py",
+       "tests/test_normalization.py",
+       "tests/test_options.py",
+       "tests/test_shell_completion.py",
+       "tests/test_stream_lifecycle.py",
+       "tests/test_termui.py",
+       "tests/test_testing.py",
+       "tests/test_types.py",
+       "tests/test_utils.py"
+      ],
+      "by_fob": true,
+      "by_pob": true,
+      "by_other": true
+     }
+    ]
+   },
+   {
+    "sha": "c48021040a",
+    "co_changed": [
+     "tests/test_arguments.py",
+     "tests/test_info_dict.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_arguments.py": "fail-on-base",
+     "tests/test_info_dict.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_arguments.py",
+       "tests/test_info_dict.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "tests/test_arguments.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "tests/test_arguments.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "8a1b1a33d7",
+    "co_changed": [
+     "tests/test_stream_lifecycle.py",
+     "tests/test_termui.py",
+     "tests/test_types.py",
+     "tests/test_utils.py"
+    ],
+    "excluded_not_passing_on_new": [
+     "tests/test_stream_lifecycle.py",
+     "tests/test_termui.py",
+     "tests/test_types.py",
+     "tests/test_utils.py"
+    ],
+    "kinds": {},
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_types.py"
+      ],
+      "by_fob": false,
+      "by_pob": false,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "tests/test_types.py"
+      ],
+      "by_fob": false,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "240603f240",
+    "co_changed": [
+     "tests/test_basic.py",
+     "tests/test_options.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_basic.py": "fail-on-base",
+     "tests/test_options.py": "pass-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_basic.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "tests/test_basic.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "fe3ad76e58",
+    "co_changed": [
+     "tests/test_basic.py",
+     "tests/test_termui.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_basic.py": "pass-on-base",
+     "tests/test_termui.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_options.py",
+       "tests/test_stream_lifecycle.py",
+       "tests/test_termui.py",
+       "tests/test_testing.py",
+       "tests/test_utils.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     }
+    ]
+   },
+   {
+    "sha": "16fc00e2f4",
+    "co_changed": [
+     "tests/test_types.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_types.py": "fail-on-base"
+    },
+    "mutants": []
+   },
+   {
+    "sha": "94c191ca6c",
+    "co_changed": [
+     "tests/test_basic.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_basic.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_basic.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "8a4ce84256",
+    "co_changed": [
+     "tests/test_utils/test_KeepOpenFile.py",
+     "tests/test_utils/test_LazyFile.py",
+     "tests/test_utils/test__detect_program_name.py",
+     "tests/test_utils/test__expand_args.py",
+     "tests/test_utils/test_confirm.py",
+     "tests/test_utils/test_echo.py",
+     "tests/test_utils/test_echo_via_pager.py",
+     "tests/test_utils/test_format_filename.py",
+     "tests/test_utils/test_make_default_short_help.py",
+     "tests/test_utils/test_open_file.py",
+     "tests/test_utils/test_prompt.py",
+     "tests/test_utils/test_sentinel.py",
+     "tests/test_utils/test_style.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_utils/test_KeepOpenFile.py": "pass-on-base",
+     "tests/test_utils/test_LazyFile.py": "pass-on-base",
+     "tests/test_utils/test__detect_program_name.py": "pass-on-base",
+     "tests/test_utils/test__expand_args.py": "pass-on-base",
+     "tests/test_utils/test_confirm.py": "pass-on-base",
+     "tests/test_utils/test_echo.py": "pass-on-base",
+     "tests/test_utils/test_echo_via_pager.py": "pass-on-base",
+     "tests/test_utils/test_format_filename.py": "pass-on-base",
+     "tests/test_utils/test_make_default_short_help.py": "pass-on-base",
+     "tests/test_utils/test_open_file.py": "pass-on-base",
+     "tests/test_utils/test_prompt.py": "pass-on-base",
+     "tests/test_utils/test_sentinel.py": "pass-on-base",
+     "tests/test_utils/test_style.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_utils/test_style.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "tests/test_termui.py"
+      ],
+      "by_fob": false,
+      "by_pob": false,
+      "by_other": true
+     },
+     {
+      "killers": [
+       "tests/test_utils/test_style.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "8c1a0a7abb",
+    "co_changed": [
+     "tests/test_compat.py",
+     "tests/test_formatting.py",
+     "tests/test_utils/test_style.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_compat.py": "fail-on-base",
+     "tests/test_formatting.py": "pass-on-base",
+     "tests/test_utils/test_style.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_arguments.py",
+       "tests/test_basic.py",
+       "tests/test_chain.py",
+       "tests/test_command_decorators.py",
+       "tests/test_commands.py",
+       "tests/test_compat.py",
+       "tests/test_context.py",
+       "tests/test_custom_classes.py",
+       "tests/test_defaults.py",
+       "tests/test_formatting.py",
+       "tests/test_normalization.py",
+       "tests/test_options.py",
+       "tests/test_stream_lifecycle.py",
+       "tests/test_termui.py",
+       "tests/test_testing.py",
+       "tests/test_utils/test_confirm.py",
+       "tests/test_utils/test_echo.py",
+       "tests/test_utils/test_echo_via_pager.py",
+       "tests/test_utils/test_open_file.py",
+       "tests/test_utils/test_prompt.py",
+       "tests/test_utils/test_style.py"
+      ],
+      "by_fob": true,
+      "by_pob": true,
+      "by_other": true
+     }
+    ]
+   },
+   {
+    "sha": "b67832c216",
+    "co_changed": [
+     "tests/test_basic.py",
+     "tests/test_info_dict.py",
+     "tests/test_options.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_basic.py": "fail-on-base",
+     "tests/test_info_dict.py": "fail-on-base",
+     "tests/test_options.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_basic.py",
+       "tests/test_options.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "tests/test_basic.py",
+       "tests/test_options.py",
+       "tests/test_shell_completion.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     },
+     {
+      "killers": [
+       "tests/test_arguments.py",
+       "tests/test_basic.py",
+       "tests/test_chain.py",
+       "tests/test_command_decorators.py",
+       "tests/test_commands.py",
+       "tests/test_context.py",
+       "tests/test_custom_classes.py",
+       "tests/test_defaults.py",
+       "tests/test_formatting.py",
+       "tests/test_info_dict.py",
+       "tests/test_normalization.py",
+       "tests/test_options.py",
+       "tests/test_shell_completion.py",
+       "tests/test_stream_lifecycle.py",
+       "tests/test_termui.py",
+       "tests/test_testing.py",
+       "tests/test_utils/test_confirm.py",
+       "tests/test_utils/test_echo.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     }
+    ]
+   },
+   {
+    "sha": "7df2f82305",
+    "co_changed": [
+     "tests/test_shell_completion.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_shell_completion.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_shell_completion.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "tests/test_shell_completion.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "333c28d79c",
+    "co_changed": [
+     "tests/test_deprecations.py",
+     "tests/test_testing.py",
+     "tests/test_utils/test_KeepOpenFile.py",
+     "tests/test_utils/test_LazyFile.py",
+     "tests/test_utils/test_make_default_short_help.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_deprecations.py": "fail-on-base",
+     "tests/test_testing.py": "fail-on-base",
+     "tests/test_utils/test_KeepOpenFile.py": "fail-on-base",
+     "tests/test_utils/test_LazyFile.py": "fail-on-base",
+     "tests/test_utils/test_make_default_short_help.py": "fail-on-base"
+    },
+    "mutants": []
+   },
+   {
+    "sha": "cfa01eeb78",
+    "co_changed": [
+     "tests/test_arguments.py",
+     "tests/test_basic.py",
+     "tests/test_deprecations.py",
+     "tests/test_shell_completion.py",
+     "tests/test_testing.py",
+     "tests/test_utils/test_open_file.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_arguments.py": "pass-on-base",
+     "tests/test_basic.py": "pass-on-base",
+     "tests/test_deprecations.py": "fail-on-base",
+     "tests/test_shell_completion.py": "pass-on-base",
+     "tests/test_testing.py": "pass-on-base",
+     "tests/test_utils/test_open_file.py": "pass-on-base"
+    },
+    "mutants": []
+   },
+   {
+    "sha": "5e906a8afb",
+    "co_changed": [
+     "tests/test_types.py",
+     "tests/test_utils/test_prompt.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_types.py": "fail-on-base",
+     "tests/test_utils/test_prompt.py": "pass-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_termui.py",
+       "tests/test_utils/test_confirm.py",
+       "tests/test_utils/test_echo.py",
+       "tests/test_utils/test_prompt.py"
+      ],
+      "by_fob": false,
+      "by_pob": true,
+      "by_other": true
+     },
+     {
+      "killers": [
+       "tests/test_termui.py",
+       "tests/test_utils/test_echo.py",
+       "tests/test_utils/test_prompt.py"
+      ],
+      "by_fob": false,
+      "by_pob": true,
+      "by_other": true
+     }
+    ]
+   },
+   {
+    "sha": "00e592cea7",
+    "co_changed": [
+     "tests/test_deprecations.py"
+    ],
+    "excluded_not_passing_on_new": [
+     "tests/test_deprecations.py"
+    ],
+    "kinds": {},
+    "mutants": []
+   },
+   {
+    "sha": "9c4dfdaebe",
+    "co_changed": [
+     "tests/test_commands.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_commands.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_basic.py",
+       "tests/test_commands.py",
+       "tests/test_formatting.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     },
+     {
+      "killers": [
+       "tests/test_arguments.py",
+       "tests/test_basic.py",
+       "tests/test_chain.py",
+       "tests/test_command_decorators.py",
+       "tests/test_commands.py",
+       "tests/test_context.py",
+       "tests/test_custom_classes.py",
+       "tests/test_defaults.py",
+       "tests/test_formatting.py",
+       "tests/test_info_dict.py",
+       "tests/test_normalization.py",
+       "tests/test_options.py",
+       "tests/test_shell_completion.py",
+       "tests/test_stream_lifecycle.py",
+       "tests/test_termui.py",
+       "tests/test_testing.py",
+       "tests/test_types.py",
+       "tests/test_utils/test_confirm.py",
+       "tests/test_utils/test_echo.py",
+       "tests/test_utils/test_open_file.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     }
+    ]
+   },
+   {
+    "sha": "8b44edfff7",
+    "co_changed": [
+     "tests/test_termui.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_termui.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_termui.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "150d1071d6",
+    "co_changed": [
+     "tests/test_termui.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_termui.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_termui.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "tests/test_termui.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "fc5c7f45da",
+    "co_changed": [
+     "tests/test_termui.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_termui.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_termui.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "f36d58bbd7",
+    "co_changed": [
+     "tests/test_termui.py",
+     "tests/test_utils/test_echo_via_pager.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_termui.py": "fail-on-base",
+     "tests/test_utils/test_echo_via_pager.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_termui.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "tests/test_termui.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "2103e15768",
+    "co_changed": [
+     "tests/test_termui.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_termui.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_termui.py",
+       "tests/test_utils/test_echo_via_pager.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     },
+     {
+      "killers": [
+       "tests/test_termui.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "tests/test_termui.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "e1fd5946ab",
+    "co_changed": [
+     "tests/test_termui.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_termui.py": "fail-on-base"
+    },
+    "mutants": []
+   },
+   {
+    "sha": "6aabf099bf",
+    "co_changed": [
+     "tests/test_abort_interrupt.py",
+     "tests/test_basic.py",
+     "tests/test_defaults.py",
+     "tests/test_exceptions/test_FileError.py",
+     "tests/test_options.py",
+     "tests/test_types/test_Choice.py",
+     "tests/test_types/test_File.py",
+     "tests/test_types/test_FloatRange.py",
+     "tests/test_types/test_FuncParamType.py",
+     "tests/test_types/test_IntRange.py",
+     "tests/test_types/test_ParamType.py",
+     "tests/test_types/test_Path.py",
+     "tests/test_types/test_convert_type.py",
+     "tests/test_utils/test_sentinel.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_abort_interrupt.py": "fail-on-base",
+     "tests/test_basic.py": "pass-on-base",
+     "tests/test_defaults.py": "pass-on-base",
+     "tests/test_exceptions/test_FileError.py": "pass-on-base",
+     "tests/test_options.py": "fail-on-base",
+     "tests/test_types/test_Choice.py": "pass-on-base",
+     "tests/test_types/test_File.py": "pass-on-base",
+     "tests/test_types/test_FloatRange.py": "pass-on-base",
+     "tests/test_types/test_FuncParamType.py": "pass-on-base",
+     "tests/test_types/test_IntRange.py": "pass-on-base",
+     "tests/test_types/test_ParamType.py": "pass-on-base",
+     "tests/test_types/test_Path.py": "pass-on-base",
+     "tests/test_types/test_convert_type.py": "pass-on-base",
+     "tests/test_utils/test_sentinel.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_abort_interrupt.py",
+       "tests/test_arguments.py",
+       "tests/test_basic.py",
+       "tests/test_chain.py",
+       "tests/test_command_decorators.py",
+       "tests/test_commands.py",
+       "tests/test_context.py",
+       "tests/test_custom_classes.py",
+       "tests/test_defaults.py",
+       "tests/test_formatting.py",
+       "tests/test_normalization.py",
+       "tests/test_options.py",
+       "tests/test_stream_lifecycle.py",
+       "tests/test_termui.py",
+       "tests/test_testing.py",
+       "tests/test_utils/test_confirm.py",
+       "tests/test_utils/test_open_file.py"
+      ],
+      "by_fob": true,
+      "by_pob": true,
+      "by_other": true
+     },
+     {
+      "killers": [
+       "tests/test_abort_interrupt.py",
+       "tests/test_arguments.py",
+       "tests/test_basic.py",
+       "tests/test_commands.py",
+       "tests/test_formatting.py",
+       "tests/test_normalization.py",
+       "tests/test_options.py",
+       "tests/test_termui.py",
+       "tests/test_testing.py"
+      ],
+      "by_fob": true,
+      "by_pob": true,
+      "by_other": true
+     }
+    ]
+   },
+   {
+    "sha": "3cbaa76b60",
+    "co_changed": [
+     "tests/test_arguments.py",
+     "tests/test_info_dict.py",
+     "tests/test_types/test_Path.py",
+     "tests/test_utils/test_make_default_short_help.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_arguments.py": "fail-on-base",
+     "tests/test_info_dict.py": "pass-on-base",
+     "tests/test_types/test_Path.py": "fail-on-base",
+     "tests/test_utils/test_make_default_short_help.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_arguments.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "tests/test_basic.py",
+       "tests/test_commands.py",
+       "tests/test_formatting.py",
+       "tests/test_shell_completion.py",
+       "tests/test_utils/test_make_default_short_help.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     }
+    ]
+   },
+   {
+    "sha": "06b2a67874",
+    "co_changed": [
+     "tests/test_arguments.py",
+     "tests/test_deprecations.py",
+     "tests/test_options.py"
+    ],
+    "excluded_not_passing_on_new": [
+     "tests/test_arguments.py",
+     "tests/test_deprecations.py",
+     "tests/test_options.py"
+    ],
+    "kinds": {},
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_basic.py",
+       "tests/test_info_dict.py"
+      ],
+      "by_fob": false,
+      "by_pob": false,
+      "by_other": true
+     },
+     {
+      "killers": [
+       "tests/test_arguments.py",
+       "tests/test_basic.py",
+       "tests/test_defaults.py",
+       "tests/test_deprecations.py",
+       "tests/test_info_dict.py",
+       "tests/test_options.py",
+       "tests/test_parser.py"
+      ],
+      "by_fob": false,
+      "by_pob": false,
+      "by_other": true
+     },
+     {
+      "killers": [
+       "tests/test_arguments.py",
+       "tests/test_deprecations.py",
+       "tests/test_options.py"
+      ],
+      "by_fob": false,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "2247b35ea1",
+    "co_changed": [
+     "tests/test_arguments.py",
+     "tests/test_deprecations.py",
+     "tests/test_options.py"
+    ],
+    "excluded_not_passing_on_new": [
+     "tests/test_arguments.py",
+     "tests/test_deprecations.py",
+     "tests/test_options.py"
+    ],
+    "kinds": {},
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_arguments.py",
+       "tests/test_basic.py",
+       "tests/test_formatting.py"
+      ],
+      "by_fob": false,
+      "by_pob": false,
+      "by_other": true
+     }
+    ]
+   },
+   {
+    "sha": "ac0e297ec2",
+    "co_changed": [
+     "tests/test_testing.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_testing.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_testing.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "tests/test_testing.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "tests/test_testing.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "dd149eb312",
+    "co_changed": [
+     "tests/test_abort_interrupt.py",
+     "tests/test_arguments.py",
+     "tests/test_basic.py",
+     "tests/test_commands.py",
+     "tests/test_context.py",
+     "tests/test_defaults.py",
+     "tests/test_formatting.py",
+     "tests/test_options.py",
+     "tests/test_stream_lifecycle.py",
+     "tests/test_termui.py",
+     "tests/test_testing.py",
+     "tests/test_types/test_File.py",
+     "tests/test_types/test_convert_type.py",
+     "tests/test_utils/test_echo.py",
+     "tests/test_utils/test_echo_via_pager.py",
+     "tests/test_utils/test_prompt.py",
+     "tests/test_utils/test_style.py"
+    ],
+    "excluded_not_passing_on_new": [
+     "tests/test_abort_interrupt.py",
+     "tests/test_arguments.py",
+     "tests/test_basic.py",
+     "tests/test_commands.py",
+     "tests/test_context.py",
+     "tests/test_defaults.py",
+     "tests/test_formatting.py",
+     "tests/test_options.py",
+     "tests/test_stream_lifecycle.py",
+     "tests/test_termui.py",
+     "tests/test_testing.py",
+     "tests/test_types/test_File.py",
+     "tests/test_types/test_convert_type.py",
+     "tests/test_utils/test_echo.py",
+     "tests/test_utils/test_echo_via_pager.py",
+     "tests/test_utils/test_prompt.py",
+     "tests/test_utils/test_style.py"
+    ],
+    "kinds": {},
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_arguments.py",
+       "tests/test_basic.py",
+       "tests/test_chain.py",
+       "tests/test_commands.py",
+       "tests/test_context.py",
+       "tests/test_defaults.py",
+       "tests/test_formatting.py",
+       "tests/test_normalization.py",
+       "tests/test_options.py",
+       "tests/test_termui.py"
+      ],
+      "by_fob": false,
+      "by_pob": false,
+      "by_other": true
+     },
+     {
+      "killers": [
+       "tests/test_options.py"
+      ],
+      "by_fob": false,
+      "by_pob": false,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "tests/test_options.py"
+      ],
+      "by_fob": false,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "fdb65f4809",
+    "co_changed": [
+     "tests/test_termui.py",
+     "tests/test_testing.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_termui.py": "fail-on-base",
+     "tests/test_testing.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_arguments.py",
+       "tests/test_basic.py",
+       "tests/test_chain.py",
+       "tests/test_command_decorators.py",
+       "tests/test_commands.py",
+       "tests/test_context.py",
+       "tests/test_custom_classes.py",
+       "tests/test_defaults.py",
+       "tests/test_formatting.py",
+       "tests/test_normalization.py",
+       "tests/test_options.py",
+       "tests/test_shell_completion.py",
+       "tests/test_stream_lifecycle.py",
+       "tests/test_termui.py",
+       "tests/test_testing.py",
+       "tests/test_types/test_Path.py",
+       "tests/test_utils/test_confirm.py",
+       "tests/test_utils/test_echo.py",
+       "tests/test_utils/test_open_file.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     },
+     {
+      "killers": [
+       "tests/test_arguments.py",
+       "tests/test_basic.py",
+       "tests/test_chain.py",
+       "tests/test_command_decorators.py",
+       "tests/test_commands.py",
+       "tests/test_context.py",
+       "tests/test_custom_classes.py",
+       "tests/test_defaults.py",
+       "tests/test_formatting.py",
+       "tests/test_normalization.py",
+       "tests/test_options.py",
+       "tests/test_stream_lifecycle.py",
+       "tests/test_termui.py",
+       "tests/test_testing.py",
+       "tests/test_types/test_Path.py",
+       "tests/test_utils/test_confirm.py",
+       "tests/test_utils/test_open_file.py",
+       "tests/test_utils/test_prompt.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     }
+    ]
+   }
+  ],
+  "dateutil": [
+   {
+    "sha": "22a49a2c31",
+    "co_changed": [
+     "tests/test_tzfile.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_tzfile.py": "pass-on-base"
+    },
+    "mutants": []
+   },
+   {
+    "sha": "208f587293",
+    "co_changed": [
+     "tests/test_tzfile.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_tzfile.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_tzfile.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "tests/test_tzfile.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "99f6653c01",
+    "co_changed": [
+     "tests/test_tzfile.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_tzfile.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_tz.py",
+       "tests/test_tzfile.py",
+       "tests/test_zoneinfo.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     },
+     {
+      "killers": [
+       "tests/test_tz.py",
+       "tests/test_tzfile.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     },
+     {
+      "killers": [
+       "tests/test_tzfile.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "6ba0156c39",
+    "co_changed": [
+     "tests/test_tzfile.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_tzfile.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_tz.py",
+       "tests/test_tzfile.py",
+       "tests/test_zoneinfo.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     },
+     {
+      "killers": [
+       "tests/test_tzfile.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "tests/test_tzfile.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "df91cdd2ed",
+    "co_changed": [
+     "tests/property/test_isoparse_prop.py",
+     "tests/property/test_tz_prop.py",
+     "tests/test_parser.py",
+     "tests/test_rrule.py",
+     "tests/test_tz.py",
+     "tests/test_tzfile.py",
+     "tests/test_tzpath_data.py",
+     "tests/test_utils.py",
+     "tests/test_zoneinfo.py"
+    ],
+    "excluded_not_passing_on_new": [
+     "tests/property/test_isoparse_prop.py",
+     "tests/property/test_tz_prop.py",
+     "tests/test_parser.py",
+     "tests/test_rrule.py",
+     "tests/test_tz.py",
+     "tests/test_tzfile.py",
+     "tests/test_tzpath_data.py",
+     "tests/test_utils.py",
+     "tests/test_zoneinfo.py"
+    ],
+    "kinds": {},
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_tzfile.py",
+       "tests/test_tzpath_data.py"
+      ],
+      "by_fob": false,
+      "by_pob": false,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "tests/property/test_isoparse_prop.py",
+       "tests/test_tzfile.py",
+       "tests/test_zoneinfo.py"
+      ],
+      "by_fob": false,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "950abb6d16",
+    "co_changed": [
+     "tests/test_rrule.py"
+    ],
+    "excluded_not_passing_on_new": [
+     "tests/test_rrule.py"
+    ],
+    "kinds": {},
+    "mutants": []
+   },
+   {
+    "sha": "68994217fb",
+    "co_changed": [
+     "tests/test_relativedelta.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_relativedelta.py": "fail-on-base"
+    },
+    "mutants": []
+   },
+   {
+    "sha": "21b6862a1e",
+    "co_changed": [
+     "tests/property/test_rrule_prop.py",
+     "tests/test_rrule.py"
+    ],
+    "excluded_not_passing_on_new": [
+     "tests/property/test_rrule_prop.py",
+     "tests/test_rrule.py"
+    ],
+    "kinds": {},
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_rrule.py"
+      ],
+      "by_fob": false,
+      "by_pob": false,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "tests/property/test_rrule_prop.py",
+       "tests/test_rrule.py"
+      ],
+      "by_fob": false,
+      "by_pob": false,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "tests/property/test_rrule_prop.py",
+       "tests/test_rrule.py"
+      ],
+      "by_fob": false,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "7a727b395d",
+    "co_changed": [
+     "tests/test_isoparser.py",
+     "tests/test_parser.py"
+    ],
+    "excluded_not_passing_on_new": [
+     "tests/test_isoparser.py",
+     "tests/test_parser.py"
+    ],
+    "kinds": {},
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_parser.py"
+      ],
+      "by_fob": false,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "6ef4de0d27",
+    "co_changed": [
+     "tests/test_rrule.py"
+    ],
+    "excluded_not_passing_on_new": [
+     "tests/test_rrule.py"
+    ],
+    "kinds": {},
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_rrule.py"
+      ],
+      "by_fob": false,
+      "by_pob": false,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "tests/test_rrule.py"
+      ],
+      "by_fob": false,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "4448b02bd1",
+    "co_changed": [
+     "tests/test_relativedelta.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_relativedelta.py": "pass-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_relativedelta.py"
+      ],
+      "by_fob": false,
+      "by_pob": true,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "5b3571afd3",
+    "co_changed": [
+     "tests/test_tzfile.py",
+     "tests/test_tzpath_data.py"
+    ],
+    "excluded_not_passing_on_new": [
+     "tests/test_tzpath_data.py"
+    ],
+    "kinds": {
+     "tests/test_tzfile.py": "pass-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/property/test_tz_prop.py"
+      ],
+      "by_fob": false,
+      "by_pob": false,
+      "by_other": true
+     },
+     {
+      "killers": [
+       "tests/property/test_tz_prop.py"
+      ],
+      "by_fob": false,
+      "by_pob": false,
+      "by_other": true
+     }
+    ]
+   },
+   {
+    "sha": "58ad91b924",
+    "co_changed": [
+     "tests/property/test_isoparse_prop.py",
+     "tests/property/test_tz_prop.py",
+     "tests/test_tz.py",
+     "tests/test_tzfile.py",
+     "tests/test_tzpath_data.py"
+    ],
+    "excluded_not_passing_on_new": [
+     "tests/property/test_isoparse_prop.py",
+     "tests/property/test_tz_prop.py",
+     "tests/test_tz.py",
+     "tests/test_tzfile.py",
+     "tests/test_tzpath_data.py"
+    ],
+    "kinds": {},
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_tz.py"
+      ],
+      "by_fob": false,
+      "by_pob": false,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "tests/test_tz.py"
+      ],
+      "by_fob": false,
+      "by_pob": false,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "tests/test_parser.py",
+       "tests/test_tz.py"
+      ],
+      "by_fob": false,
+      "by_pob": false,
+      "by_other": true
+     }
+    ]
+   },
+   {
+    "sha": "a83670eaae",
+    "co_changed": [
+     "tests/test_tz.py",
+     "tests/test_tzfile.py"
+    ],
+    "excluded_not_passing_on_new": [
+     "tests/test_tz.py",
+     "tests/test_tzfile.py"
+    ],
+    "kinds": {},
+    "mutants": [
+     {
+      "killers": [
+       "tests/property/test_isoparse_prop.py",
+       "tests/test_tzfile.py",
+       "tests/test_zoneinfo.py"
+      ],
+      "by_fob": false,
+      "by_pob": false,
+      "by_other": true
+     },
+     {
+      "killers": [
+       "tests/property/test_isoparse_prop.py",
+       "tests/property/test_tz_prop.py",
+       "tests/test_parser.py",
+       "tests/test_rrule.py",
+       "tests/test_tz.py",
+       "tests/test_tzfile.py",
+       "tests/test_tzpath_data.py",
+       "tests/test_zoneinfo.py"
+      ],
+      "by_fob": false,
+      "by_pob": false,
+      "by_other": true
+     }
+    ]
+   },
+   {
+    "sha": "4dd8153fc5",
+    "co_changed": [
+     "tests/test_imports.py",
+     "tests/test_internals.py",
+     "tests/test_tz.py",
+     "tests/test_tzfile.py",
+     "tests/test_utils.py"
+    ],
+    "excluded_not_passing_on_new": [
+     "tests/test_imports.py",
+     "tests/test_internals.py",
+     "tests/test_tz.py",
+     "tests/test_tzfile.py",
+     "tests/test_utils.py"
+    ],
+    "kinds": {},
+    "mutants": []
+   },
+   {
+    "sha": "1614e8fe66",
+    "co_changed": [
+     "tests/test_imports.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_imports.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_internals.py",
+       "tests/test_tz.py"
+      ],
+      "by_fob": false,
+      "by_pob": false,
+      "by_other": true
+     }
+    ]
+   },
+   {
+    "sha": "fd2d3467fd",
+    "co_changed": [
+     "tests/property/test_isoparse_prop.py",
+     "tests/test_imports.py",
+     "tests/test_tz.py",
+     "tests/test_tzfile.py"
+    ],
+    "excluded_not_passing_on_new": [
+     "tests/property/test_isoparse_prop.py",
+     "tests/test_imports.py",
+     "tests/test_tz.py",
+     "tests/test_tzfile.py"
+    ],
+    "kinds": {},
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_rrule.py",
+       "tests/test_tzfile.py",
+       "tests/test_zoneinfo.py"
+      ],
+      "by_fob": false,
+      "by_pob": false,
+      "by_other": true
+     }
+    ]
+   },
+   {
+    "sha": "c196c1a03d",
+    "co_changed": [
+     "tests/test_parser.py",
+     "tests/test_rrule.py",
+     "tests/test_tz.py",
+     "tests/test_tzfile.py"
+    ],
+    "excluded_not_passing_on_new": [
+     "tests/test_parser.py",
+     "tests/test_rrule.py",
+     "tests/test_tz.py",
+     "tests/test_tzfile.py"
+    ],
+    "kinds": {},
+    "mutants": []
+   },
+   {
+    "sha": "eff40999fe",
+    "co_changed": [
+     "tests/test_rrule.py",
+     "tests/test_tzfile.py"
+    ],
+    "excluded_not_passing_on_new": [
+     "tests/test_rrule.py",
+     "tests/test_tzfile.py"
+    ],
+    "kinds": {},
+    "mutants": [
+     {
+      "killers": [
+       "tests/property/test_rrule_prop.py",
+       "tests/test_rrule.py",
+       "tests/test_tz.py"
+      ],
+      "by_fob": false,
+      "by_pob": false,
+      "by_other": true
+     },
+     {
+      "killers": [
+       "tests/test_internals.py",
+       "tests/test_parser.py",
+       "tests/test_rrule.py",
+       "tests/test_tz.py"
+      ],
+      "by_fob": false,
+      "by_pob": false,
+      "by_other": true
+     }
+    ]
+   },
+   {
+    "sha": "dee4de4e96",
+    "co_changed": [
+     "tests/test_internals.py",
+     "tests/test_isoparser.py",
+     "tests/test_parser.py",
+     "tests/test_relativedelta.py",
+     "tests/test_rrule.py",
+     "tests/test_tz.py",
+     "tests/test_utils.py"
+    ],
+    "excluded_not_passing_on_new": [
+     "tests/test_internals.py",
+     "tests/test_isoparser.py",
+     "tests/test_parser.py",
+     "tests/test_relativedelta.py",
+     "tests/test_rrule.py",
+     "tests/test_tz.py",
+     "tests/test_utils.py"
+    ],
+    "kinds": {},
+    "mutants": []
+   },
+   {
+    "sha": "65fc9c3bce",
+    "co_changed": [
+     "tests/test_tzfile.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_tzfile.py": "pass-on-base"
+    },
+    "mutants": []
+   },
+   {
+    "sha": "6f13622200",
+    "co_changed": [
+     "tests/test_isoparser.py",
+     "tests/test_tz.py"
+    ],
+    "excluded_not_passing_on_new": [
+     "tests/test_isoparser.py",
+     "tests/test_tz.py"
+    ],
+    "kinds": {},
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_tz.py"
+      ],
+      "by_fob": false,
+      "by_pob": false,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "tests/test_isoparser.py"
+      ],
+      "by_fob": false,
+      "by_pob": false,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "tests/property/test_isoparse_prop.py",
+       "tests/test_isoparser.py"
+      ],
+      "by_fob": false,
+      "by_pob": false,
+      "by_other": true
+     }
+    ]
+   },
+   {
+    "sha": "d23ff760f8",
+    "co_changed": [
+     "tests/test_relativedelta.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_relativedelta.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_relativedelta.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "6e1864c7c3",
+    "co_changed": [
+     "tests/test_imports.py",
+     "tests/test_rrule.py"
+    ],
+    "excluded_not_passing_on_new": [
+     "tests/test_imports.py",
+     "tests/test_rrule.py"
+    ],
+    "kinds": {},
+    "mutants": [
+     {
+      "killers": [
+       "tests/property/test_rrule_prop.py",
+       "tests/test_rrule.py",
+       "tests/test_tz.py"
+      ],
+      "by_fob": false,
+      "by_pob": false,
+      "by_other": true
+     },
+     {
+      "killers": [
+       "tests/property/test_rrule_prop.py",
+       "tests/test_rrule.py",
+       "tests/test_tz.py"
+      ],
+      "by_fob": false,
+      "by_pob": false,
+      "by_other": true
+     }
+    ]
+   }
+  ],
+  "itsdangerous": [
+   {
+    "sha": "4559e76d63",
+    "co_changed": [
+     "tests/test_itsdangerous/test_jws.py",
+     "tests/test_itsdangerous/test_serializer.py",
+     "tests/test_itsdangerous/test_signer.py",
+     "tests/test_itsdangerous/test_timed.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_itsdangerous/test_jws.py": "pass-on-base",
+     "tests/test_itsdangerous/test_serializer.py": "pass-on-base",
+     "tests/test_itsdangerous/test_signer.py": "pass-on-base",
+     "tests/test_itsdangerous/test_timed.py": "pass-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_itsdangerous/test_timed.py"
+      ],
+      "by_fob": false,
+      "by_pob": true,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "3d3dc9f042",
+    "co_changed": [
+     "tests/test_itsdangerous/test_timed.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_itsdangerous/test_timed.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_itsdangerous/test_timed.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "05c805fce5",
+    "co_changed": [
+     "tests/test_itsdangerous/test_serializer.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_itsdangerous/test_serializer.py": "pass-on-base"
+    },
+    "mutants": []
+   },
+   {
+    "sha": "2f69e841d2",
+    "co_changed": [
+     "tests/test_itsdangerous/test_serializer.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_itsdangerous/test_serializer.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_itsdangerous/test_serializer.py",
+       "tests/test_itsdangerous/test_signer.py",
+       "tests/test_itsdangerous/test_timed.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     }
+    ]
+   },
+   {
+    "sha": "4dffa1963f",
+    "co_changed": [
+     "tests/test_itsdangerous/test_serializer.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_itsdangerous/test_serializer.py": "pass-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_itsdangerous/test_serializer.py",
+       "tests/test_itsdangerous/test_timed.py",
+       "tests/test_itsdangerous/test_url_safe.py"
+      ],
+      "by_fob": false,
+      "by_pob": true,
+      "by_other": true
+     }
+    ]
+   }
+  ],
+  "marshmallow": [
+   {
+    "sha": "71ab95a9c3",
+    "co_changed": [
+     "tests/test_deserialization.py",
+     "tests/test_schema.py",
+     "tests/test_serialization.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_deserialization.py": "fail-on-base",
+     "tests/test_schema.py": "fail-on-base",
+     "tests/test_serialization.py": "fail-on-base"
+    },
+    "mutants": []
+   },
+   {
+    "sha": "8ca596d911",
+    "co_changed": [
+     "tests/test_decorators.py",
+     "tests/test_deserialization.py",
+     "tests/test_fields.py",
+     "tests/test_schema.py",
+     "tests/test_serialization.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_decorators.py": "fail-on-base",
+     "tests/test_deserialization.py": "fail-on-base",
+     "tests/test_fields.py": "fail-on-base",
+     "tests/test_schema.py": "fail-on-base",
+     "tests/test_serialization.py": "fail-on-base"
+    },
+    "mutants": []
+   },
+   {
+    "sha": "84bed79a67",
+    "co_changed": [
+     "tests/test_context.py",
+     "tests/test_decorators.py",
+     "tests/test_deserialization.py",
+     "tests/test_fields.py",
+     "tests/test_options.py",
+     "tests/test_schema.py",
+     "tests/test_serialization.py",
+     "tests/test_utils.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_context.py": "fail-on-base",
+     "tests/test_decorators.py": "fail-on-base",
+     "tests/test_deserialization.py": "fail-on-base",
+     "tests/test_fields.py": "fail-on-base",
+     "tests/test_options.py": "fail-on-base",
+     "tests/test_schema.py": "fail-on-base",
+     "tests/test_serialization.py": "fail-on-base",
+     "tests/test_utils.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_fields.py",
+       "tests/test_schema.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "tests/test_deserialization.py",
+       "tests/test_fields.py",
+       "tests/test_serialization.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "cac2a47c68",
+    "co_changed": [
+     "tests/test_schema.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_schema.py": "pass-on-base"
+    },
+    "mutants": []
+   },
+   {
+    "sha": "7d2efd483d",
+    "co_changed": [
+     "tests/test_context.py",
+     "tests/test_decorators.py",
+     "tests/test_deserialization.py",
+     "tests/test_fields.py",
+     "tests/test_options.py",
+     "tests/test_registry.py",
+     "tests/test_schema.py",
+     "tests/test_serialization.py",
+     "tests/test_utils.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_context.py": "pass-on-base",
+     "tests/test_decorators.py": "pass-on-base",
+     "tests/test_deserialization.py": "pass-on-base",
+     "tests/test_fields.py": "pass-on-base",
+     "tests/test_options.py": "pass-on-base",
+     "tests/test_registry.py": "pass-on-base",
+     "tests/test_schema.py": "pass-on-base",
+     "tests/test_serialization.py": "pass-on-base",
+     "tests/test_utils.py": "pass-on-base"
+    },
+    "mutants": []
+   },
+   {
+    "sha": "701f52c83e",
+    "co_changed": [
+     "tests/test_schema.py",
+     "tests/test_utils.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_schema.py": "pass-on-base",
+     "tests/test_utils.py": "pass-on-base"
+    },
+    "mutants": []
+   },
+   {
+    "sha": "356e21b9ee",
+    "co_changed": [
+     "tests/test_decorators.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_decorators.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_context.py",
+       "tests/test_decorators.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     }
+    ]
+   },
+   {
+    "sha": "dc9d85245d",
+    "co_changed": [
+     "tests/test_utils.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_utils.py": "pass-on-base"
+    },
+    "mutants": []
+   },
+   {
+    "sha": "ead65cb18c",
+    "co_changed": [
+     "tests/test_utils.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_utils.py": "pass-on-base"
+    },
+    "mutants": []
+   },
+   {
+    "sha": "de5e842aea",
+    "co_changed": [
+     "tests/test_schema.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_schema.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_context.py",
+       "tests/test_deserialization.py",
+       "tests/test_fields.py",
+       "tests/test_schema.py",
+       "tests/test_serialization.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     }
+    ]
+   },
+   {
+    "sha": "50b2849cca",
+    "co_changed": [
+     "tests/test_schema.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_schema.py": "pass-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_decorators.py",
+       "tests/test_deserialization.py",
+       "tests/test_fields.py",
+       "tests/test_schema.py"
+      ],
+      "by_fob": false,
+      "by_pob": true,
+      "by_other": true
+     },
+     {
+      "killers": [
+       "tests/test_decorators.py",
+       "tests/test_deserialization.py",
+       "tests/test_fields.py",
+       "tests/test_options.py",
+       "tests/test_schema.py"
+      ],
+      "by_fob": false,
+      "by_pob": true,
+      "by_other": true
+     }
+    ]
+   },
+   {
+    "sha": "01fab376b3",
+    "co_changed": [
+     "tests/test_context.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_context.py": "pass-on-base"
+    },
+    "mutants": []
+   },
+   {
+    "sha": "8b1d061825",
+    "co_changed": [
+     "tests/test_decorators.py",
+     "tests/test_deserialization.py",
+     "tests/test_error_store.py",
+     "tests/test_fields.py",
+     "tests/test_options.py",
+     "tests/test_registry.py",
+     "tests/test_schema.py",
+     "tests/test_serialization.py",
+     "tests/test_utils.py",
+     "tests/test_validate.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_decorators.py": "pass-on-base",
+     "tests/test_deserialization.py": "pass-on-base",
+     "tests/test_error_store.py": "pass-on-base",
+     "tests/test_fields.py": "pass-on-base",
+     "tests/test_options.py": "pass-on-base",
+     "tests/test_registry.py": "pass-on-base",
+     "tests/test_schema.py": "pass-on-base",
+     "tests/test_serialization.py": "pass-on-base",
+     "tests/test_utils.py": "pass-on-base",
+     "tests/test_validate.py": "pass-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_serialization.py"
+      ],
+      "by_fob": false,
+      "by_pob": true,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "tests/test_context.py",
+       "tests/test_decorators.py",
+       "tests/test_schema.py"
+      ],
+      "by_fob": false,
+      "by_pob": true,
+      "by_other": true
+     }
+    ]
+   },
+   {
+    "sha": "5a8fa1a95d",
+    "co_changed": [
+     "tests/test_decorators.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_decorators.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_decorators.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "944f6de1b7",
+    "co_changed": [
+     "tests/test_decorators.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_decorators.py": "fail-on-base"
+    },
+    "mutants": []
+   },
+   {
+    "sha": "f27918665c",
+    "co_changed": [
+     "tests/test_validate.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_validate.py": "fail-on-base"
+    },
+    "mutants": []
+   },
+   {
+    "sha": "9cddff67b7",
+    "co_changed": [
+     "tests/test_schema.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_schema.py": "pass-on-base"
+    },
+    "mutants": []
+   },
+   {
+    "sha": "2fc8207da9",
+    "co_changed": [
+     "tests/test_context.py",
+     "tests/test_decorators.py",
+     "tests/test_schema.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_context.py": "pass-on-base",
+     "tests/test_decorators.py": "fail-on-base",
+     "tests/test_schema.py": "pass-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_decorators.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "tests/test_context.py",
+       "tests/test_decorators.py",
+       "tests/test_schema.py"
+      ],
+      "by_fob": true,
+      "by_pob": true,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "tests/test_decorators.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "0c1dd99d9f",
+    "co_changed": [
+     "tests/test_decorators.py",
+     "tests/test_registry.py",
+     "tests/test_serialization.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_decorators.py": "pass-on-base",
+     "tests/test_registry.py": "pass-on-base",
+     "tests/test_serialization.py": "pass-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_registry.py"
+      ],
+      "by_fob": false,
+      "by_pob": true,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "d861be73bc",
+    "co_changed": [
+     "tests/test_decorators.py",
+     "tests/test_deserialization.py",
+     "tests/test_schema.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_decorators.py": "pass-on-base",
+     "tests/test_deserialization.py": "pass-on-base",
+     "tests/test_schema.py": "pass-on-base"
+    },
+    "mutants": []
+   },
+   {
+    "sha": "2b84b56e9a",
+    "co_changed": [
+     "tests/test_deserialization.py",
+     "tests/test_utils.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_deserialization.py": "fail-on-base",
+     "tests/test_utils.py": "pass-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_deserialization.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "10fe10be81",
+    "co_changed": [
+     "tests/test_validate.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_validate.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_deserialization.py",
+       "tests/test_options.py",
+       "tests/test_schema.py",
+       "tests/test_validate.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     }
+    ]
+   },
+   {
+    "sha": "d24a0c9df0",
+    "co_changed": [
+     "tests/test_error_store.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_error_store.py": "pass-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_decorators.py",
+       "tests/test_error_store.py"
+      ],
+      "by_fob": false,
+      "by_pob": true,
+      "by_other": true
+     },
+     {
+      "killers": [
+       "tests/test_error_store.py"
+      ],
+      "by_fob": false,
+      "by_pob": true,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "tests/test_context.py",
+       "tests/test_decorators.py",
+       "tests/test_deserialization.py",
+       "tests/test_error_store.py",
+       "tests/test_fields.py",
+       "tests/test_schema.py"
+      ],
+      "by_fob": false,
+      "by_pob": true,
+      "by_other": true
+     }
+    ]
+   },
+   {
+    "sha": "692e79df9c",
+    "co_changed": [
+     "tests/test_error_store.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_error_store.py": "pass-on-base"
+    },
+    "mutants": []
+   },
+   {
+    "sha": "2bf3ae6ac6",
+    "co_changed": [
+     "tests/test_schema.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_schema.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_schema.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "tests/test_schema.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "39e7c833e9",
+    "co_changed": [
+     "tests/test_validate.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_validate.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_validate.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "19ca8dce2d",
+    "co_changed": [
+     "tests/test_deserialization.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_deserialization.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_deserialization.py",
+       "tests/test_serialization.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     },
+     {
+      "killers": [
+       "tests/test_deserialization.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "fea5428567",
+    "co_changed": [
+     "tests/test_fields.py",
+     "tests/test_serialization.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_fields.py": "fail-on-base",
+     "tests/test_serialization.py": "pass-on-base"
+    },
+    "mutants": []
+   },
+   {
+    "sha": "3bc191ab3c",
+    "co_changed": [
+     "tests/test_deserialization.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_deserialization.py": "pass-on-base"
+    },
+    "mutants": []
+   },
+   {
+    "sha": "070dde08ba",
+    "co_changed": [
+     "tests/test_deserialization.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_deserialization.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_deserialization.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "tests/test_deserialization.py",
+       "tests/test_serialization.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     }
+    ]
+   },
+   {
+    "sha": "65374df0c3",
+    "co_changed": [
+     "tests/test_validate.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_validate.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_validate.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "tests/test_validate.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "252090c7c7",
+    "co_changed": [
+     "tests/test_deserialization.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_deserialization.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_deserialization.py",
+       "tests/test_fields.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     }
+    ]
+   },
+   {
+    "sha": "024b5d09e9",
+    "co_changed": [
+     "tests/test_deserialization.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_deserialization.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_deserialization.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "tests/test_deserialization.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "72ac4a0420",
+    "co_changed": [
+     "tests/test_deserialization.py",
+     "tests/test_utils.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_deserialization.py": "fail-on-base",
+     "tests/test_utils.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_deserialization.py",
+       "tests/test_utils.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "c1e727e16b",
+    "co_changed": [
+     "tests/test_validate.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_validate.py": "fail-on-base"
+    },
+    "mutants": []
+   },
+   {
+    "sha": "f07eadc87d",
+    "co_changed": [
+     "tests/test_validate.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_validate.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_deserialization.py",
+       "tests/test_options.py",
+       "tests/test_schema.py",
+       "tests/test_validate.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     }
+    ]
+   },
+   {
+    "sha": "256f0aabbc",
+    "co_changed": [
+     "tests/test_fields.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_fields.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_deserialization.py",
+       "tests/test_fields.py",
+       "tests/test_schema.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     }
+    ]
+   },
+   {
+    "sha": "ec2178c26b",
+    "co_changed": [
+     "tests/test_deserialization.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_deserialization.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_deserialization.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "tests/test_deserialization.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "902f99c415",
+    "co_changed": [
+     "tests/test_validate.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_validate.py": "fail-on-base"
+    },
+    "mutants": []
+   },
+   {
+    "sha": "fcb0f9abd6",
+    "co_changed": [
+     "tests/test_utils.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_utils.py": "pass-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_deserialization.py",
+       "tests/test_schema.py",
+       "tests/test_utils.py"
+      ],
+      "by_fob": false,
+      "by_pob": true,
+      "by_other": true
+     },
+     {
+      "killers": [
+       "tests/test_deserialization.py",
+       "tests/test_schema.py",
+       "tests/test_utils.py"
+      ],
+      "by_fob": false,
+      "by_pob": true,
+      "by_other": true
+     },
+     {
+      "killers": [
+       "tests/test_context.py",
+       "tests/test_decorators.py",
+       "tests/test_deserialization.py",
+       "tests/test_fields.py",
+       "tests/test_options.py",
+       "tests/test_registry.py",
+       "tests/test_schema.py",
+       "tests/test_serialization.py",
+       "tests/test_utils.py"
+      ],
+      "by_fob": false,
+      "by_pob": true,
+      "by_other": true
+     }
+    ]
+   },
+   {
+    "sha": "7dff08fcb7",
+    "co_changed": [
+     "tests/test_deserialization.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_deserialization.py": "fail-on-base"
+    },
+    "mutants": []
+   },
+   {
+    "sha": "6ae0965607",
+    "co_changed": [
+     "tests/test_utils.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_utils.py": "pass-on-base"
+    },
+    "mutants": []
+   },
+   {
+    "sha": "5761beab39",
+    "co_changed": [
+     "tests/test_fields.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_fields.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_deserialization.py",
+       "tests/test_fields.py",
+       "tests/test_schema.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": true
+     }
+    ]
+   },
+   {
+    "sha": "88efe3ea5e",
+    "co_changed": [
+     "tests/test_deserialization.py",
+     "tests/test_schema.py",
+     "tests/test_serialization.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "tests/test_deserialization.py": "pass-on-base",
+     "tests/test_schema.py": "pass-on-base",
+     "tests/test_serialization.py": "pass-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "tests/test_serialization.py"
+      ],
+      "by_fob": false,
+      "by_pob": true,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "tests/test_deserialization.py",
+       "tests/test_utils.py"
+      ],
+      "by_fob": false,
+      "by_pob": true,
+      "by_other": true
+     }
+    ]
+   }
+  ],
+  "toolz": [
+   {
+    "sha": "020161bd1d",
+    "co_changed": [
+     "toolz/tests/test_itertoolz.py"
+    ],
+    "excluded_not_passing_on_new": [
+     "toolz/tests/test_itertoolz.py"
+    ],
+    "kinds": {},
+    "mutants": [
+     {
+      "killers": [
+       "toolz/tests/test_itertoolz.py"
+      ],
+      "by_fob": false,
+      "by_pob": false,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "toolz/tests/test_itertoolz.py"
+      ],
+      "by_fob": false,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "1b23ada481",
+    "co_changed": [
+     "toolz/tests/test_dicttoolz.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "toolz/tests/test_dicttoolz.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "toolz/tests/test_dicttoolz.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "toolz/tests/test_dicttoolz.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "c9d69b92b7",
+    "co_changed": [
+     "toolz/tests/test_functoolz.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "toolz/tests/test_functoolz.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "toolz/tests/test_functoolz.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "toolz/tests/test_functoolz.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "0434ddda9f",
+    "co_changed": [
+     "toolz/tests/test_functoolz.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "toolz/tests/test_functoolz.py": "pass-on-base"
+    },
+    "mutants": []
+   },
+   {
+    "sha": "69bb12cd8a",
+    "co_changed": [
+     "toolz/tests/test_functoolz.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "toolz/tests/test_functoolz.py": "pass-on-base"
+    },
+    "mutants": []
+   },
+   {
+    "sha": "4edf149e1e",
+    "co_changed": [
+     "toolz/tests/test_inspect_args.py"
+    ],
+    "excluded_not_passing_on_new": [
+     "toolz/tests/test_inspect_args.py"
+    ],
+    "kinds": {},
+    "mutants": []
+   },
+   {
+    "sha": "f34a534eab",
+    "co_changed": [
+     "toolz/tests/test_dicttoolz.py",
+     "toolz/tests/test_itertoolz.py"
+    ],
+    "excluded_not_passing_on_new": [
+     "toolz/tests/test_itertoolz.py"
+    ],
+    "kinds": {
+     "toolz/tests/test_dicttoolz.py": "pass-on-base"
+    },
+    "mutants": []
+   },
+   {
+    "sha": "ea3ba0d60a",
+    "co_changed": [
+     "toolz/tests/test_dicttoolz.py",
+     "toolz/tests/test_functoolz.py",
+     "toolz/tests/test_inspect_args.py",
+     "toolz/tests/test_itertoolz.py",
+     "toolz/tests/test_serialization.py",
+     "toolz/tests/test_signatures.py",
+     "toolz/tests/test_tlz.py"
+    ],
+    "excluded_not_passing_on_new": [
+     "toolz/tests/test_inspect_args.py",
+     "toolz/tests/test_itertoolz.py",
+     "toolz/tests/test_tlz.py"
+    ],
+    "kinds": {
+     "toolz/tests/test_dicttoolz.py": "pass-on-base",
+     "toolz/tests/test_functoolz.py": "pass-on-base",
+     "toolz/tests/test_serialization.py": "pass-on-base",
+     "toolz/tests/test_signatures.py": "pass-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "toolz/tests/test_inspect_args.py"
+      ],
+      "by_fob": false,
+      "by_pob": false,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "toolz/tests/test_inspect_args.py"
+      ],
+      "by_fob": false,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "55c60e9da0",
+    "co_changed": [
+     "toolz/tests/test_compatibility.py",
+     "toolz/tests/test_itertoolz.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "toolz/tests/test_compatibility.py": "pass-on-base",
+     "toolz/tests/test_itertoolz.py": "pass-on-base"
+    },
+    "mutants": []
+   },
+   {
+    "sha": "142e9ee966",
+    "co_changed": [
+     "toolz/tests/test_inspect_args.py"
+    ],
+    "excluded_not_passing_on_new": [
+     "toolz/tests/test_inspect_args.py"
+    ],
+    "kinds": {},
+    "mutants": []
+   },
+   {
+    "sha": "22dc02408c",
+    "co_changed": [
+     "toolz/tests/test_curried.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "toolz/tests/test_curried.py": "pass-on-base"
+    },
+    "mutants": []
+   },
+   {
+    "sha": "386c75033d",
+    "co_changed": [
+     "toolz/tests/test_itertoolz.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "toolz/tests/test_itertoolz.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "toolz/tests/test_itertoolz.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "toolz/tests/test_itertoolz.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "toolz/tests/test_itertoolz.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "037b10a42f",
+    "co_changed": [
+     "toolz/tests/test_functoolz.py",
+     "toolz/tests/test_inspect_args.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "toolz/tests/test_functoolz.py": "pass-on-base",
+     "toolz/tests/test_inspect_args.py": "pass-on-base"
+    },
+    "mutants": []
+   },
+   {
+    "sha": "688a812572",
+    "co_changed": [
+     "toolz/tests/test_inspect_args.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "toolz/tests/test_inspect_args.py": "pass-on-base"
+    },
+    "mutants": []
+   },
+   {
+    "sha": "a39cd67854",
+    "co_changed": [
+     "toolz/tests/test_compatibility.py",
+     "toolz/tests/test_dicttoolz.py",
+     "toolz/tests/test_functoolz.py",
+     "toolz/tests/test_inspect_args.py",
+     "toolz/tests/test_itertoolz.py",
+     "toolz/tests/test_package.py",
+     "toolz/tests/test_serialization.py"
+    ],
+    "excluded_not_passing_on_new": [
+     "toolz/tests/test_package.py"
+    ],
+    "kinds": {
+     "toolz/tests/test_compatibility.py": "pass-on-base",
+     "toolz/tests/test_dicttoolz.py": "pass-on-base",
+     "toolz/tests/test_functoolz.py": "pass-on-base",
+     "toolz/tests/test_inspect_args.py": "pass-on-base",
+     "toolz/tests/test_itertoolz.py": "pass-on-base",
+     "toolz/tests/test_serialization.py": "pass-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "toolz/tests/test_functoolz.py"
+      ],
+      "by_fob": false,
+      "by_pob": true,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "toolz/tests/test_compatibility.py",
+       "toolz/tests/test_package.py"
+      ],
+      "by_fob": false,
+      "by_pob": true,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "toolz/tests/test_functoolz.py"
+      ],
+      "by_fob": false,
+      "by_pob": true,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "5a7e078c94",
+    "co_changed": [
+     "toolz/tests/test_itertoolz.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "toolz/tests/test_itertoolz.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "toolz/tests/test_itertoolz.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "toolz/tests/test_itertoolz.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "a1e25cbd2c",
+    "co_changed": [
+     "toolz/tests/test_dicttoolz.py",
+     "toolz/tests/test_functoolz.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "toolz/tests/test_dicttoolz.py": "pass-on-base",
+     "toolz/tests/test_functoolz.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "toolz/tests/test_functoolz.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "toolz/tests/test_functoolz.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "toolz/tests/test_functoolz.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   },
+   {
+    "sha": "d2eba0374a",
+    "co_changed": [
+     "toolz/tests/test_itertoolz.py"
+    ],
+    "excluded_not_passing_on_new": [],
+    "kinds": {
+     "toolz/tests/test_itertoolz.py": "fail-on-base"
+    },
+    "mutants": [
+     {
+      "killers": [
+       "toolz/tests/test_itertoolz.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     },
+     {
+      "killers": [
+       "toolz/tests/test_itertoolz.py"
+      ],
+      "by_fob": true,
+      "by_pob": false,
+      "by_other": false
+     }
+    ]
+   }
+  ]
+ },
+ "summary": {
+  "changes": {
+   "with_co_changed_tests": 205,
+   "evaluated": 181,
+   "mixed": 28,
+   "only_pass_on_base": 50,
+   "only_fail_on_base": 103,
+   "no_valid_co_changed": 24
+  },
+  "test_files": {
+   "pass-on-base": 157,
+   "fail-on-base": 193,
+   "excluded_not_passing_on_new": 6
+  },
+  "mutants": {
+   "detected": 261,
+   "by_pass_on_base": 37,
+   "only_by_pass_on_base": 10,
+   "only_by_co_changed": 134,
+   "by_fail_on_base": 209
+  },
+  "python": "Python 3.12.13"
+ }
+}
