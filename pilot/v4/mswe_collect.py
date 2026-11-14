@@ -30,7 +30,7 @@ elif command -v apk >/dev/null 2>&1; then
 fi
 python3 -m venv /home/ctenv || python3 -m venv --without-pip /home/ctenv
 if [ ! -x /home/ctenv/bin/pip ]; then curl -sS https://bootstrap.pypa.io/get-pip.py | /home/ctenv/bin/python; fi
-/home/ctenv/bin/pip install -q --disable-pip-version-check /home/codetwin.whl --no-deps "tree-sitter>=0.23" "tree-sitter-language-pack>=0.9"
+/home/ctenv/bin/pip install -q --disable-pip-version-check /home/codetwin-0.1.0-py3-none-any.whl --no-deps "tree-sitter>=0.23" "tree-sitter-language-pack>=0.9"
 if [ "$1" = "rust" ]; then
   rustup component add llvm-tools-preview || true
   curl -sSL https://github.com/taiki-e/cargo-llvm-cov/releases/latest/download/cargo-llvm-cov-x86_64-unknown-linux-gnu.tar.gz | tar xz -C "$(dirname "$(command -v cargo)")"
@@ -83,7 +83,7 @@ def run_one(image: str, pr: int, index: int, repo_name: str, language: str, whee
         cid = sh(["docker", "run", "-d", "--entrypoint", "sleep", image, "infinity"]).stdout.strip()
         setup = out_dir / "_setup.sh"
         setup.write_text(SETUP)
-        for src, dst in [(wheel, "/home/codetwin.whl"), (HERE / "mswe_inside.py", "/home/mswe_inside.py"), (setup, "/home/setup.sh")]:
+        for src, dst in [(wheel, "/home/codetwin-0.1.0-py3-none-any.whl"), (HERE / "mswe_inside.py", "/home/mswe_inside.py"), (setup, "/home/setup.sh")]:
             sh(["docker", "cp", str(src), f"{cid}:{dst}"])
         sh(["docker", "exec", cid, "sh", "/home/setup.sh", language], timeout=1500)
         cmd = ["docker", "exec", cid, "/home/ctenv/bin/python", "/home/mswe_inside.py", "--repo", f"/home/{repo_name}",
