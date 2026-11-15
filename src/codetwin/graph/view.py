@@ -18,7 +18,7 @@ def label(path: str) -> str:
 
 def impact_view(static: dict[str, FileFacts], run: TestRun | None, src_root: str, tests: list[str], file: str,
                 lines: tuple[int, int] | None = None) -> dict:
-    g = build_graph(static, run)
+    g = build_graph(static, run, src_root)
     target = f"{file}:{lines[0]}-{lines[1]}" if lines else file
     nodes: dict[str, dict] = {target: {"id": target, "label": label(target), "kind": "target", "path": file}}
     edges: list[dict] = []

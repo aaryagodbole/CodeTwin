@@ -61,7 +61,7 @@ def _census(root: Path) -> dict[str, tuple[int, int, bool]]:
         if not files:
             continue
         tests = sum(glob_match(f, globs) for f in files)
-        out[name] = (len(files) - tests, tests, any((root / m).exists() for m in markers if "*" not in m))
+        out[name] = (len(files) - tests, tests, any(any(root.glob(m)) if "*" in m else (root / m).exists() for m in markers))
     return out
 
 

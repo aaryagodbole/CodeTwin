@@ -52,6 +52,10 @@ MISSING_TOOL = re.compile(r"no such command: `?[\w-]+`?|command not found|: not 
 BODY_TYPES = {"function_body", "block", "compound_statement", "body_statement", "statement_block"}
 
 
+UNRESOLVED_IMPORT = "unresolved-import"
+LOCAL_IMPORT = re.compile(r"^(\.\.?/|@/|~/|#)")
+
+
 class TreeSitterMissing(RuntimeError):
     pass
 
@@ -252,6 +256,14 @@ class Generic(Language):
         return (FileFacts(imports=sorted(set(raw)), dynamic=sorted(dyn), dyn_lines=sorted(dyn_lines),
                           defs=sorted(defs), mod_lines=sorted(mod_lines)), raw, names)
 
+    def looks_local(self, spec: str) -> bool:
+        """An import of the project itself: relative ("./x", "../x") or a path alias ("@/x", "~/x", "#x"), for code
+        (an asset such as "./App.css" has another extension and is not code)."""
+        if not LOCAL_IMPORT.match(spec):
+            return False
+        ext = posixpath.splitext(spec.rsplit("/", 1)[-1])[1]
+        return not ext or ext in self.extensions
+
     def facts(self) -> dict[str, FileFacts]:
         files = self._all_files()
         out: dict[str, FileFacts] = {}
@@ -266,10 +278,16 @@ class Generic(Language):
             self.spec.prepare(idx)
         for f, facts in out.items():
             deps: list[str] = []
+            unresolved = False
             for r in raws[f]:
-                for t in (self.spec.resolve(r, f, idx) if self.spec.resolve else []):
+                hits = self.spec.resolve(r, f, idx) if self.spec.resolve else []
+                for t in hits:
                     if t != f and t not in deps:
                         deps.append(t)
+                if self.spec.resolve and not hits and self.looks_local(r):
+                    unresolved = True       # a project import that could not be followed: unknown, not "no link"
+            if unresolved and UNRESOLVED_IMPORT not in facts.dynamic:
+                facts.dynamic = sorted([*facts.dynamic, UNRESOLVED_IMPORT])
             for t in (self.spec.extra_deps(f, idx) if self.spec.extra_deps else []):
                 if t != f and t not in deps:
                     deps.append(t)
@@ -396,6 +414,23 @@ class Generic(Language):
         except OSError:
             pass
 
+    def batches(self, tests: list[str]) -> list[list[str]]:
+        """Units of parallel work: one test file each, except that all test files of a project whose runner is
+        not parallel-safe (shared target/, build/ or obj/, reports inside the project) form one serial batch."""
+        out: list[list[str]] = []
+        serial: dict[str, list[str]] = {}
+        for t in tests:
+            r = self.runner_for(t, is_dir=False)
+            if r is not None and not r.parallel_safe():
+                pdir = self.project_dir(t)
+                if pdir not in serial:
+                    serial[pdir] = []
+                    out.append(serial[pdir])
+                serial[pdir].append(t)
+            else:
+                out.append([t])
+        return out
+
     def run_suite(self, sha: str, tests: list[str] | None = None, timeout: int = 3600) -> TestRun:
         tests = tests if tests is not None else self.list_tests()
         # Static-evidence mode for tests whose project has no known test runner: listed, not run, no coverage;
@@ -412,7 +447,10 @@ class Generic(Language):
         workers = max(1, int(self.opts.get("workers", 1)))
         self._missing = {}
         with ThreadPoolExecutor(workers) as ex:
-            results = list(ex.map(lambda t: self._run_one(t, self.root, per, True), runnable))
+            done = list(ex.map(lambda batch: [self._run_one(t, self.root, per, True) for t in batch],
+                               self.batches(runnable)))
+        by_test = {r[0]: r for batch in done for r in batch}
+        results = [by_test[t] for t in runnable]
         for test, dt, ok, lines in results:
             run.durations[test] = dt
             if test in self._missing:      # the runner or coverage tool is missing: no evidence, not a test failure
@@ -420,6 +458,11 @@ class Generic(Language):
             if ok is not True:
                 run.failing.append(f"{test}::" + ("timeout" if ok is None else "failed"))
             run.covered[test] = {f: sorted(ls) for f, ls in lines.items() if not self.is_test(f)}
+        silent = sorted(t for t, _dt, ok, lines in results if ok is True and not lines and t not in self._missing)
+        if silent:
+            run.notes.append(f"{self.name}: {len(silent)} test files passed but wrote no coverage report "
+                             f"(e.g. {', '.join(silent[:3])}); the files they run are unknown, not untested. Check "
+                             "coverage_file / coverage_format (see .codetwin/runner.log)")
         for why in sorted(set(self._missing.values())):
             n = sum(1 for v in self._missing.values() if v == why)
             run.notes.append(f"{self.name}: {n} test files could not run ({why}); they have no runtime evidence, so "

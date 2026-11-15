@@ -111,7 +111,7 @@ def _vars(test: str, text: str) -> dict:
 
 
 RUNNERS = [Runner("cargo-llvm-cov", "cargo llvm-cov --lcov --output-path {cov_dir}/lcov.info {target}", "lcov",
-                  "lcov.info", run_command="cargo test {target}", build_command="cargo test --no-run",
+                  "lcov.info", run_command="cargo test {target}", build_command="cargo test --no-run", shares_build_dir=True,
                   detect=lambda root: (root / "Cargo.toml").exists(), vars=_vars)]
 
 SPEC = Spec(
