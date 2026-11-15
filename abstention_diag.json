@@ -1,0 +1,112 @@
+{
+ "python": {
+  "tests": 1638,
+  "affected": 270,
+  "rate": 0.16483516483516483,
+  "rate_without_import_time_changes": 0.14931506849315068
+ },
+ "languages": {
+  "lang_go": {
+   "tests": 327,
+   "affected": 6,
+   "rate": 0.01834862385321101,
+   "rate_without_import_time_changes": 0.0,
+   "unsafe": [
+    {
+     "r": 0.0,
+     "missed_p": [
+      0.0
+     ],
+     "missed_file_only": true,
+     "missed_static_path": true
+    },
+    {
+     "r": 0.08333333333333337,
+     "missed_p": [
+      0.0
+     ],
+     "missed_file_only": true,
+     "missed_static_path": true
+    }
+   ]
+  },
+  "lang_rust": {
+   "tests": 173,
+   "affected": 10,
+   "rate": 0.057803468208092484,
+   "rate_without_import_time_changes": 0.058823529411764705,
+   "unsafe": [
+    {
+     "r": 0.05355972952667165,
+     "missed_p": [
+      0.01818181818181818
+     ],
+     "missed_file_only": true,
+     "missed_static_path": false
+    },
+    {
+     "r": 0.03603305785123967,
+     "missed_p": [
+      0.01818181818181818
+     ],
+     "missed_file_only": true,
+     "missed_static_path": false
+    },
+    {
+     "r": 0.012269822485207138,
+     "missed_p": [
+      0.006153846153846154
+     ],
+     "missed_file_only": true,
+     "missed_static_path": false
+    },
+    {
+     "r": 0.07076773444436857,
+     "missed_p": [
+      0.01818181818181818
+     ],
+     "missed_file_only": true,
+     "missed_static_path": false
+    },
+    {
+     "r": 0.018348162039144356,
+     "missed_p": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "missed_file_only": true,
+     "missed_static_path": false
+    }
+   ]
+  },
+  "lang_javascript": {
+   "tests": 335,
+   "affected": 30,
+   "rate": 0.08955223880597014,
+   "rate_without_import_time_changes": 0.03225806451612903,
+   "unsafe": [
+    {
+     "r": 0.8046636567431342,
+     "missed_p": [
+      0.19718309859154928,
+      0.19718309859154928,
+      0.19718309859154928,
+      0.19718309859154928,
+      0.19718309859154928
+     ],
+     "missed_file_only": true,
+     "missed_static_path": true
+    },
+    {
+     "r": 0.6665102157513898,
+     "missed_p": [
+      0.19718309859154928
+     ],
+     "missed_file_only": true,
+     "missed_static_path": true
+    }
+   ]
+  }
+ }
+}
