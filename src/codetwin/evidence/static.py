@@ -41,22 +41,36 @@ def analyse_file(path: Path, root: Path, packages: list[str]) -> FileFacts:
                 dyn.add(hit)
                 dyn_lines.add(node.lineno)
     defs: list[list[int]] = []
+    symbols: list[list] = []
     mod_lines: set[int] = set()
+    prefix: list[str] = []
+    in_class: list[bool] = [False]
 
     def visit(body, at_import):
         for i, st in enumerate(body):
             if isinstance(st, (ast.FunctionDef, ast.AsyncFunctionDef)):
                 start = min([d.lineno for d in st.decorator_list] + [st.lineno])
                 defs.append([start, st.end_lineno, st.body[0].lineno])
+                symbols.append([".".join(prefix + [st.name]), "method" if in_class[-1] else "function", start, st.end_lineno])
+                prefix.append(st.name)
+                in_class.append(False)
                 if at_import:
                     for d in st.decorator_list:
                         mod_lines.update(range(d.lineno, d.end_lineno + 1))
                 visit(st.body, False)
+                prefix.pop()
+                in_class.pop()
             elif isinstance(st, ast.ClassDef):
                 if at_import:
                     for d in st.decorator_list + st.bases + [k.value for k in st.keywords]:
                         mod_lines.update(range(d.lineno, d.end_lineno + 1))
+                start = min([d.lineno for d in st.decorator_list] + [st.lineno])
+                symbols.append([".".join(prefix + [st.name]), "class", start, st.end_lineno])
+                prefix.append(st.name)
+                in_class.append(True)
                 visit(st.body, at_import)
+                prefix.pop()
+                in_class.pop()
             elif at_import:
                 doc = i == 0 and isinstance(st, ast.Expr) and isinstance(st.value, ast.Constant) and isinstance(st.value.value, str)
                 if doc or isinstance(st, (ast.Import, ast.ImportFrom, ast.Pass)):
@@ -73,7 +87,8 @@ def analyse_file(path: Path, root: Path, packages: list[str]) -> FileFacts:
     # with no packages configured (a Python part of a larger repository) keep every import; resolution
     # against the repository's own modules drops third-party ones
     keep = sorted(i for i in imports if i and (not packages or any(i == p or i.startswith(p + ".") for p in packages)))
-    return FileFacts(imports=keep, dynamic=sorted(dyn), dyn_lines=sorted(dyn_lines), defs=sorted(defs), mod_lines=sorted(mod_lines))
+    return FileFacts(imports=keep, dynamic=sorted(dyn), dyn_lines=sorted(dyn_lines), defs=sorted(defs), mod_lines=sorted(mod_lines),
+                     symbols=sorted(symbols, key=lambda x: (x[2], -x[3])))
 
 
 def snapshot(repo: str | Path, src_root: str, packages: list[str], dirs: list[str]) -> dict[str, FileFacts]:

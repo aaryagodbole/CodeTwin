@@ -45,6 +45,14 @@ from .base import Language, glob_match, repo_files, under
 from .spec import Runner, Spec
 
 BODY_TYPES = {"function_body", "block", "compound_statement", "body_statement", "statement_block"}
+# containers of functions, in the grammars of the supported languages (class, struct, interface, trait, impl, ...)
+CLASS_TYPES = {"class_declaration", "class_definition", "class", "class_specifier", "struct_specifier",
+               "interface_declaration", "enum_declaration", "record_declaration", "object_declaration",
+               "struct_item", "enum_item", "trait_item", "impl_item", "mod_item", "type_spec", "module",
+               "trait_declaration", "struct_declaration", "namespace_definition", "abstract_class_declaration",
+               "singleton_class"}
+ANONYMOUS = {"arrow_function", "function_expression", "function", "lambda_expression", "lambda_literal",
+             "anonymous_function", "closure_expression", "func_literal", "lambda", "block", "do_block"}
 
 
 class TreeSitterMissing(RuntimeError):
@@ -82,6 +90,56 @@ def line(node) -> int:
 
 def end_line(node) -> int:
     return node.end_point[0] + 1
+
+
+def symbol_name(node, src: bytes) -> str | None:
+    """Name of a function or class node: its `name` field, an impl's type, or the first identifier of its
+    declarator (C/C++). Anonymous functions take the name of the variable or property they are assigned to."""
+    n = node.child_by_field_name("name") or (node.child_by_field_name("type") if node.type == "impl_item" else None)
+    if n is None and node.type in ANONYMOUS:
+        par = node.parent
+        if par is not None and par.type in ("variable_declarator", "assignment_expression", "pair",
+                                            "public_field_definition", "field_definition", "short_var_declaration"):
+            n = par.child_by_field_name("name") or par.child_by_field_name("left") or par.child_by_field_name("key")
+        if n is None:
+            return None
+    if n is None:
+        stack = [c for c in (node.child_by_field_name("declarator"),) if c is not None]
+        while stack and n is None:
+            c = stack.pop(0)
+            if c.type.endswith("identifier") or c.type in ("field_identifier", "type_identifier", "constant"):
+                n = c
+            else:
+                stack.extend(c.named_children)
+    if n is None:
+        return None
+    name = text(n, src).strip()
+    if not name or len(name) > 200 or "\n" in name:
+        return None
+    recv = node.child_by_field_name("receiver") if node.type == "method_declaration" else None
+    if recv is not None:                                   # Go: func (s *Server) Run() -> Server.Run
+        types = [c for c in walk(recv) if c.type == "type_identifier"]
+        if types:
+            name = f"{text(types[0], src)}.{name}"
+    return name
+
+
+def qualify(symbols: list[list]) -> list[list]:
+    """Prefix each symbol with the classes that contain it ("Parser.parse") and mark functions inside a class
+    as methods. Input and output rows: [name, kind, first line, last line]."""
+    rows = sorted(symbols, key=lambda r: (r[2], -r[3]))
+    out: list[list] = []
+    stack: list[list] = []
+    for name, kind, a, b in rows:
+        while stack and not (stack[-1][2] <= a and b <= stack[-1][3]):
+            stack.pop()
+        outer = [s for s in stack if s[1] == "class"]
+        q = ".".join([s[0].rsplit(".", 1)[-1] for s in outer] + [name])
+        k = "method" if kind == "function" and stack and stack[-1][1] == "class" else kind
+        row = [q, k, a, b]
+        out.append(row)
+        stack.append(row)
+    return out
 
 
 @dataclass
@@ -205,7 +263,12 @@ class Generic(Language):
         dyn: set[str] = set()
         dyn_lines: set[int] = set()
         defs: list[list[int]] = []
+        symbols: list[list] = []
         for n in walk(tree.root_node):
+            if n.type in CLASS_TYPES:
+                nm = symbol_name(n, src)
+                if nm:
+                    symbols.append([nm, "class", line(n), end_line(n)])
             if sp.imports:
                 got = sp.imports(n, src)
                 if got:
@@ -228,6 +291,9 @@ class Generic(Language):
                     braced = bool(body.children) and body.children[0].type == "{"
                     first_line = line(stmts[0]) if braced and stmts else (end_line(body) if braced else line(body))
                     defs.append([line(n), end_line(n), first_line])
+                    nm = symbol_name(n, src)
+                    if nm:
+                        symbols.append([nm, "function", line(n), end_line(n)])
         if tree.root_node.has_error:
             dyn.add("parse-error")
         mod_lines: set[int] = set(sp.load_time(tree.root_node, src)) if sp.load_time else set()
@@ -244,7 +310,7 @@ class Generic(Language):
                 continue
             mod_lines.update(range(line(ch), end_line(ch) + 1))
         return (FileFacts(imports=sorted(set(raw)), dynamic=sorted(dyn), dyn_lines=sorted(dyn_lines),
-                          defs=sorted(defs), mod_lines=sorted(mod_lines)), raw, names)
+                          defs=sorted(defs), mod_lines=sorted(mod_lines), symbols=qualify(symbols)), raw, names)
 
     def facts(self) -> dict[str, FileFacts]:
         files = self._all_files()
