@@ -133,7 +133,8 @@ class Engine:
     def without_runtime_evidence(self, diff, prev) -> dict[str, str]:
         """Changed source files whose tests have no runtime evidence, with the reason: no runner configured, or a
         runner whose runs recorded no coverage at all for the file's project (e.g. a missing coverage tool)."""
-        covered = {self.lang.evidence_group(t) for t, files in (prev.covered.items() if prev else []) if files}
+        # groups of the source files any test executed (a test project may live apart from the code it tests)
+        covered = {self.lang.evidence_group(f) for files in (prev.covered.values() if prev else []) for f in files}
         out: dict[str, str] = {}
         for f in diff:
             if not self.is_source(f):
