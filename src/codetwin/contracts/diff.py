@@ -42,6 +42,28 @@ def find_contract_files(root: Path, configured: list[str] | None = None) -> list
     return sorted(f for f in files if glob_match(f, PATTERNS) and not f.startswith(("node_modules/", ".")))
 
 
+def contract_files_at(root: Path, sha: str, configured: list[str] | None = None) -> list[str]:
+    """Contract files in the tree of commit `sha` (configured paths, or the patterns)."""
+    r = subprocess.run(["git", "ls-tree", "-r", "--name-only", sha], cwd=root, capture_output=True, text=True,
+                       check=False)
+    tree = r.stdout.splitlines() if r.returncode == 0 else []
+    if configured:
+        return sorted(f for f in configured if f in set(tree))
+    return sorted(f for f in tree if glob_match(f, PATTERNS) and not f.startswith(("node_modules/", ".")))
+
+
+def renames(root: Path, sha: str, paths: list[str]) -> dict[str, str]:
+    """Old path -> new path for files git sees as renamed between `sha` and the working tree."""
+    r = subprocess.run(["git", "diff", "-M", "--name-status", sha, "--", *paths], cwd=root, capture_output=True,
+                       text=True, check=False) if paths else None
+    out = {}
+    for line in (r.stdout.splitlines() if r is not None and r.returncode == 0 else []):
+        parts = line.split("\t")
+        if parts[0].startswith("R") and len(parts) == 3:
+            out[parts[1]] = parts[2]
+    return out
+
+
 def at_commit(root: Path, sha: str, path: str) -> str | None:
     r = subprocess.run(["git", "show", f"{sha}:{path}"], cwd=root, capture_output=True, text=True, check=False)
     return r.stdout if r.returncode == 0 else None
@@ -119,6 +141,10 @@ def _params(doc: dict, op: dict, path_item: dict) -> dict[tuple[str, str], dict]
     return out
 
 
+def _body_param(params: dict[tuple[str, str], dict]) -> dict | None:
+    return next((p for (where, _name), p in sorted(params.items()) if where == "body"), None)
+
+
 def _json_body(doc: dict, node) -> dict | None:
     node = _resolve(doc, node)
     if not isinstance(node, dict):
@@ -168,7 +194,9 @@ def diff_openapi(old: dict, new: dict, file: str) -> list[ContractChange]:
                 if q.get("required") and not (pa.get((where, name)) or {}).get("required"):
                     out.append(ContractChange(file, "parameter-required", f"{loc} {where} {name}",
                                               f"{where} parameter {name} is now required", True, path=path, field=name))
-            bo, bn = _json_body(old, oo.get("requestBody")), _json_body(new, on.get("requestBody"))
+            # OpenAPI 3 requestBody, or the OpenAPI 2 `in: body` parameter
+            bo = _json_body(old, oo.get("requestBody") or _body_param(pa))
+            bn = _json_body(new, on.get("requestBody") or _body_param(pb))
             if bo is not None and bn is not None:
                 diff_schema(bo, bn, f"{loc} request", file, old, new, out)
             ro, rn = oo.get("responses") or {}, on.get("responses") or {}
