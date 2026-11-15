@@ -63,6 +63,16 @@ def facts_to_dict(facts) -> dict:
                 "mod_lines": v.mod_lines, "deps": v.deps} for f, v in facts.items()}
 
 
+def static_or_none(adapter):
+    """Static facts, or None when tree-sitter cannot be installed in this image (old glibc); the host
+    driver then computes them from a copy of the repository (mswe_collect.py)."""
+    try:
+        return adapter.facts()
+    except Exception as e:  # noqa: BLE001  (TreeSitterMissing, ImportError of a grammar)
+        print(f"[inside] static facts deferred to the host: {type(e).__name__}: {str(e)[:200]}", flush=True)
+        return None
+
+
 def loc_of(repo: Path, files) -> dict:
     out = {}
     for f in files:
@@ -124,7 +134,7 @@ def main():
 
     # -------- base snapshot
     t0 = time.time()
-    facts_b = adapter.facts()
+    facts_b = static_or_none(adapter)
     run_b = adapter.run_suite(base, universe, timeout=args.timeout * len(universe) + 600)
     log["steps"]["base_run"] = round(time.time() - t0, 1)
     n_fail = len({x.split('::')[0] for x in run_b.failing})
@@ -138,7 +148,8 @@ def main():
             sys.exit("[inside] no coverage at all on the base commit: giving up on this PR")
     (out / "snap" / f"{base}.json").write_text(json.dumps({
         "sha": base, "date": git(repo, "log", "-1", "--format=%cI").stdout.strip(), "subject": "base",
-        "tests_present": all_tests, "static": facts_to_dict(facts_b), "loc": loc_of(repo, facts_b), "run": run_to_dict(run_b)}))
+        "tests_present": all_tests, "static": facts_to_dict(facts_b) if facts_b is not None else None,
+        "loc": loc_of(repo, facts_b) if facts_b is not None else None, "run": run_to_dict(run_b)}))
 
     # -------- fail-on-base: the PR's test files on the base code
     t0 = time.time()
@@ -165,7 +176,7 @@ def main():
         sys.exit(f"[inside] could not commit the patched tree: {(c.stdout + c.stderr)[-800:]}")
     diff = changed_lines(repo, base, new, adapter.extensions)
     t0 = time.time()
-    facts_n = adapter.facts()
+    facts_n = static_or_none(adapter)
     new_tests = adapter.list_tests()
     # Only tests that can be affected run again: those whose base coverage touched a changed or deleted
     # file, plus the PR's own test files. File-level coverage was safe on every change of the Python study,
@@ -184,7 +195,8 @@ def main():
             run_n.failing += [x for x in run_b.failing if x.split("::", 1)[0] == t]
     (out / "snap" / f"{new}.json").write_text(json.dumps({
         "sha": new, "date": git(repo, "log", "-1", "--format=%cI").stdout.strip(), "subject": f"PR {args.pr}",
-        "tests_present": new_tests, "static": facts_to_dict(facts_n), "loc": loc_of(repo, facts_n), "run": run_to_dict(run_n)}))
+        "tests_present": new_tests, "static": facts_to_dict(facts_n) if facts_n is not None else None,
+        "loc": loc_of(repo, facts_n) if facts_n is not None else None, "run": run_to_dict(run_n)}))
 
     failing_new = {x.split("::", 1)[0] for x in run_n.failing}
     f2p = sorted(t for t, fob in fail_on_base.items() if fob is True and t not in failing_new)

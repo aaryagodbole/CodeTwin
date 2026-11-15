@@ -148,6 +148,9 @@ jobs:
                             allow_patterns=["*.jsonl", "*.json"])
           PY
           find pilot/v4/data/mswe -name "*.jsonl" | head -30; du -sh pilot/v4/data/mswe
+      - name: Install CodeTwin on the runner (static facts for images too old for tree-sitter)
+        if: steps.gate.outputs.skip != 'true'
+        run: pip install -q pilot/v4/codetwin-0.1.0-py3-none-any.whl "tree-sitter>=0.23" "tree-sitter-language-pack>=0.9"
       - name: Collect
         if: steps.gate.outputs.skip != 'true'
         working-directory: pilot/v4

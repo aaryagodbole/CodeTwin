@@ -20,22 +20,36 @@ HERE = Path(__file__).resolve().parent
 DATA = HERE / "data"
 
 SETUP = r"""#!/bin/sh
+# $1 language, $2 repository folder under /home
 set -e
 export DEBIAN_FRONTEND=noninteractive
 if command -v apt-get >/dev/null 2>&1; then
   apt-get update -qq || true
-  apt-get install -y -qq --no-install-recommends python3 python3-venv python3-pip ca-certificates curl
+  apt-get install -y -qq --no-install-recommends python3 python3-venv python3-pip ca-certificates curl >/dev/null
 elif command -v apk >/dev/null 2>&1; then
-  apk add --no-cache python3 py3-pip
+  apk add --no-cache python3 py3-pip >/dev/null
 fi
 python3 -m venv /home/ctenv || python3 -m venv --without-pip /home/ctenv
 if [ ! -x /home/ctenv/bin/pip ]; then curl -sS https://bootstrap.pypa.io/get-pip.py | /home/ctenv/bin/python; fi
-/home/ctenv/bin/pip install -q --disable-pip-version-check --ignore-requires-python /home/codetwin-0.1.0-py3-none-any.whl --no-deps "tree-sitter>=0.23" "tree-sitter-language-pack>=0.9" tomli
+/home/ctenv/bin/pip install -q --disable-pip-version-check --ignore-requires-python /home/codetwin-0.1.0-py3-none-any.whl --no-deps tomli
+# grammars need glibc >= 2.34; on older images static facts are computed on the host instead
+/home/ctenv/bin/pip install -q --disable-pip-version-check --only-binary=:all: "tree-sitter>=0.23" "tree-sitter-language-pack>=0.9" \
+  || echo "tree-sitter not installable here: static facts on the host"
 if [ "$1" = "javascript" ] || [ "$1" = "typescript" ]; then
-  cd /home/* 2>/dev/null || true
+  cd "/home/$2"
   VV=$(node -p "require('vitest/package.json').version" 2>/dev/null || true)
-  if [ -n "$VV" ] && ! node -e "require('@vitest/coverage-v8')" 2>/dev/null; then
-    npm i --no-save --no-audit --no-fund --legacy-peer-deps "@vitest/coverage-v8@$VV" >/dev/null 2>&1 || npm i --no-save --no-audit --no-fund --legacy-peer-deps "@vitest/coverage-v8" >/dev/null 2>&1 || true
+  if [ -n "$VV" ]; then
+    PKG=$(node -e "const [a,b]=process.argv[1].split('.').map(Number); console.log(a===0&&b<34?'@vitest/coverage-c8':'@vitest/coverage-v8')" "$VV")
+    if ! node -e "require('$PKG')" 2>/dev/null; then
+      if [ -f pnpm-lock.yaml ]; then
+        (pnpm add -D -w "$PKG@$VV" || npx -y pnpm@8 add -D -w "$PKG@$VV") >/dev/null 2>&1 || true
+      elif [ -f yarn.lock ]; then
+        yarn add -D "$PKG@$VV" >/dev/null 2>&1 || true
+      else
+        npm i --no-save --no-audit --no-fund --legacy-peer-deps "$PKG@$VV" >/dev/null 2>&1 || true
+      fi
+      git checkout -q -- package.json pnpm-lock.yaml yarn.lock package-lock.json 2>/dev/null || true
+    fi
   fi
   cd /home
 fi
@@ -43,7 +57,7 @@ if [ "$1" = "rust" ]; then
   rustup component add llvm-tools-preview || true
   curl -sSL https://github.com/taiki-e/cargo-llvm-cov/releases/latest/download/cargo-llvm-cov-x86_64-unknown-linux-gnu.tar.gz | tar xz -C "$(dirname "$(command -v cargo)")"
 fi
-/home/ctenv/bin/python -c "import codetwin.lang, tree_sitter_language_pack; print('setup-ok')"
+/home/ctenv/bin/python -c "import codetwin.lang; print('setup-ok')"
 """
 
 
@@ -93,7 +107,7 @@ def run_one(image: str, pr: int, index: int, repo_name: str, language: str, whee
         setup.write_text(SETUP)
         for src, dst in [(wheel, "/home/codetwin-0.1.0-py3-none-any.whl"), (HERE / "mswe_inside.py", "/home/mswe_inside.py"), (setup, "/home/setup.sh")]:
             sh(["docker", "cp", str(src), f"{cid}:{dst}"])
-        sh(["docker", "exec", cid, "sh", "/home/setup.sh", language], timeout=1500)
+        sh(["docker", "exec", cid, "sh", "/home/setup.sh", language, repo_name], timeout=1500)
         cmd = ["docker", "exec", cid, "/home/ctenv/bin/python", "/home/mswe_inside.py", "--repo", f"/home/{repo_name}",
                "--out", "/home/out", "--pr", str(pr), "--index", str(index), "--max-tests", str(max_tests),
                "--language", language, "--runner", runner]
@@ -113,6 +127,7 @@ def run_one(image: str, pr: int, index: int, repo_name: str, language: str, whee
                 shutil.move(str(p), out_dir / sub / p.name)
         if (tmp / "lang.json").exists():
             shutil.move(str(tmp / "lang.json"), out_dir / "lang.json")
+        host_static(cid, repo_name, language, out_dir, log)
         return True
     except Exception as e:  # noqa: BLE001
         log.write(f"[host] pr {pr}: {e}\n")
@@ -125,6 +140,40 @@ def run_one(image: str, pr: int, index: int, repo_name: str, language: str, whee
             subprocess.run(["docker", "rm", "-f", cid], capture_output=True)
         subprocess.run(["docker", "rmi", "-f", image], capture_output=True)
         subprocess.run(["docker", "system", "prune", "-f"], capture_output=True)
+
+
+def host_static(cid: str, repo_name: str, language: str, out_dir: Path, log) -> None:
+    """Fill in static facts the container could not compute (no tree-sitter for its glibc): copy the
+    repository out (without build folders) and run CodeTwin's adapter here at both recorded commits."""
+    pending = []
+    for p in (out_dir / "snap").glob("*.json"):
+        d = json.loads(p.read_text())
+        if d.get("static") is None:
+            pending.append((p, d))
+    if not pending:
+        return
+    from codetwin import lang
+    from codetwin.config import Config
+    work = out_dir / "_repo"
+    shutil.rmtree(work, ignore_errors=True)
+    work.mkdir(parents=True)
+    tar = subprocess.Popen(["docker", "exec", cid, "tar", "-C", f"/home/{repo_name}", "--exclude=./node_modules",
+                            "--exclude=./target", "--exclude=./build", "--exclude=./.gradle", "-cf", "-", "."],
+                           stdout=subprocess.PIPE)
+    subprocess.run(["tar", "-xf", "-", "-C", str(work)], stdin=tar.stdout, check=True)
+    tar.wait()
+    for p, d in pending:
+        sh(["git", "-C", str(work), "checkout", "-q", "-f", d["sha"]])
+        adapter = lang.get(Config(root=work, language=language, source_dirs=["."], tests_dir="."))
+        facts = adapter.facts()
+        d["static"] = {f: {"imports": v.imports, "dynamic": v.dynamic, "defs": v.defs, "dyn_lines": v.dyn_lines,
+                           "mod_lines": v.mod_lines, "deps": v.deps} for f, v in facts.items()}
+        d["loc"] = {f: sum(1 for _ in (work / f).open("rb")) for f in facts}
+        d["static_on"] = "host"
+        p.write_text(json.dumps(d))
+        log.write(f"[host] static facts for {d['sha'][:10]} computed on the host ({len(facts)} files)\n")
+        print(f"[host] static facts for {d['sha'][:10]} computed on the host ({len(facts)} files)", flush=True)
+    shutil.rmtree(work, ignore_errors=True)
 
 
 def main():
