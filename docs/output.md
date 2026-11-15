@@ -21,6 +21,7 @@ Rules:
   `sufficient_tests` for no-ops), `change_risk` (`q`, `r_product`, `features`, `triggers`, `above_target`),
   `promise` (`observed`, `ci95`, `alert`) and `changed_symbols` (`symbols`: changed functions, methods and
   classes with `name`, `kind`, `file`, `start`, `end`, `tests_before`; `untested`: those no test executed) and
+  `contracts` (`breaking`: each breaking contract change with `consumers` and `tests`; see `docs/contracts.md`) and
   `cross_repo` (`repos`: per connected repository its `consumers`, `tests` and `unknowns`; see `docs/crossrepo.md`).
 - `extras` holds one object per report section (`src/codetwin/report/<name>.py`). Each has a one-line `summary`;
   the rest is section-specific and documented in the section's module docstring.
