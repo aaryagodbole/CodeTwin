@@ -93,7 +93,7 @@ RUNNERS = [Runner("dotnet",
                   'dotnet test --nologo --filter FullyQualifiedName~{test_class} --collect "XPlat Code Coverage" '
                   "--results-directory {cov_dir}", "cobertura", "**/coverage.cobertura.xml",
                   run_command="dotnet test --nologo --filter FullyQualifiedName~{test_class}",
-                  build_command="dotnet build --nologo", vars=_vars,
+                  build_command="dotnet build --nologo", vars=_vars, shares_build_dir=True,
                   detect=lambda root: any(root.glob("*.sln")) or any(root.glob("**/*.csproj")))]
 
 SPEC = Spec(

@@ -15,13 +15,18 @@ class Impact:
 
 
 def file_deps(static: dict[str, FileFacts], src_root: str | None = None) -> dict[str, list[str]]:
-    """Dependencies of every file as file paths. Language adapters fill `FileFacts.deps`; facts without it
-    (older stored snapshots, direct callers of `evidence.static`) are resolved as Python imports."""
-    if src_root is not None and any(f.imports and not f.deps for f in static.values()):
-        from ..lang.python import resolve_deps
-        static = {f: replace(v, deps=list(v.deps)) for f, v in static.items()}
-        resolve_deps(static, src_root)
-    return {f: list(v.deps) for f, v in static.items()}
+    """Dependencies of every file as file paths. Language adapters fill `FileFacts.deps`. Snapshots in which no
+    file has any resolved dependency (stored before adapters resolved them, or direct callers of `evidence.static`)
+    have their Python files resolved as Python imports; files of other languages and adapter-resolved snapshots are
+    never re-resolved (an unresolved external import in one file must not discard every other file's edges)."""
+    out = {f: list(v.deps) for f, v in static.items()}
+    if src_root is not None and not any(v.deps for v in static.values()):
+        py = {f: replace(v, deps=[]) for f, v in static.items() if f.endswith(".py")}
+        if any(v.imports for v in py.values()):
+            from ..lang.python import resolve_deps
+            resolve_deps(py, src_root)
+            out.update({f: list(v.deps) for f, v in py.items()})
+    return out
 
 
 def build_graph(static: dict[str, FileFacts], run: TestRun | None, src_root: str | None = None) -> nx.MultiDiGraph:
