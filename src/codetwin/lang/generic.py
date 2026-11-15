@@ -502,7 +502,8 @@ class Generic(Language):
         # Static-evidence mode for tests whose project has no known test runner: listed, not run, no coverage;
         # decisions on files without runtime evidence say so and run everything.
         runnable = [t for t in tests if self.runner_for(t, is_dir=False) is not None]
-        run = TestRun(sha=sha, durations={t: 1.0 for t in tests if t not in runnable})
+        run = TestRun(sha=sha, durations={t: 1.0 for t in tests if t not in runnable},
+                      unrun=[t for t in tests if t not in runnable])
         if not runnable:
             run.returncode = "no-runner"
             return run
@@ -520,6 +521,7 @@ class Generic(Language):
         for test, dt, ok, lines in results:
             run.durations[test] = dt
             if test in self._missing:      # the runner or coverage tool is missing: no evidence, not a test failure
+                run.unrun.append(test)
                 continue
             if ok is not True:
                 run.failing.append(f"{test}::" + ("timeout" if ok is None else "failed"))

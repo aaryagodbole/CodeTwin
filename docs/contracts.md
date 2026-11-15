@@ -25,4 +25,4 @@ no consumer found is reported as **unknown** (the path may be built dynamically,
 never as safe.
 
 Output: `codetwin contracts [--base REF] [--json] [--fail-on-breaking]`, the `contracts` section of
-`codetwin select --json` (and the PR comment), and the MCP tool `get_contract_changes`.
+`codetwin select --json` (listed in the GitHub Action's job summary), and the MCP tool `get_contract_changes`.

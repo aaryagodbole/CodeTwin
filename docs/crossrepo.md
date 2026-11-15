@@ -28,5 +28,5 @@ directly are listed as `direct:*`.
 that use dynamic imports, no recorded run, or a consumer of a changed symbol that no test executes.
 
 Commands: `codetwin crossrepo [--base REF] [--json]`, the `cross_repo` section of `codetwin select --json`
-(and so the PR comment), and the MCP tool `get_cross_repo_impact`. Every language with an adapter works on both
+(listed in the GitHub Action's job summary), and the MCP tool `get_cross_repo_impact`. Every language with an adapter works on both
 sides; the two repositories may use different languages.
