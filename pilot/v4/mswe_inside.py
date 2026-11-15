@@ -113,7 +113,8 @@ def main():
     git(repo, "clean", "-fdq", "-e", "node_modules", "-e", "target", "-e", "vendor")
     base = git(repo, "rev-parse", "HEAD").stdout.strip()
     runner = json.loads(args.runner) if args.runner else {}
-    runner.setdefault("workers", args.workers)
+    # JVM builds share target/ (surefire reports, the JaCoCo report folder): one test class at a time
+    runner.setdefault("workers", 1 if args.language in ("java", "kotlin") else args.workers)
     runner.setdefault("timeout", args.timeout)
     cfg = Config(root=repo, language=args.language, source_dirs=["."], tests_dir=".", raw={"runner": runner})
     adapter = lang.get(cfg)
