@@ -27,6 +27,16 @@ def _migrations() -> list[tuple[str, str]]:
     return sorted((f.name, f.read_text()) for f in files.iterdir() if f.name.endswith(".sql"))
 
 
+def outcomes_of(run: TestRun) -> dict[str, list[str]]:
+    """Test file -> failing test cases of a run (a failing case id is "file::case"; a run-level failure of a whole
+    file, e.g. a collection error, is reported under the file itself)."""
+    out: dict[str, list[str]] = {t: [] for t in run.durations}
+    for case in run.failing:
+        f = case.split("::", 1)[0]
+        out.setdefault(f, []).append(case)
+    return out
+
+
 class Store:
     def __init__(self, path: str | Path):
         self.path = Path(path)
@@ -60,7 +70,26 @@ class Store:
         self.con.execute("insert or replace into runs values (?,?,?,?,?,?,?,?)",
                          (run.sha, time.time(), str(run.returncode), run.wall, json.dumps(run.durations),
                           json.dumps(run.failing), json.dumps(run.covered), json.dumps(run.import_lines)))
+        self.add_outcomes(run.sha, outcomes_of(run), "record")
+
+    def add_outcomes(self, sha: str, outcomes: dict[str, list[str]], source: str, when: float | None = None) -> None:
+        """Append one row per test file: `outcomes` maps a test file to its failing test cases ([] = passed)."""
+        t = time.time() if when is None else when
+        self.con.executemany("insert into test_outcomes (sha, recorded, test, passed, failing_cases, source) "
+                             "values (?,?,?,?,?,?)",
+                             [(sha, t, test, int(not cases), json.dumps(sorted(cases)), source)
+                              for test, cases in sorted(outcomes.items())])
         self.con.commit()
+
+    def outcomes(self, test: str | None = None) -> list[dict]:
+        q = "select sha, recorded, test, passed, failing_cases, source from test_outcomes"
+        rows = self.con.execute(q + (" where test=? order by recorded, id" if test else " order by recorded, id"),
+                                (test,) if test else ()).fetchall()
+        return [{"sha": r[0], "recorded": r[1], "test": r[2], "passed": bool(r[3]), "failing_cases": json.loads(r[4]),
+                 "source": r[5]} for r in rows]
+
+    def run_shas(self) -> list[str]:
+        return [r[0] for r in self.con.execute("select sha from runs order by recorded")]
 
     def get_run(self, sha: str) -> TestRun | None:
         row = self.con.execute("select sha, returncode, wall, durations, failing, covered, import_lines from runs where sha=?",

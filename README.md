@@ -101,6 +101,8 @@ selected 2 test files:
 | `codetwin select [--alpha 0.05] [--json]` | select tests for the changes since the recorded commit; calibrated mode |
 | `codetwin select --budget 0.25` | best tests within 25% of full-suite time, with the risk left behind |
 | `codetwin impact FILE...` | tests reached by files, with how each link is known, and unresolved links |
+| `codetwin why TEST [--rerun N] [--json]` | why a test fails: outcome timeline, first failing commit, suspect commits ranked by what the test executed, likely cause (regression, test-changed, flaky, environment); see `docs/triage.md` |
+| `codetwin outcomes import REPORT.xml... [--sha]` | add CI results (JUnit XML, any language) to the outcome history |
 | `codetwin contracts [--json] [--fail-on-breaking]` | breaking OpenAPI / JSON-schema changes, linked to code and tests here and in connected repositories; see `docs/contracts.md` |
 | `codetwin crossrepo [--json]` | files and tests in connected repositories (`[[repos]]`) that the change may affect; see `docs/crossrepo.md` |
 | `codetwin impact FILE:SYMBOL` | one function, method or class (`src/a.py:Parser.parse`, `src/a.go:42`): tests that execute it, code that refers to it, unknowns |
