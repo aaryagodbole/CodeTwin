@@ -94,7 +94,7 @@ def create_app(root: str | Path = ".", static_dir: str | Path | None = None) -> 
         """Whole-project graph: files and tests, edges typed by evidence."""
         base = eng.store.latest_run_sha()
         run = eng.store.get_run(base) if base else None
-        g = build_graph(eng.facts_now(), run, eng.cfg.src_root)
+        g = build_graph(eng.facts_now(), run)
         tests = set(eng.tests_now()) | (set(run.durations) if run else set())
         nodes = [{"id": n, "label": "unresolved" if n == "?" else label(n), "kind": "unknown" if n == "?" else
                   "test" if n in tests else "source", "path": n} for n in g.nodes]

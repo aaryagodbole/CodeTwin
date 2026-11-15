@@ -1,27 +1,21 @@
 """Weak-check evidence: changed functions that tests execute but do not check ("pseudo-tested").
 
-For every function that encloses a changed line, the body is replaced by `return None` in a temporary
-copy of the working tree (extreme mutation, Niedermayr et al.), and the test files that executed the
+For every function that encloses a changed line, the body is replaced by `return None` (in other languages:
+an early return of a default value, see the language spec) in a temporary copy of the working tree (extreme mutation, Niedermayr et al.), and the test files that executed the
 function in the recorded run are run against it. If they all still pass, the function is executed but
 not checked: coverage-based evidence that "the tests cover this change" is weak there.
 
-In the study (paper, Section 7), 122 of 216 history changes that line-coverage selection handled safely
-had at least one changed line whose seeded fault no executing test detected.
+In the study (paper, Section 7), 105 of 209 history changes that line-coverage selection handled safely
+had at least one covered changed line whose seeded fault no executing test detected.
 
 This runs tests, so it is an explicit command (`codetwin weakcheck`), not part of every decision.
 """
 from __future__ import annotations
 
 import ast
-import os
-import shutil
-import subprocess
-import sys
 import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
-
-IGNORE = shutil.ignore_patterns(".git", ".codetwin", "node_modules", "__pycache__", ".venv", "venv", ".tox", "*.pyc")
 
 
 @dataclass
@@ -30,7 +24,7 @@ class FunctionCheck:
     start: int                    # first line (decorators included) in the new version
     end: int
     tests: list[str] = field(default_factory=list)
-    status: str = ""              # checked | unchecked | untested | error
+    status: str = ""              # checked | unchecked | untested | unsupported | error
     killers: list[str] = field(default_factory=list)
     baseline_failures: list[str] = field(default_factory=list)   # test files failing on the unmutated tree
 
@@ -95,32 +89,24 @@ def _col_to_char(line: str, col: int) -> int:
     return len(line.encode("utf-8")[:col].decode("utf-8", errors="ignore"))
 
 
-def _pytest(work: Path, env: dict, tests: list[str], timeout: int) -> subprocess.CompletedProcess:
-    return subprocess.run([sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider", "-o", "addopts=", *tests],
-                          cwd=work, env=env, capture_output=True, text=True, timeout=timeout)
-
-
-def _failed_files(stdout: str) -> set[str]:
-    return {ln.split("::")[0].split(" ")[-1] for ln in stdout.splitlines() if ln.startswith(("FAILED ", "ERROR "))}
-
-
-def run_checks(root: str | Path, src_root: str, checks: list[FunctionCheck], now_static, timeout: int = 300) -> list[FunctionCheck]:
+def run_checks(root: str | Path, src_root: str, checks: list[FunctionCheck], now_static, timeout: int = 300,
+               lang=None) -> list[FunctionCheck]:
+    """Mutate each changed function in a scratch copy and run the test files that executed it.
+    `lang` is the project's language adapter (default: Python)."""
     root = Path(root)
+    if lang is None:
+        from ..config import Config
+        from ..lang.python import Python
+        lang = Python(Config(root=root, src_root=src_root))
     with tempfile.TemporaryDirectory(prefix="codetwin-weak-") as tmp:
         work = Path(tmp) / "repo"
-        shutil.copytree(root, work, ignore=IGNORE)
-        # no bytecode cache: two mutants of one file can have equal size and mtime, and a stale .pyc would be run
-        env = dict(os.environ, PYTHONDONTWRITEBYTECODE="1", PYTHONPATH=os.pathsep.join([str(work / src_root), os.environ.get("PYTHONPATH", "")]))
+        lang.make_copy(work)
         # Baseline: test files that already fail on the unmutated tree cannot show that a mutant was caught.
-        baseline: dict[str, bool] = {}
-        for t in sorted({t for c in checks for t in c.tests}):
-            try:
-                baseline[t] = _pytest(work, env, [t], timeout).returncode == 0
-            except subprocess.TimeoutExpired:
-                baseline[t] = False
+        wanted = sorted({t for c in checks for t in c.tests})
+        baseline = lang.run_tests(work, wanted, timeout) if wanted else {}
         for c in checks:
-            c.baseline_failures = [t for t in c.tests if not baseline.get(t, False)]
-            tests = [t for t in c.tests if baseline.get(t, False)]
+            c.baseline_failures = [t for t in c.tests if baseline.get(t) is not True]
+            tests = [t for t in c.tests if baseline.get(t) is True]
             if not c.tests:
                 c.status = "untested"
                 continue
@@ -130,18 +116,23 @@ def run_checks(root: str | Path, src_root: str, checks: list[FunctionCheck], now
             fn = _innermost(now_static[c.file].defs, c.start)
             target = work / c.file
             original = target.read_text(encoding="utf-8")
-            mutant = _mutate(original, fn[0], fn[2], fn[1]) if fn else None
+            mutant = lang.extreme_mutant(original, fn, c.file) if fn else None
             if mutant is None:
-                c.status = "error"
+                c.status = "unsupported" if fn and lang.name != "python" else "error"
                 continue
             try:
                 target.write_text(mutant, encoding="utf-8")
-                r = _pytest(work, env, tests, timeout)
-                c.status = "unchecked" if r.returncode == 0 else ("checked" if r.returncode == 1 else "error")
-                if c.status == "checked":
-                    c.killers = sorted(_failed_files(r.stdout))
-            except subprocess.TimeoutExpired:
-                c.status = "error"
+                if not lang.build_ok(work, timeout):
+                    c.status = "error"     # the mutant does not compile: says nothing about the tests
+                    continue
+                res = lang.run_tests(work, tests, timeout)
+                if any(v is False for v in res.values()):
+                    c.status = "checked"
+                    c.killers = sorted(t for t, v in res.items() if v is False)
+                elif all(v is True for v in res.values()):
+                    c.status = "unchecked"
+                else:
+                    c.status = "error"
             finally:
                 target.write_text(original, encoding="utf-8")
     return checks

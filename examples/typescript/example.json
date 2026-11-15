@@ -1,0 +1,3 @@
+{"language": "javascript", "file": "src/calc.ts", "edit": ["return a * b;", "return a * b * 1;"],
+ "noop": ["return a * b;", "return a * b; // product"], "covering_test": "test/cart.test.ts",
+ "setup": ["npm", "install", "--no-audit", "--no-fund"], "annotation": ["a: number, b: number): number {\n  return a * b", "a: any, b: any): number {\n  return a * b"]}

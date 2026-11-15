@@ -28,7 +28,7 @@ def _junit_file(tc, repo: Path) -> str:
 
 
 def run_suite(repo: str | Path, sha: str, tests_dir: str, packages: list[str], src_root: str = ".",
-              tests: list[str] | None = None, timeout: int = 3600) -> TestRun:
+              tests: list[str] | None = None, timeout: int = 3600, rootdir: bool = False) -> TestRun:
     """Run pytest on `tests` (default: the whole tests_dir) and record per-test-file coverage."""
     repo = Path(repo).resolve()
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -36,10 +36,15 @@ def run_suite(repo: str | Path, sha: str, tests_dir: str, packages: list[str], s
         junit, rc_file = tmp / "junit.xml", tmp / "coveragerc"
         rc_file.write_text("[run]\nbranch = False\n")
         env = dict(os.environ, COVERAGE_CORE="ctrace", COVERAGE_FILE=str(tmp / ".coverage"))
-        env["PYTHONPATH"] = str(repo / src_root) + (os.pathsep + env["PYTHONPATH"] if env.get("PYTHONPATH") else "")
+        # src_root may list several import roots (os.pathsep-separated) for Python inside a larger repository
+        roots = os.pathsep.join(str(repo / s) for s in src_root.split(os.pathsep))
+        env["PYTHONPATH"] = roots + (os.pathsep + env["PYTHONPATH"] if env.get("PYTHONPATH") else "")
         cmd = [sys.executable, "-m", "pytest", *(tests or [tests_dir]), "-q", "-p", "no:cacheprovider",
                "-o", "junit_family=xunit1", f"--cov-config={rc_file}", "--cov-context=test", "--cov-report=",
-               f"--junitxml={junit}", *[f"--cov={p}" for p in packages]]
+               f"--junitxml={junit}", *[f"--cov={p}" for p in packages or [str(repo / s) for s in src_root.split(os.pathsep)]],
+               # Python inside a larger repository: test ids relative to the repository root, not to the
+               # nearest pyproject.toml of the Python part
+               *([f"--rootdir={repo}"] if rootdir else [])]
         t0 = time.time()
         rc: int | str
         try:

@@ -10,7 +10,9 @@
                             │                    ▲ risk.calibration (CRC + ACI), learns from `codetwin learn`
   Layer 2  store.db (SQLite: runs, static facts, decisions, outcomes, state) · graph.impact (NetworkX)
                             │
-  Layer 1  evidence.diff (git) · evidence.static (ast) · evidence.coverage (pytest + coverage.py contexts)
+  Layer 1  evidence.diff (git) · lang.<adapter>: static facts and per-test coverage for one language
+           (lang.python: ast + pytest + coverage.py · lang.generic: tree-sitter + any runner writing
+            LCOV / Go / JaCoCo / Cobertura / Clover coverage, configured by lang/specs/<language>.py)
 ```
 
 ## Data flow of `codetwin select`
@@ -36,6 +38,7 @@ automatically. Shared files (`cli.py`, `mcp_server.py`, `engine.py`, `store/db.p
 
 | You are adding | Put it in | Contract |
 |---|---|---|
+| a programming language | `src/codetwin/lang/specs/<name>.py` | `SPEC = Spec(...)`: grammars, test globs, import rules, runner presets ([languages.md](languages.md)) |
 | a CLI command (`codetwin gaps`) | `src/codetwin/commands/<name>.py` | `NAME`, `HELP`, `ORDER`, `add_arguments(p)`, `run(args)` |
 | an MCP tool (`close_gap`) | `src/codetwin/mcp_tools/<name>.py` | `register(mcp, root)` with `@mcp.tool()` |
 | data in every decision (test gaps, blind spots, evidence cards, freshness) | `src/codetwin/report/<name>.py` | `NAME`, `contribute(ctx) -> dict` with a `"summary"`; appears under `extras.<NAME>` in `select --json`, MCP and VS Code |

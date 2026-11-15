@@ -48,4 +48,5 @@ Nothing in *Could* starts before the Must items are evaluated.
 ## Not now
 
 Collision radar, executable review claims, promise monitor, conformal culprit set, failed-test triage (E2),
-signed receipt (E4c). Out of scope: other languages, the financial graph module, automatic patching.
+signed receipt (E4c). Out of scope: the financial graph module, automatic patching. (Other languages were added in
+November 2026: `src/codetwin/lang/`, docs/languages.md.)

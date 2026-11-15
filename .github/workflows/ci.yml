@@ -21,7 +21,7 @@ jobs:
         with: { python-version: "3.12" }
       - run: pip install ruff actionlint-py shellcheck-py
       - name: Lint Python (style, bugs, security rules; see pyproject.toml)
-        run: ruff check src tests
+        run: ruff check src tests scripts
       - name: Check GitHub workflow files
         run: actionlint
 
@@ -84,6 +84,52 @@ jobs:
           path: |
             junit.xml
             coverage.xml
+
+  languages:
+    # Every feature (init, record, select, impact, graph, weakcheck, run, explain, learn, no-op detection) on a
+    # sample repository per language, with that language's real toolchain: CodeTwin must work on any repository.
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        example: [python, javascript, typescript, go, java, csharp, rust, ruby, php, cpp, lua, mixed]
+    env:
+      EXAMPLE: ${{ matrix.example }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install ".[languages]"
+      - uses: actions/setup-node@v7
+        if: contains(fromJSON('["javascript", "typescript", "mixed"]'), matrix.example)
+        with: { node-version: "22" }
+      - uses: actions/setup-go@v5
+        if: matrix.example == 'go'
+        with: { go-version: "stable" }
+      - uses: actions/setup-java@v4
+        if: matrix.example == 'java'
+        with: { distribution: temurin, java-version: "21", cache: maven }
+      - uses: actions/setup-dotnet@v4
+        if: matrix.example == 'csharp'
+        with: { dotnet-version: "8.0.x" }
+      - uses: dtolnay/rust-toolchain@stable
+        if: matrix.example == 'rust'
+        with: { components: llvm-tools-preview }
+      - uses: taiki-e/install-action@v2
+        if: matrix.example == 'rust'
+        with: { tool: cargo-llvm-cov }
+      - uses: ruby/setup-ruby@v1
+        if: matrix.example == 'ruby'
+        with: { ruby-version: "3.3" }
+      - uses: shivammathur/setup-php@v2
+        if: matrix.example == 'php'
+        with: { php-version: "8.3", coverage: pcov, tools: composer }
+      - name: gcovr for C/C++ coverage
+        if: matrix.example == 'cpp'
+        run: pip install gcovr
+      - run: git config --global user.email ci@example.com && git config --global user.name ci
+      - name: Run every feature on examples/${{ matrix.example }}
+        run: python scripts/language_smoke.py "examples/$EXAMPLE"
 
   package:
     runs-on: ubuntu-latest

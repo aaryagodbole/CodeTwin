@@ -64,9 +64,4 @@ runs:
     - name: Run selected tests
       if: inputs.run-selected == 'true' && steps.select.outputs.count != '0'
       shell: bash
-      run: |
-        python - <<'PY'
-        import json, subprocess, sys
-        tests = json.load(open("codetwin-decision.json"))["selected"]
-        sys.exit(subprocess.call([sys.executable, "-m", "pytest", *tests]))
-        PY
+      run: codetwin run      # the project's own test runner (pytest, jest, go test, mvn, ...)

@@ -1,0 +1,2 @@
+{"language": "python", "file": "src/shop/calc.py", "edit": ["return a * b", "return a * b * 1"],
+ "noop": ["return a * b", "return a * b  # product"], "covering_test": "tests/test_cart.py"}

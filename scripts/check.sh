@@ -2,7 +2,7 @@
 # Definition of done for every change: lint, types, tests with coverage, VS Code extension and dashboard builds.
 set -euo pipefail
 cd "$(dirname "$0")/.."
-ruff check src tests
+ruff check src tests scripts
 if command -v mypy >/dev/null; then mypy; else echo "mypy not installed: skipped type check (pip install -e '.[dev]')"; fi
 python -m pytest --cov --cov-report=term
 if command -v npm >/dev/null; then

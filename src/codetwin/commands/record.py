@@ -10,6 +10,9 @@ def add_arguments(p) -> None:
 def run(args) -> int:
     with engine(args) as eng:
         r = eng.record()
-    print(f"recorded {r.sha[:10]}: {len(r.durations)} test files, {len(r.covered)} with coverage, "
+    with_cov = sum(1 for files in r.covered.values() if files)
+    print(f"recorded {r.sha[:10]}: {len(r.durations)} test files, {with_cov} with coverage, "
           f"{len(r.failing)} failing test cases, {r.wall:.1f}s")
+    for n in r.notes:
+        print(f"warning: {n}")
     return 0

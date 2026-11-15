@@ -1,0 +1,3 @@
+{"language": "csharp", "file": "src/Shop/Calc.cs", "edit": ["return a * b;", "return a * b * 1;"],
+ "noop": ["return a * b;", "return a * b; // product"], "covering_test": "tests/Shop.Tests/CartTests.cs",
+ "setup": [["dotnet", "build", "--nologo", "tests/Shop.Tests/Shop.Tests.csproj"]]}

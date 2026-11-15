@@ -70,7 +70,9 @@ def analyse_file(path: Path, root: Path, packages: list[str]) -> FileFacts:
                         visit([sub], False)
 
     visit(tree.body, True)
-    keep = sorted(i for i in imports if i and any(i == p or i.startswith(p + ".") for p in packages))
+    # with no packages configured (a Python part of a larger repository) keep every import; resolution
+    # against the repository's own modules drops third-party ones
+    keep = sorted(i for i in imports if i and (not packages or any(i == p or i.startswith(p + ".") for p in packages)))
     return FileFacts(imports=keep, dynamic=sorted(dyn), dyn_lines=sorted(dyn_lines), defs=sorted(defs), mod_lines=sorted(mod_lines))
 
 

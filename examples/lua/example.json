@@ -1,0 +1,2 @@
+{"language": "lua", "file": "src/calc.lua", "edit": ["return a * b", "return a * b * 1"],
+ "noop": ["return a * b", "return a * b -- product"], "covering_test": "spec/cart_spec.lua", "static_only": true}

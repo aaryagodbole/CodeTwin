@@ -1,0 +1,23 @@
+// Applied by CodeTwin with `gradle --init-script`: JaCoCo XML for every Java/Kotlin project, written to the
+// folder given by -Dcodetwin.covdir; test failures do not stop the report (pass/fail comes from JUnit XML).
+allprojects {
+    plugins.withType(JavaPlugin) {
+        project.apply plugin: 'jacoco'
+        def covdir = System.getProperty('codetwin.covdir')
+        project.tasks.named('test') { t ->
+            t.ignoreFailures = true
+            // `--tests X` runs in every module; modules without X must not fail the build
+            t.filter.failOnNoMatchingTests = false
+            t.finalizedBy(project.tasks.named('jacocoTestReport'))
+        }
+        project.tasks.named('jacocoTestReport') { r ->
+            r.reports {
+                xml.required = true
+                html.required = false
+                if (covdir) {
+                    xml.outputLocation = project.file("${covdir}/jacoco-${project.path.replace(':', '_')}.xml")
+                }
+            }
+        }
+    }
+}

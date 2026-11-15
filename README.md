@@ -50,13 +50,16 @@ Using CodeTwin in your own project. To work **on** CodeTwin, follow
 [Development setup (step by step)](#development-setup-step-by-step) instead.
 
 
-Requires Python 3.11+ and `git`. The project you analyse needs a pytest test suite.
+Requires Python 3.11+ and `git`. The project you analyse can be in Python (pytest), JavaScript/TypeScript, Go, Java,
+Kotlin, Rust, C#, Ruby, PHP, C/C++ or any language with a tree-sitter grammar and a test runner that writes coverage;
+mixed repositories (for example a Python service with a TypeScript front end) included; see
+[docs/languages.md](docs/languages.md).
 
 From a release (recommended): download the wheel and the `.vsix` from the
 [Releases](../../releases) page, then
 
 ```bash
-pip install "codetwin-X.Y.Z-py3-none-any.whl[mcp,server]"   # CLI, MCP server, dashboard
+pip install "codetwin-X.Y.Z-py3-none-any.whl[mcp,server]"   # CLI, MCP server, dashboard (all languages)
 code --install-extension codetwin-X.Y.Z.vsix                  # VS Code extension
 ```
 
@@ -70,10 +73,10 @@ pip install -e ".[mcp,server]"     # add ",dev" for development tools
 
 ## Quick start
 
-Run these inside the Python project you want to analyse:
+Run these inside the project you want to analyse:
 
 ```bash
-codetwin init          # writes .codetwin.toml with guessed settings; check them
+codetwin init          # detects the language and test runner, writes .codetwin.toml; check it
 codetwin record        # runs the suite once with per-test coverage on a clean checkout
 # ... edit some code ...
 codetwin select        # which tests to run, the estimated residual risk, PROCEED or ABSTAIN
@@ -93,7 +96,7 @@ selected 2 test files:
 
 | Command | What it does |
 |---|---|
-| `codetwin init` | create `.codetwin.toml` (source root, packages, tests directory, target α) |
+| `codetwin init [--language go]` | create `.codetwin.toml` (language, source and test folders, test runner, target α) |
 | `codetwin record` | run the full suite with per-test coverage and store it as evidence for the current commit |
 | `codetwin select [--alpha 0.05] [--json]` | select tests for the changes since the recorded commit; calibrated mode |
 | `codetwin select --budget 0.25` | best tests within 25% of full-suite time, with the risk left behind |
@@ -103,15 +106,19 @@ selected 2 test files:
 | `codetwin llm [--test]` | LLM settings for explanations (Groq, Gemini) and a connection test |
 | `codetwin learn` | run the full suite, record whether the last selection missed a test, update calibration |
 | `codetwin explain` | the numbers and reasons behind the last decision |
+| `codetwin run [TEST...]` | run the last selection (or the given test files) with the project's own test runner |
+| `codetwin weakcheck` | changed functions that tests execute but do not check (extreme mutation) |
 
 All commands accept `-C PATH` to run on another repository.
 
 ## Configuration
 
-`.codetwin.toml` in the project root:
+`.codetwin.toml` in the project root (Python shown; other languages use `[runner]`, see
+[docs/languages.md](docs/languages.md)):
 
 ```toml
 [project]
+language = "python"              # or javascript, go, java, ...; "auto" detects it
 src_root = "src"                 # directory added to PYTHONPATH ("." or "src")
 packages = ["mypackage"]         # packages measured by coverage
 source_dirs = ["src/mypackage"]  # directories with source files
@@ -142,8 +149,10 @@ Layer 2  Store/graph     SQLite evidence store · typed impact graph (static, ru
 Layer 1  Evidence        git diff (changed lines) · AST facts · per-test coverage and run times
 ```
 
-1. **Evidence.** `codetwin record` runs pytest with coverage.py dynamic contexts, so every test file's executed
-   lines are known. The AST gives imports, dynamic calls, function spans and lines that run at import time.
+1. **Evidence.** `codetwin record` runs the tests with per-test-file coverage (Python: pytest with coverage.py
+   dynamic contexts; other languages: each test file on its own with the project's runner), so every test file's
+   executed lines are known. The syntax tree (Python `ast`, otherwise tree-sitter) gives dependencies, dynamic
+   calls, function spans and lines that run at load time.
 2. **Features.** For each test file: did it run a changed line / the changed function / the changed file in the
    recorded version, import distance to the changed module, name match, co-change history, and whether the test
    itself changed. Only evidence from *before* the change's tests run is used.
@@ -399,7 +408,7 @@ More: CI and release details in [docs/releasing.md](docs/releasing.md), reposito
 |---|---|
 | done | Engine, CLI, MCP server; VS Code impact graph of a selection; web dashboard; Action skeleton; CI and releases; research study and paper |
 | next | Test gaps, blind spots and evidence cards; symbol-level impact and CodeLens; PR comment; trained per-project models |
-| later | PR comment and merge gate; agent-in-the-loop demo; cross-repository evidence; second language adapter; verified LLM link suggestions |
+| later | PR comment and merge gate; agent-in-the-loop demo; cross-repository evidence; verified LLM link suggestions |
 
 Full plan: [docs/roadmap.md](docs/roadmap.md).
 

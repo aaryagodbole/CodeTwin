@@ -8,8 +8,8 @@ from pathlib import Path
 from typing import Self
 
 from . import config as cfgmod
+from . import lang as langmod
 from . import report
-from .evidence import coverage, static
 from .evidence import diff as diffmod
 from .evidence.model import TestRun
 from .graph.impact import Impact, build_graph, impact_of
@@ -27,6 +27,7 @@ class Engine:
     def __init__(self, root: str | Path = "."):
         self.cfg = cfgmod.load(root)
         self.root = self.cfg.root
+        self.lang = langmod.get(self.cfg)
         self.store = Store(self.cfg.db_path)
         self.model = RiskModel.load(self.cfg.state_dir / "model.json")
 
@@ -44,17 +45,16 @@ class Engine:
         return diffmod.git(self.root, "rev-parse", "HEAD").strip()
 
     def is_source(self, path: str) -> bool:
-        name = path.rsplit("/", 1)[-1]
-        if path.startswith(self.cfg.tests_dir.rstrip("/") + "/") or name.startswith("test_"):
-            return False
-        return path.endswith(".py") and any(path.startswith(d.rstrip("/") + "/") for d in self.cfg.source_dirs)
+        return self.lang.is_source(path)
 
     def facts_now(self):
-        return static.snapshot(self.root, self.cfg.src_root, self.cfg.packages, self.cfg.source_dirs + [self.cfg.tests_dir])
+        return self.lang.facts()
 
     def tests_now(self) -> list[str]:
-        d = self.root / self.cfg.tests_dir
-        return sorted(p.relative_to(self.root).as_posix() for p in d.rglob("test_*.py")) if d.exists() else []
+        return self.lang.list_tests()
+
+    def changed(self, base: str, head: str | None = None):
+        return diffmod.changed_lines(self.root, base, head, self.lang.extensions)
 
     def history(self) -> list[list[str]]:
         out = subprocess.run(["git", "log", "--first-parent", "--name-only", "--format=@@", "-n", "300"],
@@ -66,7 +66,7 @@ class Engine:
     def record(self) -> TestRun:
         """Run the full suite with per-test coverage on the current checkout and store it as evidence."""
         sha = self.head()
-        run = coverage.run_suite(self.root, sha, self.cfg.tests_dir, self.cfg.packages, self.cfg.src_root)
+        run = self.lang.run_suite(sha)
         self.store.save_run(run)
         self.store.save_static(sha, self.facts_now())
         return run
@@ -79,10 +79,10 @@ class Engine:
         prev = self.store.get_run(base)
         if prev is None:
             raise RuntimeError(f"no recorded run for {base[:10]}; run `codetwin record` there first")
-        diff = diffmod.changed_lines(self.root, base)
+        diff = self.changed(base)
         tests = sorted(set(prev.durations) | set(self.tests_now()))
         rows = features.compute(diff, prev, self.store.get_static(base), self.facts_now(), tests,
-                                self.cfg.src_root, self.is_source, self.history())
+                                self.cfg.src_root, self.is_source, self.history(), self.lang.stem)
         return base, prev, diff, rows
 
     # ------------------------------------------------------------- select
@@ -112,6 +112,15 @@ class Engine:
             d.reasons = note + d.reasons
         unknowns = self.impact([f for f in diff if self.is_source(f)]).unknowns
         d.reasons += unknowns
+        blind = self.without_runtime_evidence(diff, prev)
+        if blind:
+            # Unknown is not "no dependency": without coverage for these files' tests, the risk of skipping a test
+            # cannot be estimated. Run everything and say why.
+            d.decision, d.selected = "abstain", set(rows)
+            for why in sorted(set(blind.values())):
+                fs = sorted(f for f, w in blind.items() if w == why)
+                d.reasons.append(f"{why} for {', '.join(fs[:5])}{' and others' if len(fs) > 5 else ''}: "
+                                 "static evidence only, running every test (see docs/languages.md)")
         self._with_report(d, base, prev, diff, rows, scores)
         did = self.store.save_decision(base=base, head="working-tree", mode=d.mode, alpha=alpha,
                                        alpha_t=self.store.get_state("alpha_t", alpha), threshold=d.threshold,
@@ -121,9 +130,25 @@ class Engine:
                                                "mode": d.mode})
         return d
 
+    def without_runtime_evidence(self, diff, prev) -> dict[str, str]:
+        """Changed source files whose tests have no runtime evidence, with the reason: no runner configured, or a
+        runner whose runs recorded no coverage at all for the file's project (e.g. a missing coverage tool)."""
+        # groups of the source files any test executed (a test project may live apart from the code it tests)
+        covered = {self.lang.evidence_group(f) for files in (prev.covered.values() if prev else []) for f in files}
+        out: dict[str, str] = {}
+        for f in diff:
+            if not self.is_source(f):
+                continue
+            if not self.lang.has_runtime_evidence(f):
+                out[f] = "no test runner configured"
+            elif self.lang.evidence_group(f) not in covered:
+                out[f] = "no coverage recorded for this project's tests"
+        return out
+
     def _with_report(self, d: Decision, base, prev, diff, rows, scores) -> Decision:
         ctx = report.Context(cfg=self.cfg, store=self.store, base=base, prev=prev, diff=diff, rows=rows, scores=scores,
-                             decision=d, is_source=self.is_source, facts_now=self.facts_now, impact=self.impact)
+                             decision=d, is_source=self.is_source, facts_now=self.facts_now, impact=self.impact,
+                             lang=self.lang)
         d.extras = report.build(ctx)
         return d
 
@@ -142,7 +167,12 @@ class Engine:
             raise RuntimeError(f"decision {last['id']} already has an outcome; run `codetwin select` for a new change "
                                "(learning twice from one change would count it twice in the calibration set)")
         _base, _prev, diff, rows = self.analyse(last["base"])
-        new = coverage.run_suite(self.root, "working-tree", self.cfg.tests_dir, self.cfg.packages, self.cfg.src_root)
+        no_ev = self.without_runtime_evidence(diff, self.store.get_run(last["base"]))
+        blind = [f"{f} ({why})" for f, why in sorted(no_ev.items())]
+        if blind:
+            raise RuntimeError(f"cannot learn from this change: no runtime evidence for {', '.join(blind[:5])}, so which "
+                               "tests it affects is unknown (set [runner] test_command, see docs/languages.md)")
+        new = self.lang.run_suite("working-tree")
         affected = set()
         for f, d in diff.items():
             if not self.is_source(f) or d.status == "D":
@@ -175,7 +205,7 @@ class Engine:
     def impact(self, files: list[str], base: str | None = None) -> Impact:
         base = base or self.store.latest_run_sha()
         run = self.store.get_run(base) if base else None
-        g = build_graph(self.facts_now(), run, self.cfg.src_root)
+        g = build_graph(self.facts_now(), run)
         return impact_of(g, files, self.tests_now())
 
     def explain(self) -> dict:
