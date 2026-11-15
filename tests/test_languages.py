@@ -228,7 +228,7 @@ def test_java_facts_and_mutants(tmp_path):
     assert "{ if (true) return 0; " in a.extreme_mutant(src, [5, 7, 6], "Calc.java")
     assert a.runner.name == "maven"
     assert a.runner.vars("src/test/java/com/acme/ShopTest.java", JAVA["src/test/java/com/acme/ShopTest.java"]) == \
-        {"test_class": "com.acme.ShopTest"}
+        {"test_class": "com.acme.ShopTest", "gradle": "gradle"}
 
 
 # ------------------------------------------------------------------ other specs: import resolution only

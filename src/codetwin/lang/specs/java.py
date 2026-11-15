@@ -123,10 +123,11 @@ def load_time(root, src: bytes) -> set[int]:
     return out
 
 
-def _vars(test: str, text: str) -> dict:
+def _vars(test: str, text: str, cwd: Path | None = None) -> dict:
     m = PACKAGE.search(text)
     cls = posixpath.splitext(posixpath.basename(test))[0]
-    return {"test_class": f"{m.group(1)}.{cls}" if m else cls}
+    gradle = "./gradlew" if cwd is not None and (cwd / "gradlew").exists() else "gradle"
+    return {"test_class": f"{m.group(1)}.{cls}" if m else cls, "gradle": gradle}
 
 
 GRADLE_INIT = str(Path(__file__).with_name("_jacoco.gradle"))
@@ -143,11 +144,11 @@ RUNNERS = [
            result_glob="**/target/surefire-reports/TEST-*.xml",
            detect=lambda root: (root / "pom.xml").exists(), vars=_vars),
     Runner("gradle",
-           f"gradle -q --offline --init-script {GRADLE_INIT} -Dcodetwin.covdir={{cov_dir}} test --tests {{test_class}}",
+           f"{{gradle}} -q --init-script {GRADLE_INIT} -Dcodetwin.covdir={{cov_dir}} test --tests {{test_class}}",
            "jacoco", "**/*.xml",
-           run_command="gradle -q --offline test --tests {test_class}",
-           setup_command="gradle -q testClasses",
-           build_command="gradle -q --offline testClasses",
+           run_command=f"{{gradle}} -q --init-script {GRADLE_INIT} test --tests {{test_class}}",
+           setup_command="sh -c \"[ -x ./gradlew ] && ./gradlew -q testClasses || gradle -q testClasses\"",
+           build_command="sh -c \"[ -x ./gradlew ] && ./gradlew -q testClasses || gradle -q testClasses\"",
            result_glob="**/build/test-results/test/TEST-*.xml",
            detect=lambda root: (root / "build.gradle").exists() or (root / "build.gradle.kts").exists(), vars=_vars),
 ]

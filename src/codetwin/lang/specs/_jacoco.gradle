@@ -6,6 +6,8 @@ allprojects {
         def covdir = System.getProperty('codetwin.covdir')
         project.tasks.named('test') { t ->
             t.ignoreFailures = true
+            // `--tests X` runs in every module; modules without X must not fail the build
+            t.filter.failOnNoMatchingTests = false
             t.finalizedBy(project.tasks.named('jacocoTestReport'))
         }
         project.tasks.named('jacocoTestReport') { r ->
