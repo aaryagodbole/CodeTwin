@@ -187,7 +187,7 @@ cols = ORDER + ["HIST"]
 head = " & ".join([r"\textbf{Technique}"] + [rf"\textbf{{{NAMES.get(p, 'Pooled')}}}" for p in cols])
 n_row = " & ".join(["Test changes"] + [str(S[p]["test"]) if p in S else str(sum(S[q]["test"] for q in HIST)) for p in cols])
 lines = [r"\begin{table}[htbp]",
-         r"\caption{Replication in Other Languages: Miss Rate / Test Time Saved (\%, Test Changes)}",
+         r"\caption{Replication in other languages: miss rate / test time saved (\%, test changes)}",
          r"\label{tab:v4}", r"\centering", r"\footnotesize", r"\setlength{\tabcolsep}{2pt}",
          r"\begin{tabular}{@{}l" + "r" * len(cols) + "@{}}", r"\toprule", head + r" \\", r"\midrule",
          n_row + r" \\", r"\midrule"]
