@@ -321,7 +321,7 @@ class Generic(Language):
         for p in paths:
             try:
                 root = ET.parse(p).getroot()  # noqa: S314
-            except ET.ParseError:
+            except (ET.ParseError, OSError):     # removed or half-written by a parallel run
                 continue
             seen = True
             if any(ch.tag in ("failure", "error") for tc in root.iter("testcase") for ch in tc):
@@ -344,7 +344,8 @@ class Generic(Language):
             values = dict(self._vars(local, cwd, r), cov_dir=str(cov))
             template = r.test_command if coverage or not r.run_command else r.run_command
             in_project = r.coverage_file.startswith("./") if r.coverage_file else False
-            for pattern in [r.result_glob, r.coverage_file[2:] if in_project and r.coverage_file else None]:
+            result_glob = r.result_glob.format(**values) if r.result_glob else None   # per test: no parallel clash
+            for pattern in [result_glob, r.coverage_file[2:] if in_project and r.coverage_file else None]:
                 for old in (cwd.glob(pattern) if pattern else []):      # stale reports of an earlier run
                     old.unlink(missing_ok=True)
             env = dict(os.environ, **{k: v.format(**values) for k, v in (r.env or {}).items()})
@@ -360,8 +361,8 @@ class Generic(Language):
                 ok = None
                 output = (e.stdout or b"").decode("utf-8", "replace") if isinstance(e.stdout, bytes) else str(e.stdout or "")
             dt = time.time() - t0
-            if r.result_glob and ok is not None:
-                jf = self._junit_failed(sorted(cwd.glob(r.result_glob)))
+            if result_glob and ok is not None:
+                jf = self._junit_failed(sorted(cwd.glob(result_glob)))
                 if jf is not None:
                     ok = not jf
             lines: dict = {}
