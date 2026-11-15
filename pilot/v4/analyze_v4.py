@@ -51,6 +51,8 @@ def _lang_of(name: str) -> dict:
 
 
 URL2NAME: dict[str, str] = {}
+SMALL: set[str] = set()             # projects reported separately (fewer than MIN_CHANGES changes)
+MIN_CHANGES = 20
 
 
 def is_src(path: str, spec) -> bool:
@@ -85,7 +87,9 @@ def load_project(name: str):
     for r in recs:                                        # order PRs by their base commit's date
         r["date"] = _base_date(name, r["parent"]) or r["date"]
     recs.sort(key=lambda r: (r["date"], r["index"]))
-    meta["mode"] = "history"
+    # Languages with too few changes for per-project calibration are evaluated like the NameRTS projects of the
+    # Python study: model trained on all other projects, reported separately and not pooled (group "NRTS").
+    meta["mode"] = "pairs" if name in SMALL else "history"
     meta["spec"] = list(meta["spec"][:5])
     URL2NAME[meta["spec"][0]] = name
     meta["language"] = _lang_of(name)["language"] or meta.get("language")
@@ -156,6 +160,8 @@ if __name__ == "__main__":
     if sys.argv[1:] == ["--per-language"]:
         projects = merge_by_language()
         an.OUT = HERE / "results_by_language"
+        SMALL.update(p for p in projects if len(list((DATA / p / "commits").glob("*.json"))) < MIN_CHANGES)
+        print("reported separately (fewer than", MIN_CHANGES, "changes):", sorted(SMALL))
     else:
         projects = sys.argv[1:] or sorted(p.name for p in DATA.iterdir() if not p.name.startswith("lang_")
                                           and (p / "meta.json").exists() and any((p / "commits").glob("*.json")))
