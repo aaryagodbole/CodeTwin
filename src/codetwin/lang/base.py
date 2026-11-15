@@ -156,6 +156,12 @@ class Language:
         """Can tests of this file's language be run with coverage (is a test runner known)?"""
         return True
 
+    def evidence_group(self, path: str) -> str:
+        """Files whose runtime evidence comes from the same test runs (one language; one project folder for
+        adapters that run tests per folder). A group whose tests recorded no coverage at all has no runtime
+        evidence, even if a runner is configured (e.g. its coverage tool is not installed)."""
+        return self.name
+
     def run_all(self, work: Path, tests: list[str], timeout: int) -> bool:
         """Run `tests` and say whether all passed (output goes to the terminal where the runner prints it)."""
         return all(v is True for v in self.run_tests(work, tests, timeout).values())

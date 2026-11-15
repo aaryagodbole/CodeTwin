@@ -343,3 +343,27 @@ def test_python_inside_a_larger_repository_finds_import_roots(tmp_path):
     from codetwin.lang.python import import_roots
     _write(tmp_path, {"svc/src/app/__init__.py": "", "svc/src/app/core/__init__.py": "", "lib/util/__init__.py": ""})
     assert import_roots(tmp_path) == ["lib", "svc/src"]
+
+
+def test_missing_runner_or_coverage_tool_is_no_evidence_not_a_failure(tmp_path, capsys):
+    """A runner that is not installed must not count as failing tests, and a change in its project must not be
+    treated as covered by nothing: the decision abstains and runs every test (unknown is not "no dependency")."""
+    r = tmp_path / "m"
+    _write(r, {"src/calc.js": "export function add(a, b) {\n  return a + b;\n}\n",
+               "test/calc.test.js": "import { add } from '../src/calc.js';\n",
+               "package.json": '{"name": "m"}',
+               ".codetwin.toml": '[project]\nlanguage = "javascript"\nsource_dirs = ["src"]\ntests_dir = "test"\n\n'
+                                 '[runner]\ntest_command = "definitely-not-installed-tool {test}"\n'
+                                 'coverage_format = "lcov"\ncoverage_file = "lcov.info"\n'})
+    _git(r, "init", "-q")
+    _git(r, "add", "-A")
+    _git(r, "commit", "-qm", "i")
+    capsys.readouterr()
+    assert main(["-C", str(r), "record"]) == 0
+    out = capsys.readouterr().out
+    assert "0 with coverage, 0 failing test cases" in out and "could not run (command not found)" in out
+    (r / "src/calc.js").write_text("export function add(a, b) {\n  return a + b + 0;\n}\n")
+    assert main(["-C", str(r), "select", "--json"]) == 0
+    d = json.loads(capsys.readouterr().out)
+    assert d["decision"] == "abstain" and d["selected"] == ["test/calc.test.js"]
+    assert any("no coverage recorded" in x for x in d["reasons"])
