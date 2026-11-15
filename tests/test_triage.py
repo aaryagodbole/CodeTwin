@@ -79,3 +79,57 @@ def test_junit_import_maps_cases_to_files(tmp_path, toy_repo, capsys):
     assert "2 test files (1 failing)" in capsys.readouterr().out
     with Engine(toy_repo) as eng:
         assert eng.store.outcomes("tests/test_price.py")[0]["source"] == "ci"
+
+
+# ------------------------------------------------------------------ review fixes (PR #41)
+def test_passing_reruns_do_not_hide_the_failure(toy_repo, capsys):
+    main(["-C", str(toy_repo), "init"])
+    _commit(toy_repo, "config")
+    with Engine(toy_repo) as eng:
+        sha = eng.head()
+        eng.store.add_outcomes(sha, {"tests/test_names.py": ["tests/test_names.py::test_x"]}, "ci", when=1.0)
+    capsys.readouterr()
+    main(["-C", str(toy_repo), "why", "tests/test_names.py", "--rerun", "2", "--json"])
+    out = json.loads(capsys.readouterr().out)
+    assert out["status"] == "failing"                                   # the CI failure is still what is explained
+    assert out["hypothesis"] in ("flaky", "regression-not-reproduced")
+    assert [h["source"] for h in out["timeline"]] == ["ci", "rerun", "rerun"]
+
+
+def test_unrun_tests_are_not_passes(tmp_path):
+    from codetwin.evidence.model import TestRun
+    from codetwin.store.db import Store, outcomes_of
+    run = TestRun(sha="a", durations={"t1": 1.0, "t2": 0.5}, failing=["t2::x"], unrun=["t1"])
+    assert outcomes_of(run) == {"t2": ["t2::x"]}
+    with Store(tmp_path / "e.sqlite") as s:
+        s.save_run(run)
+        assert [o["test"] for o in s.outcomes()] == ["t2"]
+
+
+def test_junit_mapping_is_never_a_guess(tmp_path):
+    xml = tmp_path / "r.xml"
+    xml.write_text('<testsuites><testsuite name="s">'
+                   '<testcase classname="test_api" name="a"><failure/></testcase>'
+                   '<testcase classname="x" name="b" file="vendor/test_thing.py"/>'
+                   '<testcase classname="tests.unit.test_api" name="c"/>'
+                   '<testcase classname="tests.test_skip" name="d"><skipped/></testcase>'
+                   '</testsuite></testsuites>')
+    tests = ["tests/unit/test_api.py", "tests/integration/test_api.py", "tests/test_skip.py"]
+    got, unmapped = read([xml], tests)
+    assert got == {"tests/unit/test_api.py": []}                       # exact dotted name maps
+    assert unmapped == ["test_api::a", "x::b"]                         # ambiguous stem, unknown file: unmapped
+    assert "tests/test_skip.py" not in got                             # all skipped: no outcome
+
+
+def test_dynamic_reach_is_an_unknown(toy_repo):
+    from codetwin.evidence.model import FileFacts
+    main(["-C", str(toy_repo), "init"])
+    _commit(toy_repo, "config")
+    with Engine(toy_repo) as eng:
+        sha = eng.head()
+        eng.store.add_outcomes(sha, {"tests/test_price.py": []}, "ci", when=1.0)
+        eng.store.add_outcomes("working-tree", {"tests/test_price.py": ["tests/test_price.py::t"]}, "ci", when=2.0)
+        facts = dict(eng.facts_now())
+        facts["tests/test_price.py"] = FileFacts(dynamic=["importlib"])
+        out = triage(eng.root, eng.store, facts, "tests/test_price.py")
+    assert any("dynamic" in u for u in out["unknowns"])

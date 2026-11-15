@@ -39,10 +39,12 @@ def _migrations() -> list[tuple[str, str]]:
 def outcomes_of(run: TestRun) -> dict[str, list[str]]:
     """Test file -> failing test cases of a run (a failing case id is "file::case"; a run-level failure of a whole
     file, e.g. a collection error, is reported under the file itself)."""
-    out: dict[str, list[str]] = {t: [] for t in run.durations}
+    unrun = set(run.unrun)
+    out: dict[str, list[str]] = {t: [] for t in run.durations if t not in unrun}
     for case in run.failing:
         f = case.split("::", 1)[0]
-        out.setdefault(f, []).append(case)
+        if f not in unrun:
+            out.setdefault(f, []).append(case)
     return out
 
 

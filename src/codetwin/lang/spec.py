@@ -32,6 +32,13 @@ class Runner:
     detect: Callable[[Path], bool] = lambda root: True
     vars: Callable[..., dict[str, str | list[str]]] | None = None   # (test id, file text[, project folder]) -> values
     env: dict[str, str] | None = None            # extra environment variables (placeholders allowed)
+    shares_build_dir: bool = False               # writes build output inside the project (target/, build/, obj/):
+                                                 # test files of one project never run in parallel
+
+    def parallel_safe(self) -> bool:
+        """Can two test files of the same project run at once? Not if the runner shares build output or writes
+        its coverage or JUnit reports inside the project folder."""
+        return not (self.shares_build_dir or self.result_glob or (self.coverage_file or "").startswith("./"))
 
 
 @dataclass
