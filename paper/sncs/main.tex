@@ -16,7 +16,7 @@
 \usepackage{algpseudocode}
 \usepackage{listings}
 \usepackage{tikz}
-\usetikzlibrary{positioning,arrows.meta,fit}
+\usetikzlibrary{positioning,arrows.meta,fit,shapes.geometric,backgrounds}
 \graphicspath{{./}{figures/}}
 
 \raggedbottom
@@ -186,7 +186,39 @@ Across the literature we see four gaps. First, although average results are good
 
 Our research question is: \emph{can evidence-aware test selection with calibrated abstention keep the miss rate at a chosen target while running substantially fewer tests than the full suite, and does it flag the changes on which conventional selection fails?} We start with Python and then ask which findings carry over to other languages. To answer it, we reviewed the literature, derived requirements from the gaps we found (Sections~\ref{sec:related} and~\ref{sec:requirements}) and designed CodeTwin AI to meet them. We did not build the whole design. We built a research prototype of its core, the part that selects tests, estimates their residual risk, calibrates that estimate and abstains, and compared this prototype with established baselines on the commit histories of open-source Python projects and on pull requests of Go, Rust and JavaScript/TypeScript projects. Changes are processed in time order, so every decision uses only what was known earlier in the same project.
 
-The project has five objectives: (O1)~create an evidence graph that shows how files, functions, tests and other repositories are connected and how each link was discovered; (O2)~select tests by risk within a time budget; (O3)~estimate the risk remaining in a selection, calibrated to a target miss rate, and abstain when there is not enough evidence; (O4)~integrate with the developer workflow and AI coding agents; and (O5)~evaluate against established baselines on public projects. This paper covers only part of these objectives. Its prototype implements the evidence collection of O1 and the selection, calibration and abstention of O2 and O3 for single repositories, and evaluates them as O5. The rest of O1, namely the typed evidence store and evidence from other repositories, and all of O4 are proposed designs: this paper describes them but does not evaluate them, and we make no claim about how well they work. The analysis reads only per-test coverage and static file facts, so another language needs only an adapter that provides them; for the replication in Section~\ref{sec:rq6} we wrote such adapters for Go, Rust, JavaScript/TypeScript and Java.
+The project has five objectives: (O1)~create an evidence graph that shows how files, functions, tests and other repositories are connected and how each link was discovered; (O2)~select tests by risk within a time budget; (O3)~estimate the risk remaining in a selection, calibrated to a target miss rate, and abstain when there is not enough evidence; (O4)~integrate with the developer workflow and AI coding agents; and (O5)~evaluate against established baselines on public projects. This paper covers only part of these objectives. Its prototype implements the evidence collection of O1 and the selection, calibration and abstention of O2 and O3 for single repositories, and evaluates them as O5. The rest of O1, namely the typed evidence store and evidence from other repositories, and all of O4 are proposed designs: this paper describes them but does not evaluate them, and we make no claim about how well they work. The analysis reads only per-test coverage and static file facts, so another language needs only an adapter that provides them; for the replication in Section~\ref{sec:rq6} we wrote such adapters for Go, Rust, JavaScript/TypeScript and Java. Fig.~\ref{fig:method} shows how the work was carried out and where the part evaluated in this paper ends.
+
+\begin{figure}[htbp]
+\centering
+\resizebox{\linewidth}{!}{%
+\begin{tikzpicture}[font=\scriptsize, node distance=4mm and 4mm,
+  st/.style={draw, rounded corners=2pt, align=center, text width=29mm, minimum height=13mm, fill=white},
+  ev/.style={st, fill=black!8},
+  pr/.style={st, dashed, text width=29mm},
+  arr/.style={-{Stealth[length=1.6mm]}, semithick}]
+\node[st] (s1) {\textbf{1. Literature survey}\\ 32 works, survey questions SQ1--SQ4\\ (Section~\ref{sec:related})};
+\node[st, right=of s1] (s2) {\textbf{2. Gap analysis}\\ classification of selection techniques; gaps G1--G5 (Section~\ref{sec:gap})};
+\node[st, right=of s2] (s3) {\textbf{3. Requirements}\\ R1--R7, each traced to a gap (Section~\ref{sec:requirements})};
+\node[st, right=of s3] (s4) {\textbf{4. Design of CodeTwin AI}\\ four layers and design decisions (Section~\ref{sec:approach})};
+\node[pr, below=9mm of s1] (f1) {\textbf{Proposed, not evaluated}\\ evidence store, cross-repository evidence, developer and agent interfaces};
+\node[ev, below=9mm of s2] (e1) {\textbf{5. Research prototype}\\ of the core: selection, risk, calibration, abstention (Section~\ref{sec:impl})};
+\node[ev, below=9mm of s3] (e2) {\textbf{6. Evaluation}\\ 681 Python changes and \vNchanges{} pull requests, RQ1--RQ6 (Sections~\ref{sec:setup}--\ref{sec:results})};
+\node[ev, below=9mm of s4] (e3) {\textbf{7. Findings and limits}\\ what held, what did not, threats (Sections~\ref{sec:discussion}--\ref{sec:threats})};
+\draw[arr] (s1) -- (s2); \draw[arr] (s2) -- (s3); \draw[arr] (s3) -- (s4);
+\draw[semithick] (s4.south) -- ++(0,-3.5mm) coordinate (h);
+\draw[arr] (h) -| (e1.north);
+\draw[arr, dashed] (h) -| (f1.north);
+\draw[arr] (e1) -- (e2); \draw[arr] (e2) -- (e3);
+\begin{scope}[on background layer]
+\node[draw=black!60, densely dotted, rounded corners=3pt, inner sep=1.8mm, fit=(e1)(e2)(e3), label={[font=\scriptsize\itshape, anchor=north east]south east:evaluated in this paper}] {};
+\end{scope}
+\node[font=\scriptsize\itshape, below=1mm of f1] {future work (Section~\ref{sec:conclusion})};
+\end{tikzpicture}%
+}
+\caption{How this work was carried out. The survey led to five gaps and seven requirements, from which we designed CodeTwin AI. Only the core of the design was built as a research prototype and evaluated (shaded); the other components are proposed and left to future work (dashed).}
+\label{fig:method}
+\end{figure}
+
 
 We make six contributions.
 \begin{itemize}
@@ -433,15 +465,71 @@ Fig.~\ref{fig:arch} shows the four layers of CodeTwin AI. \emph{Layer~1} gathers
 Four design decisions shape this architecture. The analysis is \emph{local first}: it runs on the developer's machine or the CI runner, and no code leaves that machine unless the optional language model is switched on. We prefer \emph{transparent models} such as logistic regression or gradient boosting to deep learning, so every score can be traced back to its features. Supporting a new language should only take an \emph{adapter}, that is, a parser, a test runner and a coverage collector that write evidence in a common format. Everything above Layer~1 is shared and language-independent; besides the Python prototype, we wrote adapters for Go, Rust, JavaScript/TypeScript and Java for the replication in Section~\ref{sec:rq6}. Finally, SQLite and NetworkX take the place of a graph database, which is enough for the repository sizes we target.
 
 \begin{figure}[htbp]
-\centerline{\begin{tikzpicture}
-\node[inner sep=0, anchor=south west] (arch) {\includegraphics[width=0.85\textwidth]{figures/architecture_v2.pdf}};
-\begin{scope}[x={(arch.south east)}, y={(arch.north west)}]
-% The language adapters replace pytest and coverage.py: relabel the per-test coverage box (vector overlay).
-\fill[white] (0.6190,0.7895) rectangle (0.7510,0.8100);
-\node[font=\fontfamily{phv}\fontsize{4.8}{6}\selectfont, inner sep=0] at (0.6850,0.7995) {native test runners};
+\resizebox{\linewidth}{!}{%
+\begin{tikzpicture}[font=\scriptsize,
+  b/.style={draw=black!75, rounded corners=2.5pt, align=center, fill=white, minimum height=8mm, inner sep=1.8pt, text width=31mm},
+  p/.style={b, dashed},
+  lay/.style={draw, rounded corners=4pt, inner sep=2.2mm},
+  lt/.style={font=\scriptsize\bfseries, anchor=north west, inner sep=1.5pt},
+  ar/.style={-{Stealth[length=1.6mm]}, black!75, semithick}]
+% input
+\node[b, text width=56mm, fill=red!8, draw=red!60!black] (chg) at (0,0.00) {\textbf{Code change} (commit or pull request)};
+\node[b, text width=25mm, minimum height=5mm] (lg1) at (5.1,0.25) {evaluated prototype};
+\node[p, text width=25mm, minimum height=5mm] (lg2) at (5.1,-0.35) {proposed design};
+% layer 1
+\node[b] (diff) at (-4.1,-1.75) {\textbf{git diff}\\ changed lines};
+\node[b] (adp)  at (0,-1.75)    {\textbf{Language adapter}\\ imports, dynamic calls};
+\node[b] (cov)  at (4.1,-1.75)  {\textbf{Per-test coverage}\\ native test runners};
+\node[b] (hst)  at (-4.1,-2.85) {\textbf{Version history}\\ co-change};
+\node[p] (con)  at (0,-2.85)    {\textbf{Contracts}\\ manifests, OpenAPI};
+\node[p, fill=yellow!8] (llm) at (4.1,-2.85) {\textbf{LLM suggestions}\\ unresolved calls; verified first};
+% layer 2
+\node[b, text width=62mm] (grf) at (-2.05,-5.00) {\textbf{Import graph and line facts}\\ functions, dynamic calls, import-time lines};
+\node[p, text width=44mm] (sto) at (3.85,-5.00) {\textbf{Typed evidence store}\\ static, runtime, declared, suggested, unresolved};
+% layer 3
+\node[b] (fea) at (-4.1,-7.20) {\textbf{Impact features}\\ 7 per test file};
+\node[b] (mod) at (0,-7.20)    {\textbf{Risk model} $p(i)$\\ logistic, isotonic recalibration};
+\node[b] (sel) at (4.1,-7.20)  {\textbf{Test selection} $S(c)$\\ budget $B$ or threshold $\lambda$};
+\node[b, fill=black!5] (pst) at (-4.1,-8.40) {\textbf{Past changes}\\ calibration data};
+\node[b, fill=orange!10] (cal) at (0,-8.40) {\textbf{Calibration}\\ CRC or ACI for target $\alpha$};
+\node[b, fill=orange!10] (rsk) at (4.1,-8.40) {\textbf{Residual risk}\\ $r(c)$; change-level $q(c)$};
+\node[b] (trg) at (-0.4,-9.70) {\textbf{Uncertainty triggers}\\ evaluated alternative};
+\node[draw=black!75, diamond, aspect=2.2, fill=white, inner sep=1pt] (dec) at (4.1,-9.70) {\textbf{Decide}};
+% outputs
+\node[b, text width=40mm, fill=green!8, draw=green!40!black] (go) at (-0.4,-11.50) {\textbf{Proceed}: run $S(c)$\\ report $r(c)$ and unknowns};
+\node[b, text width=40mm, fill=red!8, draw=red!60!black] (ab) at (4.6,-11.50) {\textbf{Abstain}: broader run\\ file coverage or full suite};
+% layer 4
+\node[p] (vsc) at (-4.1,-13.45) {\textbf{VS Code extension}\\ impact view, test gaps};
+\node[p] (prc) at (0,-13.45)    {\textbf{Pull-request check}\\ report and receipt};
+\node[p] (mcp) at (4.1,-13.45)  {\textbf{MCP server}\\ \texttt{verify\_change} for agents};
+% layers
+\begin{scope}[on background layer]
+\node[lay, draw=blue!55!black, fill=blue!4, fit=(diff)(cov)(hst)(llm), inner ysep=4.2mm, yshift=2mm] (L1) {};
+\node[lay, draw=green!45!black, fill=green!4, fit=(grf)(sto), inner ysep=4.2mm, yshift=2mm] (L2) {};
+\node[lay, draw=orange!70!black, fill=orange!4, fit=(fea)(sel)(pst)(trg)(dec), inner ysep=4.2mm, yshift=2mm] (L3) {};
+\node[lay, draw=black!50, fill=black!3, fit=(vsc)(mcp), inner ysep=4.2mm, yshift=2mm] (L4) {};
+\node[draw=black!30, rounded corners=3pt, fit=(lg1)(lg2), inner sep=1mm] {};
 \end{scope}
-\end{tikzpicture}}
-\caption{Architecture and decision flow of CodeTwin AI. Layer~1 collects evidence about a change, and Layer~2 stores it in a typed dependency graph. Layer~3 calculates a score for each test file and selects tests within a budget or above a threshold calibrated on recent commits; if the estimated residual risk is above the target, it abstains to a broader run (rule-based uncertainty triggers are evaluated as an alternative). Layer~4 delivers the decision. Solid boxes have been implemented and evaluated in this paper; dashed boxes have been designed but not evaluated. Language adapters (Python: \texttt{ast}, pytest and coverage.py; other languages: tree-sitter and each language's own test runner and coverage tool, Section~\ref{sec:impl}) provide the same evidence, and everything above them is shared.}
+\node[lt, text=blue!55!black] at ([shift={(1.2mm,-0.7mm)}]L1.north west) {Layer 1 $\cdot$ Evidence collection};
+\node[lt, text=green!45!black] at ([shift={(1.2mm,-0.7mm)}]L2.north west) {Layer 2 $\cdot$ Evidence graph};
+\node[lt, text=orange!70!black] at ([shift={(1.2mm,-0.7mm)}]L3.north west) {Layer 3 $\cdot$ Selection, risk and abstention};
+\node[lt, text=black!70] at ([shift={(1.2mm,-0.7mm)}]L4.north west) {Layer 4 $\cdot$ Delivery};
+% arrows
+\draw[ar] (chg) -- (L1.north -| chg);
+\draw[ar] ([xshift=18mm]L1.south -| grf) -- ([xshift=18mm]grf.north);
+\draw[ar, dashed, yellow!50!black] (llm.south) -- (sto.north -| llm.south);
+\draw[ar] (grf.south -| fea) -- (fea.north);
+\draw[ar] (fea) -- (mod); \draw[ar] (mod) -- (sel);
+\draw[ar] (pst) -- (cal); \draw[ar] (cal) -- (sel);
+\draw[ar] (sel) -- (rsk); \draw[ar] (rsk) -- (dec);
+\draw[ar, black!55] (trg) -- (dec);
+\draw[ar, green!40!black] (dec.south) -- ++(0,-0.62) -| node[pos=0.22, above, font=\scriptsize]{$r(c)\le\alpha$} (go.north);
+\draw[ar, red!60!black] (dec.east) -| node[pos=0.3, above, font=\scriptsize]{$r(c)>\alpha$} ([xshift=12mm]ab.north);
+\draw[ar, dashed] (go.south) -- (L4.north -| go.south);
+\draw[ar, dashed] (ab.south) -- (L4.north -| ab.south);
+\end{tikzpicture}%
+}
+\caption{Architecture and decision flow of CodeTwin AI. Layer~1 collects evidence about a change, and Layer~2 links it in a graph: in the prototype an import graph with line-level facts, in the full design a typed evidence store. Layer~3 calculates a score for each test file and selects tests within a budget or above a threshold calibrated on recent commits; if the estimated residual risk is above the target, it abstains to a broader run (rule-based uncertainty triggers are evaluated as an alternative). Layer~4 delivers the decision. Solid boxes are part of the research prototype evaluated in this paper; dashed boxes are proposed designs that this paper does not evaluate. Language adapters (Python: \texttt{ast}, pytest and coverage.py; other languages: tree-sitter and each language's own test runner and coverage tool, Section~\ref{sec:impl}) provide the same evidence, and everything above them is shared.}
 \label{fig:arch}
 \end{figure}
 
