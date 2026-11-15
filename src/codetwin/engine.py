@@ -112,14 +112,15 @@ class Engine:
             d.reasons = note + d.reasons
         unknowns = self.impact([f for f in diff if self.is_source(f)]).unknowns
         d.reasons += unknowns
-        blind = sorted(f for f in diff if self.is_source(f) and not self.lang.has_runtime_evidence(f))
+        blind = self.without_runtime_evidence(diff, prev)
         if blind:
-            # Unknown is not "no dependency": without a test runner there is no coverage for these files, so
-            # the risk of skipping a test cannot be estimated. Run everything and say why.
+            # Unknown is not "no dependency": without coverage for these files' tests, the risk of skipping a test
+            # cannot be estimated. Run everything and say why.
             d.decision, d.selected = "abstain", set(rows)
-            d.reasons.append(f"no test runner configured for {', '.join(blind[:5])}"
-                             f"{' and others' if len(blind) > 5 else ''}: static evidence only, running every test "
-                             "(set [runner] test_command, see docs/languages.md)")
+            for why in sorted(set(blind.values())):
+                fs = sorted(f for f, w in blind.items() if w == why)
+                d.reasons.append(f"{why} for {', '.join(fs[:5])}{' and others' if len(fs) > 5 else ''}: "
+                                 "static evidence only, running every test (see docs/languages.md)")
         self._with_report(d, base, prev, diff, rows, scores)
         did = self.store.save_decision(base=base, head="working-tree", mode=d.mode, alpha=alpha,
                                        alpha_t=self.store.get_state("alpha_t", alpha), threshold=d.threshold,
@@ -128,6 +129,20 @@ class Engine:
         self.store.set_state("last_decision", {"id": did, "base": base, "scores": scores, "selected": sorted(d.selected),
                                                "mode": d.mode})
         return d
+
+    def without_runtime_evidence(self, diff, prev) -> dict[str, str]:
+        """Changed source files whose tests have no runtime evidence, with the reason: no runner configured, or a
+        runner whose runs recorded no coverage at all for the file's project (e.g. a missing coverage tool)."""
+        covered = {self.lang.evidence_group(t) for t, files in (prev.covered.items() if prev else []) if files}
+        out: dict[str, str] = {}
+        for f in diff:
+            if not self.is_source(f):
+                continue
+            if not self.lang.has_runtime_evidence(f):
+                out[f] = "no test runner configured"
+            elif self.lang.evidence_group(f) not in covered:
+                out[f] = "no coverage recorded for this project's tests"
+        return out
 
     def _with_report(self, d: Decision, base, prev, diff, rows, scores) -> Decision:
         ctx = report.Context(cfg=self.cfg, store=self.store, base=base, prev=prev, diff=diff, rows=rows, scores=scores,
@@ -151,9 +166,10 @@ class Engine:
             raise RuntimeError(f"decision {last['id']} already has an outcome; run `codetwin select` for a new change "
                                "(learning twice from one change would count it twice in the calibration set)")
         _base, _prev, diff, rows = self.analyse(last["base"])
-        blind = sorted(f for f in diff if self.is_source(f) and not self.lang.has_runtime_evidence(f))
+        no_ev = self.without_runtime_evidence(diff, self.store.get_run(last["base"]))
+        blind = [f"{f} ({why})" for f, why in sorted(no_ev.items())]
         if blind:
-            raise RuntimeError(f"cannot learn from this change: no test runner for {', '.join(blind[:5])}, so which "
+            raise RuntimeError(f"cannot learn from this change: no runtime evidence for {', '.join(blind[:5])}, so which "
                                "tests it affects is unknown (set [runner] test_command, see docs/languages.md)")
         new = self.lang.run_suite("working-tree")
         affected = set()

@@ -43,3 +43,4 @@ class TestRun:
     import_lines: dict[str, list[int]] = field(default_factory=dict)     # source file -> lines run at import time
     returncode: int | str = 0
     wall: float = 0.0
+    notes: list[str] = field(default_factory=list)                         # problems of the run itself (not stored)

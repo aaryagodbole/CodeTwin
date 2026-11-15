@@ -121,7 +121,20 @@ def _lang_table(root: Path, name: str) -> str:
                 f'source_dirs = {_toml_list(g["source_dirs"] or ["."])}\ntests_dir = "{g["tests_dir"]}"\n')
     a = lang.adapter(Config(root=root, language=name), name)
     g = a.guess_config()
-    runner = g.get("runner") or "none found: static evidence only until you set test_command"
+    runner = g.get("runner")
+    if not runner:
+        # monorepo or mixed repository: the build file (package.json, Cargo.toml, go.mod, ...) is in a sub-folder,
+        # and each test runs from its own project folder
+        from .lang.generic import Generic
+        per: dict[str, str] = {}
+        if isinstance(a, Generic):
+            for t in a.list_tests():
+                r = a.runner_for(t, is_dir=False)
+                if r is not None:
+                    per.setdefault(a.project_dir(t) or ".", r.name)
+        runner = ("per project folder: " + ", ".join(f"{d}/ ({n})" for d, n in sorted(per.items())[:6])
+                  + (" and others" if len(per) > 6 else "")) if per else \
+            "none found: static evidence only until you set test_command"
     return (f"[lang.{name}]\nsource_dirs = {_toml_list(g['source_dirs'])}\ntests_dir = \"{g['tests_dir']}\"\n"
             f"# test runner: {runner}; override with a [lang.{name}.runner] table (docs/languages.md)\n")
 
