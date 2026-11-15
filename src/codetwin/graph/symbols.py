@@ -52,6 +52,19 @@ def symbols_of(facts: dict[str, FileFacts], path: str) -> list[Symbol]:
     return [Symbol(n, k, path, a, b) for n, k, a, b in (facts[path].symbols if path in facts else [])]
 
 
+def base_span(base_facts: dict[str, FileFacts], sym: Symbol, path: str | None = None) -> tuple[int, int] | None:
+    """Lines of `sym` in the recorded commit's snapshot (where the recorded coverage line numbers apply), found by
+    file and qualified name; the nearest one if the name occurs more than once. None if it did not exist then."""
+    cands = [s for s in symbols_of(base_facts, path or sym.file) if s.name == sym.name and s.kind == sym.kind]
+    if not cands:
+        return None
+    best = min(cands, key=lambda s: abs(s.start - sym.start))
+    return best.start, best.end
+
+
+PARSE_MARKERS = ("unparsed", "parse-error")
+
+
 def parse_target(target: str) -> tuple[str, str | None]:
     """`path:Name`, `path:Class.method` or `path:42` (line); a plain path means the whole file."""
     if ":" in target and not re.match(r"^[A-Za-z]:[\\/]", target):
@@ -99,12 +112,25 @@ def callers_of(root: Path, facts: dict[str, FileFacts], sym: Symbol) -> list[dic
 
 
 def symbol_impact(root: Path, facts: dict[str, FileFacts], run: TestRun | None, tests: list[str],
-                  sym: Symbol, is_test=lambda f: False) -> SymbolImpact:
+                  sym: Symbol, is_test=lambda f: False, base_facts: dict[str, FileFacts] | None = None) -> SymbolImpact:
+    """`base_facts`: static snapshot of the recorded run's commit. Recorded coverage uses that commit's line numbers,
+    so the symbol's span is taken from it; the working tree's span is right only if no line moved."""
     imp = SymbolImpact(sym)
     span = set(range(sym.start, sym.end + 1))
+    new_symbol = False
+    if run is not None and base_facts:
+        bs = base_span(base_facts, sym)
+        if bs is None:
+            new_symbol = True
+            imp.unknowns.append(f"{sym.name} did not exist at the recorded commit: no recorded test has executed it")
+        else:
+            span = set(range(bs[0], bs[1] + 1))
+    elif run is not None:
+        imp.unknowns.append("no static snapshot of the recorded commit: its coverage is matched by the current line "
+                            "numbers, which are wrong if lines moved (run `codetwin record` again)")
     if run is None:
         imp.unknowns.append("no recorded test run: which tests execute this symbol is unknown (run `codetwin record`)")
-    else:
+    elif not new_symbol:
         for t, files in run.covered.items():
             if span & set(files.get(sym.file, [])):
                 imp.tests.setdefault(t, set()).add(EvidenceType.RUNTIME.value)
@@ -122,6 +148,9 @@ def symbol_impact(root: Path, facts: dict[str, FileFacts], run: TestRun | None, 
     f = facts.get(sym.file)
     if f is not None and "unparsed" in f.dynamic:
         imp.unknowns.append(f"{sym.file} could not be parsed: callers and symbols in it are unknown")
+    elif f is not None and "parse-error" in f.dynamic:
+        imp.unknowns.append(f"{sym.file} has syntax errors: it was parsed only in part, so symbols and callers in "
+                            "it may be missing")
     deps = file_deps(facts)
     dyn = sorted(g for g, d in deps.items() if sym.file in d and facts[g].dynamic and g not in caller_files)
     for g in dyn[:20]:
@@ -131,8 +160,9 @@ def symbol_impact(root: Path, facts: dict[str, FileFacts], run: TestRun | None, 
 
 
 def changed_symbols(facts: dict[str, FileFacts], diff: dict[str, FileDiff], run: TestRun | None,
-                    is_source=lambda f: True) -> list[dict]:
-    """Symbols of the working tree whose lines changed, with the number of tests that executed them before."""
+                    is_source=lambda f: True, base_facts: dict[str, FileFacts] | None = None) -> list[dict]:
+    """Symbols of the working tree whose lines changed, with the number of tests that executed them before
+    (counted on the symbol's lines at the recorded commit, from `base_facts`; 0 for a symbol that is new)."""
     out: list[dict] = []
     for path, d in sorted(diff.items()):
         if not is_source(path) or d.status == "D":
@@ -141,7 +171,13 @@ def changed_symbols(facts: dict[str, FileFacts], diff: dict[str, FileDiff], run:
         for sym in symbols_of(facts, path):
             span = set(range(sym.start, sym.end + 1))
             if lines & span:
-                n = 0 if run is None else sum(1 for files in run.covered.values() if span & set(files.get(path, [])))
+                old = d.old_path or path
+                if base_facts:
+                    bs = base_span(base_facts, sym, old)
+                    before = set(range(bs[0], bs[1] + 1)) if bs else set()
+                else:
+                    before = span
+                n = 0 if run is None else sum(1 for files in run.covered.values() if before & set(files.get(old, [])))
                 out.append({**sym.to_dict(), "tests_before": n})
     # keep the innermost changed symbols: a class whose only changed lines are inside a changed method is noise
     inner = []

@@ -122,3 +122,52 @@ def test_javascript_dependent(tmp_path, toy_repo, capsys):
     assert web_r["language"] == "javascript"
     assert web_r["consumers"][0]["file"] == "src/cart.js" and web_r["consumers"][0]["symbols"] == ["round"]
     assert "test/cart.test.js" in web_r["tests"]
+
+
+# ------------------------------------------------------------------ review fixes (PR #39)
+def test_consumer_detection_details(toy_repo, app_repo, capsys, monkeypatch):
+    from codetwin.crossrepo import analysis
+    from codetwin.crossrepo.analysis import code_text, import_lines
+    late = ["x = 1"] * 450 + ["    from shop.price import total"]
+    assert import_lines(late, ["shop"]) == ["shop.price"]                 # imports inside functions, late in a file
+    assert code_text("x = total(items)  # total") == "x = total(items) " and code_text("// total") == ""
+    assert code_text('log("total failed")') == 'log("")' and code_text("*args = total") == "*args = total"
+    (app_repo / "app" / "note.py").write_text("import shop\n# total is computed upstream\nmsg = 'total'\n")
+    (app_repo / "app" / "broken.py").write_text("def broken(:\n")
+    main(["-C", str(toy_repo), "init"])
+    cfg = toy_repo / ".codetwin.toml"
+    cfg.write_text(cfg.read_text() + f'\n[[repos]]\nname = "app"\npath = "{app_repo.as_posix()}"\n')
+    p = toy_repo / "src/shop/price.py"
+    p.write_text(p.read_text().replace('i["price"]', 'i["price"] * 1'))
+    capsys.readouterr()
+    main(["-C", str(toy_repo), "crossrepo", "--json"])
+    app = json.loads(capsys.readouterr().out)["repos"][0]
+    cons = {c["file"]: c for c in app["consumers"]}
+    assert cons["app/note.py"]["link"] == "imports-package"               # names in comments/strings are not uses
+    assert any("could not be fully parsed" in u and "app/broken.py" in u for u in app["unknowns"])
+
+    real_get = analysis.langmod.get
+
+    def get(cfg):
+        a = real_get(cfg)
+        if Path(cfg.root).resolve() == app_repo.resolve():
+            def boom():
+                raise RuntimeError("tree-sitter missing")
+            a.facts = boom
+        return a
+    monkeypatch.setattr(analysis.langmod, "get", get)
+    main(["-C", str(toy_repo), "crossrepo", "--json"])
+    app = json.loads(capsys.readouterr().out)["repos"][0]
+    assert app["consumers"] == [] and any("could not analyse" in u for u in app["unknowns"])
+
+
+def test_no_source_change_has_no_cross_repo_impact(toy_repo, app_repo, capsys):
+    main(["-C", str(toy_repo), "init"])
+    cfg = toy_repo / ".codetwin.toml"
+    cfg.write_text(cfg.read_text() + f'\n[[repos]]\nname = "app"\npath = "{app_repo.as_posix()}"\n')
+    t = next((toy_repo / "tests").glob("test_*.py"))
+    t.write_text(t.read_text() + "\n# comment\n")
+    capsys.readouterr()
+    main(["-C", str(toy_repo), "crossrepo", "--json"])
+    out = json.loads(capsys.readouterr().out)
+    assert out["repos"] == [] and "no source file changed" in out["summary"]
