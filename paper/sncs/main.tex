@@ -191,19 +191,19 @@ The project has five objectives: (O1)~create an evidence graph that shows how fi
 \begin{figure}[htbp]
 \centering
 \resizebox{\linewidth}{!}{%
-\begin{tikzpicture}[font=\scriptsize, node distance=4mm and 4mm,
-  st/.style={draw, rounded corners=2pt, align=center, text width=29mm, minimum height=13mm, fill=white},
+\begin{tikzpicture}[font=\footnotesize, node distance=4mm and 4.5mm,
+  st/.style={draw, rounded corners=2pt, align=center, text width=25mm, minimum height=12mm, fill=white},
   ev/.style={st, fill=black!8},
-  pr/.style={st, dashed, text width=29mm},
+  pr/.style={st, dashed},
   arr/.style={-{Stealth[length=1.6mm]}, semithick}]
-\node[st] (s1) {\textbf{1. Literature survey}\\ 32 works, survey questions SQ1--SQ4\\ (Section~\ref{sec:related})};
-\node[st, right=of s1] (s2) {\textbf{2. Gap analysis}\\ classification of selection techniques; gaps G1--G5 (Section~\ref{sec:gap})};
-\node[st, right=of s2] (s3) {\textbf{3. Requirements}\\ R1--R7, each traced to a gap (Section~\ref{sec:requirements})};
-\node[st, right=of s3] (s4) {\textbf{4. Design of CodeTwin AI}\\ four layers and design decisions (Section~\ref{sec:approach})};
-\node[pr, below=9mm of s1] (f1) {\textbf{Proposed, not evaluated}\\ evidence store, cross-repository evidence, developer and agent interfaces};
-\node[ev, below=9mm of s2] (e1) {\textbf{5. Research prototype}\\ of the core: selection, risk, calibration, abstention (Section~\ref{sec:impl})};
-\node[ev, below=9mm of s3] (e2) {\textbf{6. Evaluation}\\ 681 Python changes and \vNchanges{} pull requests, RQ1--RQ6 (Sections~\ref{sec:setup}--\ref{sec:results})};
-\node[ev, below=9mm of s4] (e3) {\textbf{7. Findings and limits}\\ what held, what did not, threats (Sections~\ref{sec:discussion}--\ref{sec:threats})};
+\node[st] (s1) {\textbf{1. Survey}\\ 32 works, SQ1--SQ4\\ (Sec.~\ref{sec:related})};
+\node[st, right=of s1] (s2) {\textbf{2. Gap analysis}\\ gaps G1--G5\\ (Sec.~\ref{sec:gap})};
+\node[st, right=of s2] (s3) {\textbf{3. Requirements}\\ R1--R7\\ (Sec.~\ref{sec:requirements})};
+\node[st, right=of s3] (s4) {\textbf{4. Design}\\ of CodeTwin AI\\ (Sec.~\ref{sec:approach})};
+\node[pr, below=9mm of s1] (f1) {\textbf{Proposed only}\\ store, cross-repo, interfaces};
+\node[ev, below=9mm of s2] (e1) {\textbf{5. Prototype}\\ core of the design\\ (Sec.~\ref{sec:impl})};
+\node[ev, below=9mm of s3] (e2) {\textbf{6. Evaluation}\\ RQ1--RQ6\\ (Sec.~\ref{sec:setup}--\ref{sec:results})};
+\node[ev, below=9mm of s4] (e3) {\textbf{7. Findings}\\ and limits\\ (Sec.~\ref{sec:discussion}--\ref{sec:threats})};
 \draw[arr] (s1) -- (s2); \draw[arr] (s2) -- (s3); \draw[arr] (s3) -- (s4);
 \draw[semithick] (s4.south) -- ++(0,-3.5mm) coordinate (h);
 \draw[arr] (h) -| (e1.north);
@@ -212,10 +212,10 @@ The project has five objectives: (O1)~create an evidence graph that shows how fi
 \begin{scope}[on background layer]
 \node[draw=black!60, densely dotted, rounded corners=3pt, inner sep=1.8mm, fit=(e1)(e2)(e3), label={[font=\scriptsize\itshape, anchor=north east]south east:evaluated in this paper}] {};
 \end{scope}
-\node[font=\scriptsize\itshape, below=1mm of f1] {future work (Section~\ref{sec:conclusion})};
+\node[font=\scriptsize\itshape, below=1mm of f1] {future work (Sec.~\ref{sec:conclusion})};
 \end{tikzpicture}%
 }
-\caption{How this work was carried out. The survey led to five gaps and seven requirements, from which we designed CodeTwin AI. Only the core of the design was built as a research prototype and evaluated (shaded); the other components are proposed and left to future work (dashed).}
+\caption{How this work was carried out. A survey of 32 works led to five gaps (G1--G5) and seven requirements (R1--R7), from which we designed CodeTwin AI. Only the core of the design, which selects tests, estimates their residual risk, calibrates it and abstains, was built as a research prototype and evaluated on 681 Python changes and \vNchanges{} pull requests in other languages (shaded). The evidence store, cross-repository evidence and the developer and agent interfaces are proposed and left to future work (dashed).}
 \label{fig:method}
 \end{figure}
 
