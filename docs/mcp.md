@@ -26,6 +26,7 @@ The project must have a `.codetwin.toml` and a recorded run (`codetwin init && c
 |---|---|
 | `verify_change(alpha?)` | `proceed` or `run_more`, estimated residual risk, tests to run, reasons and unknowns |
 | `get_impact(files)` | tests reaching the files, with evidence types, and unresolved links |
+| `get_cross_repo_impact(base)` | consumer files and tests in connected repositories (`[[repos]]`) for the working-tree change, with unknowns |
 | `get_symbol_impact(target)` | one function, method or class (`path:Name`, `path:Class.method`, `path:line`): tests that execute it (`runtime`), test files that name it (`static-name`), tests reaching its callers (`via-caller:*`), callers with file and line, and unknowns |
 | `recommend_tests(budget?)` | highest-risk tests within a share of full-suite time, and the risk left |
 | `explain_decision()` | numbers and reasons behind the last decision |
