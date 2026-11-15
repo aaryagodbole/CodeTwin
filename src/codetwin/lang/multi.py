@@ -66,6 +66,7 @@ class Multi(Language):
             for f, ls in r.import_lines.items():
                 run.import_lines[f] = sorted(set(run.import_lines.get(f, [])) | set(ls))
             run.wall += r.wall
+            run.notes += r.notes
             codes.append(r.returncode)
         run.returncode = next((c for c in codes if c not in (0, "0")), 0)
         return run
@@ -87,6 +88,10 @@ class Multi(Language):
     def has_runtime_evidence(self, path: str) -> bool:
         a = self.of(path)
         return a is not None and a.has_runtime_evidence(path)
+
+    def evidence_group(self, path: str) -> str:
+        a = self.of(path)
+        return a.evidence_group(path) if a is not None else "?"
 
     def run_all(self, work: Path, tests: list[str], timeout: int) -> bool:
         return all([self.adapters[i].run_all(work, ts, timeout) for i, ts in self._split(tests).items()])

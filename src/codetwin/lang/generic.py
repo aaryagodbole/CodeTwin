@@ -28,6 +28,7 @@ from __future__ import annotations
 import inspect
 import os
 import posixpath
+import re
 import shlex
 import subprocess
 import tempfile
@@ -44,6 +45,10 @@ from . import coverage_formats as covfmt
 from .base import Language, glob_match, repo_files, under
 from .spec import Runner, Spec
 
+# output of a run whose runner or coverage tool is not installed (not a test failure)
+MISSING_TOOL = re.compile(r"no such command: `?[\w-]+`?|command not found|: not found|is not recognized as an internal or "
+                          r"external command|executable file not found|Cannot find module '[^']*coverage[^']*'|"
+                          r"could not determine executable to run|ENOENT[^\n]*spawn", re.I)
 BODY_TYPES = {"function_body", "block", "compound_statement", "body_statement", "statement_block"}
 # containers of functions, in the grammars of the supported languages (class, struct, interface, trait, impl, ...)
 CLASS_TYPES = {"class_declaration", "class_definition", "class", "class_specifier", "struct_specifier",
@@ -162,6 +167,7 @@ class Generic(Language):
         self.test_globs = list(r.get("test_globs", spec.test_globs))
         self._runners: dict[str, Runner | None] = {}
         self._mappers: dict[str, covfmt.PathMapper] = {}
+        self._missing: dict[str, str] = {}             # test -> why its runner or coverage tool could not run
         self.runner = self.runner_for("")
 
     # --------------------------------------------------------------- configuration
@@ -426,6 +432,8 @@ class Generic(Language):
             except subprocess.TimeoutExpired as e:
                 ok = None
                 output = (e.stdout or b"").decode("utf-8", "replace") if isinstance(e.stdout, bytes) else str(e.stdout or "")
+            except OSError as e:          # the runner itself is not installed (or not executable)
+                ok, rc, output = False, "127", f"{argv[0]}: command not found ({e.strerror})"
             dt = time.time() - t0
             if result_glob and ok is not None:
                 jf = self._junit_failed(sorted(cwd.glob(result_glob)))
@@ -437,6 +445,9 @@ class Generic(Language):
                 lines = covfmt.read_dir(r.coverage_format, where, pattern, self._mapper(pdir))
             if ok is not True or (coverage and not lines):
                 self._log(test, argv, cwd, rc, output, sorted(str(p.relative_to(cov)) for p in cov.rglob("*")))
+            if ok is not True and (rc == "127" or MISSING_TOOL.search(output)):
+                hit = MISSING_TOOL.search(output)
+                self._missing[test] = (hit.group(0) if hit else f"`{argv[0]}` not found").strip()
             return test, dt, ok, lines
 
     def _log(self, test: str, argv: list[str], cwd: Path, rc: str, output: str, produced: list[str]) -> None:
@@ -465,13 +476,20 @@ class Generic(Language):
         for pdir in sorted({self.project_dir(t) for t in runnable}):
             self._setup(self.root / pdir, self.runner_for(pdir), timeout)  # type: ignore[arg-type]
         workers = max(1, int(self.opts.get("workers", 1)))
+        self._missing = {}
         with ThreadPoolExecutor(workers) as ex:
             results = list(ex.map(lambda t: self._run_one(t, self.root, per, True), runnable))
         for test, dt, ok, lines in results:
             run.durations[test] = dt
+            if test in self._missing:      # the runner or coverage tool is missing: no evidence, not a test failure
+                continue
             if ok is not True:
                 run.failing.append(f"{test}::" + ("timeout" if ok is None else "failed"))
             run.covered[test] = {f: sorted(ls) for f, ls in lines.items() if not self.is_test(f)}
+        for why in sorted(set(self._missing.values())):
+            n = sum(1 for v in self._missing.values() if v == why)
+            run.notes.append(f"{self.name}: {n} test files could not run ({why}); they have no runtime evidence, so "
+                             "changes in their project run every test (see .codetwin/runner.log)")
         run.returncode = 0 if not run.failing else 1
         run.wall = time.time() - t0
         return run
@@ -482,6 +500,9 @@ class Generic(Language):
 
     def has_runtime_evidence(self, path: str) -> bool:
         return self.runner_for(path, is_dir=False) is not None
+
+    def evidence_group(self, path: str) -> str:
+        return f"{self.name}:{self.project_dir(path)}"
 
     def run_all(self, work: Path, tests: list[str], timeout: int) -> bool:
         for t in tests:
