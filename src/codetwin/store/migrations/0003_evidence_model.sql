@@ -13,18 +13,33 @@
 --     deleted with it.
 
 -- ===================================================================== code model
-create table revision (
+-- Every revision and code entity belongs to a repository. Row 1 is the repository this database lives in; other
+-- rows are connected repositories ([[repos]]), whose files and commits are referenced by cross-repository and
+-- contract analyses (0004). Their own runs stay in their own databases.
+create table repository (
     id        integer primary key,
-    sha       text not null unique,               -- a git commit, or the pseudo-revision 'working-tree'
-    recorded  real not null
+    name      text not null unique,               -- '.' for this repository, else the [[repos]] name
+    location  text,                               -- path relative to this repository, or a URL
+    is_self   integer not null default 0 check (is_self in (0, 1))
+);
+create unique index repository_one_self on repository (is_self) where is_self = 1;
+insert into repository (id, name, location, is_self) values (1, '.', '.', 1);
+
+create table revision (
+    id             integer primary key,
+    repository_id  integer not null default 1 references repository (id),
+    sha            text not null,                 -- a git commit, or the pseudo-revision 'working-tree'
+    recorded       real not null,
+    unique (repository_id, sha)
 );
 
 create table code_entity (
-    id    integer primary key,
-    kind  text not null check (kind in ('file', 'class', 'function', 'method')),
-    path  text not null,                          -- repository-relative path of the file
-    name  text not null default '',               -- qualified name inside the file; '' for a file
-    unique (kind, path, name),
+    id             integer primary key,
+    repository_id  integer not null default 1 references repository (id),
+    kind           text not null check (kind in ('file', 'class', 'function', 'method')),
+    path           text not null,                 -- repository-relative path of the file
+    name           text not null default '',      -- qualified name inside the file; '' for a file
+    unique (repository_id, kind, path, name),
     check ((kind = 'file') = (name = ''))
 );
 
@@ -245,7 +260,7 @@ create table setting (
 
 -- ===================================================================== views
 create view latest_run as
-    select t.*, r.sha from test_run t join revision r on r.id = t.revision_id
+    select t.*, r.sha from test_run t join revision r on r.id = t.revision_id where r.repository_id = 1
     order by t.recorded desc, t.id desc limit 1;
 
 -- Every typed link of every revision in one shape: static/declared/co-change/suggested edges, runtime links

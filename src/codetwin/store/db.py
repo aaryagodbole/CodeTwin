@@ -22,6 +22,7 @@ from ..evidence.model import FileFacts, TestRun
 MIGRATIONS = "codetwin.store.migrations"
 SYMBOL_KINDS = ("class", "function", "method")
 CALIBRATION_WINDOW, RECAL_WINDOW, CHANGE_WINDOW = 200, 5000, 2000
+SELF = 1                                   # repository.id of the repository this database belongs to
 
 
 def _migrations() -> list[tuple[str, str]]:
@@ -116,24 +117,37 @@ class Store:
         return [r[0] for r in self.con.execute("select name from sqlite_master where type='table' order by name")]
 
     # ------------------------------------------------------------- identities
-    def _revision(self, sha: str, when: float | None = None) -> int:
-        key = ("rev", sha)
+    def _revision(self, sha: str, when: float | None = None, repo: int = SELF) -> int:
+        key = ("rev", repo, sha)
         if key not in self._ids:
-            self.con.execute("insert or ignore into revision (sha, recorded) values (?,?)",
-                             (sha, time.time() if when is None else when))
-            self._ids[key] = self.con.execute("select id from revision where sha=?", (sha,)).fetchone()[0]
+            self.con.execute("insert or ignore into revision (repository_id, sha, recorded) values (?,?,?)",
+                             (repo, sha, time.time() if when is None else when))
+            self._ids[key] = self.con.execute("select id from revision where repository_id=? and sha=?",
+                                              (repo, sha)).fetchone()[0]
         return self._ids[key]
 
-    def _revision_id(self, sha: str) -> int | None:
-        row = self.con.execute("select id from revision where sha=?", (sha,)).fetchone()
+    def _revision_id(self, sha: str, repo: int = SELF) -> int | None:
+        row = self.con.execute("select id from revision where repository_id=? and sha=?", (repo, sha)).fetchone()
         return row[0] if row else None
 
-    def _entity(self, path: str, kind: str = "file", name: str = "") -> int:
-        key = (kind, path, name)
+    def _entity(self, path: str, kind: str = "file", name: str = "", repo: int = SELF) -> int:
+        key = (repo, kind, path, name)
         if key not in self._ids:
-            self.con.execute("insert or ignore into code_entity (kind, path, name) values (?,?,?)", key)
-            self._ids[key] = self.con.execute("select id from code_entity where kind=? and path=? and name=?",
-                                              key).fetchone()[0]
+            self.con.execute("insert or ignore into code_entity (repository_id, kind, path, name) values (?,?,?,?)", key)
+            self._ids[key] = self.con.execute("select id from code_entity where repository_id=? and kind=? and path=? "
+                                              "and name=?", key).fetchone()[0]
+        return self._ids[key]
+
+    def repository(self, name: str, location: str | None = None) -> int:
+        """Id of a connected repository (created on first use; its location is updated when given)."""
+        key = ("repo", name)
+        if key not in self._ids:
+            with self._tx():
+                self.con.execute("insert or ignore into repository (name, location) values (?,?)", (name, location))
+                self._ids[key] = self.con.execute("select id from repository where name=?", (name,)).fetchone()[0]
+        if location is not None:
+            with self._tx():
+                self.con.execute("update repository set location=? where id=? and is_self=0", (location, self._ids[key]))
         return self._ids[key]
 
     def _files(self) -> dict[int, str]:
@@ -165,7 +179,7 @@ class Store:
 
     def get_run(self, sha: str) -> TestRun | None:
         row = self.con.execute("select t.id, t.returncode, t.wall from test_run t join revision r on r.id = t.revision_id "
-                               "where r.sha=?", (sha,)).fetchone()
+                               "where r.repository_id=1 and r.sha=?", (sha,)).fetchone()
         if not row:
             return None
         rid, files = row[0], self._files()
@@ -189,7 +203,7 @@ class Store:
 
     def run_shas(self) -> list[str]:
         return [r[0] for r in self.con.execute("select r.sha from test_run t join revision r on r.id = t.revision_id "
-                                               "order by t.recorded, t.id")]
+                                               "where r.repository_id=1 order by t.recorded, t.id")]
 
     def latest_run_sha(self) -> str | None:
         row = self.con.execute("select sha from latest_run").fetchone()
@@ -200,7 +214,7 @@ class Store:
         return [r[0] for r in self.con.execute(
             "select distinct te.path from coverage_line c join test_run t on t.id = c.run_id "
             "join revision r on r.id = t.revision_id join code_entity f on f.id = c.file_id "
-            "join code_entity te on te.id = c.test_id where r.sha=? and f.kind='file' and f.path=? and c.line=? "
+            "join code_entity te on te.id = c.test_id where r.repository_id=1 and r.sha=? and f.kind='file' and f.path=? and c.line=? "
             "order by te.path", (sha, file, line))]
 
     # ------------------------------------------------------------- test outcomes (history for failure triage)
@@ -218,7 +232,7 @@ class Store:
     def outcomes(self, test: str | None = None) -> list[dict]:
         q = ("select o.id, r.sha, o.recorded, e.path, o.passed, o.source from test_outcome o "
              "join revision r on r.id = o.revision_id join code_entity e on e.id = o.test_id")
-        rows = self.con.execute(q + (" where e.kind='file' and e.path=?" if test else "") + " order by o.recorded, o.id",
+        rows = self.con.execute(q + (" where e.repository_id=1 and e.kind='file' and e.path=?" if test else "") + " order by o.recorded, o.id",
                                 (test,) if test else ()).fetchall()
         cases: dict[int, list[str]] = {}
         if rows:
