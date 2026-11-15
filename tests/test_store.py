@@ -45,6 +45,14 @@ def test_rerecording_a_revision_replaces_its_run(tmp_path):
         assert s.get_run(RUN.sha).durations == {"tests/test_a.py": 1.0}
 
 
+def test_rerecording_static_facts_replaces_the_whole_snapshot(tmp_path):
+    with Store(tmp_path / "e.sqlite") as s:
+        s.save_static(RUN.sha, FACTS)
+        s.save_static(RUN.sha, {"src/q.py": FACTS["src/q.py"]})        # src/p.py no longer analysed
+        assert s.get_static(RUN.sha) == {"src/q.py": FACTS["src/q.py"]}
+        assert s.con.execute("select count(*) from evidence_edge").fetchone()[0] == 0
+
+
 def test_entities_are_stored_once_and_typed(tmp_path):
     with Store(tmp_path / "e.sqlite") as s:
         s.save_run(RUN)

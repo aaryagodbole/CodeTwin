@@ -146,3 +146,52 @@ def test_end_to_end_with_dependent(toy_repo, tmp_path, capsys):
         rel = set(st.con.execute("select source, type, target from repository_relation"))
         assert {(".", "providesApi", "openapi.yaml"), ("web", "consumesApi", "openapi.yaml")} <= rel
         assert st.con.execute("pragma foreign_key_check").fetchall() == []
+
+# ------------------------------------------------------------------ review fixes (PR #40)
+def test_path_matching_is_exact():
+    assert not path_regex("/health").search('get("/health/status")')
+    assert not path_regex("/health").search('get("/health.json")')
+    assert path_regex("/health").search('get("/health?verbose=1")')
+    orders = path_regex("/users/{id}/orders")
+    assert orders.search('url = "/users/" + uid + "/orders"')
+    assert not orders.search('url = "/users/" + uid + "/profiles"')
+
+
+def test_openapi2_body_schema_is_diffed():
+    def doc(props):
+        return {"swagger": "2.0", "paths": {"/users": {"post": {
+            "parameters": [{"name": "user", "in": "body", "schema": {"$ref": "#/definitions/NewUser"}}],
+            "responses": {"201": {"description": "ok"}}}}},
+            "definitions": {"NewUser": {"type": "object", "properties": props}}}
+    old, new = doc({"name": {"type": "string"}, "email": {"type": "string"}}), doc({"name": {"type": "string"}})
+    ch = {(c.kind, c.location) for c in diff_documents(old, new, "swagger.json") if c.breaking}
+    assert ("property-removed", "POST /users request.email") in ch
+
+
+def test_deleted_and_renamed_contract_files(toy_repo, capsys):
+    (toy_repo / "openapi.yaml").write_text(yaml.safe_dump(OLD))
+    (toy_repo / "order.schema.json").write_text(json.dumps({"title": "Order", "type": "object"}))
+    for cmd in (["add", "-A"], ["commit", "-qm", "api"]):
+        subprocess.run(["git", "-c", "user.email=t@t", "-c", "user.name=t", *cmd], cwd=toy_repo, check=True)
+    main(["-C", str(toy_repo), "init"])
+    (toy_repo / "api").mkdir()
+    subprocess.run(["git", "mv", "openapi.yaml", "api/openapi.yaml"], cwd=toy_repo, check=True, capture_output=True)
+    (toy_repo / "order.schema.json").unlink()
+    capsys.readouterr()
+    main(["-C", str(toy_repo), "contracts", "--json", "--base", "HEAD"])
+    out = json.loads(capsys.readouterr().out)
+    locs = {b["location"] for b in out["breaking"]}
+    assert "Order" in locs                                           # deleted schema file: breaking
+    assert not any(b["file"].endswith("openapi.yaml") for b in out["breaking"])   # renamed, unchanged: nothing
+
+
+def test_untracked_move_is_not_a_deletion(toy_repo, capsys):
+    (toy_repo / "openapi.yaml").write_text(yaml.safe_dump(OLD))
+    for cmd in (["add", "-A"], ["commit", "-qm", "api"]):
+        subprocess.run(["git", "-c", "user.email=t@t", "-c", "user.name=t", *cmd], cwd=toy_repo, check=True)
+    main(["-C", str(toy_repo), "init"])
+    (toy_repo / "docs").mkdir()
+    (toy_repo / "openapi.yaml").rename(toy_repo / "docs" / "openapi.yaml")
+    capsys.readouterr()
+    main(["-C", str(toy_repo), "contracts", "--json", "--base", "HEAD"])
+    assert json.loads(capsys.readouterr().out)["breaking"] == []

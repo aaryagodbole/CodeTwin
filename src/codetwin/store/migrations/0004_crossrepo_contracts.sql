@@ -31,7 +31,8 @@ create table repository_link (                    -- consumer depends on provide
     provider_id  integer not null references repository (id),
     source       text not null default 'config' check (source in ('config', 'detected')),
     first_seen   real not null,
-    last_seen    real not null,
+    last_seen    real not null,                   -- last analysis that found it declared
+    ended        real,                            -- when it stopped being declared; null while it is
     unique (consumer_id, provider_id),
     check (consumer_id <> provider_id)
 );
@@ -185,6 +186,7 @@ create table analysis_unknown (                   -- what the analysis could not
 create view repository_relation as
     select r1.name as source, 'dependsOn' as type, r2.name as target from repository_link l
         join repository r1 on r1.id = l.consumer_id join repository r2 on r2.id = l.provider_id
+        where l.ended is null
     union all
     select r.name, 'providesPackage', p.name from package_provider pp
         join repository r on r.id = pp.repository_id join package p on p.id = pp.package_id

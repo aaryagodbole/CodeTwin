@@ -108,6 +108,7 @@ def test_change_in_library_reaches_dependent(toy_repo, app_repo, capsys):
         assert sym == [("total", "function", "src/shop/price.py")]
         rel = set(st.con.execute("select source, type, target from repository_relation"))
         assert {("app", "dependsOn", "."), ("gone", "dependsOn", "."), (".", "providesPackage", "shop")} <= rel
+        assert repos["app"]["consumers"] > 0
         # app's files live in app's namespace: same path in two repositories is two entities
         assert st.con.execute("select count(distinct repository_id) from code_entity where path like 'app/%'"
                               ).fetchone()[0] == 1
@@ -150,3 +151,80 @@ def test_javascript_dependent(tmp_path, toy_repo, capsys):
     assert web_r["language"] == "javascript"
     assert web_r["consumers"][0]["file"] == "src/cart.js" and web_r["consumers"][0]["symbols"] == ["round"]
     assert "test/cart.test.js" in web_r["tests"]
+
+
+# ------------------------------------------------------------------ review fixes (PR #39)
+def test_consumer_detection_details(toy_repo, app_repo, capsys, monkeypatch):
+    from codetwin.crossrepo import analysis
+    from codetwin.crossrepo.analysis import code_text, import_lines
+    late = ["x = 1"] * 450 + ["    from shop.price import total"]
+    assert import_lines(late, ["shop"]) == ["shop.price"]                 # imports inside functions, late in a file
+    assert code_text("x = total(items)  # total") == "x = total(items) " and code_text("// total") == ""
+    assert code_text('log("total failed")') == 'log("")' and code_text("*args = total") == "*args = total"
+    (app_repo / "app" / "note.py").write_text("import shop\n# total is computed upstream\nmsg = 'total'\n")
+    (app_repo / "app" / "broken.py").write_text("def broken(:\n")
+    main(["-C", str(toy_repo), "init"])
+    cfg = toy_repo / ".codetwin.toml"
+    cfg.write_text(cfg.read_text() + f'\n[[repos]]\nname = "app"\npath = "{app_repo.as_posix()}"\n')
+    p = toy_repo / "src/shop/price.py"
+    p.write_text(p.read_text().replace('i["price"]', 'i["price"] * 1'))
+    capsys.readouterr()
+    main(["-C", str(toy_repo), "crossrepo", "--json"])
+    app = json.loads(capsys.readouterr().out)["repos"][0]
+    cons = {c["file"]: c for c in app["consumers"]}
+    assert cons["app/note.py"]["link"] == "imports-package"               # names in comments/strings are not uses
+    assert any("could not be fully parsed" in u and "app/broken.py" in u for u in app["unknowns"])
+
+    real_get = analysis.langmod.get
+
+    def get(cfg):
+        a = real_get(cfg)
+        if Path(cfg.root).resolve() == app_repo.resolve():
+            def boom():
+                raise RuntimeError("tree-sitter missing")
+            a.facts = boom
+        return a
+    monkeypatch.setattr(analysis.langmod, "get", get)
+    main(["-C", str(toy_repo), "crossrepo", "--json"])
+    app = json.loads(capsys.readouterr().out)["repos"][0]
+    assert app["consumers"] == [] and any("could not analyse" in u for u in app["unknowns"])
+
+
+def test_no_source_change_has_no_cross_repo_impact(toy_repo, app_repo, capsys):
+    main(["-C", str(toy_repo), "init"])
+    cfg = toy_repo / ".codetwin.toml"
+    cfg.write_text(cfg.read_text() + f'\n[[repos]]\nname = "app"\npath = "{app_repo.as_posix()}"\n')
+    t = next((toy_repo / "tests").glob("test_*.py"))
+    t.write_text(t.read_text() + "\n# comment\n")
+    capsys.readouterr()
+    main(["-C", str(toy_repo), "crossrepo", "--json"])
+    out = json.loads(capsys.readouterr().out)
+    assert out["repos"] == [] and "no source file changed" in out["summary"]
+
+
+def test_stored_links_follow_the_configuration(toy_repo, app_repo, capsys):
+    """Review fixes (#43): runtime evidence without consumers, removed [[repos]] links end."""
+    from codetwin.store.analyses import crossrepo_history
+    main(["-C", str(toy_repo), "init"])
+    cfg = toy_repo / ".codetwin.toml"
+    base_cfg = cfg.read_text()
+    cfg.write_text(base_cfg + f'\n[[repos]]\nname = "app"\npath = "{app_repo.as_posix()}"\npackages = ["nothing_imports_this"]\n')
+    with Engine(app_repo) as dep:
+        dep.record()                                          # the dependent has a recorded run
+    p = toy_repo / "src/shop/price.py"
+    p.write_text(p.read_text().replace('i["price"]', 'i["price"] * 1'))
+    main(["-C", str(toy_repo), "crossrepo", "--json"])
+    with Engine(toy_repo) as eng:
+        st = eng.store
+        t = st.con.execute("select runtime_evidence from analysis_target").fetchone()[0]
+        assert t == 1                                         # no consumers, but it had a recorded run
+        assert ("nothing_imports_this",) not in st.con.execute("select name from package").fetchall()
+    cfg.write_text(base_cfg + '\n[[repos]]\nname = "other"\npath = "../nowhere"\n')
+    capsys.readouterr()
+    main(["-C", str(toy_repo), "crossrepo", "--json"])
+    with Engine(toy_repo) as eng:
+        rel = set(eng.store.con.execute("select source, type, target from repository_relation"))
+        assert ("other", "dependsOn", ".") in rel and ("app", "dependsOn", ".") not in rel
+        ended = eng.store.con.execute("select r.name from repository_link l join repository r on r.id = l.consumer_id "
+                                      "where l.ended is not null").fetchall()
+        assert ended == [("app",)] and len(crossrepo_history(eng.store)) == 2

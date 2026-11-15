@@ -13,6 +13,8 @@ def register(mcp, root: str) -> None:
             facts = eng.facts_now()
             base = eng.store.latest_run_sha()
             run = eng.store.get_run(base) if base else None
+            base_facts = eng.store.get_static(base) if base else None
             hits = find(facts, path, query or "")
-            return [symbol_impact(eng.root, facts, run, eng.tests_now(), s, eng.lang.is_test).to_dict() for s in hits] \
+            return [symbol_impact(eng.root, facts, run, eng.tests_now(), s, eng.lang.is_test, base_facts).to_dict()
+                    for s in hits] \
                 or [{"symbol": {"name": query, "file": path}, "unknowns": [f"no symbol '{query}' in {path}"]}]

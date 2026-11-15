@@ -6,6 +6,7 @@ they call these functions, which write one `impact_analysis` with everything it 
 from __future__ import annotations
 
 import hashlib
+import json
 import subprocess
 import time
 from dataclasses import dataclass, field
@@ -97,13 +98,13 @@ def save_crossrepo(store: Store, cfg, base: str, out: dict, symbols: list[dict],
         _provides(store, SELF, list(out.get("packages") or []), own_src)
         now = time.time()
         unknowns: list[tuple[int | None, str]] = []
+        current = []
         for ri in repos:
             rid = store.repository(ri.name, ri.path)
+            current.append(rid)
             store.con.execute("insert into repository_link (consumer_id, provider_id, first_seen, last_seen) "
-                              "values (?,?,?,?) on conflict (consumer_id, provider_id) do update set last_seen=excluded.last_seen",
-                              (rid, SELF, now, now))
-            if ri.packages_declared:
-                _provides(store, SELF, ri.packages, "config")
+                              "values (?,?,?,?) on conflict (consumer_id, provider_id) do update set "
+                              "last_seen=excluded.last_seen, ended=null", (rid, SELF, now, now))
             tid = _target(store, aid, rid, ri.path if ri.status != "not-found" else None, ri.language, ri.status,
                           ri.runtime)
             for c in ri.consumers:
@@ -116,6 +117,9 @@ def save_crossrepo(store: Store, cfg, base: str, out: dict, symbols: list[dict],
                                        for ln in sorted(set(lines))])
             _test_rows(store, tid, rid, ri.tests)
             unknowns += [(tid, u) for u in ri.unknowns]
+        # a dependent no longer declared in [[repos]]: the link ended now (kept for history)
+        store.con.execute("update repository_link set ended=? where provider_id=? and ended is null and consumer_id "
+                          "not in (select value from json_each(?))", (now, SELF, json.dumps(current)))
         _unknowns(store, aid, unknowns)
     return aid
 
@@ -219,14 +223,14 @@ def save_contracts(store: Store, cfg, base: str, out: dict, docs: list[ContractD
         wt_rev = store._revision(WORKING_TREE)
         change_ids: dict[int, int] = {}               # id(ContractChange) -> contract_change.id
         for d in docs:
-            fmt, spec, title = _format(d.new_doc)
+            fmt, spec, title = _format(d.new_doc or d.old_doc)          # a deleted file keeps its format
             fid = store._entity(d.file)
             store.con.execute("insert into api (repository_id, file_id, format, title) values (?,?,?,?) "
                               "on conflict (file_id) do update set format=excluded.format, title=excluded.title",
                               (SELF, fid, fmt, title))
             api_id = store.con.execute("select id from api where file_id=?", (fid,)).fetchone()[0]
             old_v = _version(store, api_id, d.old_text, _format(d.old_doc)[1])
-            new_v = _version(store, api_id, d.new_text, spec)
+            new_v = _version(store, api_id, d.new_text, spec if d.new_doc else None)
             _publish(store, base_rev, api_id, old_v)
             _publish(store, wt_rev, api_id, new_v)
             if old_v == new_v:

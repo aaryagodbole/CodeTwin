@@ -9,7 +9,7 @@ from .. import lang as langmod
 from ..crossrepo.analysis import _dependent_config, _recorded_run, declared
 from ..graph.impact import build_graph, impact_of
 from ..store.analyses import ContractDoc, Scope
-from .diff import ContractChange, at_commit, diff_documents, find_contract_files, load
+from .diff import ContractChange, at_commit, contract_files_at, diff_documents, find_contract_files, load, renames
 
 MAX_SITES = 30
 
@@ -24,11 +24,17 @@ def path_regex(api_path: str) -> re.Pattern:
             rx += r"[^\s/'\"`?]*"
         else:
             rx += re.escape(p)
+    end = r"(?![\w./-])"                 # "/health" is not "/health/status" nor "/health.json"; "?q=" may follow
     literal_prefix = parts[0].rstrip("/")
     if len(parts) > 1 and literal_prefix.count("/") >= 1 and len(literal_prefix) > 1:
-        # a path built by concatenation: the literal part before the first parameter
-        return re.compile(rf"(?:{rx}|{re.escape(parts[0])}['\"`]\s*\+)(?![\w-])")
-    return re.compile(rf"{rx}(?![\w-])")
+        # a path built by concatenation: the literal part before the first parameter, then the literal that
+        # follows it ("/users/" + id + "/orders"); with nothing after the parameter, the prefix alone
+        q = r"['\"`]"
+        nxt = parts[2] if len(parts) > 2 else ""
+        concat = (rf"{re.escape(parts[0])}{q}\s*\+[^+\n]*\+\s*{q}{re.escape(nxt)}" if nxt
+                  else rf"{re.escape(parts[0])}{q}\s*\+")
+        return re.compile(rf"(?:{rx}{end}|{concat}{end if nxt else ''})")
+    return re.compile(rf"{rx}{end}")
 
 
 def field_regex(name: str) -> re.Pattern:
@@ -65,6 +71,16 @@ def _scope(root: Path, adapter, contract_files: set[str]):
     return facts, files, adapter.list_tests()
 
 
+def removed_contract(old_doc, file: str) -> list[ContractChange]:
+    """A contract file deleted since the base: its whole API or schema is removed."""
+    if not isinstance(old_doc, dict):
+        return []
+    if "openapi" in old_doc or "swagger" in old_doc or "paths" in old_doc:
+        return diff_documents(old_doc, {"openapi": old_doc.get("openapi", "3"), "paths": {}}, file)
+    title = str(old_doc.get("title") or Path(file).stem.split(".")[0])
+    return [ContractChange(file, "schema-removed", title, f"contract file {file} deleted", True, field=title)]
+
+
 def for_change(cfg, lang_adapter, base: str, store=None) -> dict:
     """Breaking changes of every contract file between `base` and the working tree, with their consumers.
     With a Store, the contents, the diff and the consumers found are also stored (store/analyses.py)."""
@@ -79,7 +95,19 @@ def _analyse(cfg, lang_adapter, base: str):
     sec = cfg.section("contracts")
     configured = list(sec.get("files", [])) if isinstance(sec, dict) else []
     root = Path(cfg.root)
-    files = find_contract_files(root, configured)
+    now = find_contract_files(root, configured)
+    before = contract_files_at(root, base, configured)
+    gone = [f for f in before if not (root / f).exists()]
+    added = [f for f in now if f not in before]
+    moved = renames(root, base, gone + added) if gone else {}
+    for g in gone:                                     # moved without git knowing (untracked): same content
+        if g not in moved:
+            old = at_commit(root, base, g)
+            same = [a for a in added if a not in moved.values() and (root / a).read_text(encoding="utf-8",
+                                                                                        errors="replace") == old]
+            if old is not None and same:
+                moved[g] = same[0]
+    files = sorted(set(now) | set(gone))
     changes: list[ContractChange] = []
     errors: list[str] = []
     docs: list[ContractDoc] = []
@@ -88,15 +116,23 @@ def _analyse(cfg, lang_adapter, base: str):
     tests_rec: list[tuple] = []
     rec = (docs, scopes_rec, sites_rec, tests_rec)
     for f in files:
+        if f in moved.values():
+            continue                                   # compared under its old name below
         old_text = at_commit(root, base, f)
         if old_text is None:
             continue                                   # new contract file: nothing can break yet
         try:
-            new_text = (root / f).read_text(encoding="utf-8")
-            old_doc, new_doc = load(old_text, f), load(new_text, f)
-            found_here = diff_documents(old_doc, new_doc, f)
+            new_path = moved.get(f, f)
+            old_doc = load(old_text, f)
+            if (root / new_path).exists():
+                new_doc = load((root / new_path).read_text(encoding="utf-8"), new_path)
+                found_here = diff_documents(old_doc, new_doc, new_path)
+                docs.append(ContractDoc(new_path, old_text, (root / new_path).read_text(encoding="utf-8"), old_doc,
+                                        new_doc, found_here))
+            else:                                      # deleted: everything it described is gone
+                found_here = removed_contract(old_doc, f)
+                docs.append(ContractDoc(f, old_text, "", old_doc, {}, found_here))
             changes += found_here
-            docs.append(ContractDoc(f, old_text, new_text, old_doc, new_doc, found_here))
         except Exception as e:  # noqa: BLE001 - an unreadable contract is reported, never skipped silently
             errors.append(f"{f}: could not be read as OpenAPI/JSON schema ({type(e).__name__}: {e})")
     breaking = [c for c in changes if c.breaking]
@@ -154,6 +190,10 @@ def _analyse(cfg, lang_adapter, base: str):
                 for t, ev in reach.tests.items():
                     etests.setdefault(f"{name}:{t}", sorted(ev))
                     tests_rec.append((name, c, t, sorted(ev)))
+                for u in reach.unknowns:
+                    msg = f"{name}: {u}"
+                    if msg not in unknowns:
+                        unknowns.append(msg)
         if not consumers:
             unknowns.append(f"{c.location}: no code found that uses it (it may be built dynamically or used "
                                    "by clients outside the connected repositories)")

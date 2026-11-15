@@ -93,3 +93,26 @@ def test_tree_sitter_symbols_for_other_languages(tmp_path):
         a = lang.get(Config(root=tmp_path, language=name, source_dirs=["src"], tests_dir="test", raw={}))
         got = {s[0] for s in a.file_facts(path, (tmp_path / path).read_bytes())[0].symbols}
         assert want[name] <= got, (name, got)
+
+
+# ------------------------------------------------------------------ review fixes (PR #38)
+def test_recorded_coverage_is_matched_on_the_recorded_lines(tmp_path):
+    """Ten lines inserted above `add` since the recorded run: its coverage is at the old lines."""
+    (tmp_path / "lib.py").write_text("\n" * 10 + "def add(a, b):\n    return a + b\n")
+    now = {"lib.py": FileFacts(symbols=[["add", "function", 11, 12], ["new", "function", 1, 2]])}
+    base = {"lib.py": FileFacts(symbols=[["add", "function", 1, 2], ["other", "function", 11, 12]])}
+    run = TestRun(sha="x", covered={"t_add.py": {"lib.py": [1, 2]}, "t_other.py": {"lib.py": [11, 12]}})
+    add = Symbol("add", "function", "lib.py", 11, 12)
+    imp = symbol_impact(tmp_path, now, run, ["t_add.py", "t_other.py"], add, base_facts=base).to_dict()
+    assert list(imp["tests"]) == ["t_add.py"]                          # not the test of the code now at 11-12
+    new = symbol_impact(tmp_path, now, run, [], Symbol("new", "function", "lib.py", 1, 2), base_facts=base).to_dict()
+    assert new["tests"] == {} and any("did not exist at the recorded commit" in u for u in new["unknowns"])
+    out = changed_symbols(now, {"lib.py": FileDiff("M", "lib.py", [], [11])}, run, base_facts=base)
+    assert [(s["name"], s["tests_before"]) for s in out] == [("add", 1)]
+    assert any("no static snapshot" in u for u in symbol_impact(tmp_path, now, run, [], add).to_dict()["unknowns"])
+
+
+def test_partly_parsed_file_is_an_unknown(tmp_path):
+    facts = {"a.js": FileFacts(dynamic=["parse-error"], symbols=[["f", "function", 1, 2]])}
+    imp = symbol_impact(tmp_path, facts, None, [], Symbol("f", "function", "a.js", 1, 2)).to_dict()
+    assert any("syntax errors" in u for u in imp["unknowns"])

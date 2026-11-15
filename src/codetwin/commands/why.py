@@ -15,13 +15,19 @@ def run(args) -> int:
     from ..triage import triage
     with engine(args) as eng:
         reruns: list[bool] = []
+        not_run = ""
         for _ in range(max(0, args.rerun)):
             r = eng.lang.run_suite("working-tree", [args.test])
+            if args.test in r.unrun or r.returncode == "no-runner":
+                not_run = "; ".join(r.notes) or "no test runner is configured for it"
+                break                          # not executed: neither a pass nor a failure, nothing to record
             o = outcomes_of(r).get(args.test)
             reruns.append(o is not None and not o and r.returncode in (0, "0"))
             eng.store.add_outcomes("working-tree", {args.test: o if o is not None else [f"{args.test}::<no result>"]},
                                    "rerun")
         out = triage(eng.root, eng.store, eng.facts_now(), args.test, reruns or None)
+        if not_run:
+            out["unknowns"].append(f"could not rerun {args.test}: {not_run}")
     if args.json:
         print_json(out)
         return 0

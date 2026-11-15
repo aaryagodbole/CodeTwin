@@ -13,6 +13,7 @@ def _symbols(eng, targets: list[tuple[str, str]]) -> list[dict]:
     facts = eng.facts_now()
     base = eng.store.latest_run_sha()
     run = eng.store.get_run(base) if base else None
+    base_facts = eng.store.get_static(base) if base else None
     tests = eng.tests_now()
     out = []
     for path, query in targets:
@@ -22,7 +23,7 @@ def _symbols(eng, targets: list[tuple[str, str]]) -> list[dict]:
                         "unknowns": [f"no function or class '{query}' found in {path}"], "summary": "not found"})
             continue
         for sym in hits:
-            out.append(symbol_impact(eng.root, facts, run, tests, sym, eng.lang.is_test).to_dict())
+            out.append(symbol_impact(eng.root, facts, run, tests, sym, eng.lang.is_test, base_facts).to_dict())
     return out
 
 
