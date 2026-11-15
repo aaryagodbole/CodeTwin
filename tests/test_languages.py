@@ -1,5 +1,6 @@
 """Language adapters: coverage readers, tree-sitter facts, import resolution, no-ops, mutants, end to end."""
 import json
+import os
 import shutil
 import subprocess
 from pathlib import Path
@@ -17,8 +18,8 @@ ts = pytest.importorskip("tree_sitter_language_pack")
 
 def _git(repo: Path, *args: str) -> None:
     subprocess.run(["git", *args], cwd=repo, check=True, capture_output=True,
-                   env={"GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@t", "GIT_COMMITTER_NAME": "t",
-                        "GIT_COMMITTER_EMAIL": "t@t", "PATH": "/usr/bin:/bin:/usr/local/bin"})
+                   env=dict(os.environ, GIT_AUTHOR_NAME="t", GIT_AUTHOR_EMAIL="t@t", GIT_COMMITTER_NAME="t",
+                            GIT_COMMITTER_EMAIL="t@t"))
 
 
 def _write(root: Path, files: dict[str, str]) -> None:
@@ -367,3 +368,47 @@ def test_missing_runner_or_coverage_tool_is_no_evidence_not_a_failure(tmp_path, 
     d = json.loads(capsys.readouterr().out)
     assert d["decision"] == "abstain" and d["selected"] == ["test/calc.test.js"]
     assert any("no coverage recorded" in x for x in d["reasons"])
+
+
+# ------------------------------------------------------------------ review fixes (PR #37)
+def test_python_fallback_never_discards_adapter_edges():
+    from codetwin.evidence.model import FileFacts
+    from codetwin.graph.impact import file_deps
+    js = {"src/a.js": FileFacts(imports=["./b"], deps=["src/b.js"]), "src/b.js": FileFacts(imports=["lodash"]),
+          "src/c.js": FileFacts(imports=["react"])}
+    assert file_deps(js, "src") == {"src/a.js": ["src/b.js"], "src/b.js": [], "src/c.js": []}
+    legacy = {"src/p/a.py": FileFacts(imports=["p.b"]), "src/p/b.py": FileFacts(), "web/x.js": FileFacts(imports=["./y"])}
+    assert file_deps(legacy, "src") == {"src/p/a.py": ["src/p/b.py"], "src/p/b.py": [], "web/x.js": []}
+
+
+def test_unresolved_project_imports_are_unknown(tmp_path):
+    _write(tmp_path, {"src/a.js": "import b from './b';\nimport css from './App.css';\nimport _ from 'lodash';\n",
+                      "src/b.js": "export default 1;\n",
+                      "src/c.js": "import gone from './gone';\nimport u from '@/utils';\n"})
+    facts = _adapter(tmp_path, "javascript").facts()
+    assert "unresolved-import" not in facts["src/a.js"].dynamic        # assets and packages are not unknowns
+    assert "unresolved-import" in facts["src/c.js"].dynamic
+    from codetwin.graph.impact import build_graph
+    assert build_graph(facts, None).has_edge("src/c.js", "?")
+
+
+def test_wildcard_build_markers_count(tmp_path):
+    _write(tmp_path, {"App/Program.cs": "class P {}\n", "App/App.csproj": "<Project/>\n", "tool.py": "x = 1\n",
+                      "other.py": "y = 2\n"})
+    (tmp_path / "App.sln").write_text("")
+    assert lang.detect(tmp_path) == "csharp"                          # the .sln marks the C# project
+
+
+def test_projects_sharing_build_output_run_serially(tmp_path):
+    _write(tmp_path, {"pom.xml": "<project/>\n", "src/test/java/ATest.java": "class ATest {}\n",
+                      "src/test/java/BTest.java": "class BTest {}\n",
+                      "web/package.json": '{"devDependencies": {"jest": "1"}}', "web/test/a.test.js": "",
+                      "web/test/b.test.js": ""})
+    j = _adapter(tmp_path, "java", source_dirs=["src/main/java"], tests_dir="src/test/java")
+    tests = ["src/test/java/ATest.java", "src/test/java/BTest.java"]
+    assert j.batches(tests) == [tests]                                 # maven shares target/: one serial batch
+    from codetwin.lang.spec import Runner
+    assert Runner("x", "t {cov_dir}", "lcov", "lcov.info").parallel_safe()
+    assert not Runner("x", "t", "lcov", "./coverage/lcov.info").parallel_safe()
+    js = _adapter(tmp_path / "web", "javascript", tests_dir="test")
+    assert js.batches(["test/a.test.js", "test/b.test.js"]) == [["test/a.test.js"], ["test/b.test.js"]]
