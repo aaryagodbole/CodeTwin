@@ -43,7 +43,7 @@ def import_lines(lines: list[str], packages: list[str]) -> list[str]:
     """Import strings naming one of `packages` on import-like lines (any language). Adapters may keep only a
     project's own imports in `FileFacts.imports`, so a dependent's imports of this repository are read here."""
     out = []
-    for line in lines[:400]:
+    for line in lines:                         # whole file: imports inside functions come late
         if not IMPORT_LINE.search(line):
             continue
         for tok in TOKEN.findall(line.replace("'", " ").replace('"', " ").replace("`", " ")):
@@ -51,6 +51,19 @@ def import_lines(lines: list[str], packages: list[str]) -> list[str]:
             if any(pkgmod.matches(tok, p) for p in packages):
                 out.append(tok)
     return out
+
+
+COMMENT_START = re.compile(r"^\s*(#(?!\s*(include|import))|//|/\*|\*(\s|/|$)|--\s)")
+STRING = re.compile(r"\"(?:[^\"\\]|\\.)*\"|'(?:[^'\\\n]|\\.)*'|`[^`]*`")
+TRAILING_COMMENT = re.compile(r"(\s//|\s#\s).*$")
+
+
+def code_text(line: str) -> str:
+    """A source line without comments and string contents (any language, approximately): a changed symbol's
+    name in a comment, log message or string is not a use of it."""
+    if COMMENT_START.match(line):
+        return ""
+    return TRAILING_COMMENT.sub("", STRING.sub('""', line))
 
 
 def declared(cfg) -> list[dict]:
@@ -110,8 +123,14 @@ def analyse(cfg, changed_symbols: list[str], changed_files: list[str]) -> list[R
             out.append(ri)
             continue
         ri.language = getattr(adapter, "name", None) or dcfg.language
-        facts = adapter.facts()
-        tests = adapter.list_tests()
+        try:
+            facts = adapter.facts()
+            tests = adapter.list_tests()
+        except Exception as e:  # noqa: BLE001 - e.g. tree-sitter missing: an unknown, not a crash
+            ri.unknowns.append(f"{ri.name}: could not analyse its {ri.language} code ({type(e).__name__}: {e}); "
+                               "its consumers are unknown")
+            out.append(ri)
+            continue
         for f, fx in sorted(facts.items()):
             text = (path / f).read_text(encoding="utf-8", errors="replace").splitlines() if (path / f).exists() else []
             hit = [i for i in fx.imports if any(pkgmod.matches(i, p) for p in pk)] + import_lines(text, pk)
@@ -120,15 +139,21 @@ def analyse(cfg, changed_symbols: list[str], changed_files: list[str]) -> list[R
             used: dict[str, list[int]] = {}
             if sym_rx:
                 for n, line in enumerate(text, start=1):
-                    for m in sym_rx.finditer(line):
+                    for m in sym_rx.finditer(code_text(line)):
                         used.setdefault(m.group(1), []).append(n)
             ri.consumers.append({"file": f, "link": USES_SYMBOL if used else IMPORTS, "imports": sorted(set(hit)),
                                  "symbols": sorted(used), "lines": sorted({x for v in used.values() for x in v})[:50],
                                  "is_test": adapter.is_test(f)})
-        dyn = sorted(f for f, fx in facts.items() if fx.dynamic and any(d != "parse-error" for d in fx.dynamic))
+        bad = sorted(f for f, fx in facts.items() if {"parse-error", "unparsed"} & set(fx.dynamic))
+        dyn = sorted(f for f, fx in facts.items()
+                     if f not in bad and any(d not in ("parse-error", "unparsed") for d in fx.dynamic))
+        if bad:
+            ri.unknowns.append(f"{len(bad)} files in {ri.name} could not be fully parsed (e.g. {', '.join(bad[:3])}): "
+                               "their imports and uses of this repository may be missing")
         if dyn:
             ri.unknowns.append(f"{len(dyn)} files in {ri.name} use dynamic imports or calls "
                                f"(e.g. {', '.join(dyn[:3])}): they may use this repository without importing it")
+        run = _recorded_run(dcfg)
         if not ri.consumers:
             out.append(ri)
             continue
@@ -136,7 +161,6 @@ def analyse(cfg, changed_symbols: list[str], changed_files: list[str]) -> list[R
         for c in ri.consumers:
             if c["is_test"]:
                 ri.tests.setdefault(c["file"], set()).add(f"direct:{c['link']}")
-        run = _recorded_run(dcfg)
         if run is None:
             ri.unknowns.append(f"no recorded run in {ri.name}: tests found through its static import graph only "
                                f"(run `codetwin record` there for runtime evidence)")
@@ -157,8 +181,11 @@ def for_change(cfg, facts: dict, diff: dict, is_source) -> dict:
     from ..graph.symbols import changed_symbols
     if not declared(cfg):
         return {"repos": [], "summary": "no connected repositories ([[repos]] in .codetwin.toml)"}
-    syms = changed_symbols(facts, diff, None, is_source)
     files = sorted(f for f in diff if is_source(f))
+    if not files:
+        return {"changed_symbols": [], "packages": own_packages(cfg), "repos": [],
+                "summary": "no source file changed: nothing a connected repository uses has changed"}
+    syms = changed_symbols(facts, diff, None, is_source)
     repos = [r.to_dict() for r in analyse(cfg, [s["name"] for s in syms], files)]
     n_files = sum(len(r["consumers"]) for r in repos)
     n_tests = sum(len(r["tests"]) for r in repos)
