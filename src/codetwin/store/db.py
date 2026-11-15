@@ -254,14 +254,15 @@ class Store:
 
     # ------------------------------------------------------------- static facts (static evidence)
     def save_static(self, sha: str, facts: dict[str, FileFacts], when: float | None = None) -> None:
+        """Store the static facts of a revision, replacing all earlier ones of it (a file analysed before but not
+        now, e.g. after a change of source_dirs, must not stay in the snapshot)."""
         t = time.time() if when is None else when
         with self._tx():
             rev = self._revision(sha, t)
+            self.con.execute("delete from file_snapshot where revision_id=?", (rev,))
+            self.con.execute("delete from evidence_edge where revision_id=? and type='static'", (rev,))
             for f, x in facts.items():
                 fid = self._entity(f)
-                self.con.execute("delete from file_snapshot where revision_id=? and file_id=?", (rev, fid))
-                self.con.execute("delete from evidence_edge where revision_id=? and src_id=? and type='static'",
-                                 (rev, fid))
                 sid = self.con.execute("insert into file_snapshot (revision_id, file_id) values (?,?)",
                                        (rev, fid)).lastrowid
                 ex = self.con.executemany
