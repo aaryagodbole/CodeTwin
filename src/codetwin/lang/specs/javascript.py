@@ -162,6 +162,20 @@ def _jest_config(root: Path) -> list[str]:
     return []
 
 
+def vitest_provider(root: Path) -> str:
+    """Coverage provider of the installed Vitest: `c8` before 0.34 (renamed `v8` in 0.34)."""
+    try:
+        v = json.loads((root / "node_modules" / "vitest" / "package.json").read_text(encoding="utf-8"))["version"]
+        major, minor = (int(x) for x in v.split(".")[:2])
+    except (OSError, ValueError, KeyError):
+        return "v8"
+    return "c8" if (major, minor) < (0, 34) else "v8"
+
+
+def _vitest_vars(test: str, text: str, cwd: Path) -> dict:
+    return {"vitest_provider": [f"--coverage.provider={vitest_provider(cwd)}"]}
+
+
 def _jest_vars(test: str, text: str, cwd: Path) -> dict:
     return {"jest_config": _jest_config(cwd)}
 
@@ -176,10 +190,10 @@ def _script(root: Path) -> str:
 C8 = "npx --yes c8@10 --reporter=lcovonly --report-dir={cov_dir} --exclude-after-remap"
 RUNNERS = [
     Runner("vitest",
-           "npx --no-install vitest run --coverage.enabled=true --coverage.provider=v8 --coverage.reporter=lcov "
+           "npx --no-install vitest run --coverage.enabled=true {vitest_provider} --coverage.reporter=lcov "
            "--coverage.reportsDirectory={cov_dir} {test}",
            "lcov", "lcov.info", run_command="npx --no-install vitest run {test}",
-           detect=lambda root: _has_dep(root, "vitest")),
+           detect=lambda root: _has_dep(root, "vitest"), vars=_vitest_vars),
     Runner("jest",
            "npx --no-install jest --ci --coverage --coverageReporters=lcov --coverageDirectory={cov_dir} "
            "{jest_config} --runTestsByPath {test}",
@@ -199,7 +213,7 @@ SPEC = Spec(
     name="javascript",
     grammars={".ts": "typescript", ".mts": "typescript", ".cts": "typescript", ".tsx": "tsx",
               ".js": "javascript", ".jsx": "javascript", ".mjs": "javascript", ".cjs": "javascript"},
-    test_globs=["*.test.*", "*.spec.*", "**/__tests__/**/*.*", "test/*.*", "tests/*.*", "**/test/**/*.test.*",
+    test_globs=["*.test.*", "*.spec.*", "*.tests.*", "**/__tests__/**/*.*", "test/*.*", "tests/*.*", "**/test/**/*.test.*",
                 "**/test/**/*.spec.*", "**/tests/**/*.test.*", "**/tests/**/*.spec.*", "**/tests/**/test.ts",
                 "**/tests/**/test.js", "**/tests/**/test.mjs"],
     exclude_globs=["*.config.*", "*.d.ts", "*.mock.*", "*.snap", "**/fixtures/**", "**/e2e/**", "**/__snapshots__/**"],

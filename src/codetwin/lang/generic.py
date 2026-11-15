@@ -170,7 +170,8 @@ class Generic(Language):
             return False
         if not (glob_match(path, self.test_globs) or (in_tests and not self.test_globs)):
             return False
-        named_test = glob_match(path, ["*.test.*", "*.spec.*", "*_test.*", "test_*", "*Test.*", "*Tests.*", "*_spec.*"])
+        named_test = glob_match(path, ["*.test.*", "*.tests.*", "*.spec.*", "*_test.*", "test_*", "*Test.*", "*Tests.*",
+                                        "*_spec.*"])
         return named_test or not glob_match(path, self.spec.helper_globs)
 
     def is_source(self, path: str) -> bool:
