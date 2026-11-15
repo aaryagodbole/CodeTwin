@@ -7,4 +7,4 @@ NAME = "contracts"
 
 
 def contribute(ctx) -> dict:
-    return for_change(ctx.cfg, ctx.lang, ctx.base)
+    return for_change(ctx.cfg, ctx.lang, ctx.base, ctx.store)

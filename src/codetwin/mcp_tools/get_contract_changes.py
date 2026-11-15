@@ -10,4 +10,4 @@ def register(mcp, root: str) -> None:
         and to the tests that reach them; anything not found is listed as unknown."""
         from ..contracts import for_change
         with Engine(root) as eng:
-            return for_change(eng.cfg, eng.lang, base or eng.store.latest_run_sha() or "HEAD")
+            return for_change(eng.cfg, eng.lang, base or eng.store.latest_run_sha() or "HEAD", eng.store)

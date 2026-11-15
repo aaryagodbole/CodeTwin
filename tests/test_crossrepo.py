@@ -87,6 +87,35 @@ def test_change_in_library_reaches_dependent(toy_repo, app_repo, capsys):
         d = eng.select()
     assert d.extras["cross_repo"]["repos"][0]["name"] == "app"
 
+    # both analyses are stored, with the dependent's commit and everything the output showed
+    from codetwin.store.analyses import crossrepo_history, resolve_sha
+    with Engine(toy_repo) as eng:
+        st = eng.store
+        hist = crossrepo_history(st)
+        assert len(hist) == 2 and hist[0]["id"] == d.extras["cross_repo"]["analysis_id"] == hist[1]["id"] + 1
+        assert hist[1]["id"] == out["analysis_id"]
+        repos = {r["name"]: r for r in hist[0]["repos"]}
+        assert repos["app"]["status"] == "analysed" and repos["app"]["revision"] == resolve_sha(app_repo, "HEAD")
+        assert repos["app"]["consumers"] == len(app["consumers"]) and repos["app"]["tests"] == len(app["tests"])
+        assert repos["gone"]["status"] == "not-found" and repos["gone"]["revision"] is None
+        uses = st.con.execute("select s.symbol, s.line from consumer_symbol_use s join consumer_file c on c.id = "
+                              "s.consumer_id join code_entity f on f.id = c.file_id where f.path='app/checkout.py' and "
+                              "c.target_id = (select t.id from analysis_target t join repository r on r.id = "
+                              "t.repository_id where r.name='app' and t.analysis_id=?)", (hist[0]["id"],)).fetchall()
+        assert sorted(uses) == [("total", 1), ("total", 3)]
+        sym = st.con.execute("select e.name, e.kind, e.path from analysis_changed_symbol a join code_entity e on "
+                             "e.id = a.entity_id where a.analysis_id=?", (out["analysis_id"],)).fetchall()
+        assert sym == [("total", "function", "src/shop/price.py")]
+        rel = set(st.con.execute("select source, type, target from repository_relation"))
+        assert {("app", "dependsOn", "."), ("gone", "dependsOn", "."), (".", "providesPackage", "shop")} <= rel
+        assert repos["app"]["consumers"] > 0
+        # app's files live in app's namespace: same path in two repositories is two entities
+        assert st.con.execute("select count(distinct repository_id) from code_entity where path like 'app/%'"
+                              ).fetchone()[0] == 1
+        n_unk = st.con.execute("select count(*) from analysis_unknown where analysis_id=?", (out["analysis_id"],)).fetchone()[0]
+        assert n_unk == sum(len(r["unknowns"]) for r in out["repos"])
+        assert st.con.execute("pragma foreign_key_check").fetchall() == []
+
 
 def test_no_connected_repositories(toy_repo, capsys):
     main(["-C", str(toy_repo), "init"])
@@ -171,3 +200,31 @@ def test_no_source_change_has_no_cross_repo_impact(toy_repo, app_repo, capsys):
     main(["-C", str(toy_repo), "crossrepo", "--json"])
     out = json.loads(capsys.readouterr().out)
     assert out["repos"] == [] and "no source file changed" in out["summary"]
+
+
+def test_stored_links_follow_the_configuration(toy_repo, app_repo, capsys):
+    """Review fixes (#43): runtime evidence without consumers, removed [[repos]] links end."""
+    from codetwin.store.analyses import crossrepo_history
+    main(["-C", str(toy_repo), "init"])
+    cfg = toy_repo / ".codetwin.toml"
+    base_cfg = cfg.read_text()
+    cfg.write_text(base_cfg + f'\n[[repos]]\nname = "app"\npath = "{app_repo.as_posix()}"\npackages = ["nothing_imports_this"]\n')
+    with Engine(app_repo) as dep:
+        dep.record()                                          # the dependent has a recorded run
+    p = toy_repo / "src/shop/price.py"
+    p.write_text(p.read_text().replace('i["price"]', 'i["price"] * 1'))
+    main(["-C", str(toy_repo), "crossrepo", "--json"])
+    with Engine(toy_repo) as eng:
+        st = eng.store
+        t = st.con.execute("select runtime_evidence from analysis_target").fetchone()[0]
+        assert t == 1                                         # no consumers, but it had a recorded run
+        assert ("nothing_imports_this",) not in st.con.execute("select name from package").fetchall()
+    cfg.write_text(base_cfg + '\n[[repos]]\nname = "other"\npath = "../nowhere"\n')
+    capsys.readouterr()
+    main(["-C", str(toy_repo), "crossrepo", "--json"])
+    with Engine(toy_repo) as eng:
+        rel = set(eng.store.con.execute("select source, type, target from repository_relation"))
+        assert ("other", "dependsOn", ".") in rel and ("app", "dependsOn", ".") not in rel
+        ended = eng.store.con.execute("select r.name from repository_link l join repository r on r.id = l.consumer_id "
+                                      "where l.ended is not null").fetchall()
+        assert ended == [("app",)] and len(crossrepo_history(eng.store)) == 2

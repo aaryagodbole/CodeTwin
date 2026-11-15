@@ -22,7 +22,7 @@ def test_commands_and_tools_are_discovered():
 def test_migrations_apply_once(tmp_path):
     with Store(tmp_path / "e.sqlite") as s:
         names = [r[0] for r in s.con.execute("select name from migrations")]
-    assert "0001_initial.sql" in names
+    assert {"0001_initial.sql", "0003_evidence_model.sql", "0004_crossrepo_contracts.sql"} <= set(names)
     with Store(tmp_path / "e.sqlite") as s:
         assert s.migrate() == []                                   # second open applies nothing
 

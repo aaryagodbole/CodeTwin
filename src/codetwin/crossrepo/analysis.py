@@ -4,6 +4,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any
 
 from .. import config as cfgmod
 from .. import lang as langmod
@@ -23,11 +24,14 @@ class RepoImpact:
     consumers: list[dict] = field(default_factory=list)       # {file, link, symbols, lines}
     tests: dict[str, set[str]] = field(default_factory=dict)  # test file -> evidence
     unknowns: list[str] = field(default_factory=list)
+    status: str = "analysed"                                  # analysed | not-found | no-package | unsupported
+    runtime: bool = False                                     # the dependent had a recorded run
+    uses: dict[str, dict[str, list[int]]] = field(default_factory=dict)   # consumer file -> symbol -> lines
 
     def to_dict(self) -> dict:
         strong = sum(1 for c in self.consumers if c["link"] == USES_SYMBOL)
         return {"name": self.name, "path": self.path, "language": self.language, "packages": self.packages,
-                "consumers": self.consumers, "tests": {t: sorted(v) for t, v in sorted(self.tests.items())},
+                "status": self.status, "runtime_evidence": self.runtime, "consumers": self.consumers, "tests": {t: sorted(v) for t, v in sorted(self.tests.items())},
                 "unknowns": self.unknowns,
                 "summary": f"{self.name}: {strong} files use a changed symbol, "
                            f"{len(self.consumers) - strong} more import the package, {len(self.tests)} tests, "
@@ -107,10 +111,12 @@ def analyse(cfg, changed_symbols: list[str], changed_files: list[str]) -> list[R
         pk = list(r.get("packages") or mine)
         ri.packages = pk
         if not path.exists():
+            ri.status = "not-found"
             ri.unknowns.append(f"repository {ri.name} not found at {path}: its consumers are unknown")
             out.append(ri)
             continue
         if not pk:
+            ri.status = "no-package"
             ri.unknowns.append(f"no package name known for this repository; set [crossrepo] packages or "
                                f"packages in the [[repos]] entry of {ri.name}")
             out.append(ri)
@@ -119,6 +125,7 @@ def analyse(cfg, changed_symbols: list[str], changed_files: list[str]) -> list[R
         try:
             adapter = langmod.get(dcfg)
         except Exception as e:  # noqa: BLE001 - an unsupported dependent is an unknown, not a crash
+            ri.status = "unsupported"
             ri.unknowns.append(f"{ri.name}: language not supported ({e}); its consumers are unknown")
             out.append(ri)
             continue
@@ -141,6 +148,8 @@ def analyse(cfg, changed_symbols: list[str], changed_files: list[str]) -> list[R
                 for n, line in enumerate(text, start=1):
                     for m in sym_rx.finditer(code_text(line)):
                         used.setdefault(m.group(1), []).append(n)
+            if used:
+                ri.uses[f] = used
             ri.consumers.append({"file": f, "link": USES_SYMBOL if used else IMPORTS, "imports": sorted(set(hit)),
                                  "symbols": sorted(used), "lines": sorted({x for v in used.values() for x in v})[:50],
                                  "is_test": adapter.is_test(f)})
@@ -154,6 +163,7 @@ def analyse(cfg, changed_symbols: list[str], changed_files: list[str]) -> list[R
             ri.unknowns.append(f"{len(dyn)} files in {ri.name} use dynamic imports or calls "
                                f"(e.g. {', '.join(dyn[:3])}): they may use this repository without importing it")
         run = _recorded_run(dcfg)
+        ri.runtime = run is not None          # whether or not it has consumers
         if not ri.consumers:
             out.append(ri)
             continue
@@ -176,8 +186,9 @@ def analyse(cfg, changed_symbols: list[str], changed_files: list[str]) -> list[R
     return out
 
 
-def for_change(cfg, facts: dict, diff: dict, is_source) -> dict:
-    """Cross-repository impact of a diff of this repository, as the JSON shape used by the CLI, report and MCP."""
+def for_change(cfg, facts: dict, diff: dict, is_source, store=None, base: str | None = None) -> dict:
+    """Cross-repository impact of a diff of this repository, as the JSON shape used by the CLI, report and MCP.
+    With a Store and the base commit, the analysis is also stored (store/analyses.py) and its id returned."""
     from ..graph.symbols import changed_symbols
     if not declared(cfg):
         return {"repos": [], "summary": "no connected repositories ([[repos]] in .codetwin.toml)"}
@@ -186,9 +197,16 @@ def for_change(cfg, facts: dict, diff: dict, is_source) -> dict:
         return {"changed_symbols": [], "packages": own_packages(cfg), "repos": [],
                 "summary": "no source file changed: nothing a connected repository uses has changed"}
     syms = changed_symbols(facts, diff, None, is_source)
-    repos = [r.to_dict() for r in analyse(cfg, [s["name"] for s in syms], files)]
+    impacts = analyse(cfg, [s["name"] for s in syms], files)
+    repos = [r.to_dict() for r in impacts]
     n_files = sum(len(r["consumers"]) for r in repos)
     n_tests = sum(len(r["tests"]) for r in repos)
     n_unk = sum(len(r["unknowns"]) for r in repos)
-    return {"changed_symbols": [s["name"] for s in syms], "packages": own_packages(cfg), "repos": repos,
-            "summary": f"{len(repos)} connected repositories: {n_files} consumer files, {n_tests} tests, {n_unk} unknown"}
+    override = cfg.section("crossrepo")
+    out: dict[str, Any] = {"changed_symbols": [s["name"] for s in syms], "packages": own_packages(cfg), "repos": repos,
+           "summary": f"{len(repos)} connected repositories: {n_files} consumer files, {n_tests} tests, {n_unk} unknown",
+           "packages_source": "config" if isinstance(override, dict) and override.get("packages") else "detected"}
+    if store is not None and base is not None:
+        from ..store.analyses import save_crossrepo
+        out["analysis_id"] = save_crossrepo(store, cfg, base, out, syms, impacts)
+    return out
