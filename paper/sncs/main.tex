@@ -17,6 +17,7 @@
 \usepackage{listings}
 \usepackage{tikz}
 \usetikzlibrary{positioning,arrows.meta,fit}
+\graphicspath{{./}{figures/}}
 
 \raggedbottom
 
@@ -862,7 +863,7 @@ ACI 0.10 + line-trigger abstention & 0.0/74.0 & 0.0/88.5 & 3.8/48.0 & 1.4/70.3 \
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=\linewidth]{figures/languages.pdf}
+\includegraphics[width=\linewidth]{languages.pdf}
 \caption{Observed miss rate against the target $\alpha$ for a threshold calibrated once (left) and for adaptive calibration (right), on the Python history projects and on the Go, Rust and JavaScript/TypeScript pull requests (test changes). Points on the dashed line meet the target exactly.}
 \label{fig:languages}
 \end{figure}
