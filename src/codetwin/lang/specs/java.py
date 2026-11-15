@@ -142,7 +142,7 @@ RUNNERS = [
            setup_command=f"mvn -B -q -DskipTests {JACOCO}:prepare-agent test-compile",
            build_command="mvn -B -q -DskipTests test-compile",
            result_glob="**/target/surefire-reports/TEST-{test_class}*.xml",
-           detect=lambda root: (root / "pom.xml").exists(), vars=_vars),
+           detect=lambda root: (root / "pom.xml").exists(), vars=_vars, shares_build_dir=True),
     Runner("gradle",
            f"{{gradle}} -q --init-script {GRADLE_INIT} -Dcodetwin.covdir={{cov_dir}} test --tests {{test_class}}",
            "jacoco", "**/*.xml",
@@ -150,7 +150,8 @@ RUNNERS = [
            setup_command="sh -c \"[ -x ./gradlew ] && ./gradlew -q testClasses || gradle -q testClasses\"",
            build_command="sh -c \"[ -x ./gradlew ] && ./gradlew -q testClasses || gradle -q testClasses\"",
            result_glob="**/build/test-results/test/TEST-{test_class}*.xml",
-           detect=lambda root: (root / "build.gradle").exists() or (root / "build.gradle.kts").exists(), vars=_vars),
+           detect=lambda root: (root / "build.gradle").exists() or (root / "build.gradle.kts").exists(), vars=_vars,
+           shares_build_dir=True),
 ]
 
 SPEC = Spec(
