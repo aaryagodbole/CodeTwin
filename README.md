@@ -101,6 +101,7 @@ selected 2 test files:
 | `codetwin select [--alpha 0.05] [--json]` | select tests for the changes since the recorded commit; calibrated mode |
 | `codetwin select --budget 0.25` | best tests within 25% of full-suite time, with the risk left behind |
 | `codetwin impact FILE...` | tests reached by files, with how each link is known, and unresolved links |
+| `codetwin crossrepo [--json]` | files and tests in connected repositories (`[[repos]]`) that the change may affect; see `docs/crossrepo.md` |
 | `codetwin impact FILE:SYMBOL` | one function, method or class (`src/a.py:Parser.parse`, `src/a.go:42`): tests that execute it, code that refers to it, unknowns |
 | `codetwin graph FILE [--lines 10-24] [--json]` | impact graph around a file or selected lines (importers, dependencies, tests, unknowns) |
 | `codetwin serve` | web dashboard and read-only API on `http://127.0.0.1:8765` |
