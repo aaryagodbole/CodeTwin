@@ -1,7 +1,6 @@
 """Ties the layers together: record evidence, analyse a change, select tests, learn from outcomes."""
 from __future__ import annotations
 
-import json
 import math
 import subprocess
 from pathlib import Path
@@ -100,8 +99,8 @@ class Engine:
             sel = budget_select(rows, scores, times, budget * sum(times.values()))
             d = decide(rows, scores, sel, alpha, recal, self.cfg.fallback, mode=f"budget {budget:.0%}")
         else:
-            level = AdaptiveLevel(alpha, self.cfg.aci_gamma, self.store.get_state("alpha_t"))
-            calib = self.store.get_state("calibration", [])
+            level = AdaptiveLevel(alpha, self.cfg.aci_gamma, self.store.alpha_t())
+            calib = self.store.calibration()
             lam = crc_threshold(calib, level.level) if len(calib) >= math.ceil(1 / max(level.level, 1e-9)) else -2.0
             note = []
             if lam == -2.0:
@@ -122,12 +121,10 @@ class Engine:
                 d.reasons.append(f"{why} for {', '.join(fs[:5])}{' and others' if len(fs) > 5 else ''}: "
                                  "static evidence only, running every test (see docs/languages.md)")
         self._with_report(d, base, prev, diff, rows, scores)
-        did = self.store.save_decision(base=base, head="working-tree", mode=d.mode, alpha=alpha,
-                                       alpha_t=self.store.get_state("alpha_t", alpha), threshold=d.threshold,
+        self.store.save_decision(base=base, head="working-tree", mode=d.mode, alpha=alpha,
+                                       alpha_t=self.store.alpha_t(alpha), threshold=d.threshold,
                                        residual_risk=d.residual_risk, decision=d.decision, selected=d.selected,
-                                       reasons=d.reasons)
-        self.store.set_state("last_decision", {"id": did, "base": base, "scores": scores, "selected": sorted(d.selected),
-                                               "mode": d.mode})
+                                       reasons=d.reasons, scores=scores)
         return d
 
     def without_runtime_evidence(self, diff, prev) -> dict[str, str]:
@@ -153,17 +150,17 @@ class Engine:
         return d
 
     def _recalibrator(self) -> Recalibrator:
-        pts = self.store.get_state("recal_points", [])
+        pts = self.store.recal_points()
         return Recalibrator().fit([p[0] for p in pts], [p[1] for p in pts])
 
     # ------------------------------------------------------------- learn from the full run
     def learn(self) -> dict:
         """Run the full suite on the current tree, derive which tests were truly affected by the last
         analysed change, and update calibration, recalibration and the adaptive level."""
-        last = self.store.get_state("last_decision")
+        last = self.store.last_decision()
         if not last:
             raise RuntimeError("no decision to learn from; run `codetwin select` first")
-        if self.store.con.execute("select 1 from outcomes where decision_id=?", (last["id"],)).fetchone():
+        if self.store.has_outcome(last["id"]):
             raise RuntimeError(f"decision {last['id']} already has an outcome; run `codetwin select` for a new change "
                                "(learning twice from one change would count it twice in the calibration set)")
         _base, _prev, diff, rows = self.analyse(last["base"])
@@ -186,17 +183,15 @@ class Engine:
         scores, selected = last["scores"], set(last["selected"])
         missed = bool(affected - selected)
         non_forced = [scores[t] for t in affected if t in scores and not rows.get(t, {}).get("forced")]
-        calib = self.store.get_state("calibration", [])
-        calib.append(min(non_forced) if non_forced else math.inf)
-        self.store.set_state("calibration", calib[-200:])
-        pts = self.store.get_state("recal_points", [])
-        pts += [[scores[t], int(t in affected)] for t in scores if not rows.get(t, {}).get("forced")]
-        self.store.set_state("recal_points", pts[-5000:])
-        level = AdaptiveLevel(self.cfg.alpha, self.cfg.aci_gamma, self.store.get_state("alpha_t"))
+        self.store.add_calibration(min(non_forced) if non_forced else math.inf, last["id"])
+        calib = self.store.calibration()
+        self.store.add_recal_points(((t, scores[t], int(t in affected)) for t in scores
+                                     if not rows.get(t, {}).get("forced")), last["id"])
+        level = AdaptiveLevel(self.cfg.alpha, self.cfg.aci_gamma, self.store.alpha_t())
         # The adaptive level tracks misses of the *calibrated* threshold only; a budget-mode selection
         # missing a test says nothing about it. Scores and labels above are valid in both modes.
         if last.get("mode", "calibrated") == "calibrated":
-            self.store.set_state("alpha_t", level.update(missed))
+            self.store.set_alpha_t(level.update(missed), last["id"])
         self.store.save_outcome(last["id"], missed)
         return {"affected": sorted(affected), "missed": sorted(affected - selected), "alpha_t": level.alpha_t,
                 "calibration_size": len(calib)}
@@ -209,10 +204,8 @@ class Engine:
         return impact_of(g, files, self.tests_now())
 
     def explain(self) -> dict:
-        last = self.store.get_state("last_decision")
-        if not last:
+        last = self.store.last_decision()
+        row = self.store.decision(last["id"]) if last else None
+        if not row:
             return {"message": "no decision yet"}
-        row = self.store.con.execute("select decision, residual_risk, threshold, alpha, reasons from decisions where id=?",
-                                     (last["id"],)).fetchone()
-        return {"decision": row[0], "residual_risk": row[1], "threshold": row[2], "alpha": row[3],
-                "reasons": json.loads(row[4]), "selected": last["selected"]}
+        return {k: row[k] for k in ("decision", "residual_risk", "threshold", "alpha", "reasons", "selected")}

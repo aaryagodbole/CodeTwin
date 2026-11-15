@@ -22,9 +22,7 @@ def wilson(k: int, n: int, z: float = 1.96) -> tuple[float, float]:
 
 
 def contribute(ctx) -> dict:
-    rows = ctx.store.con.execute(
-        "select o.missed from decisions d join outcomes o on o.decision_id = d.id "
-        "where d.mode = 'calibrated' order by d.id").fetchall()
+    rows = [(missed,) for _id, _a, _at, missed in ctx.store.labelled("calibrated")]
     alpha = ctx.cfg.alpha
     recent = [int(r[0]) for r in rows[-WINDOW:]]
     n, k = len(recent), sum(recent)

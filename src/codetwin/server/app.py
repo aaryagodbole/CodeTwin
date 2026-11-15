@@ -1,7 +1,6 @@
 """FastAPI application. Every endpoint only reads evidence; nothing here changes a decision."""
 from __future__ import annotations
 
-import json
 from collections.abc import Iterator
 from pathlib import Path
 from typing import Annotated
@@ -46,13 +45,12 @@ def create_app(root: str | Path = ".", static_dir: str | Path | None = None) -> 
     def summary(eng: Eng) -> dict:
         base = eng.store.latest_run_sha()
         run = eng.store.get_run(base) if base else None
-        n_dec = eng.store.con.execute("select count(*) from decisions").fetchone()[0]
-        n_out = eng.store.con.execute("select count(*) from outcomes").fetchone()[0]
+        counts = eng.store.counts()
         return {"root": str(eng.root), "packages": eng.cfg.packages, "alpha": eng.cfg.alpha,
-                "alpha_t": eng.store.get_state("alpha_t", eng.cfg.alpha),
-                "calibration_size": len(eng.store.get_state("calibration", [])),
+                "alpha_t": eng.store.alpha_t(eng.cfg.alpha),
+                "calibration_size": len(eng.store.calibration()),
                 "recorded_commit": base, "test_files": len(run.durations) if run else 0,
-                "suite_seconds": run.wall if run else None, "decisions": n_dec, "labelled_decisions": n_out}
+                "suite_seconds": run.wall if run else None, **counts}
 
     @app.get("/api/llm")
     def llm_status(eng: Eng) -> dict:
@@ -62,26 +60,14 @@ def create_app(root: str | Path = ".", static_dir: str | Path | None = None) -> 
 
     @app.get("/api/decisions")
     def decisions(eng: Eng, limit: int = Query(100, ge=1, le=1000)) -> list[dict]:
-        rows = eng.store.con.execute(
-            "select d.id, d.recorded, d.base, d.mode, d.alpha, d.alpha_t, d.threshold, d.residual_risk, d.decision, "
-            "d.selected, d.reasons, o.missed from decisions d left join outcomes o on o.decision_id = d.id "
-            "order by d.id desc limit ?", (limit,)).fetchall()
         keys = ["id", "recorded", "base", "mode", "alpha", "alpha_t", "threshold", "residual_risk", "decision",
                 "selected", "reasons", "missed"]
-        out = []
-        for r in rows:
-            d = dict(zip(keys, r, strict=True))
-            d["selected"], d["reasons"] = json.loads(d["selected"]), json.loads(d["reasons"])
-            d["missed"] = None if d["missed"] is None else bool(d["missed"])
-            out.append(d)
-        return out
+        return [{k: d[k] for k in keys} for d in eng.store.decisions(limit)]
 
     @app.get("/api/calibration")
     def calibration(eng: Eng) -> dict:
         """Observed miss rate of labelled decisions over time, against the target alpha."""
-        rows = eng.store.con.execute(
-            "select d.id, d.alpha, d.alpha_t, o.missed from decisions d join outcomes o on o.decision_id = d.id "
-            "where d.mode = 'calibrated' order by d.id").fetchall()
+        rows = eng.store.labelled("calibrated")
         points, misses = [], 0
         for i, (did, alpha, alpha_t, missed) in enumerate(rows, 1):
             misses += missed
