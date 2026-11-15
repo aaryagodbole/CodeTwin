@@ -157,9 +157,9 @@ class Language:
         return True
 
     def evidence_group(self, path: str) -> str:
-        """Files whose runtime evidence comes from the same test runs (one language; one project folder for
-        adapters that run tests per folder). A group whose tests recorded no coverage at all has no runtime
-        evidence, even if a runner is configured (e.g. its coverage tool is not installed)."""
+        """The project a source file belongs to (its language; its project folder for adapters that run tests per
+        folder). If no recorded test executed any file of the group, the group has no runtime evidence, even with
+        a runner configured (e.g. its coverage tool is not installed)."""
         return self.name
 
     def run_all(self, work: Path, tests: list[str], timeout: int) -> bool:
