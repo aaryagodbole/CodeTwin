@@ -66,10 +66,13 @@ def _suspects(root: Path, commits: list[str], test: str, covered: dict[str, list
 
 def triage(root: Path, store, facts: dict, test: str, rerun: list[bool] | None = None) -> dict:
     """Triage of `test` from the stored outcomes; `rerun` is the pass/fail list of fresh reruns, if any."""
-    hist = store.outcomes(test)
+    every = store.outcomes(test)
     unknowns: list[str] = []
     timeline = [{"sha": h["sha"], "recorded": h["recorded"], "passed": h["passed"], "source": h["source"],
-                 "failing_cases": h["failing_cases"]} for h in hist]
+                 "failing_cases": h["failing_cases"]} for h in every]
+    # the status and the failure window come from recorded runs and CI; reruns (`why --rerun`) are evidence of
+    # flakiness, passed in `rerun`, and must not replace the failure being explained
+    hist = [h for h in every if h["source"] != "rerun"] or every
     if not hist:
         return {"test": test, "status": "unknown", "timeline": [], "window": [], "suspects": [],
                 "hypothesis": "unknown", "evidence": [],
@@ -115,6 +118,10 @@ def triage(root: Path, store, facts: dict, test: str, rerun: list[bool] | None =
         if run is None:
             unknowns.append("no recorded coverage of the last passing commit: suspects ranked by files only")
         deps = set(file_deps(facts).get(test, []))
+        dyn = sorted(f for f in {test, *deps} if f in facts and facts[f].dynamic)
+        if dyn:
+            unknowns.append(f"{', '.join(dyn[:3])} use dynamic imports or calls (or could not be parsed): commits "
+                            "changing code the test reaches that way are ranked by files only")
         suspects = _suspects(root, [c for c in window if c != WORKING_TREE], test, covered, deps)
         if WORKING_TREE in window:
             changed = diffmod.changed_lines(root, "HEAD", None, ("",))

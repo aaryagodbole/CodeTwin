@@ -45,3 +45,4 @@ class TestRun:
     returncode: int | str = 0
     wall: float = 0.0
     notes: list[str] = field(default_factory=list)                         # problems of the run itself (not stored)
+    unrun: list[str] = field(default_factory=list)       # listed but not executed (no runner, tool missing): no outcome
