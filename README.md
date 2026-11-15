@@ -207,7 +207,7 @@ writes the decision and risk to the job summary and runs the selected tests:
 ```
 src/codetwin/
   evidence/          diff, static facts, per-test coverage                     (Layer 1)
-  store/             SQLite evidence store + migrations/*.sql                  (Layer 2)
+  store/             SQLite evidence store (docs/database.md) + migrations/   (Layer 2)
   graph/             typed impact graph                                        (Layer 2)
   risk/              features, model, calibration, residual risk               (Layer 3)
   selection.py       budget/threshold selection, proceed/abstain, output       (Layer 3)

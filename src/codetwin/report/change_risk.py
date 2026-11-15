@@ -15,12 +15,12 @@ def contribute(ctx) -> dict:
     d = ctx.decision
     if not ctx.rows:
         return {"summary": "no tests"}
-    pts = ctx.store.get_state("recal_points", [])
+    pts = ctx.store.recal_points()
     recal = Recalibrator().fit([p[0] for p in pts], [p[1] for p in pts])
     now = ctx.facts_now() if ctx.facts_now else {}
     trig = triggers(ctx.diff, ctx.prev, ctx.store.get_static(ctx.base), now, ctx.is_source)
     z = features(ctx.rows, ctx.scores, set(d.selected), recal, trig)
-    model = ChangeRiskModel.fit(ctx.store.get_state("change_points", []))
+    model = ChangeRiskModel.fit(ctx.store.change_points())
     q = model(z)
     if d.mode != "no-source-change":   # no-source decisions are not saved, so there is nothing to label
         # labelled by `codetwin learn` (commands/learn.py) only if it matches the saved last decision

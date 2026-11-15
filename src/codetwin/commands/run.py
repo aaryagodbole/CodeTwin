@@ -13,7 +13,7 @@ def add_arguments(p) -> None:
 
 def run(args) -> int:
     with engine(args) as eng:
-        tests = list(args.tests) or list((eng.store.get_state("last_decision") or {}).get("selected", []))
+        tests = list(args.tests) or list((eng.store.last_decision() or {}).get("selected", []))
         if not tests:
             print("no tests to run")
             return 0
