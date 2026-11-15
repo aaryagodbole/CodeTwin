@@ -57,6 +57,10 @@ runs:
             s.writelines(f"- {r}\n" for r in d["reasons"])
             s.write(f"\n{len(d['selected'])} test files selected:\n\n")
             s.writelines(f"- `{t}`\n" for t in d["selected"])
+            extras = {k: v.get("summary") for k, v in (d.get("extras") or {}).items() if isinstance(v, dict) and v.get("summary")}
+            if extras:   # one line per report section: changed symbols, connected repositories, contracts, ...
+                s.write("\n#### Report\n\n")
+                s.writelines(f"- **{k.replace('_', ' ')}**: {v}\n" for k, v in sorted(extras.items()))
         with open(os.environ["GITHUB_OUTPUT"], "a") as o:
             o.write(f"decision={d['decision']}\nresidual_risk={d['residual_risk']}\ncount={len(d['selected'])}\n")
         PY
