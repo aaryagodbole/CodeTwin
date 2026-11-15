@@ -139,6 +139,19 @@ for p in ORDER:
     put(f"Unsafe{n}", R["triggers"][p]["line"]["unsafe"])
     put(f"TrigRiskFlag{n}", R["triggers"][p]["risk"]["flag_unsafe"])
 
+# ------------------------------------------------------------ why risk-based abstention missed (why_abstention.py)
+D = json.loads((RES / "abstention_diag.json").read_text())
+put("PyFileOnlyRate", pc(D["python"]["rate"]))
+put("PyFileOnlyRateNoImport", pc(D["python"]["rate_without_import_time_changes"]))
+for p_ in ORDER:
+    put("FileOnlyRate" + NAMES[p_].replace("/", ""), pc(D["languages"][p_]["rate"]))
+gr = [u for p_ in ("lang_go", "lang_rust") for u in D["languages"][p_]["unsafe"]]
+assert all(u["missed_file_only"] for p_ in ORDER for u in D["languages"][p_]["unsafe"])
+put("GoRustMaxMissedP", f"{max(x for u in gr for x in u['missed_p']):.3f}")
+put("GoRustMaxR", f"{max(u['r'] for u in gr):.3f}")
+put("JSMissedP", f"{max(x for u in D['languages']['lang_javascript']['unsafe'] for x in u['missed_p']):.3f}")
+put("RustNoStaticPath", sum(1 for u in D["languages"]["lang_rust"]["unsafe"] if not u["missed_static_path"]))
+
 # ------------------------------------------------------------ change-level risk q(c)
 rk = C["risk"]["aci10:HIST"]
 put("QObserved", pc(rk["observed"]))
