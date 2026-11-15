@@ -195,3 +195,49 @@ def test_failed_migration_step_rolls_back(tmp_path, monkeypatch):
     assert "runs" in tables and "decision" not in tables                  # untouched, old data intact
     assert "0003_evidence_model.sql" not in {r[0] for r in con.execute("select name from migrations")}
     con.close()
+
+
+def test_analysis_history_is_bounded(tmp_path, monkeypatch):
+    from types import SimpleNamespace
+
+    from codetwin.store import analyses
+    monkeypatch.setattr(analyses, "KEEP", 3)
+    cfg = SimpleNamespace(root=tmp_path)
+    with Store(tmp_path / "e.sqlite") as s:
+        for i in range(5):
+            analyses.save_crossrepo(s, cfg, "x" * 40, {"summary": str(i), "packages": []}, [], [])
+        assert [h["summary"] for h in analyses.crossrepo_history(s)] == ["4", "3", "2"]
+
+
+def test_contract_element_kinds_and_diff_cache(tmp_path):
+    from types import SimpleNamespace
+
+    from codetwin.contracts.diff import ContractChange
+    from codetwin.store import analyses
+    C = ContractChange
+    assert [analyses.element_kind(c) for c in (
+        C("a", "path-removed", "/x", "", True, path="/x"),
+        C("a", "parameter-required", "GET /x query q", "", True, path="/x", field="q"),
+        C("a", "type-changed", "GET /x query q", "", True, path="/x", field="q"),
+        C("a", "type-changed", "User.age", "", True, field="age"),
+        C("a", "enum-value-removed", "Role", "", True, field="Role"),
+        C("a", "response-removed", "GET /x 404", "", True, path="/x"))] == \
+        ["path", "parameter", "parameter", "property", "schema", "response"]
+    cfg = SimpleNamespace(root=tmp_path)
+    old, new = '{"openapi": "3.0.0", "paths": {"/x": {}}}', '{"openapi": "3.1.0", "paths": {}}'
+    ch = [C("api.json", "path-removed", "/x", "path removed", True, path="/x")]
+    doc = analyses.ContractDoc("api.json", old, new, json.loads(old), json.loads(new), ch)
+    with Store(tmp_path / "e.sqlite") as s:
+        for _ in range(2):
+            analyses.save_contracts(s, cfg, "b" * 40, {"summary": "s", "unknowns": ["u"]}, [doc],
+                                    [analyses.Scope("this repository", str(tmp_path), "analysed", is_self=True)],
+                                    [("this repository", ch[0], "src/a.py", 3, "path-literal")], [])
+        assert s.con.execute("select count(*) from contract_diff").fetchone()[0] == 1
+        assert s.con.execute("select count(*) from contract_change").fetchone()[0] == 1
+        assert [r["spec_version"] for r in analyses.api_history(s, "api.json")] == ["3.0.0", "3.1.0"]
+        last = s.con.execute("select max(id) from impact_analysis").fetchone()[0]
+        assert analyses.breaking_matrix(s, last) == [{"change_id": 1, "location": "/x", "check_id": "path-removed",
+                                                      "repository": ".", "state": "affected", "sites": 1, "tests": 0}]
+        with pytest.raises(sqlite3.IntegrityError):                     # a site must point at a real change
+            s.con.execute("insert into contract_site (target_id, change_id, file_id, line, how) values (1, 99, 1, 1, "
+                          "'path-literal')")

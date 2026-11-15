@@ -124,3 +124,25 @@ def test_end_to_end_with_dependent(toy_repo, tmp_path, capsys):
     assert "web:tests/test_profile.py" in email["tests"]
     assert any("DELETE /users/{id}" in u for u in out["unknowns"])     # nothing found is unknown, not "safe"
     assert main(["-C", str(toy_repo), "contracts", "--fail-on-breaking"]) == 1
+
+    from codetwin.engine import Engine
+    from codetwin.store.analyses import api_history, breaking_matrix
+    with Engine(toy_repo) as eng:
+        st = eng.store
+        # the second run reused the stored contents and their diff (content-addressed, computed once)
+        assert st.con.execute("select count(*) from contract_version").fetchone()[0] == 2
+        assert st.con.execute("select count(*) from contract_diff").fetchone()[0] == 1
+        assert [h["sha"] for h in api_history(st, "openapi.yaml")][-1] == "working-tree"
+        levels = dict(st.con.execute("select level, count(*) from contract_change group by level"))
+        assert levels["error"] == len(out["breaking"]) and levels.get("info", 0) == \
+            len(out["changes"]) - len(out["breaking"])
+        m = {(r["location"], r["repository"]): r for r in breaking_matrix(st, out["analysis_id"])}
+        assert m[("User.email", "web")]["state"] == "affected" and m[("User.email", "web")]["tests"] >= 1
+        assert m[("/health", ".")]["state"] == "affected" and m[("/health", "web")]["state"] == "clear"
+        assert m[("DELETE /users/{id}", "web")]["state"] == "clear"
+        kinds = dict(st.con.execute("select location, kind from api_element"))
+        assert kinds["/health"] == "path" and kinds["User.email"] == "property" and kinds["DELETE /users/{id}"] == \
+            "operation"
+        rel = set(st.con.execute("select source, type, target from repository_relation"))
+        assert {(".", "providesApi", "openapi.yaml"), ("web", "consumesApi", "openapi.yaml")} <= rel
+        assert st.con.execute("pragma foreign_key_check").fetchall() == []

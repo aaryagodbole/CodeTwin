@@ -10,4 +10,4 @@ def register(mcp, root: str) -> None:
         from ..crossrepo.analysis import for_change
         with Engine(root) as eng:
             b = base or eng.store.latest_run_sha() or "HEAD"
-            return for_change(eng.cfg, eng.facts_now(), eng.changed(b), eng.is_source)
+            return for_change(eng.cfg, eng.facts_now(), eng.changed(b), eng.is_source, eng.store, b)

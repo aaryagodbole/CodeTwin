@@ -87,6 +87,34 @@ def test_change_in_library_reaches_dependent(toy_repo, app_repo, capsys):
         d = eng.select()
     assert d.extras["cross_repo"]["repos"][0]["name"] == "app"
 
+    # both analyses are stored, with the dependent's commit and everything the output showed
+    from codetwin.store.analyses import crossrepo_history, resolve_sha
+    with Engine(toy_repo) as eng:
+        st = eng.store
+        hist = crossrepo_history(st)
+        assert len(hist) == 2 and hist[0]["id"] == d.extras["cross_repo"]["analysis_id"] == hist[1]["id"] + 1
+        assert hist[1]["id"] == out["analysis_id"]
+        repos = {r["name"]: r for r in hist[0]["repos"]}
+        assert repos["app"]["status"] == "analysed" and repos["app"]["revision"] == resolve_sha(app_repo, "HEAD")
+        assert repos["app"]["consumers"] == len(app["consumers"]) and repos["app"]["tests"] == len(app["tests"])
+        assert repos["gone"]["status"] == "not-found" and repos["gone"]["revision"] is None
+        uses = st.con.execute("select s.symbol, s.line from consumer_symbol_use s join consumer_file c on c.id = "
+                              "s.consumer_id join code_entity f on f.id = c.file_id where f.path='app/checkout.py' and "
+                              "c.target_id = (select t.id from analysis_target t join repository r on r.id = "
+                              "t.repository_id where r.name='app' and t.analysis_id=?)", (hist[0]["id"],)).fetchall()
+        assert sorted(uses) == [("total", 1), ("total", 3)]
+        sym = st.con.execute("select e.name, e.kind, e.path from analysis_changed_symbol a join code_entity e on "
+                             "e.id = a.entity_id where a.analysis_id=?", (out["analysis_id"],)).fetchall()
+        assert sym == [("total", "function", "src/shop/price.py")]
+        rel = set(st.con.execute("select source, type, target from repository_relation"))
+        assert {("app", "dependsOn", "."), ("gone", "dependsOn", "."), (".", "providesPackage", "shop")} <= rel
+        # app's files live in app's namespace: same path in two repositories is two entities
+        assert st.con.execute("select count(distinct repository_id) from code_entity where path like 'app/%'"
+                              ).fetchone()[0] == 1
+        n_unk = st.con.execute("select count(*) from analysis_unknown where analysis_id=?", (out["analysis_id"],)).fetchone()[0]
+        assert n_unk == sum(len(r["unknowns"]) for r in out["repos"])
+        assert st.con.execute("pragma foreign_key_check").fetchall() == []
+
 
 def test_no_connected_repositories(toy_repo, capsys):
     main(["-C", str(toy_repo), "init"])

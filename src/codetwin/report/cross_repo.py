@@ -7,4 +7,4 @@ NAME = "cross_repo"
 
 
 def contribute(ctx) -> dict:
-    return for_change(ctx.cfg, ctx.facts_now() if ctx.facts_now else {}, ctx.diff, ctx.is_source)
+    return for_change(ctx.cfg, ctx.facts_now() if ctx.facts_now else {}, ctx.diff, ctx.is_source, ctx.store, ctx.base)

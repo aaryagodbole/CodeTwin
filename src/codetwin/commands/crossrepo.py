@@ -13,7 +13,7 @@ def run(args) -> int:
     from ..crossrepo.analysis import for_change
     with engine(args) as eng:
         base = args.base or eng.store.latest_run_sha() or "HEAD"
-        out = for_change(eng.cfg, eng.facts_now(), eng.changed(base), eng.is_source)
+        out = for_change(eng.cfg, eng.facts_now(), eng.changed(base), eng.is_source, eng.store, base)
     if args.json:
         print_json(out)
         return 0

@@ -8,6 +8,7 @@ from typing import Any
 from .. import lang as langmod
 from ..crossrepo.analysis import _dependent_config, _recorded_run, declared
 from ..graph.impact import build_graph, impact_of
+from ..store.analyses import ContractDoc, Scope
 from .diff import ContractChange, at_commit, diff_documents, find_contract_files, load
 
 MAX_SITES = 30
@@ -64,21 +65,38 @@ def _scope(root: Path, adapter, contract_files: set[str]):
     return facts, files, adapter.list_tests()
 
 
-def for_change(cfg, lang_adapter, base: str) -> dict:
-    """Breaking changes of every contract file between `base` and the working tree, with their consumers."""
+def for_change(cfg, lang_adapter, base: str, store=None) -> dict:
+    """Breaking changes of every contract file between `base` and the working tree, with their consumers.
+    With a Store, the contents, the diff and the consumers found are also stored (store/analyses.py)."""
+    out, rec = _analyse(cfg, lang_adapter, base)
+    if store is not None and out["files"]:
+        from ..store.analyses import save_contracts
+        out["analysis_id"] = save_contracts(store, cfg, base, out, *rec)
+    return out
+
+
+def _analyse(cfg, lang_adapter, base: str):
     sec = cfg.section("contracts")
     configured = list(sec.get("files", [])) if isinstance(sec, dict) else []
     root = Path(cfg.root)
     files = find_contract_files(root, configured)
     changes: list[ContractChange] = []
     errors: list[str] = []
+    docs: list[ContractDoc] = []
+    scopes_rec: list[Scope] = []
+    sites_rec: list[tuple] = []
+    tests_rec: list[tuple] = []
+    rec = (docs, scopes_rec, sites_rec, tests_rec)
     for f in files:
         old_text = at_commit(root, base, f)
         if old_text is None:
             continue                                   # new contract file: nothing can break yet
         try:
             new_text = (root / f).read_text(encoding="utf-8")
-            changes += diff_documents(load(old_text, f), load(new_text, f), f)
+            old_doc, new_doc = load(old_text, f), load(new_text, f)
+            found_here = diff_documents(old_doc, new_doc, f)
+            changes += found_here
+            docs.append(ContractDoc(f, old_text, new_text, old_doc, new_doc, found_here))
         except Exception as e:  # noqa: BLE001 - an unreadable contract is reported, never skipped silently
             errors.append(f"{f}: could not be read as OpenAPI/JSON schema ({type(e).__name__}: {e})")
     breaking = [c for c in changes if c.breaking]
@@ -89,26 +107,33 @@ def for_change(cfg, lang_adapter, base: str) -> dict:
     if not breaking:
         out["summary"] = (f"{len(files)} contract files, no breaking change" if files
                           else "no OpenAPI or JSON-schema files found")
-        return out
+        return out, rec
 
     scopes = []
     facts, src, tests = _scope(root, lang_adapter, set(files))
     run = _recorded_run(cfg)
     scopes.append(("this repository", root, facts, src, tests, run, lang_adapter.is_test))
+    scopes_rec.append(Scope("this repository", str(root), "analysed", getattr(lang_adapter, "name", None),
+                            run is not None, is_self=True))
     for r in declared(cfg):
         path = (root / str(r["path"])).resolve()
         name = str(r.get("name") or path.name)
         if not path.exists():
             unknowns.append(f"repository {name} not found at {path}: its uses of the contract are unknown")
+            scopes_rec.append(Scope(name, None, "not-found"))
             continue
         dcfg = _dependent_config(path)
         try:
             ad = langmod.get(dcfg)
         except Exception as e:  # noqa: BLE001
             unknowns.append(f"{name}: language not supported ({e})")
+            scopes_rec.append(Scope(name, str(path), "unsupported"))
             continue
         f2, s2, t2 = _scope(path, ad, set())
-        scopes.append((name, path, f2, s2, t2, _recorded_run(dcfg), ad.is_test))
+        drun = _recorded_run(dcfg)
+        scopes.append((name, path, f2, s2, t2, drun, ad.is_test))
+        scopes_rec.append(Scope(name, str(path), "analysed", getattr(ad, "name", None) or dcfg.language,
+                                drun is not None))
 
     for c in breaking:
         consumers: list[dict] = []
@@ -118,14 +143,17 @@ def for_change(cfg, lang_adapter, base: str) -> dict:
             sites = _sites(path, src_files, c)
             for s in sites:
                 consumers.append({"repo": name, **s})
+                sites_rec.append((name, c, s["file"], s["line"], s["how"]))
             code = sorted({s["file"] for s in sites if not is_test(s["file"])})
             for s in sites:
                 if is_test(s["file"]):
                     etests.setdefault(f"{name}:{s['file']}", ["direct"])
+                    tests_rec.append((name, c, s["file"], ["direct"]))
             if code:
                 reach = impact_of(build_graph(fx, rrun), code, tlist)
                 for t, ev in reach.tests.items():
                     etests.setdefault(f"{name}:{t}", sorted(ev))
+                    tests_rec.append((name, c, t, sorted(ev)))
         if not consumers:
             unknowns.append(f"{c.location}: no code found that uses it (it may be built dynamically or used "
                                    "by clients outside the connected repositories)")
@@ -133,4 +161,4 @@ def for_change(cfg, lang_adapter, base: str) -> dict:
     n_cons = sum(len(b["consumers"]) for b in found)
     out["summary"] = (f"{len(breaking)} breaking contract changes, {n_cons} code sites, "
                       f"{len({t for b in found for t in b['tests']})} tests")
-    return out
+    return out, rec
