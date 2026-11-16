@@ -98,3 +98,17 @@ def test_history_is_read_at_the_requested_commit(toy_repo):
     subprocess.run(["git", "add", "-A"], cwd=toy_repo, check=True)
     subprocess.run(["git", "-c", "user.email=a@b", "-c", "user.name=a", "commit", "-qm", "later"], cwd=toy_repo, check=True)
     assert history_at(toy_repo, sha) == before
+
+
+def test_history_keeps_paths_with_spaces(toy_repo):
+    import subprocess
+
+    from codetwin.kg.build import history_at
+    for _ in range(2):
+        for name in ("src/my module.py", "src/b.py"):
+            f = toy_repo / name
+            f.write_text((f.read_text() if f.exists() else "") + "x = 1\n")
+        subprocess.run(["git", "add", "-A"], cwd=toy_repo, check=True)
+        subprocess.run(["git", "-c", "user.email=a@b", "-c", "user.name=a", "commit", "-qm", "c"], cwd=toy_repo, check=True)
+    sha = subprocess.run(["git", "rev-parse", "HEAD"], cwd=toy_repo, capture_output=True, text=True).stdout.strip()
+    assert history_at(toy_repo, sha)[-1] == ["src/b.py", "src/my module.py"]

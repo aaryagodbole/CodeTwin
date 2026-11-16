@@ -52,7 +52,7 @@ class Poster:
     transport: Any = None                     # tests inject httpx.MockTransport
     posted: dict[str, Any] = field(default_factory=dict)
 
-    def _client(self):
+    def _client(self) -> Any:
         import httpx
         return httpx.Client(base_url=API, transport=self.transport, timeout=30, headers={
             "Authorization": f"Bearer {self.token}", "Accept": "application/vnd.github+json",
@@ -87,6 +87,13 @@ class Poster:
         return user.get("type") == "Bot" and (c.get("body") or "").startswith(MARKER) and isinstance(c.get("id"), int)
 
     def post(self, review: Review, in_diff: InDiff) -> dict[str, Any]:
+        import httpx
+        try:
+            return self._post(review, in_diff)
+        except httpx.HTTPError as e:      # timeouts, connection errors: never the token, only the error type
+            raise PostError(f"could not reach GitHub ({type(e).__name__})") from None
+
+    def _post(self, review: Review, in_diff: InDiff) -> dict[str, Any]:
         t = self.target
         body = markdown(review)
         with self._client() as http:

@@ -88,6 +88,8 @@ def from_engine(eng: Any, sha: str | None = None) -> KnowledgeGraph:
 def history_at(root: Any, sha: str, limit: int = 300) -> list[list[str]]:
     """Files changed together per commit, up to and including `sha` (not the current HEAD), oldest first,
     so co-change edges describe the same commit as the static and runtime evidence."""
-    out = subprocess.run(["git", "log", "--first-parent", "--name-only", "--format=@@", "-n", str(limit), sha, "--"],
-                         cwd=root, capture_output=True, text=True, check=False).stdout
-    return [c.split() for c in out.split("@@") if c.strip()][::-1]
+    out = subprocess.run(["git", "log", "--first-parent", "--name-only", "-z", "--format=%x1e", "-n", str(limit), sha,
+                          "--"], cwd=root, capture_output=True, text=True, check=False).stdout
+    # -z: NUL-separated, unquoted paths (spaces and quotes stay intact); %x1e (record separator) frames commits
+    commits = [[p.strip("\n") for p in c.split("\0") if p.strip("\n")] for c in out.split("\x1e")]
+    return [c for c in commits if c][::-1]

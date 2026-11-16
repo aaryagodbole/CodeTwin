@@ -281,3 +281,35 @@ def test_review_rejects_decision_for_another_base_and_survives_post_errors(toy_r
     monkeypatch.delenv("GITHUB_TOKEN", raising=False)
     assert main(["-C", str(toy_repo), "review", "--post-github"]) == 0      # posting fails, review does not
     assert "could not post the review" in capsys.readouterr().err
+
+
+def test_diff_parser_headers_quoted_paths():
+    from codetwin.commands.review import commentable, git_path
+    patch = ("diff --git a/a.py b/a.py\n--- a/a.py\n+++ b/a.py\n@@ -1 +1,2 @@\n x\n+++ b/other.txt\n"
+             "@@ -9 +10 @@\n-y\n+z\n"
+             'diff --git "a/caf\\303\\251.py" "b/caf\\303\\251.py"\n--- "a/caf\\303\\251.py"\n'
+             '+++ "b/caf\\303\\251.py"\n@@ -1 +1 @@\n-a\n+b\n')
+    assert commentable(patch) == {"a.py": {1, 2, 10}, "café.py": {1}}
+    assert git_path('"b/x \\"q\\".py"') == 'b/x "q".py' and git_path("b/plain.py") == "b/plain.py"
+
+
+def test_post_turns_network_errors_into_post_error():
+    def handler(req: httpx.Request) -> httpx.Response:
+        raise httpx.ReadTimeout("slow", request=req)
+    with pytest.raises(PostError, match="could not reach GitHub \\(ReadTimeout\\)"):
+        Poster(Target("o/r", 7), "tok", httpx.MockTransport(handler)).post(_review(), lambda p, ln: True)
+
+
+def test_saved_decision_must_match_the_current_change(toy_repo, tmp_path, capsys):
+    main(["-C", str(toy_repo), "init"])
+    main(["-C", str(toy_repo), "record"])
+    p = toy_repo / "src/shop/price.py"
+    p.write_text(p.read_text() + "\n\ndef tax(x):\n    return x * 0.18\n")
+    capsys.readouterr()
+    main(["-C", str(toy_repo), "select", "--json"])
+    dec = tmp_path / "d.json"
+    dec.write_text(capsys.readouterr().out)
+    assert main(["-C", str(toy_repo), "review", "--decision", str(dec), "--format", "json"]) == 0
+    p.write_text(p.read_text() + "\n\ndef more(x):\n    return x\n")
+    with pytest.raises(SystemExit, match="does not describe the current change"):
+        main(["-C", str(toy_repo), "review", "--decision", str(dec)])

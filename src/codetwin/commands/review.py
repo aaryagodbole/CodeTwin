@@ -59,18 +59,50 @@ def load_decision(path: str) -> dict:
 
 
 _HUNK = re.compile(r"^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@")
+_ESC = {"a": "\a", "b": "\b", "t": "\t", "n": "\n", "v": "\v", "f": "\f", "r": "\r", '"': '"', "\\": "\\"}
+
+
+def git_path(raw: str) -> str:
+    """A path as git prints it in a diff header: plain, or C-quoted with octal UTF-8 escapes."""
+    if not (raw.startswith('"') and raw.endswith('"')):
+        return raw
+    body, out, i = raw[1:-1], bytearray(), 0
+    while i < len(body):
+        ch = body[i]
+        if ch == "\\" and i + 1 < len(body):
+            nxt = body[i + 1]
+            octal = body[i + 1:i + 4]
+            if len(octal) == 3 and all(c in "01234567" for c in octal):
+                out.append(int(octal, 8))
+                i += 4
+                continue
+            out += _ESC.get(nxt, nxt).encode()
+            i += 2
+            continue
+        out += ch.encode()
+        i += 1
+    return out.decode("utf-8", errors="replace")
 
 
 def commentable(patch: str) -> dict[str, set[int]]:
-    """New-file lines that GitHub accepts an inline comment on: every line inside a hunk of the diff."""
+    """New-file lines that GitHub accepts an inline comment on: every line inside a hunk of the diff.
+
+    File headers are read only between `diff --git` and the first hunk, so an added line whose text starts
+    with `++` (shown as `+++ ...`) is never taken for a header."""
     out: dict[str, set[int]] = {}
-    path = None
+    path: str | None = None
+    in_header = False
     for line in patch.splitlines():
-        if line.startswith("+++ "):
-            path = None if line[4:] == "/dev/null" else line[6:] if line.startswith("+++ b/") else line[4:]
-        elif path and (m := _HUNK.match(line)):
-            start, count = int(m[1]), int(m[2]) if m[2] is not None else 1
-            out.setdefault(path, set()).update(range(start, start + count))
+        if line.startswith("diff --git "):
+            in_header, path = True, None
+        elif in_header and line.startswith("+++ "):
+            target = git_path(line[4:])
+            path = None if target == "/dev/null" else target[2:] if target.startswith("b/") else target
+        elif m := _HUNK.match(line):
+            in_header = False
+            if path:
+                start, count = int(m[1]), int(m[2]) if m[2] is not None else 1
+                out.setdefault(path, set()).update(range(start, start + count))
     return out
 
 
@@ -86,11 +118,17 @@ def run(args: argparse.Namespace) -> int:
         sec = sec if isinstance(sec, dict) else {}
         decision = load_decision(args.decision) if args.decision else eng.select(args.base).to_dict()
         base = args.base or eng.store.latest_run_sha()
-        made_for = ((decision.get("extras") or {}).get("changed_files") or {}).get("base")
+        saved = (decision.get("extras") or {}).get("changed_files") or {}
+        made_for = saved.get("base")
         if made_for and base and made_for != base:
             raise SystemExit(f"--decision was computed against {made_for[:12]}, but this review compares with "
                              f"{base[:12]}; run `codetwin select --json` again or pass --base {made_for[:12]}")
         diff = eng.changed(base) if base else {}
+        if args.decision and isinstance(saved.get("files"), dict):
+            now = {f: len(d.new) for f, d in diff.items() if eng.is_source(f)}
+            if now != saved["files"]:
+                raise SystemExit("--decision does not describe the current change (the changed source files differ "
+                                 "since it was computed); run `codetwin select --json` again")
         changed = {f: sorted(d.new) for f, d in diff.items() if d.status != "D"}
         changed_old = {d.old_path or f: sorted(d.old) for f, d in diff.items()}
         try:
