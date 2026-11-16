@@ -3,12 +3,13 @@
 ```
             ┌──────────────── Layer 4: interfaces ────────────────┐
             │ CLI (codetwin) · VS Code extension · GitHub Action · │
-            │ MCP server for AI agents                             │
+            │ MCP server for AI agents · PR review (`review`)      │
             └───────────────┬──────────────────────────────────────┘
                             │ Engine (codetwin.engine)
   Layer 3  risk.features → risk.model → selection (budget | calibrated) → risk.residual → proceed/abstain
                             │                    ▲ risk.calibration (CRC + ACI), learns from `codetwin learn`
-  Layer 2  store.db (SQLite, normalized evidence model: docs/database.md) · graph.impact (NetworkX)
+  Layer 2  store.db (SQLite, normalized evidence model: docs/database.md) · graph.impact (NetworkX) ·
+           kg (code knowledge graph of files, symbols and tests: docs/knowledge-graph.md)
                             │
   Layer 1  evidence.diff (git) · lang.<adapter>: static facts and per-test coverage for one language
            (lang.python: ast + pytest + coverage.py · lang.generic: tree-sitter + any runner writing
@@ -41,6 +42,7 @@ automatically. Shared files (`cli.py`, `mcp_server.py`, `engine.py`, `store/db.p
 | a programming language | `src/codetwin/lang/specs/<name>.py` | `SPEC = Spec(...)`: grammars, test globs, import rules, runner presets ([languages.md](languages.md)) |
 | a CLI command (`codetwin gaps`) | `src/codetwin/commands/<name>.py` | `NAME`, `HELP`, `ORDER`, `add_arguments(p)`, `run(args)` |
 | an MCP tool (`close_gap`) | `src/codetwin/mcp_tools/<name>.py` | `register(mcp, root)` with `@mcp.tool()` |
+| a review analyzer (PR comment rule) | `src/codetwin/review/analyzers/<name>.py` + a rule id in `review/rules.py` | `NAME`, `DEFAULT`, `analyze(ctx) -> list[Finding]`; read-only ([review.md](review.md)) |
 | data in every decision (test gaps, blind spots, evidence cards, freshness) | `src/codetwin/report/<name>.py` | `NAME`, `contribute(ctx) -> dict` with a `"summary"`; appears under `extras.<NAME>` in `select --json`, MCP and VS Code |
 | a database table or column | `src/codetwin/store/migrations/NNNN_<name>.sql` (+ a data step in `store/legacy.py` if rows must move) | applied once, tracked by file name; never edit an applied file; see `docs/database.md` |
 | settings for your feature | your own table in `.codetwin.toml`, e.g. `[crossrepo]` | read with `cfg.section("crossrepo")`; no change to `config.py` |
