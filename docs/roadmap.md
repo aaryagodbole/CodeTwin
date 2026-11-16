@@ -16,6 +16,7 @@ Nothing in *Could* starts before the Must items are evaluated.
 | VS Code: impact graph of a selection beside the editor (F1, file-level and line-level), hover summary | O4 |
 | Web dashboard skeleton (Next.js): overview, system map, decisions, results, impact graph; `codetwin serve` API | O4 |
 | Calibrated threshold (CRC + adaptive), residual risk `r(c)`, abstention (U2) | O3 |
+| Pull-request review (`codetwin review`: summary comment, inline comments, SARIF) and code knowledge graph (`codetwin kg`) | O1, O4 |
 | Study v2 and paper: 681 changes, 8 projects, 812 mutants, NameRTS comparison | O5 |
 
 ## Plan
@@ -29,7 +30,7 @@ Nothing in *Could* starts before the Must items are evaluated.
 | 26 Nov – 13 Dec | VS Code F3 blind-spot shading, F4 test-gap gutter | Must | O4 |
 | 7 – 20 Dec | Symbol-level impact: functions, classes, config keys | Must | O1 |
 | 7 – 20 Dec | Evidence cards for every recommended test | Must | O2 |
-| 7 – 27 Dec | PR comment and check run in the GitHub Action | Must | O4 |
+| 7 – 27 Dec | PR check run in the GitHub Action (the PR comment and inline review are done: `codetwin review`) | Must | O4 |
 | 14 – 27 Dec | VS Code F2 impact CodeLens | Must | O4 |
 | 21 Dec – 10 Jan | Per-project model trained from `codetwin learn` history | Should | O2, O3 |
 | 2 – 24 Jan | Cross-repo: declared repositories, cross-repo edges, 2–3 library + dependents sets | Must | O1 |

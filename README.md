@@ -113,6 +113,8 @@ selected 2 test files:
 | `codetwin explain` | the numbers and reasons behind the last decision |
 | `codetwin run [TEST...]` | run the last selection (or the given test files) with the project's own test runner |
 | `codetwin weakcheck` | changed functions that tests execute but do not check (extreme mutation) |
+| `codetwin review [--format markdown\|json\|sarif\|github] [--llm] [--post-github]` | review the change like a reviewer: findings at file and line (untested changed functions, abstention, blind spots, breaking contracts, affected repositories), as a PR comment, inline comments or SARIF; see `docs/review.md` |
+| `codetwin kg stats\|blast\|export` | code knowledge graph of files, symbols and tests with typed evidence edges; blast radius of a change; GraphML/JSON export; see `docs/knowledge-graph.md` |
 
 All commands accept `-C PATH` to run on another repository.
 
@@ -197,7 +199,11 @@ writes the decision and risk to the job summary and runs the selected tests:
   with:
     alpha: "0.10"
     package: "codetwin"                        # or a wheel URL from a CodeTwin release
+    review: "true"                             # optional: post a review (needs `pull-requests: write`)
 ```
+
+With `review: "true"` the action also posts a summary comment and inline comments to the pull request and writes
+a SARIF file for GitHub code scanning (`docs/review.md`).
 
 **AI coding agents (MCP)** – `codetwin-mcp` exposes `verify_change`, `get_impact`, `get_graph`,
 `recommend_tests` and `explain_decision`, so an agent can ask before it opens a pull request. Setup: [docs/mcp.md](docs/mcp.md).
@@ -209,19 +215,22 @@ src/codetwin/
   evidence/          diff, static facts, per-test coverage                     (Layer 1)
   store/             SQLite evidence store (docs/database.md) + migrations/   (Layer 2)
   graph/             typed impact graph                                        (Layer 2)
+  kg/                code knowledge graph: files, symbols, tests, typed edges  (Layer 2)
   risk/              features, model, calibration, residual risk               (Layer 3)
   selection.py       budget/threshold selection, proceed/abstain, output       (Layer 3)
   report/            sections added to every decision (one file each)
+  review/            pull-request review: analyzers/ (one file each), rules, renderers, GitHub posting
   commands/          CLI commands (one file each)
   mcp_tools/         MCP tools for AI agents (one file each)
   server/            read-only HTTP API for the dashboard
-  crossrepo/ contracts/ llm/   planned modules (see docs/roadmap.md)
+  crossrepo/ contracts/ triage/ llm/   larger modules, each with its status in the package docstring
   engine.py, cli.py, mcp_server.py, config.py, plugins.py   shared core
 tests/               unit tests and end-to-end tests on throwaway git repositories
 extensions/vscode/   VS Code extension; src/features/ has one file per editor feature
 dashboard/           web dashboard (Next.js), served by `codetwin serve`
 action/              GitHub composite action
-docs/                architecture (incl. extension points), output contract, roadmap, MCP setup
+docs/                architecture (incl. extension points), output contract, review, knowledge graph, roadmap,
+                     MCP setup; docs/adr/ holds architecture decision records
 scripts/check.sh     lint + tests + extension build (the definition of done)
 AGENTS.md            instructions for AI coding agents working on this repository
 ```

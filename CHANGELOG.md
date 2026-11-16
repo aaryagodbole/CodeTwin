@@ -8,6 +8,18 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Added
+- `codetwin review`: pull-request review from evidence. Analyzers (one file each, `review/analyzers/`) turn the
+  decision into findings at file and line with stable rule ids CT001–CT006 (abstention, untested changed symbol,
+  dynamic calls, breaking contract, affected connected repository, file without evidence) and an optional,
+  advisory LLM reviewer (CT100, `--llm`) that gets graph context, is capped at medium severity and can never block.
+  Output as a Markdown PR comment, GitHub inline review, SARIF 2.1.0 or JSON; `--post-github` updates one summary
+  comment per pull request and never repeats an inline comment. The GitHub Action posts it with `review: "true"`.
+  Guide: docs/review.md.
+- `codetwin kg`: code knowledge graph (`src/codetwin/kg/`) of files, tests, symbols and unresolved links with
+  typed evidence edges (imports, covers, co-changes, defines), built from the evidence store; blast radius of a
+  change; GraphML and node-link JSON export. Guide: docs/knowledge-graph.md.
+- Repository standards: CodeQL and OpenSSF Scorecard workflows, `CODE_OF_CONDUCT.md`, `CITATION.cff`, and
+  architecture decision records (`docs/adr/`).
 - Language adapters (`src/codetwin/lang/`): any language, not only Python. A generic tree-sitter adapter gives
   static facts (dependencies, dynamic constructs, function spans, load-time code), semantic no-op detection and
   weakcheck mutants; each test file runs on its own with the project's test runner and any of five coverage
