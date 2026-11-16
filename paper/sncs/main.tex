@@ -315,7 +315,7 @@ TDAD~\cite{alonso2026tdad} & Python & Static code-to-test map & Test & Map for a
 
 \textit{Gaps.} Table~\ref{tab:gap} compares the closest work with CodeTwin AI by language, multi-repository support, a risk estimate for an individual change, calibrated abstention and blind-spot reporting. The answers to the survey questions leave five gaps, G1 to G5, which Section~\ref{sec:requirements} turns into requirements.
 \begin{enumerate}
-\item G1 (no per-change risk). Techniques report safety as an average over many commits. NameRTS, for example, is safe on 99.6\% of commits~\cite{wang2026namerts}, but nothing tells the developer how risky an individual change is.
+\item G1 (no per-change risk). Techniques report safety as an average over many commits, NameRTS included~\cite{wang2026namerts}, and nothing tells the developer how risky an individual change is.
 \item G2 (hidden blind spots). Calls that static analysis cannot resolve, such as those made through \texttt{getattr}, are dropped without the developer being told~\cite{salis2021pycg}.
 \item G3 (no fallback when evidence is weak). Calibration and abstention with statistical guarantees exist~\cite{angelopoulos2024crc,yadkori2024abstention,xu2026scrc}, and conformal calibration has been combined with history-based prioritisation in continuous integration~\cite{altinisik2026conformal}, yet we found no technique that selects tests for a single change with an explicit risk and the option to abstain.
 \item G4 (one language, one repository). The semantics-aware and hybrid selectors target only Java~\cite{liu2023finerts,zhang2024jcgeks} and NameRTS targets Python~\cite{wang2026namerts}, and none of the reviewed techniques follows dependants into other repositories.
@@ -547,35 +547,12 @@ For a single change, CodeTwin AI estimates the probability that an affected test
 \begin{equation}
 r(c) = 1 - \textstyle\prod_{i \in T\setminus S(c)} \big(1-\tilde p(i)\big). \label{eq:rc}
 \end{equation}
-The system abstains when $r(c)$ exceeds the target $\alpha$. As the broader run we compare the full suite, file-coverage selection and the hybrid of static reachability and file coverage, each added to the calibrated selection. We also evaluated the rule-based uncertainty triggers of the original design (Table~\ref{tab:triggers}), of which the prototype implements the four that need only single-repository evidence. In the \emph{file-level} form used in the pilot run a trigger fires if any changed file contains, for example, a dynamic call. In the \emph{line-level} form only the changed lines and their enclosing functions count, and the module trigger reads the static import-time statements of the new version, not the new test run.
+The system abstains when $r(c)$ exceeds the target $\alpha$. As the broader run we compare the full suite, file-coverage selection and the hybrid of static reachability and file coverage, each added to the calibrated selection. We also evaluated the rule-based uncertainty triggers of the original design (Table~S5 in Online Resource~1), of which the prototype implements the four that need only single-repository evidence. In the \emph{file-level} form used in the pilot run a trigger fires if any changed file contains, for example, a dynamic call. In the \emph{line-level} form only the changed lines and their enclosing functions count, and the module trigger reads the static import-time statements of the new version, not the new test run.
 
-\begin{table}[htbp]
-\caption{Uncertainty triggers}
-\label{tab:triggers}
-\centering
-\footnotesize
-\setlength{\tabcolsep}{3pt}
-\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.24\linewidth}>{\raggedright\arraybackslash}p{0.56\linewidth}>{\raggedright\arraybackslash}p{0.13\linewidth}@{}}
-\toprule
-\textbf{Trigger} & \textbf{Fires when (line-level form)} & \textbf{Status} \\
-\midrule
-Dynamic call & a changed line, or the function containing it, has a dynamic call & evaluated \\
-Untested change & no test executed the function containing a changed line, an edited import-time statement or a new module & evaluated \\
-Static/runtime conflict & a test executed a changed line but has no static import path to it & evaluated \\
-Module-level change & a changed line is an import-time statement, so all importers are affected & evaluated \\
-\midrule
-Risk & $r(c) > \alpha$ (Eq.~\ref{eq:rc}) & evaluated \\
-\midrule
-Unknown consumer & a cross-repository link cannot be resolved & planned \\
-Old evidence & coverage or dependency data are older than the code & planned \\
-Hidden coupling & files frequently change together but have no code link & planned \\
-Unparsable file & there is no adapter, or the changed file cannot be parsed & planned \\
-\bottomrule
-\end{tabular}
-\end{table}
+
 
 \subsection{Change-level risk and selective abstention}\label{sec:qc}
-The product in Eq.~(\ref{eq:rc}) assumes that skipped tests are independent, which they are not, since tests that cover the same code tend to be affected together, and Section~\ref{sec:results} shows that $r(c)$ overstates the risk of calibrated selections. For this reason we also learn the risk of a selection at the level of the change. For a change and a candidate selection we compute nine features, all known before the tests run: the logarithm of one plus the summed recalibrated scores $\tilde p(i)$ of the skipped tests, the largest of these scores, $r(c)$ itself, the logarithm of one plus the number of skipped tests that executed a changed file, the same count for a changed line, the three line-level triggers of Table~\ref{tab:triggers} other than the static/runtime conflict, and the logarithm of the number of test files. A logistic regression maps them to $q(c)$, the probability that the selection misses an affected test. It is trained on selections of the other projects at several operating points, each labelled with whether it missed, using test-level scores from models that were also trained without the evaluated project.
+The product in Eq.~(\ref{eq:rc}) assumes that skipped tests are independent, which they are not, since tests that cover the same code tend to be affected together, and Section~\ref{sec:results} shows that $r(c)$ overstates the risk of calibrated selections. For this reason we also learn the risk of a selection at the level of the change. For a change and a candidate selection we compute nine features, all known before the tests run: the logarithm of one plus the summed recalibrated scores $\tilde p(i)$ of the skipped tests, the largest of these scores, $r(c)$ itself, the logarithm of one plus the number of skipped tests that executed a changed file, the same count for a changed line, the three line-level triggers of Table~S5 in Online Resource~1 other than the static/runtime conflict, and the logarithm of the number of test files. A logistic regression maps them to $q(c)$, the probability that the selection misses an affected test. It is trained on selections of the other projects at several operating points, each labelled with whether it missed, using test-level scores from models that were also trained without the evaluated project.
 
 Two abstention rules use $q(c)$. The \emph{$q$-rule} abstains when $q(c)>\alpha$. The \emph{selective} rule applies selective conformal risk control~\cite{xu2026scrc} online. It proceeds only when $q(c)\le\tau_t$ and, once the outcome of a change that proceeded is known, sets $\tau_{t+1}=\tau_t+\gamma(\alpha-\mathit{err}_t)$. As long as $\tau$ stays within a range of width $W$, the miss rate of $N$ changes that proceeded then differs from $\alpha$ by at most $W/(\gamma N)$, without any exchangeability assumption. This says little about a project with a few dozen changes. We start from $\tau_0=0.5$ or from a warm start, the largest threshold whose finite-sample corrected miss rate on the calibration changes is at most $\alpha$.
 
@@ -755,33 +732,9 @@ The estimate $r(c)$ separated risky selections from safe ones. In budget mode at
 
 
 
-Table~\ref{tab:qc} compares $r(c)$ with the change-level estimate $q(c)$. On the adaptively calibrated selections of the history projects, $q(c)$ predicted a mean miss rate of 8.9\% where 9.3\% was observed and $r(c)$ had predicted 12.7\%, and the expected calibration error fell from 0.067 to 0.037. On the NameRTS commits the picture is mixed. There $r(c)$ was closer in mean (10.2\% against 7.2\%, with 10.1\% observed), although $q(c)$ had the lower Brier score. Over all six kinds of selection $q(c)$ had the lower Brier score on five. On line-coverage selections neither estimate beat a constant forecast by much, so there the numbers are a ranking and not probabilities.
+Table~S6 in Online Resource~1 compares $r(c)$ with the change-level estimate $q(c)$. On the adaptively calibrated selections of the history projects, $q(c)$ predicted a mean miss rate of 8.9\% where 9.3\% was observed and $r(c)$ had predicted 12.7\%, and the expected calibration error fell from 0.067 to 0.037. On the NameRTS commits the picture is mixed. There $r(c)$ was closer in mean (10.2\% against 7.2\%, with 10.1\% observed), although $q(c)$ had the lower Brier score. Over all six kinds of selection $q(c)$ had the lower Brier score on five. On line-coverage selections neither estimate beat a constant forecast by much, so there the numbers are a ranking and not probabilities.
 
-\begin{table}[htbp]
-\caption{Product formula $r(c)$ and change-level risk $q(c)$ on the same selections}
-\label{tab:qc}
-\centering
-\footnotesize
-\setlength{\tabcolsep}{2.2pt}
-\begin{tabular}{@{}lrrrrrrrr@{}}
-\toprule
-& & \multicolumn{2}{c}{\textbf{Mean (\%)}} & \multicolumn{3}{c}{\textbf{Brier score}} & \multicolumn{2}{c}{\textbf{ECE}} \\
-\cmidrule(lr){3-4}\cmidrule(lr){5-7}\cmidrule(l){8-9}
-\textbf{Selection} & \textbf{Obs.\%} & $r(c)$ & $q(c)$ & $r(c)$ & $q(c)$ & const. & $r(c)$ & $q(c)$ \\
-\midrule
-\multicolumn{9}{@{}l}{\textit{History projects (332 test changes)}} \\
-ACI $\alpha$=0.10 & 9.3 & 12.7 & 8.9 & 0.076 & 0.062 & 0.085 & 0.067 & 0.037 \\
-Budget 25\% & 65.4 & 68.3 & 64.0 & 0.064 & 0.058 & 0.226 & 0.052 & 0.031 \\
-Line coverage & 9.3 & 17.2 & 9.7 & 0.117 & 0.082 & 0.085 & 0.099 & 0.050 \\
-\midrule
-\multicolumn{9}{@{}l}{\textit{NameRTS commits (79 test changes)}} \\
-ACI $\alpha$=0.10 & 10.1 & 10.2 & 7.2 & 0.106 & 0.080 & 0.091 & 0.112 & 0.054 \\
-Budget 25\% & 58.2 & 57.6 & 54.8 & 0.047 & 0.057 & 0.243 & 0.039 & 0.043 \\
-Line coverage & 15.2 & 30.4 & 17.2 & 0.246 & 0.148 & 0.129 & 0.254 & 0.093 \\
-\bottomrule
-\end{tabular}
-\footnotetext{Obs.\% = observed miss rate; const.\ = Brier score of a constant forecast at the observed rate; ECE = expected calibration error over five bins.}
-\end{table}
+
 
 \textbf{Answer to RQ2:} on the history projects, the miss rate stays at the target only when calibration adapts over time (H2 is supported for ACI but not for static calibration). The product estimate $r(c)$ ranks changes by risk but overstates the risk of calibrated selections. A change-level model $q(c)$ gives a better calibrated number on the history projects, although on the NameRTS commits it underestimated the miss rate of calibrated selections.
 
@@ -817,33 +770,9 @@ Risk $r(c)>\alpha$ & hybrid & 25.9 & 1.8 & 25.9 & 99.7 \\
 \end{tabular}
 \end{table}
 
-Table~\ref{tab:qrule} asks whether abstention can keep the miss rate of the changes that proceed below 5\% when the selection itself is calibrated to 10\%. On the history projects both fixed rules did, on every project. The rule on $r(c)$ abstained on 32.5\% of changes and missed on 1.3\% of those that proceeded, and the $q$-rule abstained less often (27.7\%) and missed on 2.5\% (6 of 240). On the NameRTS commits the $q$-rule missed on 3 of 64 changes that proceeded (4.7\%) and $r(c)$ on 4 of 67 (6.0\%), and both exceeded the target on seaborn (11.5\% and 13.8\%). The online selective rule missed on 6.6\% of the changes that proceeded (6.2\% with a warm start). Its guarantee holds in the long run, and our projects have between 23 and 150 test changes each. On the NameRTS commits the warm start abstained on every change, because with at most 18 calibration changes the correction $1/(n+1)$ alone exceeds 5\%. We keep the fixed rules and report the online rule as a negative result.
+Table~S7 in Online Resource~1 asks whether abstention can keep the miss rate of the changes that proceed below 5\% when the selection itself is calibrated to 10\%. On the history projects both fixed rules did, on every project. The rule on $r(c)$ abstained on 32.5\% of changes and missed on 1.3\% of those that proceeded, and the $q$-rule abstained less often (27.7\%) and missed on 2.5\% (6 of 240). On the NameRTS commits the $q$-rule missed on 3 of 64 changes that proceeded (4.7\%) and $r(c)$ on 4 of 67 (6.0\%), and both exceeded the target on seaborn (11.5\% and 13.8\%). The online selective rule missed on 6.6\% of the changes that proceeded (6.2\% with a warm start). Its guarantee holds in the long run, and our projects have between 23 and 150 test changes each. On the NameRTS commits the warm start abstained on every change, because with at most 18 calibration changes the correction $1/(n+1)$ alone exceeds 5\%. We keep the fixed rules and report the online rule as a negative result.
 
-\begin{table}[htbp]
-\caption{Abstention rules with a 5\% target on top of ACI ($\alpha_{\mathit{sel}}=0.10$)}
-\label{tab:qrule}
-\centering
-\footnotesize
-\setlength{\tabcolsep}{3pt}
-\begin{tabular}{@{}lrrrr@{}}
-\toprule
-\textbf{Rule} & \textbf{Abst.\%} & \textbf{Miss among proceeded\%} & \textbf{Miss\%} & \textbf{Time\%} \\
-\midrule
-\multicolumn{5}{@{}l}{\textit{History projects (332 test changes)}} \\
-$r(c)>\alpha$ & 32.5 & 1.3 & 0.9 & 28.4 \\
-$q(c)>\alpha$ & 27.7 & 2.5 & 1.8 & 27.4 \\
-Selective, online & 4.2 & 6.6 & 6.3 & 37.0 \\
-Selective, warm start & 17.2 & 6.2 & 5.1 & 33.8 \\
-\midrule
-\multicolumn{5}{@{}l}{\textit{NameRTS commits (79 test changes)}} \\
-$r(c)>\alpha$ & 15.2 & 6.0 & 5.1 & 47.8 \\
-$q(c)>\alpha$ & 19.0 & 4.7 & 3.8 & 45.9 \\
-Selective, online & 2.5 & 9.1 & 8.9 & 49.5 \\
-Selective, warm start & 100.0 & -- & 0.0 & 45.3 \\
-\bottomrule
-\end{tabular}
-\footnotetext{Abstaining runs file coverage combined with the selection. Miss\% counts all changes after abstention.}
-\end{table}
+
 
 \textbf{Answer to RQ3:} the rule-based triggers either fire on most changes (file level) or miss most of the risky ones (line level). Abstaining on the estimated risk flags most unsafe changes at a moderate abstention rate (H3 is supported for risk-based abstention only). A fixed rule on $q(c)$ abstains less often than one on $r(c)$, and when pooled both kept the miss rate of the changes that proceeded near or below 5\%, though not on every project. The online selective rule did not converge on these short histories.
 
@@ -952,14 +881,14 @@ Table~S4 in Online Resource~1 removes evidence signals in budget mode at 25\%. W
 \section{Discussion}\label{sec:discussion}
 % =====================================================================
 \subsection{Implications}
-For developers the gain lies less in a bigger saving than in a risk that is stated and can be tuned. Line coverage was unsafe on 9.3\% of changes and gave no hint as to which ones. With adaptive calibration a team chooses the target and the risky changes are marked for a broader run. A threshold calibrated once drifts without warning, so a deployment has to keep recalibrating from post-merge or nightly full runs. For small libraries whose suites take seconds, file-level coverage remains a strong and simple default.
+For developers the gain lies less in a bigger saving than in a risk that is stated and can be tuned. Line coverage missed tests on some changes and gave no hint as to which ones. With adaptive calibration a team chooses the target and the risky changes are marked for a broader run. A threshold calibrated once drifts without warning, so a deployment has to keep recalibrating from post-merge or nightly full runs. For small libraries whose suites take seconds, file-level coverage remains a strong and simple default.
 
 For AI coding agents, a calibrated signal to proceed or to run more tests could go beyond the code-to-test map that reduced regressions in TDAD~\cite{alonso2026tdad}. Our results suggest basing that signal on the estimated risk, because hand-written rules either fired almost always or missed most risky changes. The self-confirming test result matters here too. If agents' tests behave like the human-written ones in our data, they should count as evidence for a change only when they fail on the base commit, the rule SWE-bench uses when it builds its tasks~\cite{jimenez2024swebench}. We have not measured either effect with agents.
 
 \subsection{Comparison with prior work}
-Ekstazi, NameRTS and predictive test selection report safety and cost as averages over many changes~\cite{gligoric2015ekstazi,wang2026namerts,machalica2019pts}. Our run on the NameRTS commits shows how much such numbers depend on the ground truth, and our static-calibration result shows that a threshold set from historical samples, as in predictive test selection, can drift away from its target. Adaptive conformal inference~\cite{gibbs2021aci} corrects this in test selection as it does for prediction sets. The weakness of line-level selection matches the Python study of Kauhanen et al.~\cite{kauhanen2021python}, and multi-language selection is established~\cite{elsner2022multilang,maurina2025babelrts}. What our replication adds is that adaptive calibration carries over to other languages, whereas the product formula and the abstention rule built on it do not.
+Our run on the NameRTS commits shows how much average safety figures depend on the ground truth, and our static-calibration result shows that a threshold set from historical samples, as in predictive test selection, can drift away from its target. Adaptive conformal inference~\cite{gibbs2021aci} corrects this in test selection as it does for prediction sets. The weakness of line-level selection matches the Python study of Kauhanen et al.~\cite{kauhanen2021python}, and multi-language selection is established~\cite{elsner2022multilang,maurina2025babelrts}. What our replication adds is that adaptive calibration carries over to other languages, whereas the product formula and the abstention rule built on it do not.
 
-Several parts of CodeTwin AI already exist separately. Earlier work skips tests for changes that preserve behaviour or the syntax tree~\cite{wang2018reks,landsberg2022tasting}, studies pseudo-tested code and oracle gaps~\cite{niedermayr2016will,maton2025oracle}, uses co-changed tests as relevance labels~\cite{jungwirth2026pto} and requires the tests of a benchmark task to fail before the fix~\cite{jimenez2024swebench}. Conformal risk control with ACI has been tried for per-test selection~\cite{crcpts2026}, and selective conformal risk control abstains on uncertain inputs in classification~\cite{xu2026scrc}. We did not find these ideas combined in test selection, with a residual risk for each change that is calibrated by time-aware conformal methods, a fallback to a broader run when that risk is too high, and evidence that records what the analysis could not resolve or check. Three of our results are new as far as we know. On the history projects a risk model of the whole change was better calibrated than the per-test product formula. A fixed abstention rule worked on short histories where its online counterpart did not. Whether a co-changed test fails on the base commit also separated strong from weak evidence for the change, since such tests caught 96.0\% of seeded faults against 59.0\%.
+Several parts of CodeTwin AI already exist separately. Earlier work skips tests for changes that preserve behaviour or the syntax tree~\cite{wang2018reks,landsberg2022tasting}, studies pseudo-tested code and oracle gaps~\cite{niedermayr2016will,maton2025oracle}, uses co-changed tests as relevance labels~\cite{jungwirth2026pto} and requires the tests of a benchmark task to fail before the fix~\cite{jimenez2024swebench}. Conformal risk control with ACI has been tried for per-test selection~\cite{crcpts2026}, and selective conformal risk control abstains on uncertain inputs in classification~\cite{xu2026scrc}. We did not find these ideas combined in test selection, with a residual risk for each change that is calibrated by time-aware conformal methods, a fallback to a broader run when that risk is too high, and evidence that records what the analysis could not resolve or check. Three of our results are new as far as we know. On the history projects a risk model of the whole change was better calibrated than the per-test product formula. A fixed abstention rule worked on short histories where its online counterpart did not. Whether a co-changed test fails on the base commit also separated strong from weak evidence for the change (RQ5).
 
 \subsection{Failure cases and lessons}
 Every test that line coverage missed (205 tests on 31 changes) had executed the changed file in the old version but not the changed lines, so old coverage cannot see code paths that a change adds or reroutes. Rules that sound sensible, such as abstaining when a changed function contains \texttt{getattr}, were no better than chance at flagging misses in our data. The evaluation setup can change the conclusion, since static calibration looked valid in the pilot run with 40 recent commits per project and failed on longer histories. A long-run guarantee did not help on short histories. And a result on one language is only a hypothesis for the next. In Go, Rust and JavaScript/TypeScript, risk-based abstention lost most of its value, so a deployment should check its abstention rule on the project's own history first.
@@ -978,7 +907,7 @@ Every test that line coverage missed (205 tests on 31 changes) had executed the 
 % =====================================================================
 \section{Conclusion and future work}\label{sec:conclusion}
 % =====================================================================
-We evaluated test selection on 681 changes of 8 Python projects. On the history projects, selection could state its residual risk and hold the observed miss rate at a chosen target, but only with calibration that adapts over time. A threshold fitted once on older commits missed 17.5\% of changes at a 10\% target, while adaptive conformal inference stayed at 9.3\% and saved 39.1\% of test time. Abstaining when the estimated risk exceeded the target flagged 26 of the 31 changes on which line coverage was unsafe, against 7 for the rule-based triggers. A risk model learned on whole changes was better calibrated than the product formula (8.9\% against 12.7\%, with 9.3\% observed). Co-changed tests that also passed on the old code caught 59.0\% of seeded faults, compared with 96.0\% for tests that failed there. The learned ranking did not beat a coverage ranking. On \vNtest{} test changes from Go, Rust and JavaScript/TypeScript pull requests, adaptive calibration again held every target, but risk-based abstention caught only \vTrigRiskFlag{} of \vUnsafe{} unsafe changes.
+We evaluated test selection on 681 changes of 8 Python projects and \vNtest{} test changes in Go, Rust and JavaScript/TypeScript. Selection could state its residual risk and hold the observed miss rate at a chosen target, but only with calibration that adapts over time, in every language we tried. Abstaining on the estimated risk caught most unsafe changes in Python and few elsewhere. A risk model of the whole change was better calibrated than the per-test product formula, and tests that also pass on the old code turned out to be weak evidence for a change. The learned ranking did not beat a coverage ranking.
 
 Future work should evaluate CodeTwin AI on larger projects with longer suites, feed the unchecked-line and self-confirming test evidence into $r(c)$ and $q(c)$, and test the online selective rule on longer histories. The cross-repository evidence, contract checks, verified language-model suggestions (H4), the VS Code extension and the MCP server still have to be built and evaluated, the last two with developers and AI coding agents.
 

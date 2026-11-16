@@ -318,7 +318,7 @@ Fig.~\ref{fig:workflow} summarises the study of Section~6 of the article.
 \end{figure}
 
 \section*{S4\quad Additional results}
-Fig.~\ref{fig:budget} belongs to RQ1 (budget mode), Figs.~\ref{fig:perproject}, \ref{fig:reliability} and~\ref{fig:calib} to RQ2, Fig.~\ref{fig:triggers} to RQ3, Fig.~\ref{fig:languages} to RQ6 and Table~\ref{tab:ablation} to the ablation of the article.
+Fig.~\ref{fig:budget} belongs to RQ1 (budget mode), Figs.~\ref{fig:perproject}, \ref{fig:reliability} and~\ref{fig:calib} to RQ2, Fig.~\ref{fig:triggers} to RQ3, Fig.~\ref{fig:languages} to RQ6 and Table~\ref{tab:ablation} to the ablation of the article. Table~\ref{tab:triggers} lists the uncertainty triggers of the design (Section~4.8 of the article), Table~\ref{tab:qc} compares $r(c)$ and $q(c)$ (RQ2) and Table~\ref{tab:qrule} gives the abstention rules on top of ACI (RQ3).
 
 \begin{figure}[htbp]
 \centering
@@ -384,6 +384,84 @@ $-$ all coverage & 0.601 & 30.1 & 90.8 & -0.054 \\
 \end{tabular}
 \end{table}
 
+\begin{table}[htbp]
+\caption{Uncertainty triggers}
+\label{tab:triggers}
+\centering
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.24\linewidth}>{\raggedright\arraybackslash}p{0.56\linewidth}>{\raggedright\arraybackslash}p{0.13\linewidth}@{}}
+\toprule
+\textbf{Trigger} & \textbf{Fires when (line-level form)} & \textbf{Status} \\
+\midrule
+Dynamic call & a changed line, or the function containing it, has a dynamic call & evaluated \\
+Untested change & no test executed the function containing a changed line, an edited import-time statement or a new module & evaluated \\
+Static/runtime conflict & a test executed a changed line but has no static import path to it & evaluated \\
+Module-level change & a changed line is an import-time statement, so all importers are affected & evaluated \\
+\midrule
+Risk & $r(c) > \alpha$ (Eq.~7 of the article) & evaluated \\
+\midrule
+Unknown consumer & a cross-repository link cannot be resolved & planned \\
+Old evidence & coverage or dependency data are older than the code & planned \\
+Hidden coupling & files frequently change together but have no code link & planned \\
+Unparsable file & there is no adapter, or the changed file cannot be parsed & planned \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[htbp]
+\caption{Product formula $r(c)$ and change-level risk $q(c)$ on the same selections}
+\label{tab:qc}
+\centering
+\footnotesize
+\setlength{\tabcolsep}{2.2pt}
+\begin{tabular}{@{}lrrrrrrrr@{}}
+\toprule
+& & \multicolumn{2}{c}{\textbf{Mean (\%)}} & \multicolumn{3}{c}{\textbf{Brier score}} & \multicolumn{2}{c}{\textbf{ECE}} \\
+\cmidrule(lr){3-4}\cmidrule(lr){5-7}\cmidrule(l){8-9}
+\textbf{Selection} & \textbf{Obs.\%} & $r(c)$ & $q(c)$ & $r(c)$ & $q(c)$ & const. & $r(c)$ & $q(c)$ \\
+\midrule
+\multicolumn{9}{@{}l}{\textit{History projects (332 test changes)}} \\
+ACI $\alpha$=0.10 & 9.3 & 12.7 & 8.9 & 0.076 & 0.062 & 0.085 & 0.067 & 0.037 \\
+Budget 25\% & 65.4 & 68.3 & 64.0 & 0.064 & 0.058 & 0.226 & 0.052 & 0.031 \\
+Line coverage & 9.3 & 17.2 & 9.7 & 0.117 & 0.082 & 0.085 & 0.099 & 0.050 \\
+\midrule
+\multicolumn{9}{@{}l}{\textit{NameRTS commits (79 test changes)}} \\
+ACI $\alpha$=0.10 & 10.1 & 10.2 & 7.2 & 0.106 & 0.080 & 0.091 & 0.112 & 0.054 \\
+Budget 25\% & 58.2 & 57.6 & 54.8 & 0.047 & 0.057 & 0.243 & 0.039 & 0.043 \\
+Line coverage & 15.2 & 30.4 & 17.2 & 0.246 & 0.148 & 0.129 & 0.254 & 0.093 \\
+\bottomrule
+\end{tabular}
+\footnotetext{Obs.\% = observed miss rate; const.\ = Brier score of a constant forecast at the observed rate; ECE = expected calibration error over five bins.}
+\end{table}
+
+\begin{table}[htbp]
+\caption{Abstention rules with a 5\% target on top of ACI ($\alpha_{\mathit{sel}}=0.10$)}
+\label{tab:qrule}
+\centering
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+\textbf{Rule} & \textbf{Abst.\%} & \textbf{Miss among proceeded\%} & \textbf{Miss\%} & \textbf{Time\%} \\
+\midrule
+\multicolumn{5}{@{}l}{\textit{History projects (332 test changes)}} \\
+$r(c)>\alpha$ & 32.5 & 1.3 & 0.9 & 28.4 \\
+$q(c)>\alpha$ & 27.7 & 2.5 & 1.8 & 27.4 \\
+Selective, online & 4.2 & 6.6 & 6.3 & 37.0 \\
+Selective, warm start & 17.2 & 6.2 & 5.1 & 33.8 \\
+\midrule
+\multicolumn{5}{@{}l}{\textit{NameRTS commits (79 test changes)}} \\
+$r(c)>\alpha$ & 15.2 & 6.0 & 5.1 & 47.8 \\
+$q(c)>\alpha$ & 19.0 & 4.7 & 3.8 & 45.9 \\
+Selective, online & 2.5 & 9.1 & 8.9 & 49.5 \\
+Selective, warm start & 100.0 & -- & 0.0 & 45.3 \\
+\bottomrule
+\end{tabular}
+\footnotetext{Abstaining runs file coverage combined with the selection. Miss\% counts all changes after abstention.}
+\end{table}
+
+\clearpage
 \section*{S5\quad Full text of shortened result paragraphs}
 The article reports these results in condensed form (Sections~7 and~7.5). The paragraphs below give them in full, with every number.
 
