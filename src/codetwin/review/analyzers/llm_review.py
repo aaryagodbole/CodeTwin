@@ -15,6 +15,7 @@ from ..model import Finding, Severity, Source
 
 NAME = "llm_review"
 DEFAULT = False
+ADVISORY = True          # its error messages are not copied into review notes (see pipeline.run)
 MAX_PATCH_CHARS = 60_000
 MAX_COMMENTS = 15
 _ALLOWED = {"medium": Severity.MEDIUM, "low": Severity.LOW, "info": Severity.INFO}
@@ -42,8 +43,8 @@ def _parse(text: str) -> list[dict]:
         data = json.loads(m.group(0))
     except json.JSONDecodeError:
         return []
-    items = data.get("comments", []) if isinstance(data, dict) else []
-    return [c for c in items if isinstance(c, dict)]
+    items = data.get("comments") if isinstance(data, dict) else None
+    return [c for c in items if isinstance(c, dict)] if isinstance(items, list) else []
 
 
 def analyze(ctx: ReviewContext) -> list[Finding]:
@@ -55,7 +56,8 @@ def analyze(ctx: ReviewContext) -> list[Finding]:
     out: list[Finding] = []
     for c in _parse(text)[:MAX_COMMENTS]:
         path, line = c.get("path"), c.get("line")
-        if not isinstance(line, int) or not ctx.in_diff(path, line):
+        if not isinstance(path, str) or isinstance(line, bool) or not isinstance(line, int) or line < 1 \
+                or not ctx.in_diff(path, line):
             continue
         out.append(Finding(
             rule="CT100", severity=_ALLOWED.get(str(c.get("severity", "info")).lower(), Severity.INFO),

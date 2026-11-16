@@ -1,12 +1,14 @@
 """`codetwin kg`: the code knowledge graph of the recorded commit (stats, export, blast radius)."""
 from __future__ import annotations
 
+import argparse
+
 from ._util import engine, print_json
 
 NAME, HELP, ORDER = "kg", "knowledge graph of files, symbols and tests: stats, export (json/graphml), blast radius", 54
 
 
-def add_arguments(p) -> None:
+def add_arguments(p: argparse.ArgumentParser) -> None:
     p.add_argument("action", choices=["stats", "export", "blast"], help="what to do")
     p.add_argument("targets", nargs="*", help="blast: files or file:line (line numbers of the recorded commit)")
     p.add_argument("--sha", help="recorded commit (default: latest recorded run)")
@@ -25,7 +27,7 @@ def _targets(items: list[str]) -> dict[str, list[int]]:
     return out
 
 
-def run(args) -> int:
+def run(args: argparse.Namespace) -> int:
     from ..kg import from_engine
     from ..kg.export import write
 

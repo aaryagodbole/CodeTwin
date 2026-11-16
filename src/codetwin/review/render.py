@@ -7,6 +7,7 @@
 """
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import Any
 
 from .. import __version__
@@ -68,7 +69,7 @@ def markdown(review: Review) -> str:
     return "\n".join(lines)
 
 
-def github(review: Review, in_diff: Any) -> dict[str, Any]:
+def github(review: Review, in_diff: Callable[[str | None, int | None], bool]) -> dict[str, Any]:
     """Body of a pull-request review. `in_diff(path, line)` tells whether GitHub accepts a comment there."""
     comments: list[dict[str, Any]] = []
     for f in review.findings:

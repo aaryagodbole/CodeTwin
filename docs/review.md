@@ -46,7 +46,12 @@ Every finding names a rule. Ids are stable: never renumber or reuse one (`src/co
 | CT100 | `llm_review` (off by default) | at most medium | a language model's comment on a line in the diff |
 
 A review is **blocking** when CodeTwin abstained or an evidence finding is high or critical. LLM findings
-never make a review blocking, are capped at medium, and are dropped when they point outside the diff.
+never make a review blocking, are capped at medium, and are dropped when they point outside the diff hunks.
+
+A decision passed with `--decision` is checked first: it must be a `select --json` output, and it must have
+been computed against the same recorded commit the review compares with. In GitHub Actions, a failed post
+(for example a read-only token on a fork or Dependabot pull request) prints a warning; the SARIF file is
+already written and the selected tests still run.
 
 ## In GitHub Actions
 

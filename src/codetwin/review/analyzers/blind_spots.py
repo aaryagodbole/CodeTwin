@@ -14,8 +14,8 @@ NAME = "blind_spots"
 DEFAULT = True
 
 # "<file>: dynamic calls (getattr) cannot be followed statically"  /  "<file>: new or unparsed file, no evidence yet"
-_DYNAMIC = re.compile(r"^(?P<file>[^:\s]+): dynamic calls \((?P<kinds>[^)]*)\)")
-_NO_EVIDENCE = re.compile(r"^(?P<file>[^:\s]+): new or unparsed file")
+_DYNAMIC = re.compile(r"^(?P<file>.+?): dynamic calls \((?P<kinds>[^)]*)\)")
+_NO_EVIDENCE = re.compile(r"^(?P<file>.+?): new or unparsed file")
 
 
 def analyze(ctx: ReviewContext) -> list[Finding]:

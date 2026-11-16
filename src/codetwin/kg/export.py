@@ -15,7 +15,10 @@ from .graph import KnowledgeGraph
 
 
 def to_json(kg: KnowledgeGraph) -> dict[str, Any]:
-    data = nx.node_link_data(kg.g, edges="links")
+    try:
+        data = nx.node_link_data(kg.g, edges="links")        # NetworkX >= 3.4
+    except TypeError:
+        data = nx.node_link_data(kg.g, link="links")  # type: ignore[call-arg]  # NetworkX 3.2 / 3.3
     data["stats"] = kg.stats()
     return data
 

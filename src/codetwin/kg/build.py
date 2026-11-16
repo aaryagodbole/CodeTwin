@@ -1,6 +1,7 @@
 """Build the knowledge graph from recorded evidence: static facts, a test run and the commit history."""
 from __future__ import annotations
 
+import subprocess
 from collections import Counter
 from collections.abc import Callable, Iterable
 from itertools import combinations
@@ -79,4 +80,14 @@ def from_engine(eng: Any, sha: str | None = None) -> KnowledgeGraph:
         raise RuntimeError("no recorded run yet; run `codetwin record` first")
     static = eng.store.get_static(sha)
     run = eng.store.get_run(sha)
-    return build(static, run, eng.history(), eng.lang.is_test, eng.cfg.src_root, repo=eng.root.name)
+    if not static and run is None:
+        raise RuntimeError(f"no recorded evidence for {sha}; record it first or pick another commit")
+    return build(static, run, history_at(eng.root, sha), eng.lang.is_test, eng.cfg.src_root, repo=eng.root.name)
+
+
+def history_at(root: Any, sha: str, limit: int = 300) -> list[list[str]]:
+    """Files changed together per commit, up to and including `sha` (not the current HEAD), oldest first,
+    so co-change edges describe the same commit as the static and runtime evidence."""
+    out = subprocess.run(["git", "log", "--first-parent", "--name-only", "--format=@@", "-n", str(limit), sha, "--"],
+                         cwd=root, capture_output=True, text=True, check=False).stdout
+    return [c.split() for c in out.split("@@") if c.strip()][::-1]

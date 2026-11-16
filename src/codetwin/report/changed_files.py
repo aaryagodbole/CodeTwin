@@ -6,4 +6,4 @@ NAME = "changed_files"
 
 def contribute(ctx) -> dict:
     files = {f: len(d.new) for f, d in ctx.diff.items() if ctx.is_source(f)}
-    return {"files": files, "summary": f"{len(files)} source files, {sum(files.values())} changed lines"}
+    return {"files": files, "base": ctx.base, "summary": f"{len(files)} source files, {sum(files.values())} changed lines"}

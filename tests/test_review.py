@@ -5,7 +5,7 @@ import pytest
 
 from codetwin.cli import main
 from codetwin.review import ReviewContext, Severity, Source, run, select_analyzers
-from codetwin.review.github_api import Poster, Target, post_from_env
+from codetwin.review.github_api import Poster, PostError, Target, post_from_env
 from codetwin.review.model import Finding, Review
 from codetwin.review.render import MARKER, github, markdown, sarif
 from codetwin.review.rules import RULES
@@ -140,7 +140,7 @@ def _review():
 def test_renderers():
     r = _review()
     md = markdown(r)
-    assert md.startswith(MARKER) and "Run more tests before merging" and "AI suggestion, not verified" in md
+    assert md.startswith(MARKER) and "Run more tests before merging" in md and "AI suggestion, not verified" in md
     gh = github(r, lambda p, ln: p == "src/a.py" and ln == 3)
     assert [c["line"] for c in gh["comments"]] == [3] and "codetwin-fp:" in gh["comments"][0]["body"]
     s = sarif(r)
@@ -160,7 +160,10 @@ def test_post_updates_summary_and_skips_known_inline(tmp_path):
         calls.append((req.method, req.url.path))
         assert req.headers["Authorization"] == "Bearer tok"
         if req.method == "GET" and req.url.path.endswith("/issues/7/comments"):
-            return httpx.Response(200, json=[{"id": 11, "body": "other"}, {"id": 12, "body": MARKER + " old"}])
+            return httpx.Response(200, json=[
+                {"id": 10, "body": "quoting " + MARKER, "user": {"type": "User"}},      # a person quoting it
+                {"id": 11, "body": MARKER + " pasted by a person", "user": {"type": "User"}},
+                {"id": 12, "body": MARKER + " old", "user": {"type": "Bot"}}])
         if req.method == "GET" and req.url.path.endswith("/pulls/7/comments"):
             return httpx.Response(200, json=[{"body": f"x <!-- codetwin-fp:{fp} -->"}])
         return httpx.Response(200, json={})
@@ -172,7 +175,7 @@ def test_post_updates_summary_and_skips_known_inline(tmp_path):
     ev.write_text(json.dumps({"pull_request": {"number": 7}}))
     env = {"GITHUB_REPOSITORY": "o/r", "GITHUB_EVENT_PATH": str(ev)}
     assert Target.from_env(env) == Target("o/r", 7)
-    with pytest.raises(RuntimeError, match="GITHUB_TOKEN"):
+    with pytest.raises(PostError, match="GITHUB_TOKEN"):
         post_from_env(r, lambda p, ln: True, env)
     with pytest.raises(RuntimeError, match="pull_request"):
         Target.from_env({})
@@ -196,3 +199,85 @@ def test_review_command_end_to_end(toy_repo, capsys, tmp_path):
     assert json.loads(sar.read_text())["version"] == "2.1.0"
     assert main(["-C", str(toy_repo), "review", "--decision", str(dec), "--only", "untested_change",
                  "--fail-on-blocking"]) in (0, 1)
+
+
+def test_paths_with_spaces_and_unknown_only_repos():
+    d = _decision(reasons=["src/my module.py: dynamic calls (getattr) cannot be followed statically",
+                           "src/new file.py: new or unparsed file, no evidence yet"],
+                  extras={"cross_repo": {"repos": [{"name": "web", "consumers": [], "tests": {},
+                                                    "unknowns": ["web: dynamic import"]}]}})
+    by = {f.rule: f for f in run(_ctx(d)).findings}
+    assert by["CT003"].path == "src/my module.py" and by["CT006"].path == "src/new file.py"
+    assert by["CT005"].severity is Severity.LOW and by["CT005"].title.startswith("Could not tell")
+
+
+def test_two_breaking_changes_on_one_property_both_kept():
+    b = {"file": "api.yaml", "location": "User.age", "detail": "d", "consumers": [], "tests": {}}
+    d = _decision(extras={"contracts": {"breaking": [dict(b, kind="type-changed"), dict(b, kind="enum-narrowed")]}})
+    assert len([f for f in run(_ctx(d)).findings if f.rule == "CT004"]) == 2
+
+
+def test_failed_sections_and_advisory_errors_in_notes():
+    d = _decision(extras={"contracts": {"error": "boom"}})
+    assert run(_ctx(d)).notes == ["report section contracts failed, so findings that depend on it are missing: boom"]
+
+    class Advisory:
+        NAME, ADVISORY = "adv", True
+
+        @staticmethod
+        def analyze(ctx):
+            raise RuntimeError("provider said: <the whole diff>")
+    assert run(_ctx(_decision()), [Advisory]).notes == ["analyzer adv failed: RuntimeError"]
+
+
+def test_disabled_may_be_a_generator():
+    names = {m.NAME for m in select_analyzers(disabled=(n for n in ["blind_spots"]))}
+    assert "blind_spots" not in names and "untested_change" in names
+
+
+def test_saved_alpha_wins_over_config():
+    class Cfg:
+        alpha = 0.2
+    d = _decision(extras={"change_risk": {"alpha": 0.1, "summary": ""}})
+    assert run(_ctx(d, cfg=Cfg())).alpha == 0.1
+
+
+def test_llm_comments_with_bad_types_are_skipped_one_by_one():
+    from codetwin.review.analyzers import llm_review
+    text = json.dumps({"comments": [{"path": [], "line": 4, "title": "bad path"}, {"path": "src/a.py", "line": True},
+                                    {"path": "src/a.py", "line": 4, "severity": "low", "title": "Good", "message": "m"}]})
+    r = run(_ctx(_decision(), llm=_FakeLLM(text), options={"patch": "x"}), [llm_review])
+    assert [f.title for f in r.findings] == ["Good"] and r.notes == []
+    assert llm_review._parse('{"comments": "not a list"}') == []
+
+
+def test_commentable_lines_and_decision_checks(tmp_path):
+    from codetwin.commands.review import commentable, load_decision
+    patch = ("diff --git a/a.py b/a.py\n--- a/a.py\n+++ b/a.py\n@@ -1,3 +1,2 @@\n x\n-y\n z\n"
+             "diff --git a/n.py b/n.py\n--- /dev/null\n+++ b/n.py\n@@ -0,0 +1 @@\n+new\n"
+             "diff --git a/gone.py b/gone.py\n--- a/gone.py\n+++ /dev/null\n@@ -1 +0,0 @@\n-old\n")
+    c = commentable(patch)
+    assert c == {"a.py": {1, 2}, "n.py": {1}}
+    ctx = ReviewContext(root=".", decision=_decision(), changed={"a.py": [2, 3]}, commentable=c)
+    assert ctx.in_diff("a.py", 2) and not ctx.in_diff("a.py", 3)      # line 3 no longer exists
+    bad = tmp_path / "d.json"
+    for content, msg in [("{}", "'decision' must be"), ("[]", "expected a JSON object"), ("not json", "cannot read"),
+                         (json.dumps(_decision(residual_risk=2)), "'residual_risk'")]:
+        bad.write_text(content)
+        with pytest.raises(SystemExit, match=msg):
+            load_decision(str(bad))
+    bad.write_text(json.dumps(_decision()))
+    assert load_decision(str(bad))["decision"] == "proceed"
+
+
+def test_review_rejects_decision_for_another_base_and_survives_post_errors(toy_repo, tmp_path, capsys, monkeypatch):
+    main(["-C", str(toy_repo), "init"])
+    main(["-C", str(toy_repo), "record"])
+    dec = tmp_path / "d.json"
+    dec.write_text(json.dumps(_decision(extras={"changed_files": {"base": "f" * 40, "files": {}, "summary": ""}})))
+    with pytest.raises(SystemExit, match="computed against ffffffffffff"):
+        main(["-C", str(toy_repo), "review", "--decision", str(dec)])
+    capsys.readouterr()
+    monkeypatch.delenv("GITHUB_TOKEN", raising=False)
+    assert main(["-C", str(toy_repo), "review", "--post-github"]) == 0      # posting fails, review does not
+    assert "could not post the review" in capsys.readouterr().err

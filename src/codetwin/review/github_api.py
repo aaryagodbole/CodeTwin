@@ -11,6 +11,7 @@ from __future__ import annotations
 import json
 import os
 import re
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -20,6 +21,11 @@ from .render import MARKER, github, markdown
 
 API = "https://api.github.com"
 _FP = re.compile(r"<!-- codetwin-fp:([0-9a-f]{16}) -->")
+InDiff = Callable[[str | None, int | None], bool]
+
+
+class PostError(RuntimeError):
+    """GitHub refused or answered unexpectedly. The message has the HTTP status, never the token."""
 
 
 @dataclass
@@ -52,29 +58,45 @@ class Poster:
             "Authorization": f"Bearer {self.token}", "Accept": "application/vnd.github+json",
             "X-GitHub-Api-Version": "2022-11-28"})
 
-    def _all(self, http, url: str) -> list[dict]:
+    @staticmethod
+    def _check(r: Any, what: str) -> Any:
+        if r.status_code >= 400:
+            hint = " (read-only token: fork or Dependabot pull request, or missing `pull-requests: write`)" \
+                if r.status_code in (401, 403, 404) else ""
+            raise PostError(f"GitHub returned {r.status_code} while {what}{hint}")
+        return r
+
+    def _all(self, http: Any, url: str) -> list[dict]:
         out: list[dict] = []
         page = 1
         while True:
-            r = http.get(url, params={"per_page": 100, "page": page})
-            r.raise_for_status()
-            items = r.json()
-            out += items
+            items = self._check(http.get(url, params={"per_page": 100, "page": page}), "listing comments").json()
+            if not isinstance(items, list):
+                raise PostError(f"unexpected answer from GitHub for {url}: not a list")
+            out += [c for c in items if isinstance(c, dict) and isinstance(c.get("body") or "", str)]
             if len(items) < 100:
                 return out
             page += 1
 
-    def post(self, review: Review, in_diff) -> dict[str, Any]:
+    @staticmethod
+    def _is_summary(c: dict) -> bool:
+        """Our summary comment: written by a bot (the Actions token posts as github-actions[bot]) and starting
+        with the marker. A person quoting the marker in a comment is never edited."""
+        u = c.get("user")
+        user: dict = u if isinstance(u, dict) else {}
+        return user.get("type") == "Bot" and (c.get("body") or "").startswith(MARKER) and isinstance(c.get("id"), int)
+
+    def post(self, review: Review, in_diff: InDiff) -> dict[str, Any]:
         t = self.target
         body = markdown(review)
         with self._client() as http:
-            mine = [c for c in self._all(http, f"/repos/{t.repo}/issues/{t.number}/comments")
-                    if MARKER in (c.get("body") or "")]
+            mine = [c for c in self._all(http, f"/repos/{t.repo}/issues/{t.number}/comments") if self._is_summary(c)]
             if mine:
-                r = http.patch(f"/repos/{t.repo}/issues/comments/{mine[0]['id']}", json={"body": body})
+                self._check(http.patch(f"/repos/{t.repo}/issues/comments/{mine[0]['id']}", json={"body": body}),
+                            "updating the summary comment")
             else:
-                r = http.post(f"/repos/{t.repo}/issues/{t.number}/comments", json={"body": body})
-            r.raise_for_status()
+                self._check(http.post(f"/repos/{t.repo}/issues/{t.number}/comments", json={"body": body}),
+                            "posting the summary comment")
             self.posted["summary"] = "updated" if mine else "created"
 
             existing = {m for c in self._all(http, f"/repos/{t.repo}/pulls/{t.number}/comments")
@@ -83,14 +105,15 @@ class Poster:
             payload["comments"] = [c for c in payload["comments"] if not set(_FP.findall(c["body"])) & existing]
             self.posted["inline"] = len(payload["comments"])
             if payload["comments"]:
-                r = http.post(f"/repos/{t.repo}/pulls/{t.number}/reviews", json=payload)
-                r.raise_for_status()
+                self._check(http.post(f"/repos/{t.repo}/pulls/{t.number}/reviews", json=payload),
+                            "posting inline comments")
         return self.posted
 
 
-def post_from_env(review: Review, in_diff, env: dict[str, str] | None = None, transport: Any = None) -> dict:
+def post_from_env(review: Review, in_diff: InDiff, env: dict[str, str] | None = None,
+                  transport: Any = None) -> dict:
     env = dict(os.environ) if env is None else env
     token = env.get("GITHUB_TOKEN")
     if not token:
-        raise RuntimeError("GITHUB_TOKEN is not set; pass it to the step as an environment variable")
+        raise PostError("GITHUB_TOKEN is not set; pass it to the step as an environment variable")
     return Poster(Target.from_env(env), token, transport).post(review, in_diff)

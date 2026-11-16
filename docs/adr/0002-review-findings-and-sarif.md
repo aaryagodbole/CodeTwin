@@ -26,5 +26,5 @@ language model explains and never decides (AGENTS.md).
 
 - Teams can filter, suppress or track findings by rule in GitHub code scanning.
 - Changing a rule's meaning needs a new id; the old id is retired, not reused.
-- The review depends on the decision's report sections (`docs/output.md`); a failed section yields no
-  findings and is not read as "nothing found".
+- The review depends on the decision's report sections (`docs/output.md`). A failed section yields no
+  findings, and `Review.notes` names it, so the summary comment says which findings may be missing.

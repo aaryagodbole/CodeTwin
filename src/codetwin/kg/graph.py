@@ -72,14 +72,24 @@ class KnowledgeGraph:
 
     # ------------------------------------------------------------- queries
     def symbols_at(self, path: str, lines: list[int] | set[int]) -> list[str]:
-        """Innermost symbols of `path` whose span contains one of `lines`; no lines = the file's top-level symbols."""
-        defined = self.neighbours(node_id(NodeKind.FILE, path), EdgeKind.DEFINES)
+        """For each line, the innermost symbol of `path` that contains it; no lines = the file's top-level symbols."""
+        fid = self.file_node(path)
+        defined = self.neighbours(fid, EdgeKind.DEFINES) if fid else []
         if not lines:
             return [s for s in defined if not any(o != s and self._inside(s, o) for o in defined)]
-        ls = set(lines)
-        hit = [s for s in defined
-               if ls & set(range(self.g.nodes[s].get("start", 0), self.g.nodes[s].get("end", -1) + 1))]
-        return [s for s in hit if not any(o != s and self._inside(o, s) for o in hit)]
+        out: set[str] = set()
+        for ln in set(lines):
+            hit = [s for s in defined if self.g.nodes[s].get("start", 0) <= ln <= self.g.nodes[s].get("end", -1)]
+            out.update(s for s in hit if not any(o != s and self._inside(o, s) for o in hit))
+        return sorted(out)
+
+    def file_node(self, path: str) -> str | None:
+        """Node id of a source or test file, or None if the graph does not know the path."""
+        for kind in (NodeKind.FILE, NodeKind.TEST):
+            nid = node_id(kind, path)
+            if nid in self.g:
+                return nid
+        return None
 
     def _inside(self, inner: str, outer: str) -> bool:
         i, o = self.g.nodes[inner], self.g.nodes[outer]
@@ -94,10 +104,9 @@ class KnowledgeGraph:
         br = BlastRadius()
         start = []
         for path, lines in sorted(changed.items()):
-            fid = node_id(NodeKind.FILE, path)
-            if fid not in self.g:
-                if node_id(NodeKind.TEST, path) not in self.g:
-                    br.unknowns.append(f"{path}: not in the graph (new or unparsed file)")
+            fid = self.file_node(path)
+            if fid is None:
+                br.unknowns.append(f"{path}: not in the graph (new or unparsed file)")
                 continue
             start.append(fid)
             br.symbols += self.symbols_at(path, lines)

@@ -69,3 +69,32 @@ def test_from_engine_and_cli(toy_repo, capsys, tmp_path):
     assert out["tests"] == {"tests/test_price.py": ["runtime"]}
     assert main(["-C", str(toy_repo), "kg", "export", "--format", "graphml", "-o", str(tmp_path / "x.graphml")]) == 0
     assert main(["-C", str(toy_repo), "kg", "stats"]) == 0
+
+
+def test_innermost_symbol_per_line_and_test_files():
+    kg = _toy()
+    assert kg.symbols_at("src/a.py", [5, 7]) == [node_id(NodeKind.SYMBOL, "src/a.py::C"),
+                                                 node_id(NodeKind.SYMBOL, "src/a.py::C.m")]
+    assert kg.file_node("tests/test_b.py") == node_id(NodeKind.TEST, "tests/test_b.py")
+    assert kg.blast_radius({"tests/test_b.py": [1]}).unknowns == []
+
+
+def test_unrecorded_sha_is_an_error(toy_repo):
+    import pytest
+    main(["-C", str(toy_repo), "init"])
+    with Engine(toy_repo) as eng:
+        eng.record()
+        with pytest.raises(RuntimeError, match="no recorded evidence"):
+            from_engine(eng, "0" * 40)
+
+
+def test_history_is_read_at_the_requested_commit(toy_repo):
+    import subprocess
+
+    from codetwin.kg.build import history_at
+    sha = subprocess.run(["git", "rev-parse", "HEAD"], cwd=toy_repo, capture_output=True, text=True).stdout.strip()
+    before = history_at(toy_repo, sha)
+    (toy_repo / "extra.txt").write_text("x")
+    subprocess.run(["git", "add", "-A"], cwd=toy_repo, check=True)
+    subprocess.run(["git", "-c", "user.email=a@b", "-c", "user.name=a", "commit", "-qm", "later"], cwd=toy_repo, check=True)
+    assert history_at(toy_repo, sha) == before

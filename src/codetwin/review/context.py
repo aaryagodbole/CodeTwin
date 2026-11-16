@@ -15,6 +15,7 @@ class ReviewContext:
     graph: Any = None                       # codetwin.kg.KnowledgeGraph, if one was built
     llm: Any = None                         # codetwin.llm.LLMClient, only when the user switched it on
     options: dict = field(default_factory=dict)
+    commentable: dict[str, set[int]] | None = None   # new-file lines inside diff hunks (None: use `changed`)
 
     def section(self, name: str) -> dict:
         """One report section of the decision (`extras.<name>`), or {} if absent or failed."""
@@ -23,4 +24,8 @@ class ReviewContext:
 
     def in_diff(self, path: str | None, line: int | None) -> bool:
         """GitHub can only attach an inline comment to a line that is part of the diff."""
-        return bool(path and line and line in set(self.changed.get(path, [])))
+        if not path or not line:
+            return False
+        if self.commentable is not None:
+            return line in self.commentable.get(path, set())
+        return line in set(self.changed.get(path, []))

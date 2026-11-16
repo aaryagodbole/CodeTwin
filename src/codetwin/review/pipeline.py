@@ -19,10 +19,11 @@ def select_analyzers(enabled: Iterable[str] | None = None, disabled: Iterable[st
     """Analyzer modules to run: the defaults, or exactly `enabled` if given, minus `disabled`."""
     mods = discover(PACKAGE)
     names = set(enabled) if enabled is not None else {m.NAME for m in mods if getattr(m, "DEFAULT", True)}
-    unknown = (names | set(disabled)) - {m.NAME for m in mods}
+    off = set(disabled)
+    unknown = (names | off) - {m.NAME for m in mods}
     if unknown:
         raise ValueError(f"unknown review analyzers: {', '.join(sorted(unknown))}")
-    return [m for m in mods if m.NAME in names and m.NAME not in set(disabled)]
+    return [m for m in mods if m.NAME in names and m.NAME not in off]
 
 
 def run(ctx: ReviewContext, mods: list[ModuleType] | None = None) -> Review:
@@ -34,8 +35,14 @@ def run(ctx: ReviewContext, mods: list[ModuleType] | None = None) -> Review:
             for f in mod.analyze(ctx):
                 f.analyzer = mod.NAME
                 findings.append(f)
-        except Exception as e:  # noqa: BLE001 - one broken analyzer must not hide the others' findings
-            notes.append(f"analyzer {mod.NAME} failed: {type(e).__name__}: {e}")
+        except Exception as e:  # noqa: BLE001 - failure policy: an analyzer that raises contributes no findings,
+            # is named in Review.notes, and does not stop the others. Messages of advisory (LLM) analyzers are not
+            # copied, because a provider's error body can echo the diff into a published comment.
+            detail = "" if getattr(mod, "ADVISORY", False) else f": {e}"
+            notes.append(f"analyzer {mod.NAME} failed: {type(e).__name__}{detail}")
+    for name, sec in sorted((ctx.decision.get("extras") or {}).items()):
+        if isinstance(sec, dict) and "error" in sec:
+            notes.append(f"report section {name} failed, so findings that depend on it are missing: {sec['error']}")
     seen: set[str] = set()
     unique = []
     for f in findings:
@@ -51,6 +58,7 @@ def run(ctx: ReviewContext, mods: list[ModuleType] | None = None) -> Review:
     for path, lines in sorted(ctx.changed.items()):
         files.append(FileSummary(path, len(lines), sorted(set(covering.get(path, [])) & set(selected)),
                                  sum(1 for f in unique if f.path == path)))
-    alpha = getattr(ctx.cfg, "alpha", None)
+    saved = ((ctx.decision.get("extras") or {}).get("change_risk") or {})
+    alpha = saved.get("alpha", getattr(ctx.cfg, "alpha", None)) if isinstance(saved, dict) else getattr(ctx.cfg, "alpha", None)
     return Review(decision=str(d.get("decision", "proceed")), residual_risk=float(d.get("residual_risk", 0.0)),
                   alpha=alpha, selected=selected, findings=unique, files=files, notes=notes)

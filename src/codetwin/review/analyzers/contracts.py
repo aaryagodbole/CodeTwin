@@ -20,7 +20,7 @@ def analyze(ctx: ReviewContext) -> list[Finding]:
         tests = sorted(b.get("tests", {}))
         out.append(Finding(
             rule="CT004", severity=Severity.HIGH if consumers else Severity.MEDIUM,
-            title=f"Breaking contract change: {b.get('location')}",
+            title=f"Breaking contract change ({b.get('kind', 'changed')}): {b.get('location')}",
             message=f"{b.get('detail', 'A breaking change')} in `{b.get('file')}`. "
                     + (f"{len(consumers)} code sites use it." if consumers else
                        "No code using it was found, but clients outside the connected repositories may."),
