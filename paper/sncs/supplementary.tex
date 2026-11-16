@@ -318,7 +318,7 @@ Fig.~\ref{fig:workflow} summarises the study of Section~6 of the article.
 \end{figure}
 
 \section*{S4\quad Additional results}
-Fig.~\ref{fig:budget} belongs to RQ1 (budget mode), Figs.~\ref{fig:perproject}, \ref{fig:reliability} and~\ref{fig:calib} to RQ2, Fig.~\ref{fig:triggers} to RQ3, Fig.~\ref{fig:languages} to RQ6 and Table~\ref{tab:ablation} to the ablation of the article. Table~\ref{tab:triggers} lists the uncertainty triggers of the design (Section~4.8 of the article), Table~\ref{tab:qc} compares $r(c)$ and $q(c)$ (RQ2) and Table~\ref{tab:qrule} gives the abstention rules on top of ACI (RQ3).
+Fig.~\ref{fig:budget} belongs to RQ1 (budget mode), Figs.~\ref{fig:perproject} and~\ref{fig:reliability} to RQ2 and Table~\ref{tab:ablation} to the ablation of the article. Table~\ref{tab:triggers} lists the uncertainty triggers of the design (Section~4.8 of the article), Table~\ref{tab:qc} compares $r(c)$ and $q(c)$ (RQ2) and Table~\ref{tab:qrule} gives the abstention rules on top of ACI (RQ3).
 
 \begin{figure}[htbp]
 \centering
@@ -339,27 +339,6 @@ Fig.~\ref{fig:budget} belongs to RQ1 (budget mode), Figs.~\ref{fig:perproject}, 
 \includegraphics[width=\linewidth]{figures/reliability.pdf}
 \caption{Reliability of the residual-risk estimate $r(c)$ (history projects): mean estimate against observed miss rate in five bins; numbers give the changes per bin. Points below the diagonal overestimate the risk.}
 \label{fig:reliability}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=\linewidth]{figures/triggers.pdf}
-\caption{Share of unsafe and of safe changes (for line-coverage selection) that each abstention rule flags (history projects). A useful rule flags many unsafe and few safe changes.}
-\label{fig:triggers}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=\linewidth]{figures/calibration.pdf}
-\caption{Observed miss rate against the target $\alpha$ for the three calibration variants (history projects). Points below the dotted line meet the target.}
-\label{fig:calib}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=\linewidth]{languages.pdf}
-\caption{Observed miss rate against the target $\alpha$ for a threshold calibrated once (left) and for adaptive calibration (right), on the Python history projects and on the Go, Rust and JavaScript/TypeScript pull requests (test changes). Points on the dashed line meet the target exactly.}
-\label{fig:languages}
 \end{figure}
 
 \begin{table}[htbp]

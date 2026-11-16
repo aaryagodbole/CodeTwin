@@ -695,7 +695,7 @@ In Fig.~\ref{fig:tradeoff} the coverage baselines form the frontier of time save
 
 
 \subsection{RQ2: Calibration and residual risk}
-Table~\ref{tab:rq2} gives the observed miss rate for each target (plotted in Fig.~S6 of Online Resource~1). Static calibration, fitted once on the oldest 40\% of each project's changes, did not hold. For targets of 5\%, 10\% and 20\% it missed affected tests on 11.4\%, 17.5\% and 28.0\% of later changes, and on marshmallow, whose old changes gave a threshold of 0.978, it missed 26.7\%. The sliding window came closer (5.7\%, 12.0\% and 21.1\%). Adaptive calibration kept the miss rate at or below every target, with 0.6\%, 4.5\%, 9.3\% and 19.9\% for targets of 1\%, 5\%, 10\% and 20\%, and saved 28.5\%, 39.1\% and 46.7\% of test time at the three larger targets. At $\alpha=0.10$ it was as safe as line coverage (90.7\%), and unlike line coverage its level can be tightened, so at $\alpha=0.05$ it was safe on 95.5\% of changes. Per project the miss rate at $\alpha=0.10$ ranged from 6.5\% to 11.1\% (Fig.~S3 in Online Resource~1), and on the NameRTS commits it reached 13.8\% on seaborn. In a pilot run with 15--16 calibration changes per project static calibration had looked valid, but with longer histories drift dominates.
+Table~\ref{tab:rq2} gives the observed miss rate for each target and Fig.~\ref{fig:calib} plots it. Static calibration, fitted once on the oldest 40\% of each project's changes, did not hold. For targets of 5\%, 10\% and 20\% it missed affected tests on 11.4\%, 17.5\% and 28.0\% of later changes, and on marshmallow, whose old changes gave a threshold of 0.978, it missed 26.7\%. The sliding window came closer (5.7\%, 12.0\% and 21.1\%). Adaptive calibration kept the miss rate at or below every target, with 0.6\%, 4.5\%, 9.3\% and 19.9\% for targets of 1\%, 5\%, 10\% and 20\%, and saved 28.5\%, 39.1\% and 46.7\% of test time at the three larger targets. At $\alpha=0.10$ it was as safe as line coverage (90.7\%), and unlike line coverage its level can be tightened, so at $\alpha=0.05$ it was safe on 95.5\% of changes. Per project the miss rate at $\alpha=0.10$ ranged from 6.5\% to 11.1\% (Fig.~S3 in Online Resource~1), and on the NameRTS commits it reached 13.8\% on seaborn. In a pilot run with 15--16 calibration changes per project static calibration had looked valid, but with longer histories drift dominates.
 
 \begin{table}[htbp]
 \caption{Observed miss rate (\%) and time saved (\%) per target $\alpha$ (history projects)}
@@ -717,6 +717,13 @@ $\alpha$ & Miss & Time & Miss & Time & Miss & Time \\
 \end{tabular}
 \end{table}
 
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.78\linewidth]{figures/calibration.pdf}
+\caption{Observed miss rate against the target $\alpha$ for the three calibration variants (history projects). Points below the dotted line meet the target.}
+\label{fig:calib}
+\end{figure}
+
 
 
 
@@ -732,7 +739,7 @@ Table~S6 in Online Resource~1 compares $r(c)$ with the change-level estimate $q(
 \textbf{Answer to RQ2:} the miss rate stays at the target only when calibration adapts over time (H2 holds for ACI, not for static calibration). $r(c)$ ranks changes by risk but overstates it, and $q(c)$ is better calibrated on the history projects but not on the NameRTS commits.
 
 \subsection{RQ3: Uncertainty triggers and risk-based abstention}
-Line coverage was unsafe on 31 of the 332 test changes (9.3\%). The file-level triggers of the original design flagged 29 of them but fired on 85.7\% of the safe changes as well. The line-level triggers caught only 7 and still fired on 49.2\% of the safe ones, so they did not point at the risky changes. The risk rule $r(c)>\alpha$ flagged 26 of the 31 and fired on 27.2\% of the safe changes (Fig.~S5 in Online Resource~1).
+Line coverage was unsafe on 31 of the 332 test changes (9.3\%). The file-level triggers of the original design flagged 29 of them but fired on 85.7\% of the safe changes as well. The line-level triggers caught only 7 and still fired on 49.2\% of the safe ones, so they did not point at the risky changes. The risk rule $r(c)>\alpha$ flagged 26 of the 31 and fired on 27.2\% of the safe changes (Fig.~\ref{fig:triggers}).
 
 
 
@@ -763,6 +770,13 @@ Risk $r(c)>\alpha$ & hybrid & 25.9 & 1.8 & 25.9 & 99.7 \\
 \end{tabular}
 \end{table}
 
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.78\linewidth]{figures/triggers.pdf}
+\caption{Share of unsafe and of safe changes (for line-coverage selection) that each abstention rule flags (history projects). A useful rule flags many unsafe and few safe changes.}
+\label{fig:triggers}
+\end{figure}
+
 Table~S7 in Online Resource~1 asks whether abstention can keep the miss rate of the changes that proceed below 5\% when the selection itself is calibrated to 10\%. On the history projects both fixed rules did, on every project. The rule on $r(c)$ abstained on 32.5\% of changes and missed on 1.3\% of those that proceeded, and the $q$-rule abstained less often (27.7\%) and missed on 2.5\% (6 of 240). On the NameRTS commits the $q$-rule missed on 3 of 64 changes that proceeded (4.7\%) and $r(c)$ on 4 of 67 (6.0\%), and both exceeded the target on seaborn (11.5\% and 13.8\%). The online selective rule missed on 6.6\% of the changes that proceeded (6.2\% with a warm start). Its guarantee holds in the long run, and our projects have between 23 and 150 test changes each. On the NameRTS commits the warm start abstained on every change, because with at most 18 calibration changes the correction $1/(n+1)$ alone exceeds 5\%. We keep the fixed rules and report the online rule as a negative result.
 
 
@@ -777,7 +791,6 @@ The tests detected 812 seeded faults. For 478 of the 479 detected faults on test
 \label{tab:rq4}
 \centering
 \footnotesize
-\setlength{\tabcolsep}{2pt}
 \setlength{\tabcolsep}{3pt}
 \begin{tabular}{@{}lrrrr@{}}
 \toprule
@@ -801,7 +814,14 @@ CodeTwin, budget 25\% & 75.0 & 41.8 & 55.7 & 95.0 \\
 \footnotetext{Safe\% by our coverage ground truth (cov.) and by the published NameRTS ground truth.}
 \end{table}
 
-On the NameRTS commit pairs (Table~\ref{tab:rq4}), NameRTS saved 68.7\% of test time and was safe on every change by its own ground truth~\cite{wang2026namerts}. By our coverage ground truth it was safe on only 62.0\% of changes, while still detecting 99.2\% of the seeded faults. The two ground truths count different tests, those that execute a changed line and those reachable through name dependencies. Adaptive calibration at $\alpha=0.10$ was safe on 89.9\% of changes by coverage and 92.4\% by the NameRTS ground truth while saving 50.3\%, and with risk-based abstention on 94.9\% while saving 47.8\%. With only 15--18 calibration changes per project, adaptive calibration missed 5.1\%, 10.1\% and 21.5\% of changes at targets of 5\%, 10\% and 20\%, slightly above target.
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.78\linewidth]{figures/namerts_gt.pdf}
+\caption{Share of NameRTS commits (79 test changes) on which each selection was safe, by our coverage ground truth (filled) and by the published NameRTS ground truth (open); a single ringed point means the two agree. The numbers on the right give the test time saved.}
+\label{fig:namerts}
+\end{figure}
+
+On the NameRTS commit pairs (Table~\ref{tab:rq4} and Fig.~\ref{fig:namerts}), NameRTS saved 68.7\% of test time and was safe on every change by its own ground truth~\cite{wang2026namerts}. By our coverage ground truth it was safe on only 62.0\% of changes, while still detecting 99.2\% of the seeded faults. The two ground truths count different tests, those that execute a changed line and those reachable through name dependencies. Adaptive calibration at $\alpha=0.10$ was safe on 89.9\% of changes by coverage and 92.4\% by the NameRTS ground truth while saving 50.3\%, and with risk-based abstention on 94.9\% while saving 47.8\%. With only 15--18 calibration changes per project, adaptive calibration missed 5.1\%, 10.1\% and 21.5\% of changes at targets of 5\%, 10\% and 20\%, slightly above target.
 
 \textbf{Answer to RQ4:} the coverage ground truth contains nearly all tests that detect seeded faults. NameRTS is more efficient, whereas CodeTwin AI is safer by coverage and states its risk, and which of the two counts as safer depends on the ground truth.
 
@@ -847,7 +867,14 @@ ACI 0.10 + line-trigger abstention & 0.0/74.0 & 0.0/88.5 & 3.8/48.0 & 1.4/70.3 \
 \end{table}
 %% v4-table: end
 
-\emph{Calibration.} Adaptive calibration again held the pooled miss rate at or below each target, at \vAciFiveMiss\%, \vAciTenMiss\% and \vAciTwentyMiss\% for 5\%, 10\% and 20\%, and at $\alpha=0.10$ in every language (\vAciTenMissGo\%, \vAciTenMissRust\%, \vAciTenMissJSTS\%), although Go missed on \vAciFiveMissGo\% of its \vTestGo{} test changes at $\alpha=0.05$. The once-fitted threshold behaved differently than in Python. Pooled over the languages it held at $\alpha=0.05$ and $0.10$ (\vCrcStaticFiveMiss\% and \vCrcStaticMiss\% missed, against 11.4\% and 17.5\% in Python) but missed on \vCrcStaticTwentyMiss\% at $\alpha=0.20$ (Go \vCrcStaticTwentyMissGo\%, Rust \vCrcStaticTwentyMissRust\%, JavaScript/TypeScript \vCrcStaticTwentyMissJSTS\%). There the calibration changes allowed thresholds of at least \vMinLambdaTwenty{}, which left out \vCrcStaticTwentyTestRed\% of the test files on average (Fig.~S7 in Online Resource~1).
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth]{languages.pdf}
+\caption{Observed miss rate against the target $\alpha$ for a threshold calibrated once (left) and for adaptive calibration (right), on the Python history projects and on the Go, Rust and JavaScript/TypeScript pull requests (test changes). Points on the dashed line meet the target exactly.}
+\label{fig:languages}
+\end{figure}
+
+\emph{Calibration.} Fig.~\ref{fig:languages} compares the two calibrations across languages. Adaptive calibration again held the pooled miss rate at or below each target, at \vAciFiveMiss\%, \vAciTenMiss\% and \vAciTwentyMiss\% for 5\%, 10\% and 20\%, and at $\alpha=0.10$ in every language (\vAciTenMissGo\%, \vAciTenMissRust\%, \vAciTenMissJSTS\%), although Go missed on \vAciFiveMissGo\% of its \vTestGo{} test changes at $\alpha=0.05$. The once-fitted threshold behaved differently than in Python. Pooled over the languages it held at $\alpha=0.05$ and $0.10$ (\vCrcStaticFiveMiss\% and \vCrcStaticMiss\% missed, against 11.4\% and 17.5\% in Python) but missed on \vCrcStaticTwentyMiss\% at $\alpha=0.20$ (Go \vCrcStaticTwentyMissGo\%, Rust \vCrcStaticTwentyMissRust\%, JavaScript/TypeScript \vCrcStaticTwentyMissJSTS\%). There the calibration changes allowed thresholds of at least \vMinLambdaTwenty{}, which left out \vCrcStaticTwentyTestRed\% of the test files on average (Fig.~\ref{fig:languages}).
 
 
 
