@@ -212,7 +212,8 @@ class Store:
         return row[0] if row else None
 
     def latest_run_recorded(self) -> float | None:
-        row = self.con.execute("select max(recorded) from test_run").fetchone()
+        """When the run returned by `latest_run_sha()` was recorded (same repository and row as that method)."""
+        row = self.con.execute("select recorded from latest_run").fetchone()
         return row[0] if row else None
 
     def tests_covering(self, sha: str, file: str, line: int) -> list[str]:
