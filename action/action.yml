@@ -19,6 +19,14 @@ inputs:
   github-token:
     description: Token used to post the review
     default: ${{ github.token }}
+  upload:
+    description: >-
+      Upload the decision report to CodeTwin Cloud (docs/cloud.md). Opt-in. Authenticates with the job's GitHub
+      OIDC token, so the job needs `permissions: id-token: write`; no secret is needed. A failed upload only warns.
+    default: "false"
+  upload-server:
+    description: CodeTwin Cloud API URL (https)
+    default: ""
 outputs:
   decision:
     description: proceed or abstain
@@ -84,6 +92,13 @@ runs:
         python -m pip install -q "httpx>=0.27"     # GitHub API client (also in the server/llm extras)
         codetwin review --decision codetwin-decision.json --post-github --format sarif -o codetwin-review.sarif
         echo "sarif=codetwin-review.sarif" >> "$GITHUB_OUTPUT"
+
+    - name: Upload the decision report
+      if: inputs.upload == 'true'
+      shell: bash
+      env:
+        CODETWIN_SERVER: ${{ inputs.upload-server }}
+      run: codetwin push --decision codetwin-decision.json --best-effort   # never fails the job (docs/cloud.md)
 
     - name: Run selected tests
       if: inputs.run-selected == 'true' && steps.select.outputs.count != '0'

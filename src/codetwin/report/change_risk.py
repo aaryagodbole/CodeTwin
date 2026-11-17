@@ -9,6 +9,7 @@ from ..risk.change_risk import ChangeRiskModel, features, triggers
 from ..risk.residual import Recalibrator
 
 NAME = "change_risk"
+PUBLISH = True    # paths, names and numbers only (docs/data-policy.md)
 
 
 def contribute(ctx) -> dict:

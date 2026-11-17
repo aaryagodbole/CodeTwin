@@ -8,6 +8,9 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Added
+- `codetwin push`: uploads the decision report to CodeTwin Cloud (GitHub OIDC in Actions, project token when
+  self-hosting; https only except localhost; `--dry-run` prints what is sent; `--best-effort` never fails CI).
+  Report sections opt in with `PUBLISH = True`. Action inputs `upload` and `upload-server`
 - Cloud API (`cloud/`, package `codetwin-cloud`): uploads authenticated with GitHub OIDC (or project tokens
   when self-hosting), strict `codetwin.report/v1` validation, idempotent storage in Postgres, read endpoints with
   the local API's shapes (contract test), 90-day retention cron, operator commands; CI job `cloud` with Postgres

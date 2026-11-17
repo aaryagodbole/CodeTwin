@@ -141,7 +141,9 @@ outcome  (report_id → report primary key, missed, failing jsonb, received_at)
 3. Cloud API (`cloud/`, its own package and Vercel project): Postgres schema and migrations, OIDC
    verification, upload and read endpoints, retention cron, operator commands, and tests (including the contract
    test). How to run and deploy it: `cloud/README.md`.
-4. `codetwin push [--dry-run]`, `PUBLISH` opt-in for report sections, and an `upload` input in the Action.
+4. `codetwin push [--dry-run] [--best-effort]` (`src/codetwin/push.py`), `PUBLISH = True` opt-in for report
+   sections (on now: changed_files, changed_symbols, change_risk, promise, semantic_noop; not contracts or
+   cross_repo), and `upload` / `upload-server` inputs in the Action.
 5. Self-hosting: Dockerfile and `docker-compose.yml`.
 
 After 5: the dashboard reads the cloud API (`NEXT_PUBLIC_DATA_MODE=cloud`), adds a project switcher and GitHub

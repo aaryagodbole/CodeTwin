@@ -4,6 +4,7 @@ from __future__ import annotations
 from ..graph.symbols import changed_symbols
 
 NAME = "changed_symbols"
+PUBLISH = True    # paths, names and numbers only (docs/data-policy.md)
 
 
 def contribute(ctx) -> dict:
