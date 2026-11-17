@@ -8,6 +8,9 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Added
+- Dashboard redesign: design tokens with a light and dark theme toggle, sidebar layout, residual-risk gauge, sparklines
+  and outcome donut on the overview, filterable decisions with expandable rows, area chart of the observed miss rate
+  against the target, skeleton, empty and error states. Reads the same API; no engine change.
 - Hosted dashboard: a demo mode (`npm run dev:demo`, `build:demo`) reads a snapshot of the API written by
   `scripts/demo_snapshot.py` from a real engine run on `examples/python`; Vercel config (`dashboard/vercel.json`);
   CI job `dashboard-demo` checks the deployment build on every pull request; guide in `docs/dashboard.md`
