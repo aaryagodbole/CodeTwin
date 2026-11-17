@@ -128,7 +128,7 @@ outcome  (report_id → report primary key, missed, failing jsonb, received_at)
 | Environment | Dashboard and API | Database | Data |
 |---|---|---|---|
 | Local | `npm run dev` + `codetwin serve` | the project's SQLite | your project |
-| Local (cloud stack) | `docker compose up` | Postgres container | uploads from `codetwin push --server http://localhost:8080` |
+| Local (cloud stack) | `docker compose up` (`docs/self-hosting.md`) | Postgres container | uploads from `codetwin push --server http://localhost:8080` |
 | Preview (every PR) | Vercel preview URL | Neon branch `preview/<git-branch>`, deleted with the branch | demo / seeded |
 | Production (`main`) | Vercel production URL | Neon main branch | CodeTwin's own PRs, examples |
 
@@ -167,7 +167,8 @@ outcome  (report_id → report primary key, missed, failing jsonb, received_at)
 4. `codetwin push [--dry-run] [--best-effort]` (`src/codetwin/push.py`), `PUBLISH = True` opt-in for report
    sections (on now: changed_files, changed_symbols, change_risk, promise, semantic_noop; not contracts or
    cross_repo), and `upload` / `upload-server` inputs in the Action.
-5. Self-hosting: Dockerfile and `docker-compose.yml`.
+5. Self-hosting: `cloud/Dockerfile`, `dashboard/Dockerfile`, `compose.yaml` (Postgres + API + dashboard), an
+   end-to-end CI job (`self-host`) and `docs/self-hosting.md`.
 
 After 5: the dashboard reads the cloud API (`NEXT_PUBLIC_DATA_MODE=cloud`), adds a project switcher and GitHub
 login, and CodeTwin uploads its own pull requests.

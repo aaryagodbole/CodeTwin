@@ -8,6 +8,8 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Added
+- Self-hosting: `compose.yaml` (Postgres, cloud API, dashboard), Dockerfiles for the API (non-root, health
+  check) and the dashboard (nginx), `docs/self-hosting.md`; CI job `self-host` runs the stack end to end
 - `codetwin push`: uploads the decision report to CodeTwin Cloud (GitHub OIDC in Actions, project token when
   self-hosting; https only except localhost; `--dry-run` prints what is sent; `--best-effort` never fails CI).
   Report sections opt in with `PUBLISH = True`. Action inputs `upload` and `upload-server`

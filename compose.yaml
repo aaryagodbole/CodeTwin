@@ -1,0 +1,40 @@
+# Self-hosted CodeTwin Cloud: Postgres + API + dashboard on your own machine or servers (docs/self-hosting.md).
+#   docker compose up -d --build
+#   docker compose exec api python -m codetwin_cloud add-project OWNER/NAME --public --token
+# Dashboard http://localhost:3000 · API http://localhost:8080/api/docs
+# Set POSTGRES_PASSWORD and CRON_SECRET in a .env file next to this one before exposing anything beyond localhost.
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: codetwin
+      POSTGRES_DB: codetwin
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-codetwin-local-only}
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U codetwin -d codetwin"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  api:
+    build: ./cloud
+    environment:
+      DATABASE_URL: postgresql://codetwin:${POSTGRES_PASSWORD:-codetwin-local-only}@db:5432/codetwin
+      CRON_SECRET: ${CRON_SECRET:-}
+      CODETWIN_CORS_ORIGINS: ${CODETWIN_CORS_ORIGINS:-http://localhost:3000}
+    ports: ["127.0.0.1:8080:8080"]
+    depends_on:
+      db: { condition: service_healthy }
+    restart: unless-stopped
+
+  dashboard:
+    build:
+      context: ./dashboard
+      args: { DATA_MODE: demo }
+    ports: ["127.0.0.1:3000:80"]
+    restart: unless-stopped
+
+volumes:
+  pgdata:
