@@ -11,6 +11,10 @@
   requests do not touch the same file. Keep each pull request to one feature.
 * Before opening a pull request: `git fetch origin && git rebase origin/dev`, then `scripts/check.sh`.
 * Use the pull-request template; AI coding agents follow `AGENTS.md`.
+* Step by step, from issue to merge: [AGENTS.md → Workflow](AGENTS.md#workflow-from-issue-to-merged-pull-request).
+  In short: follow the issue's Approach, and suggest any change or addition **on the issue first**, with a reason.
+  Then get both a CodeRabbit review (comment `@coderabbitai full review`) and the code owner's review, and fix or
+  answer every comment before merging.
 * Keep the layers separate: the VS Code extension, GitHub Action and MCP server call the engine through the
   CLI or `codetwin.engine.Engine`; analysis code lives only in `src/codetwin`.
 * Never claim a number in the README, synopsis or paper that does not come from a script output.
