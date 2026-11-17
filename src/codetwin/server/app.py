@@ -30,6 +30,9 @@ def _engine(request: Request) -> Iterator[Engine]:
 
 Eng = Annotated[Engine, Depends(_engine)]
 
+DECISION_KEYS = ["id", "recorded", "base", "mode", "alpha", "alpha_t", "threshold", "residual_risk", "decision",
+                 "selected", "reasons", "missed"]
+
 
 def create_app(root: str | Path = ".", static_dir: str | Path | None = None) -> FastAPI:
     app = FastAPI(title="CodeTwin AI", version=__version__, docs_url="/api/docs", openapi_url="/api/openapi.json")
@@ -62,9 +65,7 @@ def create_app(root: str | Path = ".", static_dir: str | Path | None = None) -> 
 
     @app.get("/api/decisions")
     def decisions(eng: Eng, limit: int = Query(100, ge=1, le=1000)) -> list[dict]:
-        keys = ["id", "recorded", "base", "mode", "alpha", "alpha_t", "threshold", "residual_risk", "decision",
-                "selected", "reasons", "missed"]
-        return [{k: d[k] for k in keys} for d in eng.store.decisions(limit)]
+        return [{k: d[k] for k in DECISION_KEYS} for d in eng.store.decisions(limit)]
 
     @app.get("/api/decisions/{decision_id}")
     def decision_detail(eng: Eng, decision_id: int) -> dict:
@@ -77,9 +78,7 @@ def create_app(root: str | Path = ".", static_dir: str | Path | None = None) -> 
             k: (None if s is None or (isinstance(s, float) and math.isnan(s)) else s)
             for k, s in scores.items()
         }
-        keys = ["id", "recorded", "base", "mode", "alpha", "alpha_t", "threshold", "residual_risk", "decision",
-                "selected", "reasons", "missed"]
-        res = {k: d[k] for k in keys if k in d}
+        res = {k: d[k] for k in DECISION_KEYS if k in d}
         for k in ("threshold", "residual_risk", "alpha", "alpha_t"):
             v = res.get(k)
             if isinstance(v, float) and math.isnan(v):
@@ -110,8 +109,9 @@ def create_app(root: str | Path = ".", static_dir: str | Path | None = None) -> 
         if not sha:
             raise HTTPException(404, "no recorded run yet; run `codetwin record` first")
 
+        key = (sha, eng.store.latest_run_recorded())
         cache = getattr(request.app.state, "_kg_cache", None)
-        if cache is None or cache[0] != sha:
+        if cache is None or cache[0] != key:
             try:
                 from ..kg import from_engine
                 from ..kg.export import to_json
@@ -122,7 +122,7 @@ def create_app(root: str | Path = ".", static_dir: str | Path | None = None) -> 
             nodes = raw.get("nodes", [])
             edges = raw.get("links", raw.get("edges", []))
             stats = raw.get("stats", kg.stats())
-            cache = (sha, {"nodes": nodes, "edges": edges, "stats": stats})
+            cache = (key, {"nodes": nodes, "edges": edges, "stats": stats})
             request.app.state._kg_cache = cache
 
         base_data = cache[1]

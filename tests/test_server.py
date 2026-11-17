@@ -1,3 +1,6 @@
+import time
+from pathlib import Path
+
 import pytest
 
 pytest.importorskip("fastapi")
@@ -10,7 +13,7 @@ from codetwin.engine import Engine
 from codetwin.server.app import create_app
 
 
-def test_api_reads_evidence(toy_repo):
+def test_api_reads_evidence(toy_repo: Path) -> None:
     main(["-C", str(toy_repo), "init"])
     with Engine(toy_repo) as eng:
         eng.record()
@@ -39,7 +42,7 @@ def test_api_reads_evidence(toy_repo):
     assert all("key" not in p or p["key"] is None for p in st["providers"])
 
 
-def test_decision_detail_and_flaky_and_kg(toy_repo):
+def test_decision_detail_and_flaky_and_kg(toy_repo: Path) -> None:
     main(["-C", str(toy_repo), "init"])
     c = TestClient(create_app(toy_repo))
     assert c.get("/api/kg").status_code == 404
@@ -63,6 +66,15 @@ def test_decision_detail_and_flaky_and_kg(toy_repo):
     assert flaky[0]["commits"] == 1
     assert flaky[0]["last_sha"] == sha
 
+    t0 = time.time()
+    with Engine(toy_repo) as eng:
+        eng.store._revision("f" * 40, when=t0 + 10.0)
+        eng.store._revision("0" * 40, when=t0 + 20.0)
+        for s in ("f" * 40, "0" * 40):
+            eng.store.add_outcomes(s, {"tests/test_price.py": []}, "record")
+            eng.store.add_outcomes(s, {"tests/test_price.py": ["c"]}, "rerun")
+    assert c.get("/api/flaky").json()[0]["last_sha"] == "0" * 40
+
     d = c.get("/api/decisions/1").json()
     assert d["id"] == 1
     assert "scores" in d
@@ -80,3 +92,9 @@ def test_decision_detail_and_flaky_and_kg(toy_repo):
     assert "symbol" not in kinds_no_sym
     assert all("::" not in n["id"] for n in kg_no_sym["nodes"])
     assert kg_no_sym["stats"]["nodes"] < kg["stats"]["nodes"]
+
+    (toy_repo / "tests" / "test_extra.py").write_text("def test_extra(): assert 1 == 1\n")
+    with Engine(toy_repo) as eng:
+        eng.record()
+    kg_updated = c.get("/api/kg").json()
+    assert kg_updated["stats"]["nodes"] > kg["stats"]["nodes"]

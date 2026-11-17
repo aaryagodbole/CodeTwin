@@ -34,7 +34,7 @@ export interface DecisionRow {
   alpha: number | null;
   alpha_t: number | null;
   threshold: number | null;
-  residual_risk: number;
+  residual_risk: number | null;
   decision: "proceed" | "abstain";
   selected: string[];
   reasons: string[];

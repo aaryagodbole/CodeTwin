@@ -211,6 +211,10 @@ class Store:
         row = self.con.execute("select sha from latest_run").fetchone()
         return row[0] if row else None
 
+    def latest_run_recorded(self) -> float | None:
+        row = self.con.execute("select max(recorded) from test_run").fetchone()
+        return row[0] if row else None
+
     def tests_covering(self, sha: str, file: str, line: int) -> list[str]:
         """Test files whose recorded run executed `file` at `line` (uses the coverage_by_line index)."""
         return [r[0] for r in self.con.execute(
@@ -250,7 +254,7 @@ class Store:
     def flaky_tests(self) -> list[dict]:
         return [{"sha": r[0], "test": r[1], "passes": r[2], "failures": r[3]} for r in self.con.execute(
             "select r.sha, f.test, f.passes, f.failures from flaky_test f join revision r on r.id = f.revision_id "
-            "order by f.test, r.sha")]
+            "order by f.test, r.recorded")]
 
     # ------------------------------------------------------------- static facts (static evidence)
     def save_static(self, sha: str, facts: dict[str, FileFacts], when: float | None = None) -> None:
