@@ -8,6 +8,7 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Added
+- Report section `test_gaps` (`src/codetwin/report/test_gaps.py`): reports changed lines that ran under no test before the change, mapping them to enclosing symbols and working-tree line numbers.
 - `codetwin review`: pull-request review from evidence. Analyzers (one file each, `review/analyzers/`) turn the
   decision into findings at file and line with stable rule ids CT001–CT006 (abstention, untested changed symbol,
   dynamic calls, breaking contract, affected connected repository, file without evidence) and an optional,
