@@ -25,20 +25,20 @@ export default function SystemMap() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-xl font-semibold">System map</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">System map</h1>
         <p className="text-sm text-muted">Files and tests; edges show how each link is known. Click a file to see its impact.</p>
       </div>
       <Card>
         <div className="mb-3 flex flex-wrap items-center gap-4 text-sm">
           {TYPES.map((t) => (
-            <label key={t} className="inline-flex items-center gap-1">
-              <input type="checkbox" checked={types.includes(t)}
+            <label key={t} className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-border bg-card-2 px-3 py-1 text-xs">
+              <input type="checkbox" className="accent-[var(--accent)]" checked={types.includes(t)}
                 onChange={(e) => setTypes(e.target.checked ? [...types, t] : types.filter((x) => x !== t))} />
               {t}
             </label>
           ))}
-          <label className="inline-flex items-center gap-1">
-            <input type="checkbox" checked={tests} onChange={(e) => setTests(e.target.checked)} /> tests
+          <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-border bg-card-2 px-3 py-1 text-xs">
+            <input type="checkbox" className="accent-[var(--accent)]" checked={tests} onChange={(e) => setTests(e.target.checked)} /> tests
           </label>
           <Legend />
         </div>

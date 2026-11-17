@@ -6,8 +6,8 @@ import { useEffect, useRef } from "react";
 import type { Graph } from "@/lib/api";
 
 export const EDGE_STYLES: Record<string, { color: string; style: "solid" | "dashed" | "dotted" }> = {
-  static: { color: "#8a8a8a", style: "solid" },
-  runtime: { color: "#3794ff", style: "solid" },
+  static: { color: "#8b90a8", style: "solid" },
+  runtime: { color: "#5b8cff", style: "solid" },
   "co-change": { color: "#e8912d", style: "dashed" },
   declared: { color: "#b180d7", style: "solid" },
   suggested: { color: "#b180d7", style: "dashed" },
@@ -33,9 +33,9 @@ export function GraphView({ graph, root, onOpen }: { graph: Graph; root?: string
           ? { name: "breadthfirst", directed: true, roots: [root], spacingFactor: 1.2 }
           : { name: "cose", animate: false, nodeRepulsion: () => 9000 },
         style: [
-          { selector: "node", style: { label: "data(label)", "font-size": 10, color: fg, "text-valign": "bottom", "text-margin-y": 4, width: 16, height: 16, "background-color": "#8a8a8a" } },
-          { selector: "node[kind = 'target']", style: { "background-color": "#f5c518", width: 24, height: 24 } },
-          { selector: "node[kind = 'test']", style: { "background-color": "#3fb950", shape: "round-rectangle" } },
+          { selector: "node", style: { label: "data(label)", "font-size": 10, color: fg, "text-valign": "bottom", "text-margin-y": 4, width: 16, height: 16, "background-color": "#8b90a8", "border-width": 2, "border-color": "#ffffff", "border-opacity": 0.6 } },
+          { selector: "node[kind = 'target']", style: { "background-color": "#f5b324", width: 24, height: 24 } },
+          { selector: "node[kind = 'test']", style: { "background-color": "#2fbf71", shape: "round-rectangle" } },
           { selector: "node[kind = 'unknown']", style: { "background-color": "#6e6e6e", shape: "diamond" } },
           { selector: "edge", style: { width: 1.5, "curve-style": "bezier", "target-arrow-shape": "triangle", "arrow-scale": 0.7 } },
           ...Object.entries(EDGE_STYLES).map(([type, s]) => ({
@@ -51,7 +51,7 @@ export function GraphView({ graph, root, onOpen }: { graph: Graph; root?: string
       cy?.destroy();
     };
   }, [graph, root, onOpen]);
-  return <div ref={ref} className="h-[560px] w-full rounded-lg border border-border" />;
+  return <div ref={ref} className="h-[560px] w-full rounded-xl border border-border bg-card-2/40" />;
 }
 
 export function Legend() {
