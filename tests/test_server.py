@@ -78,27 +78,6 @@ def test_decision_detail_and_flaky_and_kg(toy_repo: Path) -> None:
 
     # Regression: flaky_tests() must not include results from other repositories
     with Engine(toy_repo) as eng:
-        # Insert a revision under repo_id=2 (a connected repo) with the same test name
-        eng.store._revision("a" * 40, when=t0 + 30.0, repo=2)
-        eng.store.con.execute(
-            "insert or ignore into test_outcome (revision_id, test_id, recorded, passed, source) "
-            "select r.id, e.id, ?, 1, 'record' from revision r, code_entity e "
-            "where r.sha=? and r.repository_id=2 and e.path='tests/test_price.py' and e.repository_id=1 limit 1",
-            (t0 + 31.0, "a" * 40),
-        )
-        eng.store.con.execute(
-            "insert or ignore into test_outcome (revision_id, test_id, recorded, passed, source) "
-            "select r.id, e.id, ?, 0, 'rerun' from revision r, code_entity e "
-            "where r.sha=? and r.repository_id=2 and e.path='tests/test_price.py' and e.repository_id=1 limit 1",
-            (t0 + 32.0, "a" * 40),
-        )
-        eng.store.con.commit()
-    # The cross-repo SHA must NOT appear in /api/flaky
-    flaky2 = c.get("/api/flaky").json()
-    assert all(f["last_sha"] != "a" * 40 for f in flaky2), "cross-repo SHA must not appear in /api/flaky"
-
-    # Regression: flaky_tests() must not include results from other repositories
-    with Engine(toy_repo) as eng:
         # Register a connected repo and insert a revision under it
         repo2_id = eng.store.repository("other-repo")
         rev2_id = eng.store._revision("a" * 40, when=t0 + 30.0, repo=repo2_id)
@@ -107,17 +86,17 @@ def test_decision_detail_and_flaky_and_kg(toy_repo: Path) -> None:
             test_ent = eng.store.con.execute(
                 "select id from code_entity where path='tests/test_price.py' and repository_id=1"
             ).fetchone()
-            if test_ent:
-                eng.store.con.execute(
-                    "insert into test_outcome (revision_id, test_id, recorded, passed, source)"
-                    " values (?,?,?,1,'record')",
-                    (rev2_id, test_ent[0], t0 + 31.0),
-                )
-                eng.store.con.execute(
-                    "insert into test_outcome (revision_id, test_id, recorded, passed, source)"
-                    " values (?,?,?,0,'rerun')",
-                    (rev2_id, test_ent[0], t0 + 32.0),
-                )
+            assert test_ent, "test setup: tests/test_price.py must be a known entity"
+            eng.store.con.execute(
+                "insert into test_outcome (revision_id, test_id, recorded, passed, source)"
+                " values (?,?,?,1,'record')",
+                (rev2_id, test_ent[0], t0 + 31.0),
+            )
+            eng.store.con.execute(
+                "insert into test_outcome (revision_id, test_id, recorded, passed, source)"
+                " values (?,?,?,0,'rerun')",
+                (rev2_id, test_ent[0], t0 + 32.0),
+            )
     # The cross-repo SHA must NOT appear in /api/flaky
     flaky2 = c.get("/api/flaky").json()
     assert all(f["last_sha"] != "a" * 40 for f in flaky2), "cross-repo SHA must not appear in /api/flaky"
