@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import subprocess
 
 from codetwin.cli import main
 
@@ -32,21 +33,20 @@ def test_tested_line_edited_is_not_gap(toy_repo, capsys):
     out = json.loads(capsys.readouterr().out)
     gaps = out["extras"]["test_gaps"]
     assert gaps["files"] == {}
-    assert "0 of 1 changed lines" in gaps["summary"]
+    assert gaps["summary"] == "every changed line ran under at least one test"
 
 
 def test_edited_comment_or_def_line_is_not_gap(toy_repo, capsys):
     main(["-C", str(toy_repo), "init"])
     main(["-C", str(toy_repo), "record"])
     p = toy_repo / "src/shop/price.py"
-    # Edit the def header line
     p.write_text(p.read_text().replace("def total(items):", "def total(items):  # sum prices"))
     capsys.readouterr()
     assert main(["-C", str(toy_repo), "select", "--json"]) == 0
     out = json.loads(capsys.readouterr().out)
     gaps = out["extras"]["test_gaps"]
     assert gaps["files"] == {}
-    assert "0 of 1 changed lines" in gaps["summary"]
+    assert gaps["summary"] == "every changed line ran under at least one test"
 
 
 def test_new_file_all_code_lines_are_gaps(toy_repo, capsys):
@@ -63,3 +63,76 @@ def test_new_file_all_code_lines_are_gaps(toy_repo, capsys):
     assert info["lines"] == [1, 3]  # line 2 is a comment, skipped
     assert "tax" in info["symbols"]
     assert "2 of 3 changed lines in 1 file ran under no test" in gaps["summary"]
+
+
+def test_docstring_edit_is_not_gap(toy_repo, capsys):
+    p = toy_repo / "src/shop/price.py"
+    p.write_text('def total(items):\n    """Calculate total price."""\n    return sum(i["price"] for i in items)\n')
+    subprocess.run(["git", "commit", "-am", "add docstring"], cwd=toy_repo, check=True, capture_output=True)
+    main(["-C", str(toy_repo), "init"])
+    main(["-C", str(toy_repo), "record"])
+    p.write_text('def total(items):\n    """Calculate total price of all items."""\n    return sum(i["price"] for i in items)\n')
+    capsys.readouterr()
+    assert main(["-C", str(toy_repo), "select", "--json"]) == 0
+    out = json.loads(capsys.readouterr().out)
+    gaps = out["extras"]["test_gaps"]
+    assert gaps["files"] == {}
+    assert gaps["summary"] == "every changed line ran under at least one test"
+
+
+def test_untested_branch_edit_and_addition_are_gaps(toy_repo, capsys):
+    p = toy_repo / "src/shop/price.py"
+    p.write_text(
+        'def total(items):\n'
+        '    t = sum(i["price"] for i in items)\n'
+        '    if t > 1000:\n'
+        '        return t - 10\n'
+        '    return t\n'
+    )
+    subprocess.run(["git", "commit", "-am", "add untested branch"], cwd=toy_repo, check=True, capture_output=True)
+    main(["-C", str(toy_repo), "init"])
+    main(["-C", str(toy_repo), "record"])
+    # Edit the untested branch and add a print below it
+    p.write_text(
+        'def total(items):\n'
+        '    t = sum(i["price"] for i in items)\n'
+        '    if t > 1000:\n'
+        '        print(t)\n'
+        '        return t - 20\n'
+        '    return t\n'
+    )
+    capsys.readouterr()
+    assert main(["-C", str(toy_repo), "select", "--json"]) == 0
+    out = json.loads(capsys.readouterr().out)
+    gaps = out["extras"]["test_gaps"]
+    assert "src/shop/price.py" in gaps["files"]
+    info = gaps["files"]["src/shop/price.py"]
+    # Both lines 4 and 5 in the new file should be gaps
+    assert 4 in info["lines"] and 5 in info["lines"]
+    assert "total" in info["symbols"]
+
+
+def test_deletion_of_untested_branch(toy_repo, capsys):
+    p = toy_repo / "src/shop/price.py"
+    p.write_text(
+        'def total(items):\n'
+        '    t = sum(i["price"] for i in items)\n'
+        '    if t > 1000:\n'
+        '        return t - 10\n'
+        '    return t\n'
+    )
+    subprocess.run(["git", "commit", "-am", "add untested branch"], cwd=toy_repo, check=True, capture_output=True)
+    main(["-C", str(toy_repo), "init"])
+    main(["-C", str(toy_repo), "record"])
+    # Delete the untested branch
+    p.write_text(
+        'def total(items):\n'
+        '    t = sum(i["price"] for i in items)\n'
+        '    return t\n'
+    )
+    capsys.readouterr()
+    assert main(["-C", str(toy_repo), "select", "--json"]) == 0
+    out = json.loads(capsys.readouterr().out)
+    gaps = out["extras"]["test_gaps"]
+    assert gaps["files"] == {}
+    assert gaps["summary"] == "no source files changed"
