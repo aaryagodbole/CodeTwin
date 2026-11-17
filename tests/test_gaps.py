@@ -65,10 +65,14 @@ def test_new_file_all_code_lines_are_gaps(toy_repo, capsys):
     assert "2 of 3 changed lines in 1 file ran under no test" in gaps["summary"]
 
 
+def _commit(repo, msg: str) -> None:
+    subprocess.run(["git", "-c", "user.email=t@t", "-c", "user.name=t", "commit", "-am", msg], cwd=repo, check=True, capture_output=True)
+
+
 def test_docstring_edit_is_not_gap(toy_repo, capsys):
     p = toy_repo / "src/shop/price.py"
     p.write_text('def total(items):\n    """Calculate total price."""\n    return sum(i["price"] for i in items)\n')
-    subprocess.run(["git", "commit", "-am", "add docstring"], cwd=toy_repo, check=True, capture_output=True)
+    _commit(toy_repo, "add docstring")
     main(["-C", str(toy_repo), "init"])
     main(["-C", str(toy_repo), "record"])
     p.write_text('def total(items):\n    """Calculate total price of all items."""\n    return sum(i["price"] for i in items)\n')
@@ -89,7 +93,7 @@ def test_untested_branch_edit_and_addition_are_gaps(toy_repo, capsys):
         '        return t - 10\n'
         '    return t\n'
     )
-    subprocess.run(["git", "commit", "-am", "add untested branch"], cwd=toy_repo, check=True, capture_output=True)
+    _commit(toy_repo, "add untested branch")
     main(["-C", str(toy_repo), "init"])
     main(["-C", str(toy_repo), "record"])
     # Edit the untested branch and add a print below it
@@ -121,7 +125,7 @@ def test_deletion_of_untested_branch(toy_repo, capsys):
         '        return t - 10\n'
         '    return t\n'
     )
-    subprocess.run(["git", "commit", "-am", "add untested branch"], cwd=toy_repo, check=True, capture_output=True)
+    _commit(toy_repo, "add untested branch")
     main(["-C", str(toy_repo), "init"])
     main(["-C", str(toy_repo), "record"])
     # Delete the untested branch
