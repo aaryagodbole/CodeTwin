@@ -211,6 +211,11 @@ class Store:
         row = self.con.execute("select sha from latest_run").fetchone()
         return row[0] if row else None
 
+    def latest_run_recorded(self) -> float | None:
+        """When the run returned by `latest_run_sha()` was recorded (same repository and row as that method)."""
+        row = self.con.execute("select recorded from latest_run").fetchone()
+        return row[0] if row else None
+
     def tests_covering(self, sha: str, file: str, line: int) -> list[str]:
         """Test files whose recorded run executed `file` at `line` (uses the coverage_by_line index)."""
         return [r[0] for r in self.con.execute(
@@ -250,7 +255,7 @@ class Store:
     def flaky_tests(self) -> list[dict]:
         return [{"sha": r[0], "test": r[1], "passes": r[2], "failures": r[3]} for r in self.con.execute(
             "select r.sha, f.test, f.passes, f.failures from flaky_test f join revision r on r.id = f.revision_id "
-            "order by f.test, r.sha")]
+            "where r.repository_id = 1 order by f.test, r.recorded, r.id")]
 
     # ------------------------------------------------------------- static facts (static evidence)
     def save_static(self, sha: str, facts: dict[str, FileFacts], when: float | None = None) -> None:

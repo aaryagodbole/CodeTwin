@@ -18,5 +18,20 @@ npm run dev                         # http://localhost:3000, talks to the API (s
 Production: `npm run build` writes `out/`; then `codetwin serve --static dashboard/out` serves the dashboard and
 the API from one process.
 
+## API routes
+
+| Route | Description |
+|---|---|
+| `GET /api/health` | Service health status and version |
+| `GET /api/summary` | Project configuration, recorded commit, and evidence counts |
+| `GET /api/decisions` | Recent decisions list (newest first) |
+| `GET /api/decisions/{id}` | Single decision details with selection reasons, outcome, and per-test risk scores |
+| `GET /api/flaky` | Flaky tests (passed and failed on same commit), grouped by test and sorted by failures |
+| `GET /api/kg` | Code knowledge graph (`nodes`, `edges`, `stats`); `?symbols=false` omits symbol nodes |
+| `GET /api/calibration` | Observed miss rate over time against target alpha |
+| `GET /api/map` | Whole-project file and test dependency map |
+| `GET /api/graph` | Impact graph for a file and line range (`?file=...&lines=...`) |
+| `GET /api/llm` | LLM explanation provider availability |
+
 Structure: `src/app/<page>/page.tsx` per page, `src/components/` shared UI, `src/lib/api.ts` typed API client.
 Add a page as a new folder in `src/app/` and a link in `src/components/nav.tsx`.

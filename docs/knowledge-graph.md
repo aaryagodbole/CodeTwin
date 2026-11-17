@@ -12,6 +12,8 @@ codetwin kg export --format graphml -o graph.graphml   # Gephi, yEd, Cytoscape, 
 codetwin kg export --format json -o graph.json      # node-link JSON (D3, NetworkX, the dashboard)
 ```
 
+The web dashboard API also exposes the knowledge graph via `GET /api/kg` (see `dashboard/README.md`).
+
 ## Schema
 
 | Node kind | Id | Attributes |
