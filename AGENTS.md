@@ -15,6 +15,48 @@ cd dashboard && npm ci && npm run dev    # needs `codetwin serve` running in a p
 A change is done only when `scripts/check.sh` passes (ruff, mypy, pytest with coverage, extension and dashboard
 builds) and new behaviour has a test.
 
+## Workflow: from issue to merged pull request
+
+Every task is a GitHub issue assigned to one person. The issue's **Approach** and **Done when** sections are the
+spec. Follow these steps in order.
+
+1. **Read the issue completely**, including its comments. Also read every file it names under *Background*. If the
+   issue says *Start after* another issue, check that issue is merged (or open as a PR, if that is what it says)
+   before you begin.
+2. **Plan before you code.** If you see a gap, a bug in the approach, a simpler way, or something worth adding,
+   **write it as a comment on the issue first**. Say:
+   - *what* you want to change or add
+   - *why*, with a concrete example: an input and the wrong or better output
+   - *what it affects*: files, output keys, other people's tasks
+
+   Wait for Aarya's reply before building anything beyond the issue. Small things that only make the issued work
+   more correct may go ahead, but still need the comment. Never silently do more or less than the issue says.
+3. **Branch** from up-to-date `dev`: `git checkout dev && git pull && git checkout -b <branch named in the issue>`.
+   Use one branch and one pull request per issue.
+4. **Implement exactly the Approach**, plus any additions agreed in step 2. Keep commits small with clear
+   messages. Follow the rules below (no look-ahead, unknowns reported, extension points, output contract).
+5. **Test what the issue lists**, plus one test for each extra case you added. Try the feature by hand as the
+   issue describes. Run `scripts/check.sh` until it passes. Update the CHANGELOG and docs named in the issue.
+6. **Open the pull request into `dev`.** Fill in the template:
+   - write `Closes #<issue>` in the body
+   - list anything you did differently from the issue, and why, with a link to the issue comment where it was
+     agreed
+   - add a screenshot for any VS Code or dashboard change
+7. **Get both reviews.** A pull request is merged only after both:
+   - **CodeRabbit.** Auto-review is off in this repository, so comment exactly `@coderabbitai full review` on the
+     pull request. This must be a mention, not a link. After each new push, comment `@coderabbitai review`.
+   - **Code owner.** `.github/CODEOWNERS` requests Aarya automatically. Don't merge your own pull request.
+8. **Resolve every review comment**, from CodeRabbit and the code owner. For each one, either:
+   - fix it, push, and reply with what you changed (commit id), or
+   - explain why not (out of scope, conflicts with the issue, a false alarm), with evidence.
+
+   Resolve a conversation only when it is fixed or the reviewer agrees. Push new commits; don't force-push over
+   reviewed commits. When all conversations are resolved and CI passes, ask Aarya to merge.
+9. **After merging**, set the Notion card to Done and comment on any issue that was waiting for yours.
+
+AI assistants follow the same steps. In particular: post the step 2 plan on the issue before writing code beyond
+what the issue says, and never resolve a reviewer's conversation without a fix or an agreed reason.
+
 ## Rules specific to this project
 
 - **No look-ahead.** Code in `risk/` and `selection.py` may use only evidence that exists *before* a change's
