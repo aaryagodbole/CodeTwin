@@ -212,14 +212,7 @@ jobs:
         run: npm ci && npm run build:demo
       - name: Every snapshot file is in the build
         working-directory: dashboard
-        run: |
-          node -e '
-            const fs = require("fs");
-            const meta = JSON.parse(fs.readFileSync("out/demo/meta.json"));
-            const missing = meta.files.filter((f) => !fs.existsSync("out/demo/api/" + f));
-            if (missing.length) { console.error("missing in build:", missing); process.exit(1); }
-            console.log(`demo build OK: ${meta.files.length} API answers from ${meta.edits} labelled changes`);
-          '
+        run: node ../scripts/check_demo_build.mjs
 
   action:
     # Runs this repository's own GitHub Action on the pull request, installing CodeTwin from the checkout.
