@@ -8,7 +8,9 @@ Two rules identify test gaps (reported as 1-based line numbers in the working tr
    nor executed at import time (`ctx.prev.import_lines`). For unequal-length
    additions (`nc > oc`), added lines are gaps unless all of the hunk's old lines
    were covered or imported. A pure insertion takes the coverage of the nearest
-   old code line, above or below, with the same indentation as the inserted code.
+   old code line, above or below, with the same indentation as the inserted code,
+   within the same block. The body of a block opened by an added line (`if x:`)
+   has no execution evidence of its own and is always a gap.
 
 Skipped lines (never reported as gaps):
 - Import-time lines: `def` headers and module-level constants executed at import.
@@ -116,17 +118,43 @@ def _insertion_anchor(old_lines: list[str], new_lines: list[str], os_: int, ns: 
     line above or below the insertion with the same indentation as the first inserted code line, preferring
     the one above. Example: a line inserted after an `if` block, at function level, is anchored to the
     function-level line below it, not to the last line inside the (maybe untested) `if` branch."""
-    new_code = [new_lines[ln - 1] for ln in range(ns, ns + nc) if _is_code(new_lines, ln) and ln <= len(new_lines)]
+    new_code = [new_lines[ln - 1] for ln in range(ns, ns + nc) if ln <= len(new_lines) and _is_code(new_lines, ln)]
     if not new_code or not old_lines:
         return os_
     want = _indent(new_code[0])
-    above = next((ln for ln in range(os_, 0, -1) if _is_code(old_lines, ln)), 0)
-    below = next((ln for ln in range(os_ + 1, len(old_lines) + 1) if _is_code(old_lines, ln)), 0)
-    if above and _indent(old_lines[above - 1]) == want:
-        return above
-    if below and _indent(old_lines[below - 1]) == want:
-        return below
-    return above or below or os_
+
+    def nearest(lines: range) -> int:
+        # Skip deeper lines (bodies of blocks at this level); stop when the code leaves this block.
+        for ln in lines:
+            if not _is_code(old_lines, ln):
+                continue
+            ind = _indent(old_lines[ln - 1])
+            if ind == want:
+                return ln
+            if ind < want:
+                return 0
+        return 0
+
+    found = nearest(range(os_, 0, -1)) or nearest(range(os_ + 1, len(old_lines) + 1))
+    if found:
+        return found
+    return next((ln for ln in range(os_, 0, -1) if _is_code(old_lines, ln)), 0) or os_
+
+
+def _new_block_bodies(lines: list[str], start: int, end: int) -> set[int]:
+    """Lines in [start, end] that are the body of a block opened by an added line (`if x:` ... ). Such a body
+    has no execution evidence of its own, so it never inherits the coverage of the code around it."""
+    out: set[int] = set()
+    opener: int | None = None   # indentation of the innermost added line that opens a block
+    for ln in range(start, min(end, len(lines)) + 1):
+        if not _is_code(lines, ln):
+            continue
+        ind = _indent(lines[ln - 1])
+        if opener is not None and ind > opener:
+            out.add(ln)
+            continue
+        opener = ind if lines[ln - 1].split("#", 1)[0].rstrip().endswith(":") else None
+    return out
 
 
 def _enclosing_sym(facts: dict, path: str, ln: int) -> str | None:
@@ -264,11 +292,12 @@ def contribute(ctx: Any) -> dict:
                         anchor = _insertion_anchor(old_text_lines, new_text_lines, os_, ns, nc)
                         hunk_covered = (anchor in file_covered or anchor in file_imports)
 
+                    bodies = _new_block_bodies(new_text_lines, ns + paired_count, ns + nc - 1)
                     for i in range(paired_count, nc):
                         new_ln = ns + i
                         if new_ln in new_docstrings or not _is_code(new_text_lines, new_ln):
                             continue
-                        if not hunk_covered:
+                        if not hunk_covered or new_ln in bodies:
                             gap_lines.add(new_ln)
                             sym_name = _enclosing_sym(facts, path, new_ln)
                             if sym_name:

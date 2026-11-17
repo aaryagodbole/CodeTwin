@@ -229,3 +229,33 @@ def test_line_inserted_at_end_of_untested_branch_is_gap(toy_repo, capsys):
     p.write_text(UNTESTED_BRANCH.replace("        t = t - 10\n", "        t = t - 10\n        t = t * 2\n"))
     gaps = _select_gaps(toy_repo, capsys)
     assert gaps["files"]["src/shop/price.py"]["lines"] == [5]
+
+
+def test_line_appended_after_untested_body_at_end_of_file_is_not_gap(toy_repo, capsys):
+    # The tested function ends with an untested if body, and nothing follows it in the file
+    p = toy_repo / "src/shop/price.py"
+    p.write_text(p.read_text() + "\n\ndef mark(seen):\n    seen.append(1)\n    if len(seen) > 1000:\n        seen.clear()\n")
+    (toy_repo / "tests/test_mark.py").write_text(
+        "from shop.price import mark\n\n\ndef test_mark():\n    seen = []\n    mark(seen)\n    assert seen == [1]\n")
+    subprocess.run(["git", "add", "-A"], cwd=toy_repo, check=True, capture_output=True)
+    _commit(toy_repo, "add mark")
+    main(["-C", str(toy_repo), "init"])
+    main(["-C", str(toy_repo), "record"])
+    # Appended at function level after the untested body: it runs whenever mark() runs
+    p.write_text(p.read_text() + "    seen.append(2)\n")
+    gaps = _select_gaps(toy_repo, capsys)
+    assert gaps["files"] == {}
+
+
+def test_inserted_branch_body_is_gap(toy_repo, capsys):
+    main(["-C", str(toy_repo), "init"])
+    main(["-C", str(toy_repo), "record"])
+    p = toy_repo / "src/shop/price.py"
+    old = p.read_text()
+    ret = next(line for line in old.splitlines() if line.strip().startswith("return"))
+    # A new branch before the tested return: the condition runs, its body has never run
+    p.write_text(old.replace(ret + "\n", "    if not items:\n        return 0\n" + ret + "\n", 1))
+    new_lines = p.read_text().splitlines()
+    body = new_lines.index("        return 0") + 1
+    gaps = _select_gaps(toy_repo, capsys)
+    assert gaps["files"]["src/shop/price.py"]["lines"] == [body]
