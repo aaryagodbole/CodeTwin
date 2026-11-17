@@ -38,8 +38,9 @@ Option 3.
   self-hosted servers only.
 - **Same API contract.** The cloud API serves the same read endpoints as `codetwin serve`, so the dashboard
   works against either. It adds `POST /api/v1/reports` for uploads.
-- **Hosting.** The dashboard and the API run on Vercel: Next.js plus FastAPI as a Vercel Function in the same
-  project. The database is Neon Postgres, with a database branch per preview deployment. A Docker Compose file
+- **Hosting.** The dashboard and the API run on Vercel as two projects from this repository: the Next.js
+  dashboard (`dashboard/`) and the API (`cloud/`, FastAPI as one Vercel Function). The API is a separate small
+  package, because it does not need the analysis engine and its heavy parser dependencies. The database is Neon Postgres, with a database branch per preview deployment. A Docker Compose file
   runs the same API, dashboard and Postgres on one's own servers (self-hosting).
 - **Opt-in.** Nothing is uploaded unless the user runs `codetwin push` or enables the Action's upload input.
   Without it, CodeTwin works fully offline, as described in the paper.

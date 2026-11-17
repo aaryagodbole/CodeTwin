@@ -1,0 +1,33 @@
+[project]
+name = "codetwin-cloud"
+version = "0.1.0"
+description = "CodeTwin Cloud: receives decision reports (never code) and serves them to the dashboard"
+requires-python = ">=3.12"
+license = "MIT"
+dependencies = [
+    "fastapi>=0.115",
+    "psycopg[binary]>=3.2",
+    "pyjwt[crypto]>=2.8",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "httpx>=0.27", "uvicorn>=0.29", "ruff>=0.6"]
+
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["codetwin_cloud"]
+
+[tool.setuptools.package-data]
+codetwin_cloud = ["migrations/*.sql"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+extend = "../pyproject.toml"
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101", "S105", "S106"]   # asserts and fake tokens in tests

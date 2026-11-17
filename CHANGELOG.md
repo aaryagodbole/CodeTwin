@@ -8,6 +8,9 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Added
+- Cloud API (`cloud/`, package `codetwin-cloud`): uploads authenticated with GitHub OIDC (or project tokens
+  when self-hosting), strict `codetwin.report/v1` validation, idempotent storage in Postgres, read endpoints with
+  the local API's shapes (contract test), 90-day retention cron, operator commands; CI job `cloud` with Postgres
 - Cloud design: ADR 0003 (a cloud plane that receives decision reports, never code), `docs/cloud.md`
   (report format, API, OIDC uploads, schema, environments, operations) and `docs/data-policy.md`
 - Hosted dashboard: a demo mode (`npm run dev:demo`, `build:demo`) reads a snapshot of the API written by
