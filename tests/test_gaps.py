@@ -187,4 +187,45 @@ def test_deletion_of_untested_branch(toy_repo, capsys):
     out = json.loads(capsys.readouterr().out)
     gaps = out["extras"]["test_gaps"]
     assert gaps["files"] == {}
-    assert gaps["summary"] == "no source files changed"
+    # A source file did change (lines were only deleted), so it must not say "no source files changed"
+    assert gaps["summary"] == "no test gaps found"
+
+
+UNTESTED_BRANCH = (
+    'def total(items):\n'
+    '    t = sum(i["price"] for i in items)\n'
+    '    if t > 1000:\n'
+    '        t = t - 10\n'
+    '    return t\n'
+)
+
+
+def _select_gaps(repo, capsys) -> dict:
+    capsys.readouterr()
+    assert main(["-C", str(repo), "select", "--json"]) == 0
+    return json.loads(capsys.readouterr().out)["extras"]["test_gaps"]
+
+
+def test_line_inserted_after_untested_block_is_not_gap(toy_repo, capsys):
+    p = toy_repo / "src/shop/price.py"
+    p.write_text(UNTESTED_BRANCH)
+    _commit(toy_repo, "add untested branch")
+    main(["-C", str(toy_repo), "init"])
+    main(["-C", str(toy_repo), "record"])
+    # Inserted at function level after the if block: it runs on every call, and the test calls total()
+    p.write_text(UNTESTED_BRANCH.replace("    return t\n", "    t = round(t, 2)\n    return t\n"))
+    gaps = _select_gaps(toy_repo, capsys)
+    assert gaps["files"] == {}
+    assert gaps["summary"] == "no test gaps found"
+
+
+def test_line_inserted_at_end_of_untested_branch_is_gap(toy_repo, capsys):
+    p = toy_repo / "src/shop/price.py"
+    p.write_text(UNTESTED_BRANCH)
+    _commit(toy_repo, "add untested branch")
+    main(["-C", str(toy_repo), "init"])
+    main(["-C", str(toy_repo), "record"])
+    # Inserted inside the branch that no test enters (t > 1000)
+    p.write_text(UNTESTED_BRANCH.replace("        t = t - 10\n", "        t = t - 10\n        t = t * 2\n"))
+    gaps = _select_gaps(toy_repo, capsys)
+    assert gaps["files"]["src/shop/price.py"]["lines"] == [5]

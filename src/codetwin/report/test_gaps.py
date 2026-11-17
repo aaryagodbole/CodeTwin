@@ -7,7 +7,8 @@ Two rules identify test gaps (reported as 1-based line numbers in the working tr
    corresponding old line was neither covered by any test (`ctx.prev.covered`)
    nor executed at import time (`ctx.prev.import_lines`). For unequal-length
    additions (`nc > oc`), added lines are gaps unless all of the hunk's old lines
-   (or neighboring line for pure insertions) were covered or imported.
+   were covered or imported. A pure insertion takes the coverage of the nearest
+   old code line, above or below, with the same indentation as the inserted code.
 
 Skipped lines (never reported as gaps):
 - Import-time lines: `def` headers and module-level constants executed at import.
@@ -27,7 +28,7 @@ Output shape:
     }
 
 Only files that have gaps are included in `files`.
-When no gaps exist, summary is "no test gaps found" (or "no source files changed" if 0 lines changed).
+When no gaps exist, summary is "no test gaps found" (or "no source files changed" if the diff has no source file).
 """
 from __future__ import annotations
 
@@ -104,6 +105,30 @@ def _is_code(lines: list[str], ln: int) -> bool:
     return bool(s and not s.startswith("#"))
 
 
+def _indent(s: str) -> int:
+    return len(s) - len(s.lstrip())
+
+
+def _insertion_anchor(old_lines: list[str], new_lines: list[str], os_: int, ns: int, nc: int) -> int:
+    """Old line whose coverage stands for a pure insertion after old line `os_` (git `-os_,0 +ns,nc`).
+
+    The inserted code runs whenever the old code at the same indentation runs. So take the nearest old code
+    line above or below the insertion with the same indentation as the first inserted code line, preferring
+    the one above. Example: a line inserted after an `if` block, at function level, is anchored to the
+    function-level line below it, not to the last line inside the (maybe untested) `if` branch."""
+    new_code = [new_lines[ln - 1] for ln in range(ns, ns + nc) if _is_code(new_lines, ln) and ln <= len(new_lines)]
+    if not new_code or not old_lines:
+        return os_
+    want = _indent(new_code[0])
+    above = next((ln for ln in range(os_, 0, -1) if _is_code(old_lines, ln)), 0)
+    below = next((ln for ln in range(os_ + 1, len(old_lines) + 1) if _is_code(old_lines, ln)), 0)
+    if above and _indent(old_lines[above - 1]) == want:
+        return above
+    if below and _indent(old_lines[below - 1]) == want:
+        return below
+    return above or below or os_
+
+
 def _enclosing_sym(facts: dict, path: str, ln: int) -> str | None:
     syms = [s for s in symbols_of(facts, path) if s.start <= ln <= s.end]
     if not syms:
@@ -137,9 +162,13 @@ def contribute(ctx: Any) -> dict:
 
     files_out: dict[str, dict] = {}
     total_changed = 0
+    source_files_changed = 0
 
     for path, d in sorted(ctx.diff.items()):
-        if not ctx.is_source(path) or d.status == "D":
+        if not ctx.is_source(path):
+            continue
+        source_files_changed += 1
+        if d.status == "D":
             continue
 
         old_path = d.old_path or path
@@ -231,8 +260,9 @@ def contribute(ctx: Any) -> dict:
                             ln in file_covered or ln in file_imports for ln in hunk_old_lines
                         )
                     else:
-                        # Pure insertion: check the neighbor line just above
-                        hunk_covered = (os_ in file_covered or os_ in file_imports)
+                        # Pure insertion: the neighbouring old code line at the same indentation
+                        anchor = _insertion_anchor(old_text_lines, new_text_lines, os_, ns, nc)
+                        hunk_covered = (anchor in file_covered or anchor in file_imports)
 
                     for i in range(paired_count, nc):
                         new_ln = ns + i
@@ -254,7 +284,7 @@ def contribute(ctx: Any) -> dict:
     total_gaps = sum(len(info["lines"]) for info in files_out.values())
     gap_files_count = len(files_out)
 
-    if total_changed == 0:
+    if source_files_changed == 0:
         summary = "no source files changed"
     elif total_gaps == 0:
         summary = "no test gaps found"
