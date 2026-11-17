@@ -17,7 +17,7 @@ export function Card({ title, action, children, className = "" }: {
 }
 
 export function Stat({ label, value, hint, icon: Icon, children }: {
-  label: string; value: React.ReactNode; hint?: string; icon?: LucideIcon; children?: React.ReactNode;
+  label: React.ReactNode; value: React.ReactNode; hint?: string; icon?: LucideIcon; children?: React.ReactNode;
 }) {
   return (
     <Card>

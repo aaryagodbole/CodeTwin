@@ -1,13 +1,14 @@
 "use client";
 
-import { Activity, GitBranch, LayoutDashboard, ListChecks, Moon, Network, Sun } from "lucide-react";
+import { Activity, FolderTree, GitBranch, LayoutDashboard, ListChecks, Moon, Network, Sun } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useSyncExternalStore } from "react";
 
 const links = [
   { href: "/", label: "Overview", icon: LayoutDashboard },
-  { href: "/map/", label: "System map", icon: Network },
+  { href: "/map/", label: "Dependency graph", icon: Network },
+  { href: "/repository/", label: "Repository", icon: FolderTree },
   { href: "/decisions/", label: "Decisions", icon: ListChecks },
   { href: "/results/", label: "Results", icon: Activity },
 ];

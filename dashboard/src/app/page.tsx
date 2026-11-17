@@ -1,12 +1,14 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, Clock, Database, GitCommit, ShieldCheck } from "lucide-react";
+import { ArrowRight, Database, FolderTree, GitCommit, Network, ShieldCheck, Zap } from "lucide-react";
 import Link from "next/link";
 import { DecisionTable } from "@/app/decisions/table";
 import { ErrorBox, Loading } from "@/components/state";
 import { Card, Stat } from "@/components/ui/card";
 import { Donut, RiskGauge, Sparkline } from "@/components/ui/charts";
+import { Info } from "@/components/ui/info";
+import { skippedShare } from "@/lib/analysis";
 import { get, type Calibration, type DecisionRow, type Summary } from "@/lib/api";
 
 const pct = (x: number | null | undefined) => (x == null ? "–" : `${(x * 100).toFixed(1)}%`);
@@ -25,6 +27,8 @@ export default function Overview() {
   const missed = rows.filter((d) => d.missed === true).length;
   const pending = rows.filter((d) => d.missed == null).length;
   const safe = rows.length - missed - pending;
+  const shares = rows.map((d) => skippedShare(d, s.test_files)).filter((x): x is number => x != null);
+  const avgSkipped = shares.length ? shares.reduce((a, b) => a + b, 0) / shares.length : null;
   const observed = calibration.data?.points.map((p) => p.observed_miss_rate) ?? [];
   const rate = calibration.data && calibration.data.labelled ? calibration.data.misses / calibration.data.labelled : null;
   return (
@@ -34,8 +38,22 @@ export default function Overview() {
         <p className="text-sm text-muted">{s.root} · packages {s.packages.join(", ") || "–"}</p>
       </div>
 
+      <div className="grid gap-3 sm:grid-cols-3">
+        {[
+          { href: "/map/", icon: Network, title: "Dependency graph", text: "See how files and tests connect" },
+          { href: "/repository/", icon: FolderTree, title: "Repository analysis", text: "Hubs, untested files, unknowns" },
+          { href: "/decisions/", icon: Database, title: "Decisions", text: "Why each change got its tests" },
+        ].map(({ href, icon: Icon, title, text }) => (
+          <Link key={href} href={href} className="card-shadow group flex items-center gap-3 rounded-2xl border border-border bg-card p-4 transition hover:border-accent">
+            <span className="grid h-10 w-10 place-items-center rounded-xl bg-accent-soft text-accent"><Icon size={18} aria-hidden /></span>
+            <span className="min-w-0"><span className="block text-sm font-semibold">{title}</span><span className="block truncate text-xs text-muted">{text}</span></span>
+            <ArrowRight size={16} className="ml-auto text-muted transition group-hover:translate-x-0.5 group-hover:text-accent" aria-hidden />
+          </Link>
+        ))}
+      </div>
+
       <div className="grid gap-4 lg:grid-cols-3">
-        <Card title="Latest residual risk" className="lg:row-span-1">
+        <Card title="Latest residual risk" action={<Info>The estimated chance that skipping the other tests hides a failure. It must stay under the target, otherwise CodeTwin abstains.</Info>}>
           <RiskGauge value={latest ? (latest.residual_risk ?? null) : null} target={s.alpha} />
           <p className="mt-1 text-center text-xs text-muted">
             {latest ? `Decision #${latest.id} · ${latest.decision}` : "No decision yet"}
@@ -50,8 +68,9 @@ export default function Overview() {
           </Stat>
           <Stat label="Recorded commit" value={<code className="text-xl">{s.recorded_commit?.slice(0, 8) ?? "none"}</code>}
             hint={`${s.test_files} test files`} icon={GitCommit} />
-          <Stat label="Full suite time" value={s.suite_seconds == null ? "–" : `${s.suite_seconds.toFixed(1)}s`}
-            hint={`calibration set: ${s.calibration_size} changes`} icon={Clock} />
+          <Stat label={<>Test files skipped <Info>Average share of test files left out of a run in the latest decisions. An estimate of effort saved; it assumes similar test durations.</Info></>}
+            value={avgSkipped == null ? "–" : `${(avgSkipped * 100).toFixed(0)}%`}
+            hint={s.suite_seconds == null ? "estimate" : `full suite takes ${s.suite_seconds.toFixed(1)}s`} icon={Zap} />
         </div>
       </div>
 

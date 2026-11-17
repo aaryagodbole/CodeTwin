@@ -1,6 +1,7 @@
 "use client";
 
 import { ChevronDown } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 import { Empty } from "@/components/state";
 import { Badge } from "@/components/ui/badge";
@@ -17,7 +18,7 @@ function Row({ d }: { d: DecisionRow }) {
   return (
     <>
       <tr className="border-t border-border transition hover:bg-card-2/60">
-        <td className="py-3 pl-1 pr-3 text-muted tabular-nums">#{d.id}</td>
+        <td className="py-3 pl-1 pr-3 tabular-nums"><Link href={`/decisions/detail/?id=${d.id}`} className="text-accent hover:underline">#{d.id}</Link></td>
         <td className="pr-3 whitespace-nowrap text-muted">{new Date(d.recorded * 1000).toLocaleString()}</td>
         <td className="pr-3"><Badge tone={d.decision === "proceed" ? "green" : "amber"}>{d.decision}</Badge></td>
         <td className="pr-3"><RiskBar value={d.residual_risk ?? null} target={d.alpha} /></td>
