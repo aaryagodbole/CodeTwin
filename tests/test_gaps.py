@@ -283,3 +283,67 @@ def test_opens_block_handles_strings_and_comments():
     assert not _opens_block('x = "a:"')
     assert not _opens_block("y = d[1:]  # slice:")
     assert not _opens_block("z = 1  # note:")
+
+
+# ---- CLI command tests (codetwin gaps) ----
+
+
+def test_gaps_json_matches_select_json(toy_repo, capsys):
+    """gaps --json output matches select --json's extras.test_gaps."""
+    main(["-C", str(toy_repo), "init"])
+    main(["-C", str(toy_repo), "record"])
+    p = toy_repo / "src/shop/price.py"
+    p.write_text(p.read_text() + "\ndef discount(price, percent):\n    return price * (1 - percent)\n")
+
+    capsys.readouterr()
+    assert main(["-C", str(toy_repo), "select", "--json"]) == 0
+    select_out = json.loads(capsys.readouterr().out)
+    select_gaps = select_out["extras"]["test_gaps"]
+
+    capsys.readouterr()
+    assert main(["-C", str(toy_repo), "gaps", "--json"]) == 0
+    gaps_out = json.loads(capsys.readouterr().out)
+
+    assert gaps_out == select_gaps
+
+
+def test_gaps_does_not_store_decision(toy_repo, capsys):
+    """Running gaps must not add a decision to the store."""
+    from codetwin.engine import Engine
+
+    main(["-C", str(toy_repo), "init"])
+    main(["-C", str(toy_repo), "record"])
+    p = toy_repo / "src/shop/price.py"
+    p.write_text(p.read_text() + "\ndef discount(price, percent):\n    return price * (1 - percent)\n")
+
+    with Engine(str(toy_repo)) as eng:
+        before = len(eng.store.decisions())
+
+    capsys.readouterr()
+    assert main(["-C", str(toy_repo), "gaps"]) == 0
+
+    with Engine(str(toy_repo)) as eng:
+        after = len(eng.store.decisions())
+
+    assert after == before
+
+
+def test_ranges_helper():
+    from codetwin.commands.gaps import _ranges
+
+    assert _ranges([1, 2, 3, 7]) == "1-3, 7"
+    assert _ranges([5]) == "5"
+    assert _ranges([1, 2, 3]) == "1-3"
+    assert _ranges([1, 3, 5]) == "1, 3, 5"
+    assert _ranges([]) == ""
+    assert _ranges([10, 11, 12, 20, 21]) == "10-12, 20-21"
+
+
+def test_gaps_friendly_error_before_record(toy_repo, capsys):
+    """gaps prints a friendly message if there is no recorded run."""
+    main(["-C", str(toy_repo), "init"])
+    capsys.readouterr()
+    ret = main(["-C", str(toy_repo), "gaps"])
+    assert ret == 1
+    out = capsys.readouterr().out
+    assert "record" in out.lower()
