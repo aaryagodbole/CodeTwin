@@ -35,7 +35,9 @@ When no gaps exist, summary is "no test gaps found" (or "no source files changed
 from __future__ import annotations
 
 import ast
+import io
 import subprocess
+import tokenize
 from pathlib import Path
 from typing import Any
 
@@ -153,8 +155,19 @@ def _new_block_bodies(lines: list[str], start: int, end: int) -> set[int]:
         if opener is not None and ind > opener:
             out.add(ln)
             continue
-        opener = ind if lines[ln - 1].split("#", 1)[0].rstrip().endswith(":") else None
+        opener = ind if _opens_block(lines[ln - 1]) else None
     return out
+
+
+def _opens_block(line: str) -> bool:
+    """Does this line end with the `:` that opens a block? Uses the tokenizer, so a `#` or `:` inside a string
+    (`if x == "#":`) or a trailing comment is handled correctly."""
+    try:
+        toks = [t for t in tokenize.generate_tokens(io.StringIO(line.strip() + "\n").readline)
+                if t.type not in (tokenize.COMMENT, tokenize.NL, tokenize.NEWLINE, tokenize.ENDMARKER)]
+    except (tokenize.TokenError, IndentationError, SyntaxError):
+        return line.rstrip().endswith(":")
+    return bool(toks) and toks[-1].type == tokenize.OP and toks[-1].string == ":"
 
 
 def _enclosing_sym(facts: dict, path: str, ln: int) -> str | None:

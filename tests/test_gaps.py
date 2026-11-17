@@ -259,3 +259,27 @@ def test_inserted_branch_body_is_gap(toy_repo, capsys):
     body = new_lines.index("        return 0") + 1
     gaps = _select_gaps(toy_repo, capsys)
     assert gaps["files"]["src/shop/price.py"]["lines"] == [body]
+
+
+def test_inserted_branch_with_hash_in_string_is_gap(toy_repo, capsys):
+    main(["-C", str(toy_repo), "init"])
+    main(["-C", str(toy_repo), "record"])
+    p = toy_repo / "src/shop/price.py"
+    old = p.read_text()
+    ret = next(line for line in old.splitlines() if line.strip().startswith("return"))
+    # The '#' is inside a string, not a comment: the line still opens a block
+    p.write_text(old.replace(ret + "\n", '    if items == "#":  # odd input\n        return 0\n' + ret + "\n", 1))
+    body = p.read_text().splitlines().index("        return 0") + 1
+    gaps = _select_gaps(toy_repo, capsys)
+    assert gaps["files"]["src/shop/price.py"]["lines"] == [body]
+
+
+def test_opens_block_handles_strings_and_comments():
+    from codetwin.report.test_gaps import _opens_block
+
+    assert _opens_block('if x == "#":')
+    assert _opens_block("for i in xs:  # loop")
+    assert _opens_block("else:")
+    assert not _opens_block('x = "a:"')
+    assert not _opens_block("y = d[1:]  # slice:")
+    assert not _opens_block("z = 1  # note:")
