@@ -33,6 +33,20 @@ Eng = Annotated[Engine, Depends(_engine)]
 DECISION_KEYS = ["id", "recorded", "base", "mode", "alpha", "alpha_t", "threshold", "residual_risk", "decision",
                  "selected", "reasons", "missed"]
 
+_NAN_KEYS = ("threshold", "residual_risk", "alpha", "alpha_t")
+
+
+def _clean_decision(d: dict) -> dict:
+    """Return a copy of a decision dict with NaN floats replaced by None and missing list fields defaulted."""
+    out = {k: d.get(k) for k in DECISION_KEYS}
+    for k in _NAN_KEYS:
+        v = out.get(k)
+        if isinstance(v, float) and math.isnan(v):
+            out[k] = None
+    out.setdefault("selected", [])
+    out.setdefault("reasons", [])
+    return out
+
 
 def create_app(root: str | Path = ".", static_dir: str | Path | None = None) -> FastAPI:
     app = FastAPI(title="CodeTwin AI", version=__version__, docs_url="/api/docs", openapi_url="/api/openapi.json")
@@ -65,7 +79,7 @@ def create_app(root: str | Path = ".", static_dir: str | Path | None = None) -> 
 
     @app.get("/api/decisions")
     def decisions(eng: Eng, limit: int = Query(100, ge=1, le=1000)) -> list[dict]:
-        return [{k: d[k] for k in DECISION_KEYS} for d in eng.store.decisions(limit)]
+        return [_clean_decision(d) for d in eng.store.decisions(limit)]
 
     @app.get("/api/decisions/{decision_id}")
     def decision_detail(eng: Eng, decision_id: int) -> dict:
@@ -78,11 +92,7 @@ def create_app(root: str | Path = ".", static_dir: str | Path | None = None) -> 
             k: (None if s is None or (isinstance(s, float) and math.isnan(s)) else s)
             for k, s in scores.items()
         }
-        res = {k: d[k] for k in DECISION_KEYS if k in d}
-        for k in ("threshold", "residual_risk", "alpha", "alpha_t"):
-            v = res.get(k)
-            if isinstance(v, float) and math.isnan(v):
-                res[k] = None
+        res = _clean_decision(d)
         res["scores"] = clean_scores
         return res
 

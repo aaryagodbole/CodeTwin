@@ -254,7 +254,7 @@ class Store:
     def flaky_tests(self) -> list[dict]:
         return [{"sha": r[0], "test": r[1], "passes": r[2], "failures": r[3]} for r in self.con.execute(
             "select r.sha, f.test, f.passes, f.failures from flaky_test f join revision r on r.id = f.revision_id "
-            "order by f.test, r.recorded")]
+            "where r.repository_id = 1 order by f.test, r.recorded, r.id")]
 
     # ------------------------------------------------------------- static facts (static evidence)
     def save_static(self, sha: str, facts: dict[str, FileFacts], when: float | None = None) -> None:
