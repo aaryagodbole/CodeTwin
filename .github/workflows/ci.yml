@@ -193,6 +193,34 @@ jobs:
       - uses: actions/upload-artifact@v7
         with: { name: dashboard, path: dashboard/out }
 
+  dashboard-demo:
+    # The hosted dashboard (Vercel) is built in demo mode from a snapshot of a real engine run. This job proves the
+    # snapshot can still be produced by the current engine and API, and that the demo build serves every file.
+    # If a PR breaks it, the deployment would break too (docs/dashboard.md).
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with: { python-version: "3.12", cache: pip }
+      - uses: actions/setup-node@v7
+        with: { node-version: "22", cache: npm, cache-dependency-path: dashboard/package-lock.json }
+      - run: pip install -e ".[server]" pytest
+      - name: Regenerate the demo snapshot from a real run on examples/python
+        run: python scripts/demo_snapshot.py
+      - name: Demo build (what Vercel deploys)
+        working-directory: dashboard
+        run: npm ci && npm run build:demo
+      - name: Every snapshot file is in the build
+        working-directory: dashboard
+        run: |
+          node -e '
+            const fs = require("fs");
+            const meta = JSON.parse(fs.readFileSync("out/demo/meta.json"));
+            const missing = meta.files.filter((f) => !fs.existsSync("out/demo/api/" + f));
+            if (missing.length) { console.error("missing in build:", missing); process.exit(1); }
+            console.log(`demo build OK: ${meta.files.length} API answers from ${meta.edits} labelled changes`);
+          '
+
   action:
     # Runs this repository's own GitHub Action on the pull request, installing CodeTwin from the checkout.
     if: github.event_name == 'pull_request'

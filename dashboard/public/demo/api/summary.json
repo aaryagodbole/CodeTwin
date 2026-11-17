@@ -1,0 +1,14 @@
+{
+ "alpha": 0.1,
+ "alpha_t": 0.10000000000000002,
+ "calibration_size": 10,
+ "decisions": 10,
+ "labelled_decisions": 10,
+ "packages": [
+  "shop"
+ ],
+ "recorded_commit": "f57aa5b786c028da18068713a6fd200bab13319d",
+ "root": "examples/python (demo)",
+ "suite_seconds": 0.5419487953186035,
+ "test_files": 2
+}

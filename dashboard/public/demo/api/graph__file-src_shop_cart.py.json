@@ -1,0 +1,53 @@
+{
+ "counts": {
+  "importers": 0,
+  "tests": 1,
+  "unknown": 0
+ },
+ "edges": [
+  {
+   "detail": "executes this file",
+   "source": "tests/test_cart.py",
+   "target": "src/shop/cart.py",
+   "type": "runtime"
+  },
+  {
+   "detail": "imported by this file",
+   "source": "src/shop/cart.py",
+   "target": "src/shop/calc.py",
+   "type": "static"
+  }
+ ],
+ "evidence": {
+  "has_coverage": true,
+  "recorded_commit": "f57aa5b786c028da18068713a6fd200bab13319d"
+ },
+ "nodes": [
+  {
+   "id": "src/shop/cart.py",
+   "kind": "target",
+   "label": "cart.py",
+   "path": "src/shop/cart.py"
+  },
+  {
+   "id": "tests/test_cart.py",
+   "kind": "test",
+   "label": "test_cart.py",
+   "path": "tests/test_cart.py"
+  },
+  {
+   "id": "src/shop/calc.py",
+   "kind": "source",
+   "label": "calc.py",
+   "path": "src/shop/calc.py"
+  }
+ ],
+ "summary": "used by 0 \u00b7 1 tests \u00b7 0 unknown",
+ "target": {
+  "id": "src/shop/cart.py",
+  "kind": "target",
+  "label": "cart.py",
+  "path": "src/shop/cart.py"
+ },
+ "unknowns": []
+}

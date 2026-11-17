@@ -15,6 +15,9 @@ npm install
 npm run dev                         # http://localhost:3000, talks to the API (see .env.development)
 ```
 
+Demo data without a project: `npm run dev:demo`. How to see it locally, deploy it on Vercel and check pull
+requests: [docs/dashboard.md](../docs/dashboard.md).
+
 Production: `npm run build` writes `out/`; then `codetwin serve --static dashboard/out` serves the dashboard and
 the API from one process.
 

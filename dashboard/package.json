@@ -4,7 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:demo": "cross-env NEXT_PUBLIC_DATA_MODE=demo next dev",
     "build": "next build",
+    "build:demo": "cross-env NEXT_PUBLIC_DATA_MODE=demo next build",
     "start": "next start",
     "lint": "eslint"
   },
@@ -22,6 +24,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "cross-env": "^10.1.0",
     "eslint": "^9",
     "eslint-config-next": "16.4.6",
     "tailwindcss": "4.3.5",

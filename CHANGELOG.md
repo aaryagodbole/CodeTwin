@@ -8,6 +8,9 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Added
+- Hosted dashboard: a demo mode (`npm run dev:demo`, `build:demo`) reads a snapshot of the API written by
+  `scripts/demo_snapshot.py` from a real engine run on `examples/python`; Vercel config (`dashboard/vercel.json`);
+  CI job `dashboard-demo` checks the deployment build on every pull request; guide in `docs/dashboard.md`
 - `codetwin review`: pull-request review from evidence. Analyzers (one file each, `review/analyzers/`) turn the
   decision into findings at file and line with stable rule ids CT001–CT006 (abstention, untested changed symbol,
   dynamic calls, breaking contract, affected connected repository, file without evidence) and an optional,

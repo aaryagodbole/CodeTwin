@@ -1,0 +1,76 @@
+{
+ "labelled": 10,
+ "misses": 1,
+ "points": [
+  {
+   "alpha": 0.1,
+   "alpha_t": 0.1,
+   "decision_id": 1,
+   "n": 1,
+   "observed_miss_rate": 0.0
+  },
+  {
+   "alpha": 0.1,
+   "alpha_t": 0.10200000000000001,
+   "decision_id": 2,
+   "n": 2,
+   "observed_miss_rate": 0.0
+  },
+  {
+   "alpha": 0.1,
+   "alpha_t": 0.10400000000000001,
+   "decision_id": 3,
+   "n": 3,
+   "observed_miss_rate": 0.0
+  },
+  {
+   "alpha": 0.1,
+   "alpha_t": 0.10600000000000001,
+   "decision_id": 4,
+   "n": 4,
+   "observed_miss_rate": 0.0
+  },
+  {
+   "alpha": 0.1,
+   "alpha_t": 0.10800000000000001,
+   "decision_id": 5,
+   "n": 5,
+   "observed_miss_rate": 0.0
+  },
+  {
+   "alpha": 0.1,
+   "alpha_t": 0.11000000000000001,
+   "decision_id": 6,
+   "n": 6,
+   "observed_miss_rate": 0.0
+  },
+  {
+   "alpha": 0.1,
+   "alpha_t": 0.11200000000000002,
+   "decision_id": 7,
+   "n": 7,
+   "observed_miss_rate": 0.14285714285714285
+  },
+  {
+   "alpha": 0.1,
+   "alpha_t": 0.09400000000000001,
+   "decision_id": 8,
+   "n": 8,
+   "observed_miss_rate": 0.125
+  },
+  {
+   "alpha": 0.1,
+   "alpha_t": 0.09600000000000002,
+   "decision_id": 9,
+   "n": 9,
+   "observed_miss_rate": 0.1111111111111111
+  },
+  {
+   "alpha": 0.1,
+   "alpha_t": 0.09800000000000002,
+   "decision_id": 10,
+   "n": 10,
+   "observed_miss_rate": 0.1
+  }
+ ]
+}

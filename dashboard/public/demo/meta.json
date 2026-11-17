@@ -1,0 +1,16 @@
+{
+ "generated": "2026-11-17T13:25:51Z",
+ "project": "examples/python",
+ "edits": 10,
+ "files": [
+  "calibration.json",
+  "decisions__limit-10.json",
+  "decisions__limit-500.json",
+  "graph__file-src_shop_calc.py.json",
+  "graph__file-src_shop_cart.py.json",
+  "health.json",
+  "map.json",
+  "summary.json"
+ ],
+ "how": "python scripts/demo_snapshot.py (runs the real engine; see the script docstring)"
+}
