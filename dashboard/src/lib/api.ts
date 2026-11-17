@@ -34,11 +34,59 @@ export interface DecisionRow {
   alpha: number | null;
   alpha_t: number | null;
   threshold: number | null;
-  residual_risk: number;
+  residual_risk: number | null;
   decision: "proceed" | "abstain";
   selected: string[];
   reasons: string[];
   missed: boolean | null;
+}
+
+export interface DecisionDetail extends DecisionRow {
+  scores: Record<string, number | null>;
+}
+
+export interface FlakyTest {
+  test: string;
+  passes: number;
+  failures: number;
+  commits: number;
+  last_sha: string;
+}
+
+export type KgNodeKind = "repository" | "file" | "test" | "symbol" | "unknown";
+export type KgEdgeKind = "contains" | "defines" | "imports" | "covers" | "co_changes" | "unresolved";
+
+export interface KgNode {
+  id: string;
+  kind: KgNodeKind;
+  key?: string;
+  name?: string;
+  file?: string;
+  start?: number;
+  end?: number;
+  symbol_kind?: string;
+  detail?: string;
+  [key: string]: unknown;
+}
+
+export interface KgEdge {
+  source: string;
+  target: string;
+  kind: KgEdgeKind;
+  lines?: number | string;
+  commits?: number;
+  [key: string]: unknown;
+}
+
+export interface KnowledgeGraph {
+  nodes: KgNode[];
+  edges: KgEdge[];
+  stats: {
+    nodes: number;
+    edges: number;
+    node_kinds: Record<string, number>;
+    edge_kinds: Record<string, number>;
+  };
 }
 
 export interface Calibration {

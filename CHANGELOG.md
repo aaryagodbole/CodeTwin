@@ -8,6 +8,8 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Added
+- Dashboard server endpoints: `GET /api/decisions/{id}` (single decision with selection reasons, per-test risk scores and outcome), `GET /api/flaky` (flaky tests grouped by test and sorted by failure count), and `GET /api/kg` (code knowledge graph with node/edge shapes, `?symbols=false` filtering, and cache).
+- Typed client models in `dashboard/src/lib/api.ts` (`DecisionDetail`, `FlakyTest`, `KgNode`, `KgEdge`, `KnowledgeGraph`).
 - `codetwin review`: pull-request review from evidence. Analyzers (one file each, `review/analyzers/`) turn the
   decision into findings at file and line with stable rule ids CT001–CT006 (abstention, untested changed symbol,
   dynamic calls, breaking contract, affected connected repository, file without evidence) and an optional,

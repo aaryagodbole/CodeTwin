@@ -19,7 +19,7 @@ export function DecisionTable({ rows }: { rows: DecisionRow[] }) {
               <td className="py-2 pr-4">{d.id}</td>
               <td className="pr-4 whitespace-nowrap">{new Date(d.recorded * 1000).toLocaleString()}</td>
               <td className="pr-4"><Badge tone={d.decision === "proceed" ? "green" : "amber"}>{d.decision}</Badge></td>
-              <td className="pr-4">{(d.residual_risk * 100).toFixed(1)}%</td>
+              <td className="pr-4">{d.residual_risk == null ? "—" : `${(d.residual_risk * 100).toFixed(1)}%`}</td>
               <td className="pr-4">{d.alpha == null ? "–" : `${(d.alpha * 100).toFixed(0)}%`}</td>
               <td className="pr-4">{d.selected.length}</td>
               <td className="pr-4">
