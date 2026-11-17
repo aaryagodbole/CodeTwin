@@ -33,7 +33,7 @@ def test_tested_line_edited_is_not_gap(toy_repo, capsys):
     out = json.loads(capsys.readouterr().out)
     gaps = out["extras"]["test_gaps"]
     assert gaps["files"] == {}
-    assert gaps["summary"] == "every changed line ran under at least one test"
+    assert gaps["summary"] == "no test gaps found"
 
 
 def test_edited_comment_or_def_line_is_not_gap(toy_repo, capsys):
@@ -46,7 +46,7 @@ def test_edited_comment_or_def_line_is_not_gap(toy_repo, capsys):
     out = json.loads(capsys.readouterr().out)
     gaps = out["extras"]["test_gaps"]
     assert gaps["files"] == {}
-    assert gaps["summary"] == "every changed line ran under at least one test"
+    assert gaps["summary"] == "no test gaps found"
 
 
 def test_new_file_all_code_lines_are_gaps(toy_repo, capsys):
@@ -81,7 +81,7 @@ def test_docstring_edit_is_not_gap(toy_repo, capsys):
     out = json.loads(capsys.readouterr().out)
     gaps = out["extras"]["test_gaps"]
     assert gaps["files"] == {}
-    assert gaps["summary"] == "every changed line ran under at least one test"
+    assert gaps["summary"] == "no test gaps found"
 
 
 def test_untested_branch_edit_and_addition_are_gaps(toy_repo, capsys):
@@ -114,6 +114,54 @@ def test_untested_branch_edit_and_addition_are_gaps(toy_repo, capsys):
     # Both lines 4 and 5 in the new file should be gaps
     assert 4 in info["lines"] and 5 in info["lines"]
     assert "total" in info["symbols"]
+
+
+def test_mixed_coverage_hunk_reports_gap(toy_repo, capsys):
+    p = toy_repo / "src/shop/price.py"
+    p.write_text(
+        'def total(items):\n'
+        '    t = sum(i["price"] for i in items)\n'
+        '    if t > 1000:\n'
+        '        return t - 10\n'
+        '    return t\n'
+    )
+    _commit(toy_repo, "add untested branch")
+    main(["-C", str(toy_repo), "init"])
+    main(["-C", str(toy_repo), "record"])
+    # Modify condition (covered line 3) and add a statement to untested return (line 4)
+    # Hunk has (3, 2, 3, 3): line 3 is covered, line 4 was untested
+    p.write_text(
+        'def total(items):\n'
+        '    t = sum(i["price"] for i in items)\n'
+        '    if t >= 1000:\n'
+        '        print(t)\n'
+        '        return t - 20\n'
+        '    return t\n'
+    )
+    capsys.readouterr()
+    assert main(["-C", str(toy_repo), "select", "--json"]) == 0
+    out = json.loads(capsys.readouterr().out)
+    gaps = out["extras"]["test_gaps"]
+    assert "src/shop/price.py" in gaps["files"]
+    info = gaps["files"]["src/shop/price.py"]
+    # Line 3 is edit of covered line -> not gap
+    # Lines 4 and 5 in untested branch -> both are gaps
+    assert 3 not in info["lines"]
+    assert 4 in info["lines"] and 5 in info["lines"]
+
+
+def test_docstring_sharing_line_with_code_is_not_excluded(toy_repo, capsys):
+    main(["-C", str(toy_repo), "init"])
+    main(["-C", str(toy_repo), "record"])
+    new_file = toy_repo / "src/shop/tax.py"
+    new_file.write_text('def tax(a): """Tax."""; return a * 0.1\n')
+    capsys.readouterr()
+    assert main(["-C", str(toy_repo), "select", "--json"]) == 0
+    out = json.loads(capsys.readouterr().out)
+    gaps = out["extras"]["test_gaps"]
+    assert "src/shop/tax.py" in gaps["files"]
+    info = gaps["files"]["src/shop/tax.py"]
+    assert 1 in info["lines"]
 
 
 def test_deletion_of_untested_branch(toy_repo, capsys):

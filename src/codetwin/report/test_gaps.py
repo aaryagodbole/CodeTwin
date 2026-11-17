@@ -6,13 +6,13 @@ Two rules identify test gaps (reported as 1-based line numbers in the working tr
 2. Edited lines inside tested functions: lines from diff hunks where the
    corresponding old line was neither covered by any test (`ctx.prev.covered`)
    nor executed at import time (`ctx.prev.import_lines`). For unequal-length
-   additions (`nc > oc`), added lines are gaps if none of the hunk's old lines
+   additions (`nc > oc`), added lines are gaps unless all of the hunk's old lines
    (or neighboring line for pure insertions) were covered or imported.
 
 Skipped lines (never reported as gaps):
 - Import-time lines: `def` headers and module-level constants executed at import.
 - Comments and blank lines: lines that are empty or start with `#`.
-- Docstrings: docstring line spans (parsed via `ast`).
+- Docstrings: docstring line spans without executable statements (parsed via `ast`).
 
 Output shape:
     "test_gaps": {
@@ -27,6 +27,7 @@ Output shape:
     }
 
 Only files that have gaps are included in `files`.
+When no gaps exist, summary is "no test gaps found" (or "no source files changed" if 0 lines changed).
 """
 from __future__ import annotations
 
@@ -46,15 +47,40 @@ def _docstring_lines(text: str) -> set[int]:
         tree = ast.parse(text)
     except SyntaxError:
         return set()
-    out: set[int] = set()
+    doc_lines: set[int] = set()
+    other_stmt_lines: set[int] = set()
     for node in ast.walk(tree):
         if (
             isinstance(node, ast.Expr)
             and isinstance(node.value, ast.Constant)
             and isinstance(node.value.value, str)
         ):
-            out.update(range(node.lineno, (node.end_lineno or node.lineno) + 1))
-    return out
+            doc_lines.update(range(node.lineno, (node.end_lineno or node.lineno) + 1))
+        elif isinstance(node, ast.stmt):
+            if isinstance(
+                node,
+                (
+                    ast.FunctionDef,
+                    ast.AsyncFunctionDef,
+                    ast.ClassDef,
+                    ast.If,
+                    ast.For,
+                    ast.While,
+                    ast.With,
+                    ast.Try,
+                ),
+            ):
+                other_stmt_lines.add(node.lineno)
+            else:
+                other_stmt_lines.update(range(node.lineno, (node.end_lineno or node.lineno) + 1))
+    return doc_lines - other_stmt_lines
+
+
+def _base_line_for_new(hunks: list[tuple[int, int, int, int]], new_ln: int) -> int | None:
+    for os_, oc, ns, nc in hunks:
+        if ns <= new_ln < ns + min(oc, nc):
+            return os_ + (new_ln - ns)
+    return None
 
 
 def _read_old_lines(repo: Path, base: str, old_path: str) -> list[str]:
@@ -163,8 +189,10 @@ def contribute(ctx: Any) -> dict:
                         s_start <= ln <= s_end
                         and ln not in new_docstrings
                         and _is_code(new_text_lines, ln)
-                        and ln not in file_imports
                     ):
+                        base_ln = _base_line_for_new(d.hunks, ln)
+                        if base_ln is not None and base_ln in file_imports:
+                            continue
                         gap_lines.add(ln)
                         gap_symbols.add(s["name"])
 
@@ -197,7 +225,11 @@ def contribute(ctx: Any) -> dict:
                 if nc > oc:
                     if oc > 0:
                         hunk_old_lines = set(range(os_, os_ + oc))
-                        hunk_covered = bool(hunk_old_lines & (file_covered | file_imports))
+                        # In mixed-coverage hunks, additions are only covered if all replaced
+                        # old lines were covered or imported.
+                        hunk_covered = all(
+                            ln in file_covered or ln in file_imports for ln in hunk_old_lines
+                        )
                     else:
                         # Pure insertion: check the neighbor line just above
                         hunk_covered = (os_ in file_covered or os_ in file_imports)
@@ -225,7 +257,7 @@ def contribute(ctx: Any) -> dict:
     if total_changed == 0:
         summary = "no source files changed"
     elif total_gaps == 0:
-        summary = "every changed line ran under at least one test"
+        summary = "no test gaps found"
     else:
         files_word = "1 file" if gap_files_count == 1 else f"{gap_files_count} files"
         summary = f"{total_gaps} of {total_changed} changed lines in {files_word} ran under no test"
