@@ -22,7 +22,9 @@ const chip = "inline-flex cursor-pointer items-center gap-1.5 rounded-full borde
 export default function SystemMap() {
   const router = useRouter();
   const q = useQuery({ queryKey: ["map"], queryFn: () => get<Graph>("/map") });
-  const [types, setTypes] = useState<string[]>(TYPES.map((t) => t.key));
+  // Big graphs start without runtime links (one per test and file reached) so the structure is readable; the user can switch them on.
+  const [picked_types, setTypes] = useState<string[] | null>(null);
+  const types = picked_types ?? (q.data && q.data.edges.length > 150 ? TYPES.map((t) => t.key).filter((k) => k !== "runtime") : TYPES.map((t) => t.key));
   const [tests, setTests] = useState(true);
   const [search, setSearch] = useState("");
   const [picked, setPicked] = useState<string | null>(null);

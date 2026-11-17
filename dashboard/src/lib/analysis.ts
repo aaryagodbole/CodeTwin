@@ -27,11 +27,14 @@ export interface RepoAnalysis {
   unresolved: { from: string; to: string }[];
 }
 
+/** Files under a tests folder (fixtures, typing samples, conftest) are test support, not source to be covered. */
+export const isTestSupport = (path: string) => /(^|\/)(tests?|__tests__|spec)\//.test(path) || /(^|\/)conftest\.py$/.test(path);
+
 export function analyseRepo(g: Graph): RepoAnalysis {
   const byId = new Map(g.nodes.map((n) => [n.id, n]));
   const stat = new Map<string, FileStat>();
   for (const n of g.nodes) {
-    if (n.kind === "source" || n.kind === "target") stat.set(n.id, { node: n, usedBy: 0, testedBy: 0, uses: 0 });
+    if ((n.kind === "source" || n.kind === "target") && !isTestSupport(n.path)) stat.set(n.id, { node: n, usedBy: 0, testedBy: 0, uses: 0 });
   }
   const seenUse = new Set<string>();
   const seenTest = new Set<string>();
@@ -63,7 +66,7 @@ export function analyseRepo(g: Graph): RepoAnalysis {
   const tested = perFile.filter((f) => f.testedBy > 0).length;
   return {
     files: perFile.length,
-    tests: g.nodes.filter((n) => n.kind === "test").length,
+    tests: g.nodes.filter((n) => n.kind === "test" || isTestSupport(n.path)).length,
     unknownNodes: g.nodes.filter((n) => n.kind === "unknown").length,
     edges: g.edges.length,
     edgeTypes: [...types].map(([type, count]) => ({ type, count })).sort((a, b) => b.count - a.count),
