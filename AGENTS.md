@@ -33,6 +33,20 @@ spec. Follow these steps in order.
    more correct may go ahead, but still need the comment. Never silently do more or less than the issue says.
 3. **Branch** from up-to-date `dev`: `git checkout dev && git pull && git checkout -b <branch named in the issue>`.
    Use one branch and one pull request per issue.
+
+   **Always start from the latest `dev`.** Before you start, and again every time you come back to the work, run
+   `git fetch origin` and check `git log --oneline HEAD..origin/dev`. If it lists commits, bring them in with
+   `git merge origin/dev` before writing more code. Do this again before you open the pull request and before
+   asking for a review. Other people's pull requests are merged every day, and working on an old `dev` is how
+   conflicts and broken builds happen.
+
+   **Merge conflicts.** Solve a conflict yourself only when it is easy and clear: for example both sides added
+   different lines to `CHANGELOG.md` or a list (keep both), or one side only renamed or moved code the other
+   side did not touch. Read both sides, keep every change that is meant to stay, then run `scripts/check.sh`
+   and say in the pull request which files had conflicts and how you solved them. If a conflict changes logic,
+   or you are not sure which side is right, stop: do not guess, and do not delete the other person's work.
+   Comment on the pull request which files conflict and ask the code owner (Aarya) to solve them. Never
+   force-push to solve a conflict.
 4. **Implement exactly the Approach**, plus any additions agreed in step 2. Keep commits small with clear
    messages. Follow the rules below (no look-ahead, unknowns reported, extension points, output contract).
 5. **Test what the issue lists**, plus one test for each extra case you added. Try the feature by hand as the
