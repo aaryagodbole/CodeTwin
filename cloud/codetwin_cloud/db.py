@@ -32,6 +32,12 @@ def connect(url: str | None = None) -> Iterator[psycopg.Connection[DictRow]]:
         yield conn
 
 
+def find_project(conn: psycopg.Connection[DictRow], owner: str, name: str) -> DictRow | None:
+    """The project for OWNER/NAME, matched case-insensitively like GitHub. The one place projects are looked up."""
+    return conn.execute("select id, owner, name, public, uploads_enabled, github_repository_id from project "
+                        "where lower(owner) = lower(%s) and lower(name) = lower(%s)", (owner, name)).fetchone()
+
+
 def migration_files() -> list[tuple[str, str]]:
     files = resources.files("codetwin_cloud") / "migrations"
     return sorted((f.name, f.read_text()) for f in files.iterdir() if f.name.endswith(".sql"))

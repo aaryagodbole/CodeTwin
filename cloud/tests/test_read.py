@@ -84,5 +84,19 @@ def test_health_reports_a_broken_database():
 def test_migrations_apply_once(database):
     with db.connect(database) as c:
         assert db.migrate(c) == []
-        names = [r["name"] for r in c.execute("select name from schema_migrations").fetchall()]
-    assert names == ["0001_initial.sql"]
+        names = [r["name"] for r in c.execute("select name from schema_migrations order by name").fetchall()]
+    assert names == [name for name, _sql in db.migration_files()]
+    assert names[0] == "0001_initial.sql"
+
+
+def test_out_of_range_decision_id_is_not_found(client, database):
+    register(database)
+    big = 2**70
+    assert client.get(f"/api/v1/projects/acme/shop/decisions/{big}").status_code == 404
+
+
+def test_cors_origins_ignore_spaces(monkeypatch):
+    from codetwin_cloud.app import Settings
+
+    monkeypatch.setenv("CODETWIN_CORS_ORIGINS", "https://a.example, https://b.example ,")
+    assert Settings().cors_origins == ["https://a.example", "https://b.example"]

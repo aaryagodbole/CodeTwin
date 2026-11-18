@@ -36,8 +36,7 @@ def main(argv: list[str] | None = None) -> int:
                       "on conflict (lower(owner), lower(name)) do update set public = excluded.public",
                       (owner, name, args.public))
             print(f"registered {owner}/{name} ({'public' if args.public else 'private'})")
-        row = c.execute("select id from project where lower(owner) = lower(%s) and lower(name) = lower(%s)",
-                        (owner, name)).fetchone()
+        row = db.find_project(c, owner, name)
         if row is None:
             print(f"{owner}/{name} is not registered; run add-project first", file=sys.stderr)
             return 1

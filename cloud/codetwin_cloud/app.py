@@ -18,6 +18,7 @@ from fastapi.responses import JSONResponse
 from psycopg.rows import DictRow
 from psycopg.types.json import Jsonb
 from pydantic import ValidationError
+from starlette.concurrency import run_in_threadpool
 
 from . import auth, db
 from .models import Report
@@ -38,8 +39,8 @@ class Settings:
     max_report_bytes: int = 256 * 1024
     retention_days: int = 90
     cron_secret: str | None = field(default_factory=lambda: os.environ.get("CRON_SECRET"))
-    cors_origins: list[str] = field(default_factory=lambda: [o for o in os.environ.get(
-        "CODETWIN_CORS_ORIGINS", "*").split(",") if o])
+    cors_origins: list[str] = field(default_factory=lambda: [o.strip() for o in os.environ.get(
+        "CODETWIN_CORS_ORIGINS", "*").split(",") if o.strip()])
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -81,36 +82,19 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     # ------------------------------------------------------------------ upload
     @app.post("/api/v1/reports")
-    async def upload(request: Request, c: Conn) -> JSONResponse:
+    async def upload(request: Request) -> JSONResponse:
+        # Only reading the body is async. Everything else (psycopg, the JWKS fetch) blocks, so it runs in the
+        # thread pool and never stalls the event loop for other requests.
         body = await request.body()
         if len(body) > s.max_report_bytes:
             raise HTTPException(413, f"report larger than {s.max_report_bytes // 1024} KB")
         token = auth.bearer(request.headers.get("authorization"))
-        try:
-            report = Report.model_validate_json(body)
-        except ValidationError as e:
-            raise HTTPException(422, json.loads(e.json(include_url=False, include_input=False))) from None
-        owner, name = report.owner_name
-        project = c.execute("select id, uploads_enabled from project where lower(owner) = lower(%s) "
-                            "and lower(name) = lower(%s)", (owner, name)).fetchone()
-        caller = _authenticate(c, token, project, s)
-        if project is None or not project["uploads_enabled"]:
-            raise HTTPException(403, f"{report.repository} is not registered for uploads (cloud/README.md)")
-        if caller.kind == "github-oidc":
-            _check_claims(caller, report)
-        elif caller.project_id != project["id"]:
-            raise HTTPException(403, "this project token belongs to another project")
-        recent = c.execute("select count(*) as n from report where project_id = %s and "
-                           "received_at > now() - interval '1 hour'", (project["id"],)).fetchone()
-        if recent and recent["n"] >= s.uploads_per_hour:
-            raise HTTPException(429, f"at most {s.uploads_per_hour} uploads per project per hour")
-        report_id, created = _insert(c, project["id"], report)
+        report_id, created = await run_in_threadpool(_store, body, token, s)
         return JSONResponse({"id": report_id, "created": created}, status_code=201 if created else 200)
 
     # ------------------------------------------------------------------ read (same shapes as codetwin serve)
     def project_of(c: psycopg.Connection[DictRow], owner: str, repo: str) -> dict:
-        p = c.execute("select id, owner, name, public from project where lower(owner) = lower(%s) "
-                      "and lower(name) = lower(%s)", (owner, repo)).fetchone()
+        p = db.find_project(c, owner, repo)
         if p is None or not p["public"]:  # private projects need a session (not built yet)
             raise HTTPException(404, f"no public project {owner}/{repo}")
         return p
@@ -202,12 +186,59 @@ def _authenticate(c: psycopg.Connection[DictRow], token: str, project: Any, s: S
     return auth.verify_github_oidc(token, s.resolve_key, s.audience)
 
 
+def _store(body: bytes, token: str, s: Settings) -> tuple[int, bool]:
+    """Validate, authenticate and store one report; commits before returning, so a 201 means it is stored."""
+    try:
+        report = Report.model_validate_json(body)
+    except ValidationError as e:
+        raise HTTPException(422, json.loads(e.json(include_url=False, include_input=False))) from None
+    with db.connect(s.database_url) as c:
+        project = db.find_project(c, *report.owner_name)
+        caller = _authenticate(c, token, project, s)
+        if project is None or not project["uploads_enabled"]:
+            raise HTTPException(403, f"{report.repository} is not registered for uploads (cloud/README.md)")
+        if caller.kind == "github-oidc":
+            _check_claims(caller, report)
+            _check_repository_id(c, project, caller)
+        elif caller.project_id != project["id"]:
+            raise HTTPException(403, "this project token belongs to another project")
+        # A retry of a report that is already stored is not a new upload: answer it before the rate limit.
+        existing = _existing(c, project["id"], report)
+        if existing is not None:
+            return existing, False
+        recent = c.execute("select count(*) as n from report where project_id = %s and "
+                           "received_at > now() - interval '1 hour'", (project["id"],)).fetchone()
+        if recent and recent["n"] >= s.uploads_per_hour:
+            raise HTTPException(429, f"at most {s.uploads_per_hour} uploads per project per hour")
+        result = _insert(c, project["id"], report)
+        c.commit()          # before the response is sent, so the client never sees "stored" for a lost write
+        return result
+
+
+def _check_repository_id(c: psycopg.Connection[DictRow], project: DictRow, caller: auth.Caller) -> None:
+    """Bind the project to GitHub's repository id on its first OIDC upload, then require that id."""
+    if project["github_repository_id"] is None:
+        c.execute("update project set github_repository_id = %s where id = %s and github_repository_id is null",
+                  (caller.repository_id, project["id"]))
+    elif project["github_repository_id"] != caller.repository_id:
+        raise HTTPException(403, "the token's repository id does not match this project (renamed or recreated "
+                                 "repository); ask the operator to re-register it")
+
+
+def _existing(c: psycopg.Connection[DictRow], project_id: int, report: Report) -> int | None:
+    row = c.execute("select id from report where project_id = %s and run_id = %s and run_attempt = %s "
+                    "and head_sha = %s", (project_id, report.run.id, report.run.attempt, report.commit.head)).fetchone()
+    return row["id"] if row else None
+
+
 def _check_claims(caller: auth.Caller, report: Report) -> None:
-    """A job may upload only its own result: same repository, run and commit as in its OIDC token."""
+    """A job may upload only its own result: same repository, run, attempt and commit as in its OIDC token."""
     if (caller.repository or "").lower() != report.repository.lower():
         raise HTTPException(403, "the token's repository does not match the report")
     if report.run.source != "github-actions" or caller.run_id != report.run.id:
         raise HTTPException(403, "the token's workflow run does not match the report")
+    if caller.run_attempt != report.run.attempt:
+        raise HTTPException(403, "the token's run attempt does not match the report")
     if caller.sha != report.commit.head:
         raise HTTPException(403, "the token's commit does not match the report's head commit")
 
@@ -223,13 +254,11 @@ def _insert(c: psycopg.Connection[DictRow], project_id: int, report: Report) -> 
         (project_id, report.commit.head, report.commit.base, report.commit.ref, report.commit.pull_request,
          report.run.source, report.run.id, report.run.attempt, report.engine.version, d.decision, d.residual_risk,
          d.alpha, d.threshold, d.mode, len(d.selected), Jsonb(payload))).fetchone()
-    if row is None:
-        existing = c.execute("select id from report where project_id = %s and run_id = %s and run_attempt = %s "
-                             "and head_sha = %s", (project_id, report.run.id, report.run.attempt,
-                                                   report.commit.head)).fetchone()
+    if row is None:                # stored by a concurrent request after _existing() looked
+        existing = _existing(c, project_id, report)
         if existing is None:       # deleted between the two statements (retention); treat as a conflict
             raise HTTPException(409, "report was removed while it was being stored; retry")
-        return existing["id"], False
+        return existing, False
     if report.outcome is not None:
         c.execute("insert into outcome (report_id, missed, failing) values (%s, %s, %s)",
                   (row["id"], report.outcome.missed, Jsonb(report.outcome.failing)))

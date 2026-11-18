@@ -60,11 +60,16 @@ def test_size_and_rate_limits(client, database):
     assert client.post("/api/v1/reports", content=json.dumps(big), headers=auth_header(oidc())).status_code == 413
     for attempt in range(1, 6):    # settings allow 5 per hour in tests
         r = client.post("/api/v1/reports", json=report(run={"source": "github-actions", "id": "1001",
-                                                            "attempt": attempt}), headers=auth_header(oidc()))
+                                                            "attempt": attempt}),
+                        headers=auth_header(oidc(run_attempt=str(attempt))))
         assert r.status_code == 201
     r = client.post("/api/v1/reports", json=report(run={"source": "github-actions", "id": "1001", "attempt": 6}),
-                    headers=auth_header(oidc()))
+                    headers=auth_header(oidc(run_attempt="6")))
     assert r.status_code == 429
+    # A retry of a report that is already stored is not a new upload: it gets its id back, even at the limit.
+    again = client.post("/api/v1/reports", json=report(run={"source": "github-actions", "id": "1001", "attempt": 1}),
+                        headers=auth_header(oidc(run_attempt="1")))
+    assert again.status_code == 200 and again.json()["created"] is False
 
 
 def test_project_token_upload_for_self_hosting(client, database):
@@ -89,3 +94,41 @@ def test_outcome_is_stored_with_the_report(client, database):
         o = c.execute("select missed, failing from outcome where report_id = %s", (r.json()["id"],)).fetchone()
     assert o == {"missed": True, "failing": ["tests/test_calc.py::t"]}
     assert HEAD  # the report's head commit equals the token's sha
+
+
+def test_the_token_run_attempt_must_match_the_report(client, database):
+    """One job token cannot store extra reports by changing run.attempt."""
+    register(database)
+    forged = report(run={"source": "github-actions", "id": "1001", "attempt": 2})
+    r = client.post("/api/v1/reports", json=forged, headers=auth_header(oidc(run_attempt="1")))
+    assert r.status_code == 403 and "attempt" in r.json()["detail"]
+
+
+def test_nan_and_infinity_are_refused(client, database):
+    """NaN would be stored and then break every read of the project (JSON cannot encode it)."""
+    register(database)
+    for bad in ("NaN", "Infinity"):
+        body = json.dumps(report()).replace('"threshold": 0.42', f'"threshold": {bad}')
+        r = client.post("/api/v1/reports", content=body, headers=auth_header(oidc()))
+        assert r.status_code == 422, bad
+        body = json.dumps(report()).replace('"score": 0.71', f'"score": {bad}')
+        assert client.post("/api/v1/reports", content=body, headers=auth_header(oidc())).status_code == 422
+    assert client.get("/api/v1/projects/acme/shop/decisions").status_code == 200
+
+
+def test_oidc_uploads_are_bound_to_the_repository_id(client, database):
+    """A renamed or recreated repository with the same name cannot upload into the original project."""
+    register(database)
+    first = client.post("/api/v1/reports", json=report(), headers=auth_header(oidc(repository_id="111")))
+    assert first.status_code == 201
+    other = report(commit={"head": "c" * 40, "base": None, "ref": None, "pull_request": None})
+    r = client.post("/api/v1/reports", json=other, headers=auth_header(oidc(repository_id="222", sha="c" * 40)))
+    assert r.status_code == 403 and "repository id" in r.json()["detail"]
+    ok = client.post("/api/v1/reports", json=other, headers=auth_header(oidc(repository_id="111", sha="c" * 40)))
+    assert ok.status_code == 201
+
+
+def test_a_token_without_repository_id_is_refused(client, database):
+    register(database)
+    r = client.post("/api/v1/reports", json=report(), headers=auth_header(oidc(repository_id=None)))
+    assert r.status_code == 401

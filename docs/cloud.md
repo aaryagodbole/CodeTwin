@@ -85,11 +85,16 @@ compares the response shapes.
    - `iss = https://token.actions.githubusercontent.com`
    - `aud = codetwin-cloud`
    - `exp` and `nbf`, with 60 s of leeway
-3. `repository` in the token must equal `repository` in the report. `run_id` and `sha` in the token must equal
-   the report's run id and head commit, so a job can only upload its own result.
+3. `repository` in the token must equal `repository` in the report. `run_id`, `run_attempt` and `sha` in the
+   token must equal the report's run id, attempt and head commit, so a job can only upload its own result (one
+   token cannot store extra reports by changing the attempt).
 4. The repository must be registered (`project` row) and allowed to upload. Unknown repositories get `403`;
    nothing is created implicitly.
-5. The token is not stored or logged.
+5. The token must carry `repository_id`. The first OIDC upload binds the project to that id
+   (`project.github_repository_id`); later uploads with another id get `403`. A repository that is renamed,
+   transferred, or deleted and recreated under the same name cannot upload into the old project's history. To
+   move a project to a new repository on purpose, the operator clears `github_repository_id`.
+6. The token is not stored or logged.
 
 Self-hosted servers can also accept a per-project token (stored hashed, shown once), for CI systems without OIDC.
 
@@ -126,8 +131,10 @@ outcome  (report_id → report primary key, missed, failing jsonb, received_at)
 - **Health:** `GET /api/health` checks the database connection; the Vercel deployment check calls it.
 - **Logs:** one JSON line per request (request id, route, status, duration, project). No payloads, no tokens.
 - **Errors:** Sentry, when `SENTRY_DSN` is set; off by default.
-- **Limits:** at most 120 uploads per project per hour (`429` after that), 256 KB per report, read endpoints
+- **Limits:** at most 120 uploads per project per hour (`429` after that; a retry of a report that is already
+  stored still gets `200` with its id), 256 KB per report, no NaN or Infinity in numbers (`422`), read endpoints
   paginated (`limit` ≤ 1000).
+- **Durability:** an upload is committed before the response is sent, so `201`/`200` means the report is stored.
 - **Service levels** (best effort on free tiers): upload p95 < 1 s; dashboard read p95 < 500 ms; a failed
   upload never fails the user's CI job. The Action reports a warning, because CodeTwin's decision does not
   depend on the cloud.
