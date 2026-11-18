@@ -84,5 +84,72 @@ def test_health_reports_a_broken_database():
 def test_migrations_apply_once(database):
     with db.connect(database) as c:
         assert db.migrate(c) == []
-        names = [r["name"] for r in c.execute("select name from schema_migrations").fetchall()]
-    assert names == ["0001_initial.sql"]
+        names = [r["name"] for r in c.execute("select name from schema_migrations order by name").fetchall()]
+    assert names == [name for name, _sql in db.migration_files()]
+    assert names[0] == "0001_initial.sql"
+
+
+def test_out_of_range_decision_id_is_not_found(client, database):
+    register(database)
+    big = 2**70
+    assert client.get(f"/api/v1/projects/acme/shop/decisions/{big}").status_code == 404
+
+
+def test_cors_origins_ignore_spaces(monkeypatch):
+    from codetwin_cloud.app import Settings
+
+    monkeypatch.setenv("CODETWIN_CORS_ORIGINS", "https://a.example, https://b.example ,")
+    assert Settings().cors_origins == ["https://a.example", "https://b.example"]
+
+
+def test_add_project_again_keeps_it_public(database, monkeypatch):
+    from codetwin_cloud.__main__ import main
+
+    monkeypatch.setenv("DATABASE_URL", database)
+    assert main(["add-project", "acme/shop", "--public"]) == 0
+    assert main(["add-project", "acme/shop", "--token"]) == 0           # only to get a token
+    with db.connect(database) as c:
+        assert c.execute("select public from project").fetchone() == {"public": True}
+    assert main(["add-project", "acme/shop", "--private"]) == 0
+    with db.connect(database) as c:
+        assert c.execute("select public from project").fetchone() == {"public": False}
+
+
+def test_calibration_counts_only_calibrated_decisions_like_the_local_api(client, database):
+    register(database)
+    for attempt, mode, missed in [(1, "calibrated", True), (2, "full", False), (3, "calibrated", False)]:
+        body = report(run={"source": "github-actions", "id": "1001", "attempt": attempt},
+                      outcome={"missed": missed, "failing": []})
+        body["decision"]["mode"] = mode
+        assert client.post("/api/v1/reports", json=body,
+                           headers=auth_header(oidc(run_attempt=str(attempt)))).status_code == 201
+    cal = client.get("/api/v1/projects/acme/shop/calibration").json()
+    assert cal["labelled"] == 2 and cal["misses"] == 1 and cal["points"][-1]["observed_miss_rate"] == 0.5
+
+
+def test_retention_checks_the_secret_before_touching_the_database():
+    from fastapi.testclient import TestClient
+
+    from codetwin_cloud.app import Settings, create_app
+
+    broken = Settings(database_url="postgresql://nobody@127.0.0.1:1/none", cron_secret="s")
+    assert TestClient(create_app(broken)).get("/api/cron/retention").status_code == 401
+
+
+def test_operator_typo_never_connects(monkeypatch, capsys):
+    import pytest as _pytest
+
+    from codetwin_cloud.__main__ import main
+
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+    monkeypatch.delenv("POSTGRES_URL", raising=False)
+    with _pytest.raises(SystemExit):
+        main(["add-project", "shop"])
+    assert "OWNER/NAME" in capsys.readouterr().err
+
+
+def test_request_ids_are_short_and_plain(client):
+    ok = client.get("/api/health", headers={"x-request-id": "ci-run-42"})
+    assert ok.headers["x-request-id"] == "ci-run-42"
+    long = client.get("/api/health", headers={"x-request-id": "x" * 500})
+    assert long.headers["x-request-id"] != "x" * 500 and len(long.headers["x-request-id"]) <= 64

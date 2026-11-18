@@ -33,6 +33,7 @@ class AuthError(Exception):
 class Caller:
     kind: str                          # "github-oidc" or "project-token"
     repository: str | None = None      # owner/name from the OIDC token
+    repository_id: int | None = None   # GitHub's numeric id: stable across renames
     run_id: str | None = None
     run_attempt: int | None = None
     sha: str | None = None
@@ -52,10 +53,14 @@ def github_key(token: str) -> Any:
 def verify_github_oidc(token: str, resolve_key: KeyResolver = github_key, audience: str = AUDIENCE) -> Caller:
     try:
         claims = jwt.decode(token, resolve_key(token), algorithms=["RS256"], audience=audience, issuer=GITHUB_ISSUER,
-                            leeway=60, options={"require": ["exp", "iat", "iss", "aud", "repository", "run_id", "sha"]})
+                            leeway=60, options={"require": ["exp", "iat", "iss", "aud", "repository", "repository_id", "run_id", "sha"]})
+    except jwt.PyJWKClientConnectionError:
+        # GitHub's key endpoint is unreachable: a transient server-side problem, not a bad token, so clients retry.
+        raise AuthError(503, "cannot reach GitHub to verify the OIDC token; retry later") from None
     except (jwt.PyJWTError, jwt.PyJWKClientError) as e:
         raise AuthError(401, f"invalid GitHub OIDC token: {e}") from None
-    return Caller("github-oidc", repository=str(claims["repository"]), run_id=str(claims["run_id"]),
+    return Caller("github-oidc", repository=str(claims["repository"]), repository_id=int(claims["repository_id"]),
+                  run_id=str(claims["run_id"]),
                   run_attempt=int(claims.get("run_attempt", 1)), sha=str(claims["sha"]))
 
 

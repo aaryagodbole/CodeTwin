@@ -44,9 +44,12 @@ def publishable() -> set[str]:
     return {mod.NAME for mod in discover("codetwin.report") if getattr(mod, "PUBLISH", False) is True}
 
 
-def build(ctx: Context) -> dict[str, dict]:
+def build(ctx: Context, only: set[str] | None = None) -> dict[str, dict]:
+    """Run every section (or only the named ones). A section that raises gives an "error" entry instead."""
     out: dict[str, dict] = {}
     for mod in discover("codetwin.report"):
+        if only is not None and mod.NAME not in only:
+            continue
         try:
             out[mod.NAME] = mod.contribute(ctx)
         except Exception as e:  # noqa: BLE001 - a broken section must be visible, not silently missing

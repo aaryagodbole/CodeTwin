@@ -114,6 +114,7 @@ selected 2 test files:
 | `codetwin explain` | the numbers and reasons behind the last decision |
 | `codetwin run [TEST...]` | run the last selection (or the given test files) with the project's own test runner |
 | `codetwin weakcheck` | changed functions that tests execute but do not check (extreme mutation) |
+| `codetwin gaps [--json]` | changed lines no recorded test ran (no decision stored); see `docs/output.md` `test_gaps` |
 | `codetwin review [--format markdown\|json\|sarif\|github] [--llm] [--post-github]` | review the change like a reviewer: findings at file and line (untested changed functions, abstention, blind spots, breaking contracts, affected repositories), as a PR comment, inline comments or SARIF; see `docs/review.md` |
 | `codetwin kg stats\|blast\|export` | code knowledge graph of files, symbols and tests with typed evidence edges; blast radius of a change; GraphML/JSON export; see `docs/knowledge-graph.md` |
 
@@ -388,13 +389,14 @@ git push -u origin feature/test-gaps   # 7. upload the branch to GitHub
 ```
 
 8. GitHub shows a **Compare & pull request** button: open the PR **into `dev`**, fill in the template
-   (what, how you tested it) and add a line to `CHANGELOG.md` under *Unreleased*.
+   (what, how you tested it) and add a line to `CHANGELOG.md` under *Unreleased*. Then review your own change
+   (AGENTS.md, "Self-review of your pull request") and report it in the template's Self-review section.
 9. Wait for the checks on the PR to turn green and for a review. Fix comments by committing again on the same
    branch and pushing; the PR updates itself.
 10. After it is merged: `git checkout dev && git pull`, then start the next task with a new branch.
 
-Before opening a PR, if `dev` has moved on: `git fetch origin && git rebase origin/dev`, run the checks
-again, then `git push --force-with-lease`.
+Before opening a PR, and whenever `dev` has moved on: `git fetch origin && git merge origin/dev`, run the
+checks again, then `git push`. Never rebase or force-push a pushed branch (see AGENTS.md, "Never").
 
 Where to put new code (one file per feature, so two people never edit the same file):
 [docs/architecture.md → Extension points](docs/architecture.md#extension-points-how-to-add-a-feature-without-editing-shared-files).

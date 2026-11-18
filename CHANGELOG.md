@@ -14,11 +14,17 @@ All notable changes to this project are documented here. The format follows
 - Cloud API (`cloud/`, package `codetwin-cloud`): uploads authenticated with GitHub OIDC (or project tokens
   when self-hosting), strict `codetwin.report/v1` validation, idempotent storage in Postgres, read endpoints with
   the local API's shapes (contract test), 90-day retention cron, operator commands; CI job `cloud` with Postgres
+- Contributor process (`AGENTS.md`, `CONTRIBUTING.md`, pull request template): every AI coding tool uses its
+  matching skills and self-reviews the whole change right after opening a pull request, before asking for review
+  (Claude Code `/code-review`, Codex `/review`, or a checklist); the code owner runs `/code-review` before every
+  merge, with at most two re-runs after fixes; the rule against
+  hard-coded languages and repositories is listed with the project rules.
 - Cloud design: ADR 0003 (a cloud plane that receives decision reports, never code), `docs/cloud.md`
   (report format, API, OIDC uploads, schema, environments, operations) and `docs/data-policy.md`
 - Hosted dashboard: a demo mode (`npm run dev:demo`, `build:demo`) reads a snapshot of the API written by
   `scripts/demo_snapshot.py` from a real engine run on `examples/python`; Vercel config (`dashboard/vercel.json`);
   CI job `dashboard-demo` checks the deployment build on every pull request; guide in `docs/dashboard.md`
+- `codetwin gaps [--json]`: print the test-gap report (changed lines no recorded test ran) without storing a decision; consecutive lines are merged into ranges in the text output. Exits 2 with the message on stderr when nothing is recorded, and 1 when the section fails (same `error` shape as in `select`).
 - Dashboard server endpoints: `GET /api/decisions/{id}` (single decision with selection reasons, per-test risk scores and outcome), `GET /api/flaky` (flaky tests grouped by test and sorted by failure count), and `GET /api/kg` (code knowledge graph with node/edge shapes, `?symbols=false` filtering, and cache).
 - Typed client models in `dashboard/src/lib/api.ts` (`DecisionDetail`, `FlakyTest`, `KgNode`, `KgEdge`, `KnowledgeGraph`).
 - Report section `test_gaps` (`src/codetwin/report/test_gaps.py`): reports changed lines that ran under no test before the change, mapping them to enclosing symbols and working-tree line numbers.

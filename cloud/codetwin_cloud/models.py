@@ -1,5 +1,6 @@
 """The upload format `codetwin.report/v1` (docs/cloud.md, "Report format"). Validated strictly: unknown fields are
-rejected, so nothing outside the documented, policy-approved fields (docs/data-policy.md) can be stored."""
+rejected everywhere except inside `decision.sections`, whose content is free-form per section (what each engine
+report section publishes with PUBLISH = True) and only size-limited. docs/data-policy.md says what may go there."""
 from __future__ import annotations
 
 from typing import Literal
@@ -11,7 +12,8 @@ REPO = r"^[A-Za-z0-9_.-]{1,100}/[A-Za-z0-9_.-]{1,100}$"
 
 
 class Strict(BaseModel):
-    model_config = ConfigDict(extra="forbid", populate_by_name=True)
+    # allow_inf_nan=False: NaN/Infinity would be stored and then break every JSON read of the project.
+    model_config = ConfigDict(extra="forbid", populate_by_name=True, allow_inf_nan=False)
 
 
 class Engine(Strict):

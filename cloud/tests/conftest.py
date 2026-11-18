@@ -56,7 +56,7 @@ def register(url: str, repository: str = "acme/shop", public: bool = True) -> in
 def oidc(**over: Any) -> str:
     now = int(time.time())
     claims = {"iss": GITHUB_ISSUER, "aud": AUDIENCE, "iat": now, "nbf": now, "exp": now + 300,
-              "repository": "acme/shop", "run_id": "1001", "run_attempt": "1", "sha": HEAD,
+              "repository": "acme/shop", "repository_id": "111", "run_id": "1001", "run_attempt": "1", "sha": HEAD,
               "sub": "repo:acme/shop:pull_request"}
     claims.update(over)
     return jwt.encode({k: v for k, v in claims.items() if v is not None}, KEY, algorithm="RS256")

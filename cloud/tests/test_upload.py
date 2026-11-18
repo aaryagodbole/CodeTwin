@@ -60,11 +60,16 @@ def test_size_and_rate_limits(client, database):
     assert client.post("/api/v1/reports", content=json.dumps(big), headers=auth_header(oidc())).status_code == 413
     for attempt in range(1, 6):    # settings allow 5 per hour in tests
         r = client.post("/api/v1/reports", json=report(run={"source": "github-actions", "id": "1001",
-                                                            "attempt": attempt}), headers=auth_header(oidc()))
+                                                            "attempt": attempt}),
+                        headers=auth_header(oidc(run_attempt=str(attempt))))
         assert r.status_code == 201
     r = client.post("/api/v1/reports", json=report(run={"source": "github-actions", "id": "1001", "attempt": 6}),
-                    headers=auth_header(oidc()))
+                    headers=auth_header(oidc(run_attempt="6")))
     assert r.status_code == 429
+    # A retry of a report that is already stored is not a new upload: it gets its id back, even at the limit.
+    again = client.post("/api/v1/reports", json=report(run={"source": "github-actions", "id": "1001", "attempt": 1}),
+                        headers=auth_header(oidc(run_attempt="1")))
+    assert again.status_code == 200 and again.json()["created"] is False
 
 
 def test_project_token_upload_for_self_hosting(client, database):
@@ -89,3 +94,120 @@ def test_outcome_is_stored_with_the_report(client, database):
         o = c.execute("select missed, failing from outcome where report_id = %s", (r.json()["id"],)).fetchone()
     assert o == {"missed": True, "failing": ["tests/test_calc.py::t"]}
     assert HEAD  # the report's head commit equals the token's sha
+
+
+def test_the_token_run_attempt_must_match_the_report(client, database):
+    """One job token cannot store extra reports by changing run.attempt."""
+    register(database)
+    forged = report(run={"source": "github-actions", "id": "1001", "attempt": 2})
+    r = client.post("/api/v1/reports", json=forged, headers=auth_header(oidc(run_attempt="1")))
+    assert r.status_code == 403 and "attempt" in r.json()["detail"]
+
+
+def test_nan_and_infinity_are_refused(client, database):
+    """NaN would be stored and then break every read of the project (JSON cannot encode it)."""
+    register(database)
+    for bad in ("NaN", "Infinity"):
+        body = json.dumps(report()).replace('"threshold": 0.42', f'"threshold": {bad}')
+        r = client.post("/api/v1/reports", content=body, headers=auth_header(oidc()))
+        assert r.status_code == 422, bad
+        body = json.dumps(report()).replace('"score": 0.71', f'"score": {bad}')
+        assert client.post("/api/v1/reports", content=body, headers=auth_header(oidc())).status_code == 422
+    assert client.get("/api/v1/projects/acme/shop/decisions").status_code == 200
+
+
+def test_oidc_uploads_are_bound_to_the_repository_id(client, database):
+    """A renamed or recreated repository with the same name cannot upload into the original project."""
+    register(database)
+    first = client.post("/api/v1/reports", json=report(), headers=auth_header(oidc(repository_id="111")))
+    assert first.status_code == 201
+    other = report(commit={"head": "c" * 40, "base": None, "ref": None, "pull_request": None})
+    r = client.post("/api/v1/reports", json=other, headers=auth_header(oidc(repository_id="222", sha="c" * 40)))
+    assert r.status_code == 403 and "repository id" in r.json()["detail"]
+    ok = client.post("/api/v1/reports", json=other, headers=auth_header(oidc(repository_id="111", sha="c" * 40)))
+    assert ok.status_code == 201
+
+
+def test_a_token_without_repository_id_is_refused(client, database):
+    register(database)
+    r = client.post("/api/v1/reports", json=report(), headers=auth_header(oidc(repository_id=None)))
+    assert r.status_code == 401
+
+
+def test_repository_id_binding_cannot_be_raced(client, database):
+    """Two first uploads at once: the one that loses the binding must be refused, not stored."""
+    from codetwin_cloud import app as cloud_app
+    from codetwin_cloud.auth import Caller
+
+    pid = register(database)
+    stale = {"id": pid, "github_repository_id": None}          # what both requests read before either bound
+    with db.connect(database) as c:
+        c.execute("update project set github_repository_id = 111 where id = %s", (pid,))   # request A won
+        loser = Caller("github-oidc", repository="acme/shop", repository_id=222, run_id="1001", run_attempt=1,
+                       sha=HEAD)
+        try:
+            cloud_app._check_repository_id(c, stale, loser)
+        except Exception as e:  # noqa: BLE001
+            assert getattr(e, "status_code", None) == 403
+        else:
+            raise AssertionError("a racing upload from another repository id was accepted")
+
+
+def test_an_outcome_sent_with_a_retry_is_stored(client, database):
+    register(database)
+    first = client.post("/api/v1/reports", json=report(), headers=auth_header(oidc()))
+    assert first.status_code == 201
+    later = report(outcome={"missed": True, "failing": ["tests/test_cart.py"]})
+    r = client.post("/api/v1/reports", json=later, headers=auth_header(oidc()))
+    assert r.status_code == 200 and r.json() == {"id": first.json()["id"], "created": False}
+    with db.connect(database) as c:
+        row = c.execute("select missed from outcome where report_id = %s", (first.json()["id"],)).fetchone()
+    assert row == {"missed": True}
+
+
+def test_large_bodies_are_refused_without_reading_them_all(client, database):
+    register(database)
+    huge = {"Content-Length": str(10 * 1024 * 1024), **auth_header(oidc())}
+    assert client.post("/api/v1/reports", content=b"{}", headers=huge).status_code == 413
+
+    def stream():
+        for _ in range(100):
+            yield b" " * 64 * 1024          # 6.4 MB in chunks, no Content-Length
+    assert client.post("/api/v1/reports", content=stream(), headers=auth_header(oidc())).status_code == 413
+
+
+def test_bad_token_wins_over_a_bad_body(client, database):
+    """Unauthenticated callers get 401, never the schema errors of a 422."""
+    register(database)
+    r = client.post("/api/v1/reports", content=b'{"schema": 1}', headers=auth_header("not-a-jwt"))
+    assert r.status_code == 401
+
+
+def test_jwks_outage_is_a_503_not_a_bad_token(settings, database):
+    import jwt as pyjwt
+    from fastapi.testclient import TestClient
+
+    from codetwin_cloud.app import create_app
+
+    def down(_token):
+        raise pyjwt.PyJWKClientConnectionError("timed out")
+    settings.resolve_key = down
+    register(database)
+    r = TestClient(create_app(settings)).post("/api/v1/reports", json=report(), headers=auth_header(oidc()))
+    assert r.status_code == 503
+
+
+def test_a_token_cannot_probe_which_projects_exist(client, database):
+    """Registered (even private) and unregistered names answer the same to a token from another repository."""
+    register(database, "victim/secret", public=False)
+    token = oidc(repository="evil/x")
+    known = client.post("/api/v1/reports", json=report(repository="victim/secret"), headers=auth_header(token))
+    unknown = client.post("/api/v1/reports", json=report(repository="victim/nothing"), headers=auth_header(token))
+    assert known.status_code == unknown.status_code == 403
+    assert known.json() == unknown.json()
+
+
+def test_nan_inside_sections_is_refused(client, database):
+    register(database)
+    body = json.dumps(report()).replace('"files": ["src/shop/calc.py"]', '"files": ["src/shop/calc.py"], "x": NaN')
+    assert client.post("/api/v1/reports", content=body, headers=auth_header(oidc())).status_code == 422
