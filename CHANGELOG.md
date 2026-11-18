@@ -8,6 +8,11 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Added
+- Dashboard redesign: design tokens with a light and dark theme toggle, sidebar layout, residual-risk gauge, sparklines
+  and outcome donut on the overview, filterable decisions with expandable rows, area chart of the observed miss rate
+  against the target, skeleton, empty and error states. New pages: interactive dependency graph (search, hover
+  highlight, details panel), repository analysis (hub files, files without a test, unresolved links) and a decision
+  detail page; plain-language help tips throughout. Reads the same API; no engine change.
 - Self-hosting: `compose.yaml` (Postgres, cloud API, dashboard), Dockerfiles for the API (non-root, health
   check) and the dashboard (nginx), `docs/self-hosting.md`; CI job `self-host` runs the stack end to end
 - `codetwin push`: uploads the decision report to CodeTwin Cloud (GitHub OIDC in Actions, project token when

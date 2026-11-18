@@ -1,35 +1,137 @@
 @import "tailwindcss";
 
+/* Design tokens. Light by default; dark follows the system unless the user picks a theme (data-theme on <html>). */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f6f7fb;
+  --foreground: #14151a;
   --card: #ffffff;
-  --border: #e5e5e5;
-  --muted: #6b6b6b;
+  --card-2: #f1f2f8;
+  --border: #e4e6ef;
+  --muted: #6a6f85;
+  --accent: #5b5bf0;
+  --accent-2: #8b5cf6;
+  --accent-soft: rgba(91, 91, 240, 0.1);
+  --good: #12a150;
+  --warn: #d98a0b;
+  --bad: #e5484d;
+  --good-ink: #0b6b34;
+  --warn-ink: #8a5300;
+  --bad-ink: #b4232a;
+  --accent-ink: #3b3bc4;
+  --muted-ink: #4b5063;
+  --shadow: 0 1px 2px rgba(20, 21, 26, 0.04), 0 8px 24px rgba(20, 21, 26, 0.05);
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0b0b0c;
-    --foreground: #ededed;
-    --card: #141416;
-    --border: #2a2a2e;
-    --muted: #9a9aa0;
+  :root:not([data-theme="light"]) {
+    --background: #0a0b10;
+    --foreground: #eceef7;
+    --card: #12141c;
+    --card-2: #181b26;
+    --border: #232636;
+    --muted: #8d93ab;
+    --accent: #7c7cff;
+    --accent-2: #a78bfa;
+    --accent-soft: rgba(124, 124, 255, 0.14);
+    --good: #3ecf7b;
+    --warn: #f0a93a;
+    --bad: #ff6b70;
+    --good-ink: #5fe39a;
+    --warn-ink: #ffc266;
+    --bad-ink: #ff9a9d;
+  --accent-ink: #b0b0ff;
+  --muted-ink: #b8bccd;
+    --accent-ink: #b0b0ff;
+    --muted-ink: #b8bccd;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.35);
   }
+}
+
+:root[data-theme="dark"] {
+  --background: #0a0b10;
+  --foreground: #eceef7;
+  --card: #12141c;
+  --card-2: #181b26;
+  --border: #232636;
+  --muted: #8d93ab;
+  --accent: #7c7cff;
+  --accent-2: #a78bfa;
+  --accent-soft: rgba(124, 124, 255, 0.14);
+  --good: #3ecf7b;
+  --warn: #f0a93a;
+  --bad: #ff6b70;
+  --good-ink: #5fe39a;
+  --warn-ink: #ffc266;
+  --bad-ink: #ff9a9d;
+  --accent-ink: #b0b0ff;
+  --muted-ink: #b8bccd;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.35);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
+  --color-card-2: var(--card-2);
   --color-border: var(--border);
   --color-muted: var(--muted);
-  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
+  --color-accent: var(--accent);
+  --color-accent-2: var(--accent-2);
+  --color-accent-soft: var(--accent-soft);
+  --color-good: var(--good);
+  --color-warn: var(--warn);
+  --color-bad: var(--bad);
+  --color-good-ink: var(--good-ink);
+  --color-warn-ink: var(--warn-ink);
+  --color-bad-ink: var(--bad-ink);
+  --color-accent-ink: var(--accent-ink);
+  --color-muted-ink: var(--muted-ink);
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Inter, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
+}
+
+code {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  background: var(--card-2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.1em 0.4em;
+}
+
+.card-shadow {
+  box-shadow: var(--shadow);
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton {
+  border-radius: 10px;
+  background: linear-gradient(90deg, var(--card-2) 25%, var(--border) 37%, var(--card-2) 63%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* backwards, not both: nothing (transform/opacity) stays applied after the animation, so a finished card makes no
+   stacking context and a help tooltip inside it can rise above the next card. */
+.rise {
+  animation: rise 0.35s ease-out backwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton, .rise { animation: none; }
 }
