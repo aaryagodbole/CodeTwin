@@ -61,8 +61,9 @@ spec. Follow these steps in order.
      pull request. This must be a mention, not a link. After each new push, comment `@coderabbitai review`.
      The free plan allows about one review an hour, so ask for it when the pull request is ready, not on every
      push.
-   - **Gemini Code Assist** reviews once when the pull request opens (rules: `.gemini/styleguide.md`). Comment
-     `/gemini review` for another review after you push fixes. Answer its comments like CodeRabbit's.
+   - **PR-Agent** (optional, free, no hourly limit) runs only when asked. Comment `/review` for findings,
+     `/improve` for code suggestions, `/describe` for a summary or `/ask "..."` for a question; comment again
+     after you push fixes. Rules: `.pr_agent.toml`. Answer its comments like CodeRabbit's.
    - **Code owner.** `.github/CODEOWNERS` requests Aarya automatically. Don't merge your own pull request.
 8. **Resolve every review comment**, from CodeRabbit and the code owner. For each one, either:
    - fix it, push, and reply with what you changed (commit id), or
