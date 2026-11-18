@@ -116,8 +116,10 @@ code {
   to { opacity: 1; transform: none; }
 }
 
+/* backwards, not both: nothing (transform/opacity) stays applied after the animation, so a finished card makes no
+   stacking context and a help tooltip inside it can rise above the next card. */
 .rise {
-  animation: rise 0.35s ease-out both;
+  animation: rise 0.35s ease-out backwards;
 }
 
 @media (prefers-reduced-motion: reduce) {

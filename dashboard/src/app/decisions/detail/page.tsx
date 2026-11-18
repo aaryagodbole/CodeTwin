@@ -64,7 +64,8 @@ function Detail() {
           <Stat label={<>Tests to run <Info>Test files CodeTwin selected for this change.</Info></>} value={d.selected.length}
             hint={total && d.base === summary.data?.recorded_commit ? `of ${total} test files` : undefined} />
           <Stat label={<>Tests skipped <Info>Share of test files left out. An estimate of effort saved, not of time (it assumes similar test durations).</Info></>}
-            value={skip == null ? "–" : `${(skip * 100).toFixed(0)}%`} hint="estimate" />
+            value={summary.error ? "error" : skip == null ? "–" : `${(skip * 100).toFixed(0)}%`}
+            hint={summary.error ? "could not load the test count" : "estimate"} />
           <Stat label="Outcome" value={d.missed == null ? "pending" : d.missed ? "missed" : "safe"}
             hint={d.missed == null ? "not labelled yet: known after a full test run of this change" : "from the later full run"} />
           <Stat label="Selection threshold" value={d.threshold == null ? "–" : d.threshold.toFixed(2)} hint={d.alpha == null ? undefined : `target miss rate ${(d.alpha * 100).toFixed(0)}%`} />
