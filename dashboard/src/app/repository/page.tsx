@@ -18,7 +18,8 @@ const open = (p: string) => `/graph/?file=${encodeURIComponent(p)}`;
 export default function Repository() {
   const q = useQuery({ queryKey: ["map"], queryFn: () => get<Graph>("/map") });
   const a = useMemo(() => (q.data ? analyseRepo(q.data) : undefined), [q.data]);
-  if (q.error) return <ErrorBox error={q.error} />;
+  // "<100%" below when rounding would hide an unreached file. A failed refresh keeps the last analysis on screen with a warning; only a first load that fails is an error page.
+  if (q.error && !a) return <ErrorBox error={q.error} />;
   if (!a) return <Loading />;
   if (a.files === 0 && a.tests === 0 && a.edges === 0) return <Empty>Nothing recorded yet. Run <code>codetwin record</code> to analyse this repository.</Empty>;
   const maxEdge = Math.max(...a.edgeTypes.map((e) => e.count), 1);
@@ -28,14 +29,20 @@ export default function Repository() {
       <PageHeader title="Repository analysis">
         What CodeTwin learned about this codebase: how files depend on each other, which are covered by tests, and what it cannot see.
       </PageHeader>
+      {q.error && (
+        <p role="status" className="rounded-xl border border-warn/40 bg-warn/10 px-3 py-2 text-sm">
+          Could not refresh ({String((q.error as Error).message ?? q.error)}); showing the last analysis.
+        </p>
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat label="Source files" value={a.files} icon={FileCode2} hint="in the current checkout" />
+        <Stat label="Source files" value={a.files} icon={FileCode2} hint="in the dependency graph" />
         <Stat label="Test and support files" value={a.tests} icon={FlaskConical} hint="tests plus fixtures, conftest" />
         <Stat label="Links found" value={a.edges} icon={Link2} hint={`${a.edgeTypes.length} kinds of evidence`} />
         <Stat label={<>Files reached by tests <Info>Share of source files that at least one test file imports or actually ran during recording. A low number means changes there are hard to check.</Info></>}
-          value={a.files === 0 ? "–" : `${(a.reach * 100).toFixed(0)}%`} icon={ShieldCheck}
-          hint={a.untested.length ? `${a.untested.length} without a test` : "every file has a test"} />
+          value={a.files === 0 ? "–" : a.untested.length > 0 && a.reach >= 0.995 ? "<100%" : `${(a.reach * 100).toFixed(0)}%`}
+          icon={ShieldCheck}
+          hint={a.files === 0 ? "no source files to assess" : a.untested.length ? `${a.untested.length} without a test` : "every file has a test"} />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
@@ -53,7 +60,7 @@ export default function Repository() {
           <p className="mt-4 text-xs text-muted">Static = read from the code. Runtime = seen while tests ran. Co-change = from git history. Unresolved = could not be determined.</p>
         </Card>
 
-        <Card title="Most depended-on files" action={<Info>Files that many other files import. A change here can ripple widely, so they deserve the strongest tests.</Info>}>
+        <Card title="Most depended-on files" action={<Info align="end">Files that many other files import. A change here can ripple widely, so they deserve the strongest tests.</Info>}>
           {a.hubs.length === 0 ? <Empty>No file is imported by another yet.</Empty> : (
             <ul className="space-y-3">
               {a.hubs.map((h) => (
@@ -74,7 +81,7 @@ export default function Repository() {
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card title="Files without a test" action={<Badge tone={a.untested.length ? "amber" : "green"}>{a.untested.length ? `${a.untested.length} found` : "none"}</Badge>}>
-          {a.untested.length === 0 ? <Empty>Every source file is reached by at least one test.</Empty> : (
+          {a.files === 0 ? <Empty>No source files to assess.</Empty> : a.untested.length === 0 ? <Empty>Every source file is reached by at least one test.</Empty> : (
             <ul className="divide-y divide-border text-sm">
               {a.untested.map((f) => (
                 <li key={f.node.id} className="flex items-center justify-between gap-3 py-2">
@@ -86,7 +93,7 @@ export default function Repository() {
           )}
         </Card>
 
-        <Card title="What the analysis cannot see" action={<Info>Links CodeTwin could not resolve, such as dynamic calls. They are reported as unknown, never treated as safe.</Info>}>
+        <Card title="What the analysis cannot see" action={<Info align="end">Links CodeTwin could not resolve, such as dynamic calls. They are reported as unknown, never treated as safe.</Info>}>
           {a.unresolved.length === 0 ? (
             <div className="flex items-center gap-2 py-6 text-sm text-muted"><Boxes size={18} aria-hidden />Nothing unresolved in this repository.</div>
           ) : (

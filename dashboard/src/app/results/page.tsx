@@ -15,24 +15,28 @@ export default function Results() {
   const c = q.data;
   const data = c.points.map((p) => ({ n: p.n, observed: p.observed_miss_rate * 100, target: p.alpha * 100, level: p.alpha_t * 100 }));
   const rate = c.labelled ? (c.misses / c.labelled) * 100 : null;
-  const target = data.at(-1)?.target ?? null;
+  // The miss rate covers every labelled decision, so it is compared with their average target, not the latest one.
+  const targets = data.map((d) => d.target);
+  const target = targets.length ? targets.reduce((x, y) => x + y, 0) / targets.length : null;
+  const mixed = targets.some((t) => Math.abs(t - targets[0]) > 1e-9);
   const ok = rate != null && target != null && rate <= target;
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Results</h1>
         <p className="text-sm text-muted">
-          Does the observed miss rate stay at the target? Each point is a change whose outcome is known (from <code>codetwin learn</code>).
+          Does the observed miss rate stay at the target? Each point is a calibrated-mode decision whose outcome is known
+          (from <code>codetwin learn</code>); budget, full and fallback runs are not part of the calibration.
         </p>
       </div>
       <div className="grid gap-4 sm:grid-cols-3">
-        <Stat label="Labelled changes" value={c.labelled} icon={Crosshair} />
+        <Stat label="Labelled calibrated decisions" value={c.labelled} icon={Crosshair} />
         <Stat label="Misses" value={c.misses} icon={ShieldAlert} />
         <Stat label="Observed miss rate" value={rate == null ? "–" : `${rate.toFixed(1)}%`}
-          hint={target == null ? undefined : `${ok ? "within" : "above"} the ${fmtPct(target / 100)} target`} icon={Target} />
+          hint={target == null ? undefined : `${ok ? "within" : "above"} the ${mixed ? "average " : ""}${fmtPct(target / 100)} target`} icon={Target} />
       </div>
       <Card title="Observed miss rate vs target">
-        {data.length === 0 ? <Empty>No labelled decisions yet. Run <code>codetwin learn</code> after a few changes.</Empty> : (
+        {data.length === 0 ? <Empty>No labelled calibrated decisions yet. Run <code>codetwin select</code> (calibrated mode) and then <code>codetwin learn</code> after a few changes.</Empty> : (
           <div className="h-80">
             <ResponsiveContainer>
               <AreaChart data={data} margin={{ top: 8, right: 12, left: -8, bottom: 8 }}>

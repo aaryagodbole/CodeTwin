@@ -56,7 +56,7 @@ export default function Overview() {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
-        <Card title="Latest residual risk" action={<Info>The estimated chance that skipping the other tests hides a failure. It must stay under the target, otherwise CodeTwin abstains.</Info>}>
+        <Card title="Latest residual risk" action={<Info align="end">The estimated chance that a test the change affects is among those skipped. Above the target, CodeTwin abstains and recommends a broader selection.</Info>}>
           {decisionState ?? (<>
             {/* The target this decision was made with (its recorded alpha), not today's configuration. */}
             <RiskGauge value={latest ? (latest.residual_risk ?? null) : null} target={latest ? latest.alpha : null} />
@@ -77,7 +77,7 @@ export default function Overview() {
           <Stat label="Recorded commit" value={<code className="text-xl">{s.recorded_commit?.slice(0, 8) ?? "none"}</code>}
             hint={`${s.test_files} test files`} icon={GitCommit} />
           <Stat label={<>Test files skipped <Info>Average share of test files left out of a run, over the latest decisions made against the current recording. An estimate of effort saved; it assumes similar test durations.</Info></>}
-            value={avgSkipped == null ? "–" : `${(avgSkipped * 100).toFixed(0)}%`}
+            value={decisions.error ? "error" : !decisions.data ? "…" : avgSkipped == null ? "–" : `${(avgSkipped * 100).toFixed(0)}%`}
             hint={s.suite_seconds == null ? "estimate" : `full suite takes ${s.suite_seconds.toFixed(1)}s`} icon={Zap} />
         </div>
       </div>
@@ -90,7 +90,7 @@ export default function Overview() {
               { label: "Missed", value: missed, color: "var(--bad)" },
               { label: "Pending", value: pending, color: "var(--muted)" },
             ]} />
-            <p className="mt-4 text-xs text-muted">{proceed} of the last {rows.length} decisions proceeded; the rest abstained and ran more tests.</p>
+            <p className="mt-4 text-xs text-muted">{proceed} of the last {rows.length} decisions proceeded; the rest abstained and recommended a broader selection.</p>
           </>)}
         </Card>
         <Card title="Latest decisions" className="lg:col-span-2"

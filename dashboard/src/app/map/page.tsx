@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { FileCode2, FlaskConical, Search, X } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { GraphView, Legend } from "@/components/graph-view";
 import { Empty, ErrorBox, Loading } from "@/components/state";
 import { Card } from "@/components/ui/card";
@@ -46,7 +46,25 @@ export default function SystemMap() {
   const label = (id: string) => pathOf.get(id) ?? id;
   // Keyboard path to node details: the search results are a list of buttons that select like a click does.
   const term = search.trim().toLowerCase();
-  const matches = term && graph ? graph.nodes.filter((n) => `${n.label} ${n.path}`.toLowerCase().includes(term)).slice(0, 8) : [];
+  // Exact path or name first, then paths that start with the text, then any other match.
+  const rank = (n: { label: string; path: string }) =>
+    n.path.toLowerCase() === term || n.label.toLowerCase() === term ? 0 : n.path.toLowerCase().startsWith(term) ? 1 : 2;
+  const matches = term && graph
+    ? graph.nodes.filter((n) => `${n.label} ${n.path}`.toLowerCase().includes(term))
+      .sort((a, b) => rank(a) - rank(b) || a.path.localeCompare(b.path)).slice(0, 8)
+    : [];
+  // Where keyboard focus goes back to when the details close: the result that opened them, else the search box.
+  const searchRef = useRef<HTMLInputElement>(null);
+  const openedFrom = useRef<string | null>(null);
+  const closeDetails = () => {
+    setPicked(null);
+    const id = openedFrom.current;
+    openedFrom.current = null;
+    requestAnimationFrame(() => {
+      const back = id ? document.querySelector<HTMLButtonElement>(`[data-result="${CSS.escape(id)}"]`) : null;
+      (back ?? searchRef.current)?.focus();
+    });
+  };
   return (
     <div className="space-y-6">
       <PageHeader title="Dependency graph">
@@ -56,7 +74,7 @@ export default function SystemMap() {
         <div className="mb-4 flex flex-wrap items-center gap-2">
           <label className="relative">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" aria-hidden />
-            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Find a file or test"
+            <input ref={searchRef} value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Find a file or test"
               aria-label="Find a file or test"
               className="w-56 rounded-full border border-border bg-card-2 py-1.5 pl-8 pr-3 text-sm outline-none focus:border-accent" />
           </label>
@@ -77,9 +95,10 @@ export default function SystemMap() {
         {matches.length > 0 && (
           <ul className="mb-3 flex flex-wrap gap-1.5" aria-label="Matching files and tests">
             {matches.map((n) => (
-              <li key={n.id}>
-                <button type="button" onClick={() => setPicked(n.id)} aria-pressed={picked === n.id}
-                  className="rounded-full border border-border bg-card px-2.5 py-1 text-xs hover:border-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent">
+              <li key={n.id} className="min-w-0 max-w-full">
+                <button type="button" data-result={n.id} onClick={() => { openedFrom.current = n.id; setPicked(n.id); }}
+                  aria-pressed={picked === n.id}
+                  className="max-w-full break-all rounded-2xl border border-border bg-card px-2.5 py-1 text-left text-xs hover:border-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent">
                   {n.path}
                 </button>
               </li>
@@ -103,7 +122,7 @@ export default function SystemMap() {
                         {node.kind === "test" ? <FlaskConical size={16} className="text-good" /> : <FileCode2 size={16} className="text-accent" />}
                         <span className="break-all">{node.path}</span>
                       </div>
-                      <button onClick={() => setPicked(null)} aria-label="Close details" className="text-muted hover:text-foreground"><X size={16} /></button>
+                      <button onClick={closeDetails} aria-label="Close details" className="text-muted hover:text-foreground"><X size={16} /></button>
                     </div>
                     <p className="text-xs text-muted">{node.kind === "test" ? "Test file" : "Source file"} · {related.length} links</p>
                     <ul className="max-h-60 space-y-1.5 overflow-y-auto text-xs">

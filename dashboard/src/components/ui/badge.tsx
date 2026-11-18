@@ -4,7 +4,7 @@ const tones = {
   amber: "bg-warn/15 text-warn-ink",
   red: "bg-bad/15 text-bad-ink",
   accent: "bg-accent-soft text-accent",
-  gray: "bg-muted/15 text-muted",
+  gray: "bg-muted/15 text-muted-ink",
 } as const;
 
 export function Badge({ tone = "gray", children }: { tone?: keyof typeof tones; children: React.ReactNode }) {

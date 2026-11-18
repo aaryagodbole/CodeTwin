@@ -67,7 +67,9 @@ export function GraphView({ graph, root, onOpen, onSelect, search, selected }: {
       setReady((n) => n + 1);
       cy.on("mouseover", "node", (e) => {
         const hood = e.target.closedNeighborhood();
-        cy!.elements().not(hood).addClass("hover-faded");
+        // Search hits (and their links) stay bright while hovering something else.
+        const hits = cy!.nodes(".hit");
+        cy!.elements().not(hood).not(hits).not(hits.connectedEdges()).addClass("hover-faded");
         hood.addClass("lit");
       });
       cy.on("mouseout", "node", () => cy!.elements().removeClass("hover-faded lit"));
@@ -75,7 +77,17 @@ export function GraphView({ graph, root, onOpen, onSelect, search, selected }: {
         cy.on("tap", "node", (e) => onSelect(e.target.id()));
         cy.on("tap", (e) => { if (e.target === cy) onSelect(null); });
       }
-      if (onOpen) cy.on(onSelect ? "dbltap" : "tap", "node", (e) => onOpen(e.target.data("path")));
+      if (onOpen && onSelect) {
+        // Cytoscape's dbltap does not check that both taps hit the same node; open only on two taps on one node.
+        let last: { id: string; at: number } | null = null;
+        cy.on("tap", "node", (e) => {
+          const id = e.target.id(), at = e.timeStamp;
+          if (last && last.id === id && at - last.at < 400) onOpen(e.target.data("path"));
+          last = { id, at };
+        });
+      } else if (onOpen) {
+        cy.on("tap", "node", (e) => onOpen(e.target.data("path")));
+      }
     });
     return () => {
       cancelled = true;
@@ -136,6 +148,8 @@ function graphStyle(fg: string, ring: string): StylesheetJson {
     { selector: "node[kind = 'test']", style: { "background-color": "#2fbf71", shape: "round-rectangle" } },
     { selector: "node[kind = 'unknown']", style: { "background-color": "#6e6e6e", shape: "diamond" } },
     { selector: "node[showLabel = 1], node:selected, node.lit, node.hit", style: { "text-opacity": 1 } },
+    // A label the user asked for (hover, search, selection) shows at any zoom, not only above the minimum size.
+    { selector: "node:selected, node.lit, node.hit", style: { "min-zoomed-font-size": 0 } },
     { selector: "edge", style: { opacity: 0.55 } },
     { selector: "node:selected", style: { "border-width": 3, "border-color": "#7c7cff" } },
     { selector: "edge", style: { width: 1.5, "curve-style": "bezier", "target-arrow-shape": "triangle", "arrow-scale": 0.7 } },

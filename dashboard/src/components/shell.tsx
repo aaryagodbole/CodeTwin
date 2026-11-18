@@ -82,7 +82,7 @@ export function Shell({ banner, children }: { banner?: React.ReactNode; children
           {links.map(({ href, label, icon: Icon }) => (
             <Link key={href} href={href} aria-current={current(href)}
               className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition ${
-                isActive(href) ? "bg-accent-soft font-medium text-accent" : "text-muted hover:bg-card-2 hover:text-foreground"}`}>
+                isActive(href) ? "bg-accent-soft font-medium text-accent-ink" : "text-muted hover:bg-card-2 hover:text-foreground"}`}>
               <Icon size={17} aria-hidden />
               {label}
             </Link>
@@ -98,7 +98,7 @@ export function Shell({ banner, children }: { banner?: React.ReactNode; children
           <nav className="flex gap-1 md:hidden" aria-label="Main (mobile)">
             {links.map(({ href, label, icon: Icon }) => (
               <Link key={href} href={href} aria-label={label} aria-current={current(href)}
-                className={`grid h-9 w-9 place-items-center rounded-lg ${isActive(href) ? "bg-accent-soft text-accent" : "text-muted"}`}>
+                className={`grid h-9 w-9 place-items-center rounded-lg ${isActive(href) ? "bg-accent-soft text-accent-ink" : "text-muted"}`}>
                 <Icon size={17} />
               </Link>
             ))}
