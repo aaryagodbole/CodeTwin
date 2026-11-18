@@ -95,8 +95,9 @@ unless you are still working; drafts are not reviewed.
 
 1. Optional, any time: ask PR-Agent (see below).
 2. When checks are green: comment `@coderabbitai full review`. Wait for its review (a few minutes).
-3. The code owner (Aarya) is requested automatically, and runs a full code review (`/code-review` in Claude
-   Code) on every pull request before it can be merged. Its findings arrive as review comments; answer them in
+3. The code owner (Aarya) is requested automatically, and runs a full code review on every pull request before
+   it can be merged (`/code-review --comment <pull request number>` in Claude Code, which posts each finding as
+   a review comment on the lines it is about). Answer those comments in
    step 8 like any other.
 
 **PR-Agent: the free AI reviewer you can use as often as you like**
@@ -202,13 +203,15 @@ spec. Follow these steps in order.
    messages. Follow the rules below (no look-ahead, unknowns reported, extension points, output contract).
 5. **Test what the issue lists**, plus one test for each extra case you added. Try the feature by hand as the
    issue describes. Run `scripts/check.sh` until it passes. Update the CHANGELOG and docs named in the issue.
-   Then do the **self-review** (next section) and fix what it finds before opening the pull request.
+   Then do the **self-review** (section "Self-review before opening a pull request" below) and fix what it
+   finds before opening the pull request.
 6. **Open the pull request into `dev`.** Fill in the template:
    - write `Closes #<issue>` in the body
    - list anything you did differently from the issue, and why, with a link to the issue comment where it was
      agreed
+   - fill in *Self-review*: the tool and skills you used, what the review found, what you fixed
    - add a screenshot for any VS Code or dashboard change
-7. **Get both reviews.** A pull request is merged only after both:
+7. **Get all the reviews.** A pull request is merged only after all of these:
    - **CodeRabbit.** Auto-review is off in this repository. When the pull request is ready (checks green, your
      own review done), comment exactly `@coderabbitai full review`. This must be a mention, not a link. After
      you have pushed fixes for its comments, comment `@coderabbitai review` once. The free plan allows about one
@@ -269,15 +272,16 @@ If a tool has no skill for a job, follow the steps in this file by hand.
 ## Self-review before opening a pull request
 
 Every author does this, and every AI coding tool (Claude Code, Codex, Antigravity, Copilot, Cursor or any
-other) must do it before it opens or updates a pull request. A pull request without a self-review is not ready
-for review.
+other) must do it at two moments: before it opens the pull request, and again before it asks for the final
+review after fixing review comments (step 8). Not on every small push. A pull request without a self-review is
+not ready for review.
 
 **1. Run a full review of your whole change** against the latest `dev` (`git fetch origin`, then review
 `git diff origin/dev...HEAD`, not only the last commit):
 
 | Tool | How |
 |---|---|
-| Claude Code | `/code-review` |
+| Claude Code | `/code-review <pull request number>`, or `/code-review <your branch name>` before the pull request exists. Plain `/code-review` reviews only what is not pushed yet, so always give the target, and check that the files it lists match `git diff --stat origin/dev...HEAD` |
 | Codex | `/review`, against the base branch `dev` |
 | Any other tool or agent (Antigravity, Copilot, Cursor, ...) | ask it to review `git diff origin/dev...HEAD` using the checklist below, and to list each problem with file, line and a concrete failing input |
 | No AI tool | go through the checklist below yourself, file by file |
@@ -315,6 +319,10 @@ replace it.
 - **No look-ahead.** Code in `risk/` and `selection.py` may use only evidence that exists *before* a change's
   tests run: the base commit's recorded run, the diff, and static facts of the new code. The new run is used
   only in `Engine.learn()` to compute the ground truth. Using it for features or decisions invalidates the method.
+- **No hard-coded languages or repositories.** CodeTwin must work on any repository in any language. Shared code
+  has no special cases for one language, file name, extension, test runner or repository: language facts belong
+  in `src/codetwin/lang/specs/` or `.codetwin.toml`, runners are detected, and the dashboard treats every file the
+  same way.
 - **Unknown is not "no dependency".** Never drop unresolved links (dynamic calls, unparsed files, new modules);
   report them in `Impact.unknowns` / `Decision.reasons`.
 - **Calibration semantics are fixed by the paper.** `crc_threshold` returns `-1.0` when no threshold is feasible,

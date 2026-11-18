@@ -8,6 +8,10 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Added
+- Contributor process (`AGENTS.md`, `CONTRIBUTING.md`, pull request template): every AI coding tool uses its
+  matching skills and self-reviews the whole change before opening a pull request (Claude Code `/code-review`,
+  Codex `/review`, or a checklist); the code owner runs `/code-review` before every merge; the rule against
+  hard-coded languages and repositories is listed with the project rules.
 - Cloud design: ADR 0003 (a cloud plane that receives decision reports, never code), `docs/cloud.md`
   (report format, API, OIDC uploads, schema, environments, operations) and `docs/data-policy.md`
 - Hosted dashboard: a demo mode (`npm run dev:demo`, `build:demo`) reads a snapshot of the API written by
