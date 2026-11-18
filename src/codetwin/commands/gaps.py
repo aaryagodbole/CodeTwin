@@ -1,6 +1,7 @@
 """Print the test-gap report without storing a decision."""
 from __future__ import annotations
 
+import argparse
 import sys
 
 from .. import report
@@ -32,12 +33,12 @@ def _ranges(lines: list[int]) -> str:
     return ", ".join(parts)
 
 
-def add_arguments(p) -> None:
+def add_arguments(p: argparse.ArgumentParser) -> None:
     p.add_argument("--base", help="recorded commit to compare with (default: latest recorded)")
     p.add_argument("--json", action="store_true", help="machine-readable output (same shape as extras.test_gaps)")
 
 
-def run(args) -> int:
+def run(args: argparse.Namespace) -> int:
     with engine(args) as eng:
         # Only what the section needs: no test listing, history or feature rows, and nothing is stored.
         # Nothing recorded raises RuntimeError; the CLI prints it on stderr and exits with 2, like every command.
