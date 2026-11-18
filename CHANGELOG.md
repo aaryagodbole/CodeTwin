@@ -9,8 +9,9 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 - Contributor process (`AGENTS.md`, `CONTRIBUTING.md`, pull request template): every AI coding tool uses its
-  matching skills and self-reviews the whole change before opening a pull request (Claude Code `/code-review`,
-  Codex `/review`, or a checklist); the code owner runs `/code-review` before every merge; the rule against
+  matching skills and self-reviews the whole change right after opening a pull request, before asking for review
+  (Claude Code `/code-review`, Codex `/review`, or a checklist); the code owner runs `/code-review` before every
+  merge, with at most two re-runs after fixes; the rule against
   hard-coded languages and repositories is listed with the project rules.
 - Cloud design: ADR 0003 (a cloud plane that receives decision reports, never code), `docs/cloud.md`
   (report format, API, OIDC uploads, schema, environments, operations) and `docs/data-policy.md`

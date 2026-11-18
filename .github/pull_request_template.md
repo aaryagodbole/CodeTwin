@@ -30,11 +30,12 @@
 
 - [ ] Merged the latest `dev` into this branch before asking for review
 - [ ] Checks are green
+- [ ] Self-review done and reported above (AGENTS.md, "Self-review of your pull request")
 - [ ] Commented `@coderabbitai full review` once ready (and `@coderabbitai review` once after pushing fixes)
 - [ ] Code owner review requested (automatic via CODEOWNERS)
 - [ ] Every review comment fixed or answered with a reason; conversations resolved only when done
 - [ ] Screenshot added (VS Code or dashboard changes)
 
-## Before merge (code owner)
+## Before merge (only the code owner ticks this)
 
 - [ ] Merge review: `/code-review --comment <pull request number>` on the latest commit; every finding fixed or answered

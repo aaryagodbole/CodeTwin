@@ -386,7 +386,8 @@ git push -u origin feature/test-gaps   # 7. upload the branch to GitHub
 ```
 
 8. GitHub shows a **Compare & pull request** button: open the PR **into `dev`**, fill in the template
-   (what, how you tested it) and add a line to `CHANGELOG.md` under *Unreleased*.
+   (what, how you tested it) and add a line to `CHANGELOG.md` under *Unreleased*. Then review your own change
+   (AGENTS.md, "Self-review of your pull request") and report it in the template's Self-review section.
 9. Wait for the checks on the PR to turn green and for a review. Fix comments by committing again on the same
    branch and pushing; the PR updates itself.
 10. After it is merged: `git checkout dev && git pull`, then start the next task with a new branch.

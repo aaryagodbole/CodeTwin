@@ -145,7 +145,7 @@ small push).
 **9. Merge and clean up**
 
 Aarya merges (squash) when the conditions in "Merge review" (workflow step 7) are met. Never merge your own
-pull request. After the merge:
+pull request (the only exception, for the code owner, is in "Merge review"). After the merge:
 
 ```bash
 git checkout dev && git pull
@@ -156,8 +156,7 @@ Set the Notion card to *Done*, and comment on any issue that was waiting for you
 
 **Never**
 
-- `git push --force` / `git push -f`, `git reset --hard` on a pushed branch, or `git rebase` after a review
-  started. Reviewers lose their place, and work can be lost. To undo a pushed commit, use `git revert <id>`.
+- `git push --force` / `git push -f`, `git reset --hard` or `git rebase` on a branch you have already pushed. Reviewers lose their place, and work can be lost. To undo a pushed commit, use `git revert <id>`.
 - Commit secrets (API keys, tokens, `.env` files). If you pushed one by mistake, tell Aarya at once; the key
   must be revoked, not only deleted from the file.
 - Commit directly to `dev` or `main`, or work on someone else's branch without asking them.
@@ -221,16 +220,20 @@ spec. Follow these steps in order.
    - **PR-Agent** (optional, free, no hourly limit) runs only when asked. Comment `/review` for findings,
      `/improve` for code suggestions, `/describe` for a summary or `/ask "..."` for a question; comment again
      after you push fixes. Rules: `.pr_agent.toml`. Answer its comments like CodeRabbit's.
-   - **Code owner.** `.github/CODEOWNERS` requests Aarya automatically. Don't merge your own pull request.
+   - **Code owner.** `.github/CODEOWNERS` requests Aarya automatically. Don't merge your own pull request
+     (the code owner's own pull requests: see "Merge review").
    - **Merge review (the one rule for merging).** The code owner runs `/code-review --comment <pull request
      number>` (Claude Code) on the pull request's **latest commit**, even when CodeRabbit and PR-Agent found
      nothing; `--comment` posts each finding on the lines it is about. The reviewer reads the linked issue first,
      so a problem in the issue's Approach is raised on the issue, not blamed on the author. The pull request is
      merged only when every finding is fixed or answered, every other review comment is resolved and CI is
-     green. If fixes were pushed after the review, it runs once more; when that run finds nothing new (only
-     findings already answered), the pull request is merged. Merging `dev` into the branch without conflicts
-     does not need a new review. When the code owner is the author, the code owner still runs the merge review
-     and merges with the admin bypass after it is clean.
+     green. If fixes were pushed after the review, it runs again on those new commits only, at most twice. An AI
+     review finds something slightly different on every run, so "nothing new" is not the bar: the pull request
+     is merged when a re-run has no new correctness or security finding. Smaller points left after the second
+     re-run go into a follow-up issue linked from the pull request. A merge of `dev` that git completed on its
+     own is covered by CI; a merge where you solved conflicts by hand is reviewed again. When the code owner is
+     the author, the code owner still runs the merge review and merges with the admin bypass after it passes;
+     this is the only exception to "never merge your own pull request".
 8. **Resolve every review comment yourself**, from CodeRabbit, PR-Agent and the code owner. The author of the pull
    request fixes and resolves; reviewers only comment. For each one, either:
    - fix it, push, and reply with what you changed (commit id), or
@@ -284,13 +287,13 @@ review after fixing review comments (step 8). Not on every small push. A pull re
 not ready for review.
 
 **1. Run a full review of your whole change** against the latest `dev` (`git fetch origin && git merge
-origin/dev` first, so the review sees what CI and the merge will see; then review
+origin/dev` and `git push` first, so the review sees what CI and the merge will see; then review
 `git diff origin/dev...HEAD`, not only the last commit):
 
 | Tool | How |
 |---|---|
 | Claude Code | `/code-review <pull request number>`. Plain `/code-review` reviews only unpushed work, so always give the number |
-| Codex | `/review`, against the base branch `dev` |
+| Codex | `/review`, with `origin/dev` (after `git fetch`) as the base, not your local `dev` |
 | Any other tool or agent (Antigravity, Copilot, Cursor, ...) | ask it to review `git diff origin/dev...HEAD` using the checklist below, and to list each problem with file, line and a concrete failing input |
 | No AI tool | go through the checklist below yourself, file by file |
 
@@ -330,8 +333,8 @@ replace it.
 - **No hard-coded languages or repositories.** CodeTwin must work on any repository in any language. Shared code
   has no special cases for one language, file name, extension, test runner or repository: language facts belong
   in `src/codetwin/lang/specs/` or `.codetwin.toml`, runners are detected, and the dashboard treats every file the
-  same way. Existing code that breaks this is fixed in its own issue (#71); in other pull requests, flag only
-  new special cases.
+  same way. Existing code that breaks this is fixed in a separate issue for it (open one if none exists, and link
+  it from #71); in other pull requests, flag only new special cases.
 - **Unknown is not "no dependency".** Never drop unresolved links (dynamic calls, unparsed files, new modules);
   report them in `Impact.unknowns` / `Decision.reasons`.
 - **Calibration semantics are fixed by the paper.** `crc_threshold` returns `-1.0` when no threshold is feasible,
