@@ -339,11 +339,54 @@ def test_ranges_helper():
     assert _ranges([10, 11, 12, 20, 21]) == "10-12, 20-21"
 
 
-def test_gaps_friendly_error_before_record(toy_repo, capsys):
-    """gaps prints a friendly message if there is no recorded run."""
+def test_gaps_error_before_record_goes_to_stderr(toy_repo, capsys):
+    """Nothing recorded: same as every command (cli.main prints on stderr, exit 2); stdout stays empty for --json."""
     main(["-C", str(toy_repo), "init"])
+    for extra in ([], ["--json"]):
+        capsys.readouterr()
+        assert main(["-C", str(toy_repo), "gaps", *extra]) == 2
+        out, err = capsys.readouterr()
+        assert out == ""
+        assert "record" in err.lower()
+
+
+def test_gaps_failing_section_is_reported_like_select(toy_repo, capsys, monkeypatch):
+    """A section error gives select's {"error", "summary"} shape and a non-zero exit, not a traceback."""
+    from codetwin.report import test_gaps
+
+    main(["-C", str(toy_repo), "init"])
+    main(["-C", str(toy_repo), "record"])
+
+    def boom(ctx):
+        raise ValueError("bad hunk")
+
+    monkeypatch.setattr(test_gaps, "contribute", boom)
     capsys.readouterr()
-    ret = main(["-C", str(toy_repo), "gaps"])
-    assert ret == 1
-    out = capsys.readouterr().out
-    assert "record" in out.lower()
+    assert main(["-C", str(toy_repo), "gaps", "--json"]) == 1
+    out = json.loads(capsys.readouterr().out)
+    assert out == {"error": "ValueError: bad hunk", "summary": "section failed: bad hunk"}
+    assert main(["-C", str(toy_repo), "gaps"]) == 1
+    assert "section failed" in capsys.readouterr().err
+
+
+def test_gaps_does_not_compute_feature_rows(toy_repo, capsys, monkeypatch):
+    """gaps needs only base, recorded run and diff: it must not run the test listing and feature rows of select."""
+    from codetwin.engine import Engine
+
+    main(["-C", str(toy_repo), "init"])
+    main(["-C", str(toy_repo), "record"])
+
+    def no_analyse(self, base=None):
+        raise AssertionError("gaps must not call Engine.analyse()")
+
+    monkeypatch.setattr(Engine, "analyse", no_analyse)
+    capsys.readouterr()
+    assert main(["-C", str(toy_repo), "gaps"]) == 0
+
+
+def test_report_build_only_runs_the_named_sections():
+    from codetwin import report
+
+    ctx = report.Context(cfg=None, store=None, base="x", prev=None, diff={}, rows={}, scores={}, decision=None,
+                         is_source=lambda p: True)
+    assert set(report.build(ctx, only={"test_gaps"})) == {"test_gaps"}

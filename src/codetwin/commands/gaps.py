@@ -1,6 +1,8 @@
 """Print the test-gap report without storing a decision."""
 from __future__ import annotations
 
+import sys
+
 from .. import report
 from ..report import test_gaps
 from ._util import engine, print_json
@@ -37,36 +39,27 @@ def add_arguments(p) -> None:
 
 def run(args) -> int:
     with engine(args) as eng:
-        try:
-            base, prev, diff, rows = eng.analyse(args.base)
-        except RuntimeError as exc:
-            print(str(exc))
-            return 1
+        # Only what the section needs: no test listing, history or feature rows, and nothing is stored.
+        # Nothing recorded raises RuntimeError; the CLI prints it on stderr and exits with 2, like every command.
+        base, prev, diff = eng.change(args.base)
+        ctx = eng.report_context(None, base, prev, diff, rows={}, scores={})
+        # Through report.build, so a failing section gives the same {"error", "summary"} as in `select`.
+        gaps = report.build(ctx, only={test_gaps.NAME})[test_gaps.NAME]
 
-        ctx = report.Context(
-            cfg=eng.cfg, store=eng.store, base=base, prev=prev,
-            diff=diff, rows=rows, scores={}, decision=None,
-            is_source=eng.is_source, facts_now=eng.facts_now,
-            lang=eng.lang,
-        )
-        gaps = test_gaps.contribute(ctx)
-
+    failed = "error" in gaps
     if args.json:
         print_json(gaps)
-        return 0
+        return 1 if failed else 0
+    if failed:
+        print(f"codetwin gaps: {gaps['summary']}", file=sys.stderr)
+        return 1
 
-    files = gaps.get("files", {})
-    if not files:
-        print(gaps["summary"])
-        return 0
-
-    for path, info in sorted(files.items()):
+    for path, info in sorted(gaps.get("files", {}).items()):
         lines = info["lines"]
-        changed = info["changed_lines"]
         syms = info.get("symbols", [])
         sym_text = f"  ({', '.join(syms)})" if syms else ""
-        print(f"{path}  {len(lines)} of {changed} changed lines untested{sym_text}")
+        # changed_lines counts every added line (blank lines and comments too), lines only code lines.
+        print(f"{path}  {len(lines)} untested code lines ({info['changed_lines']} lines changed){sym_text}")
         print(f"  lines {_ranges(lines)}")
-
     print(gaps["summary"])
     return 0
