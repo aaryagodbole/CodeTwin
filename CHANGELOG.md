@@ -8,6 +8,7 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Added
+- Report section `freshness` (`src/codetwin/report/freshness.py`): reports how many commits old the recorded evidence is, flags stale evidence when `commits_behind` exceeds `[freshness] stale_after` (default 20), and suggests running `codetwin record`.
 - Dashboard redesign: design tokens with a light and dark theme toggle, sidebar layout, residual-risk gauge, sparklines
   and outcome donut on the overview, filterable decisions with expandable rows, area chart of the observed miss rate
   against the target, skeleton, empty and error states. New pages: interactive dependency graph (search, hover
