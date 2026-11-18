@@ -1,16 +1,35 @@
 // Typed client for the read-only CodeTwin API (src/codetwin/server/app.py).
-// In production the dashboard is served by the API itself, so the base URL is empty (same origin).
+// Two data sources, chosen at build time with NEXT_PUBLIC_DATA_MODE (docs/dashboard.md):
+//   "live" (default): a running `codetwin serve`. When the API serves the dashboard itself the base URL is empty.
+//   "demo": static JSON in public/demo/, written by scripts/demo_snapshot.py from a real engine run. Used by the
+//           hosted dashboard (Vercel), which has no API behind it.
+import { demoPath } from "./demo-path.mjs";
+
+export { demoPath };
+
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? "";
+export const DATA_MODE: "live" | "demo" = process.env.NEXT_PUBLIC_DATA_MODE === "demo" ? "demo" : "live";
 
 export async function get<T>(path: string, params?: Record<string, string | undefined>): Promise<T> {
-  const qs = params
-    ? "?" + new URLSearchParams(Object.entries(params).filter(([, v]) => v) as [string, string][]).toString()
-    : "";
-  const res = await fetch(`${BASE}/api${path}${qs}`);
+  const clean = Object.fromEntries(Object.entries(params ?? {}).filter(([, v]) => v)) as Record<string, string>;
+  const url = DATA_MODE === "demo"
+    ? demoPath(path, clean)
+    : `${BASE}/api${path}${Object.keys(clean).length ? "?" + new URLSearchParams(clean).toString() : ""}`;
+  const res = await fetch(url);
   if (!res.ok) {
+    if (DATA_MODE === "demo" && res.status === 404) {
+      throw new Error("Not in the demo data. Run the dashboard against `codetwin serve` to see this view.");
+    }
     throw new Error(`${res.status} ${res.statusText}: ${await res.text()}`);
   }
   return (await res.json()) as T;
+}
+
+export interface DemoMeta {
+  generated: string;
+  project: string;
+  edits: number;
+  files: string[];
 }
 
 export interface Summary {

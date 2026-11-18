@@ -1,0 +1,28 @@
+{
+ "counts": {
+  "importers": 0,
+  "tests": 0,
+  "unknown": 0
+ },
+ "edges": [],
+ "evidence": {
+  "has_coverage": true,
+  "recorded_commit": "eef6eadce5256127d7536e675b88b567fa8a3d44"
+ },
+ "nodes": [
+  {
+   "id": "src/shop/__init__.py",
+   "kind": "target",
+   "label": "shop/__init__.py",
+   "path": "src/shop/__init__.py"
+  }
+ ],
+ "summary": "used by 0 · 0 tests · 0 unknown",
+ "target": {
+  "id": "src/shop/__init__.py",
+  "kind": "target",
+  "label": "shop/__init__.py",
+  "path": "src/shop/__init__.py"
+ },
+ "unknowns": []
+}

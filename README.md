@@ -184,7 +184,8 @@ and risk. Develop with `npm ci && npm run compile`, then press F5.
 
 **Web dashboard** – `dashboard/` (Next.js): overview, system map, decisions, results (observed miss rate vs
 target) and the impact graph of any file. `codetwin serve` serves it with the API; see
-[dashboard/README.md](dashboard/README.md).
+[dashboard/README.md](dashboard/README.md). Try it without a project: `cd dashboard && npm run dev:demo`. Local
+preview, Vercel deployment and pull-request checks: [docs/dashboard.md](docs/dashboard.md).
 
 **GitHub Actions** – `action/`: on a pull request, records evidence on the base branch, selects tests for the PR,
 writes the decision and risk to the job summary and runs the selected tests:

@@ -1,0 +1,41 @@
+{
+ "counts": {
+  "importers": 0,
+  "tests": 0,
+  "unknown": 0
+ },
+ "edges": [
+  {
+   "detail": "imported by this file",
+   "source": "tests/test_calc.py",
+   "target": "src/shop/calc.py",
+   "type": "static"
+  }
+ ],
+ "evidence": {
+  "has_coverage": true,
+  "recorded_commit": "eef6eadce5256127d7536e675b88b567fa8a3d44"
+ },
+ "nodes": [
+  {
+   "id": "tests/test_calc.py",
+   "kind": "target",
+   "label": "test_calc.py",
+   "path": "tests/test_calc.py"
+  },
+  {
+   "id": "src/shop/calc.py",
+   "kind": "source",
+   "label": "calc.py",
+   "path": "src/shop/calc.py"
+  }
+ ],
+ "summary": "used by 0 · 0 tests · 0 unknown",
+ "target": {
+  "id": "tests/test_calc.py",
+  "kind": "target",
+  "label": "test_calc.py",
+  "path": "tests/test_calc.py"
+ },
+ "unknowns": []
+}
