@@ -100,7 +100,10 @@ class Engine:
             d = Decision({t for t, r in rows.items() if r["forced"]}, "proceed", 0.0, None, "no-source-change",
                          ["no source file changed; only added or changed tests run"], risk_before=0.0)
             self._with_report(d, base, prev, diff, rows, scores)
-            self._save(d, base, alpha, scores)   # stored too, so run, learn and explain see this change (E3)
+            if diff:
+                # Stored too, so run, learn and explain see this change (E3). Without scores: nothing learns from
+                # them. A clean tree (empty diff) is not a change and replaces no decision.
+                self._save(d, base, alpha, {})
             return d
         recal = self._recalibrator()
         times = {t: prev.durations.get(t, 1.0) for t in rows}
@@ -128,10 +131,9 @@ class Engine:
             # cannot be estimated. Run everything and say why.
             d.decision, d.selected = "abstain", set(rows)
             d.residual_risk = residual_risk(scores, d.selected, recal)   # the risk of what now runs (E2)
-            # The risk sentence from decide() described the selection that no longer runs: state both risks.
+            # decide()'s sentence describes a selection that no longer runs: keep it and add the risk of what runs.
             d.reasons[d.reasons.index(risk_reason)] = (
-                f"estimated residual risk {d.risk_before:.1%} for the selection; running every test instead "
-                f"(estimated residual risk {d.residual_risk:.1%})")
+                f"{risk_reason}; running every test instead (estimated residual risk {d.residual_risk:.1%})")
             for why in sorted(set(blind.values())):
                 fs = sorted(f for f, w in blind.items() if w == why)
                 d.reasons.append(f"{why} for {', '.join(fs[:5])}{' and others' if len(fs) > 5 else ''}: "
@@ -189,9 +191,12 @@ class Engine:
         if last.get("mode") == "no-source-change":
             # Only tests changed and every changed test ran, so nothing was missed. Such a change says nothing about
             # the risk model: no calibration, recalibration or adaptive-level update (it would shift calibration).
-            if any(self.is_source(f) for f in self.changed(last["base"])):
-                raise RuntimeError("source files changed since the last `codetwin select`, which saw a change to tests "
-                                   "only; run `codetwin select` again before `learn`")
+            now = self.changed(last["base"])
+            new_tests = (set(now) & set(self.tests_now())) - set(last["selected"])
+            if any(self.is_source(f) for f in now) or new_tests:
+                raise RuntimeError("the change differs from the one the last `codetwin select` saw (it edited only "
+                                   f"{', '.join(last['selected']) or 'tests'}); run `codetwin select` again before "
+                                   "`learn`")
             self.store.save_outcome(last["id"], False)
             return {"affected": sorted(last["selected"]), "missed": [],
                     "alpha_t": self.store.alpha_t(self.cfg.alpha), "calibration_size": len(self.store.calibration()),
@@ -240,9 +245,9 @@ class Engine:
         return impact_of(g, files, self.tests_now())
 
     def explain(self) -> dict:
-        last = self.store.last_decision()
-        row = self.store.decision(last["id"]) if last else None
-        if not row:
+        rows = self.store.decisions(limit=1, extras=True)
+        if not rows:
             return {"message": "no decision yet"}
+        row = rows[0]
         return {k: row[k] for k in ("decision", "mode", "residual_risk", "risk_before", "threshold", "alpha", "reasons",
                                      "selected", "extras")}

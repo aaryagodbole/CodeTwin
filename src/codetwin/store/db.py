@@ -10,6 +10,7 @@ import json
 import math
 import sqlite3
 import time
+from collections import Counter
 from collections.abc import Iterable, Iterator
 from contextlib import AbstractContextManager, contextmanager
 from importlib import resources
@@ -125,20 +126,22 @@ class Store:
                 continue
             # A table rebuild must not cascade to child rows: such a file starts with this marker. The pragma has no
             # effect inside a transaction, so it is set before `begin` and restored after commit or rollback.
-            fk_off = sql.startswith("-- requires: foreign_keys off")
-            known: set[tuple] = set()
-            if fk_off:
-                self.con.execute("pragma foreign_keys = off")
-                # Fail only on violations this migration adds: an orphan row from before must not lock the store.
-                known = {tuple(r) for r in self.con.execute("pragma foreign_key_check")}
+            fk_off = sql.lstrip("\ufeff \t\r\n").startswith("-- requires: foreign_keys off")
+            known: Counter[tuple] = Counter()
             self._depth = 1
             try:
+                if fk_off:
+                    self.con.execute("pragma foreign_keys = off")
+                    # Fail only on violations this migration adds, so an orphan row from before cannot lock the store.
+                    # A multiset: `without rowid` tables report every violation with rowid null, so count them.
+                    known = Counter(tuple(r) for r in self.con.execute("pragma foreign_key_check"))
                 # Inside the try: if the script itself fails part way, its open transaction is rolled back too.
                 self.con.executescript("begin;\n" + sql)   # leaves the transaction open (no implicit commit)
                 if name in STEPS:
                     STEPS[name](self)
-                if fk_off and (bad := [r for r in self.con.execute("pragma foreign_key_check") if tuple(r) not in known]):
-                    raise sqlite3.IntegrityError(f"migration {name} broke {len(bad)} foreign key(s): {bad[:3]}")
+                if fk_off and (bad := Counter(tuple(r) for r in self.con.execute("pragma foreign_key_check")) - known):
+                    raise sqlite3.IntegrityError(f"migration {name} broke {bad.total()} foreign key(s): "
+                                                 f"{list(bad)[:3]}")
                 self.con.execute("insert into migrations values (?,?)", (name, time.time()))
                 self.con.execute("commit")
             except BaseException:

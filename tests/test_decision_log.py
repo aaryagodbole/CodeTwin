@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import math
 import sqlite3
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -60,10 +61,10 @@ def test_blind_override_stores_the_risk_of_every_test(toy_repo: Path, monkeypatc
                                                                       set(stored["selected"]), recal))
         assert stored["residual_risk"] == pytest.approx(d.residual_risk)
         assert stored["risk_before"] == pytest.approx(d.risk_before)
-        # the reason states the risk that was stored, not only the risk of the selection that no longer runs
-        assert any(f"{d.risk_before:.1%} for the selection" in r and f"{stored['residual_risk']:.1%}" in r
-                   for r in stored["reasons"])
-        assert not any(r.startswith("estimated residual risk") and "<= target" in r for r in stored["reasons"])
+        # the reason keeps decide()'s sentence (risk_before vs target) and states the risk that was stored
+        risk = [r for r in stored["reasons"] if r.startswith("estimated residual risk")]
+        assert len(risk) == 1 and f"{d.risk_before:.1%}" in risk[0] and "target" in risk[0]
+        assert f"running every test instead (estimated residual risk {stored['residual_risk']:.1%})" in risk[0]
 
 
 def test_stored_decision_matches_the_returned_one(toy_repo: Path) -> None:
@@ -103,6 +104,27 @@ def test_learn_refuses_a_test_only_decision_once_source_changed(toy_repo: Path) 
         with pytest.raises(RuntimeError, match="select` again"):
             eng.learn()
         assert not eng.store.has_outcome(eng.store.last_decision()["id"])
+
+
+def test_learn_refuses_a_test_only_decision_once_another_test_changed(toy_repo: Path) -> None:
+    with _engine(toy_repo) as eng:
+        t = toy_repo / "tests/test_price.py"
+        t.write_text(t.read_text() + "\ndef test_more():\n    assert True\n")
+        eng.select()
+        n = toy_repo / "tests/test_names.py"
+        n.write_text(n.read_text() + "\ndef test_other():\n    assert True\n")
+        with pytest.raises(RuntimeError, match="select` again"):
+            eng.learn()
+
+
+def test_a_clean_tree_stores_no_decision(toy_repo: Path) -> None:
+    with _engine(toy_repo) as eng:
+        _edit_source(toy_repo)
+        eng.select()
+        real = eng.store.last_decision()["id"]
+        subprocess.run(["git", "checkout", "--", "."], cwd=toy_repo, check=True)
+        assert eng.select().mode == "no-source-change"
+        assert eng.store.last_decision()["id"] == real      # the last real decision is still the one learn uses
 
 
 # ----------------------------------------------------------------------------------------------- E4: report sections
