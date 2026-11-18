@@ -35,7 +35,8 @@ def test_run_takes_the_tests_from_the_decision_file(toy_repo: Path, tmp_path: Pa
             yield eng
     monkeypatch.setattr(run_cmd, "engine", engine_without_runner)
     decision = tmp_path / "d.json"
-    decision.write_text(json.dumps({"decision": "proceed", "selected": ["tests/test_price.py"]}), encoding="utf-8")
+    decision.write_text(json.dumps({"decision": "proceed", "residual_risk": 0.02, "selected": ["tests/test_price.py"],
+                                    "reasons": [], "extras": {}}), encoding="utf-8")
     capsys.readouterr()
     assert main(["-C", str(toy_repo), "run", "--decision", str(decision)]) == 0
     assert ran and ran[-1] == ["tests/test_price.py"]
@@ -45,10 +46,12 @@ def test_run_refuses_a_file_that_is_not_a_decision(toy_repo: Path, tmp_path: Pat
                                                    capsys: pytest.CaptureFixture[str]) -> None:
     _recorded(toy_repo)
     bad = tmp_path / "bad.json"
-    bad.write_text('{"selected": null}', encoding="utf-8")
-    capsys.readouterr()
-    assert main(["-C", str(toy_repo), "run", "--decision", str(bad)]) == 2
-    assert "select --json" in capsys.readouterr().err
+    for content in ['{"selected": null}', "", "{not json"]:
+        bad.write_text(content, encoding="utf-8")
+        with pytest.raises(SystemExit, match="--decision"):
+            main(["-C", str(toy_repo), "run", "--decision", str(bad)])
+    with pytest.raises(SystemExit, match="not both"):
+        main(["-C", str(toy_repo), "run", "tests/test_price.py", "--decision", str(bad)])
 
 
 def test_learn_can_be_retried_after_failing_part_way(toy_repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -111,3 +114,13 @@ def test_inline_comments_use_the_pull_request_base(tmp_path: Path, monkeypatch: 
     assert _pull_request_base(repo) is None              # not in the local history: fall back to the recorded base
     monkeypatch.delenv("GITHUB_EVENT_PATH")
     assert _pull_request_base(repo) is None
+
+
+def test_a_malformed_event_never_crashes_the_review(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from codetwin.commands.review import _pull_request_base
+
+    event = tmp_path / "event.json"
+    for payload in ['{"pull_request": {"base": "main"}}', '{"pull_request": []}', "[1]", "{bad"]:
+        event.write_text(payload, encoding="utf-8")
+        monkeypatch.setenv("GITHUB_EVENT_PATH", str(event))
+        assert _pull_request_base(tmp_path) is None

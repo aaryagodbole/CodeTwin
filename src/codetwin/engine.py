@@ -195,7 +195,7 @@ class Engine:
         non_forced = [scores[t] for t in affected if t in scores and not rows.get(t, {}).get("forced")]
         # One transaction: if learning stops part way, nothing is stored and `learn` can simply run again
         # (calibration_point.decision_id is unique, so a half-stored label could never be completed).
-        with self.store._tx():
+        with self.store.transaction():
             self.store.add_calibration(min(non_forced) if non_forced else math.inf, last["id"])
             calib = self.store.calibration()
             self.store.add_recal_points(((t, scores[t], int(t in affected)) for t in scores

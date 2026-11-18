@@ -38,8 +38,8 @@ def _split(s: str | None) -> list[str]:
 def load_decision(path: str) -> dict:
     """A decision from `codetwin select --json`, checked before it is trusted (it is a file from outside)."""
     try:
-        d = json.loads(Path(path).read_text())
-    except (OSError, json.JSONDecodeError) as e:
+        d = json.loads(Path(path).read_text(encoding="utf-8"))
+    except (OSError, ValueError) as e:
         raise SystemExit(f"--decision {path}: cannot read JSON ({e})") from None
     problems = []
     if not isinstance(d, dict):
@@ -117,11 +117,13 @@ def _pull_request_base(root: Path) -> str | None:
     except (OSError, ValueError):
         return None
     pr = event.get("pull_request") if isinstance(event, dict) else None
-    sha = ((pr or {}).get("base") or {}).get("sha") if isinstance(pr, dict) else None
-    if not isinstance(sha, str) or not re.fullmatch(r"[0-9a-f]{40}", sha):
+    base = pr.get("base") if isinstance(pr, dict) else None
+    sha = base.get("sha") if isinstance(base, dict) else None
+    if not isinstance(sha, str) or not re.fullmatch(r"[0-9a-f]{40}|[0-9a-f]{64}", sha):   # SHA-1 or SHA-256
         return None
-    found = subprocess.run(["git", "cat-file", "-e", f"{sha}^{{commit}}"], cwd=root, capture_output=True, check=False)
-    return sha if found.returncode == 0 else None
+    # The commit must be here and share history with HEAD (a shallow checkout may have one without the other).
+    merge_base = subprocess.run(["git", "merge-base", sha, "HEAD"], cwd=root, capture_output=True, check=False)
+    return sha if merge_base.returncode == 0 else None
 
 
 def run(args: argparse.Namespace) -> int:
@@ -169,8 +171,14 @@ def run(args: argparse.Namespace) -> int:
         patch = git(eng.root, "diff", "--unified=3", base, "--") if base else ""
         # GitHub accepts inline comments only on lines of the pull request's own diff. The recorded base can be an
         # older commit than the PR's base, so use the PR's base commit when the workflow event provides it.
-        pr_base = _pull_request_base(eng.root)
-        in_pr = git(eng.root, "diff", "--unified=3", f"{pr_base}...HEAD", "--") if pr_base else patch
+        in_pr = patch
+        if args.post_github or args.format == "github":     # only inline comments need the pull request's diff
+            pr_base = _pull_request_base(eng.root)
+            if pr_base and pr_base != base:
+                try:
+                    in_pr = git(eng.root, "diff", "--unified=3", f"{pr_base}...HEAD", "--")
+                except RuntimeError:
+                    in_pr = patch                           # keep the review working on the recorded diff
         ctx = ReviewContext(root=eng.root, decision=decision, changed=changed, cfg=eng.cfg, graph=kg, llm=llm,
                             options={"patch": patch if llm else "", "changed_old": changed_old, "covering": covering},
                             commentable=commentable(in_pr))

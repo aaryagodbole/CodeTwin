@@ -11,7 +11,7 @@ import math
 import sqlite3
 import time
 from collections.abc import Iterable, Iterator
-from contextlib import contextmanager
+from contextlib import AbstractContextManager, contextmanager
 from importlib import resources
 from pathlib import Path
 from typing import Any, Self
@@ -64,6 +64,10 @@ class Store:
         self.migrate()
 
     # ------------------------------------------------------------- connection, transactions, migrations
+    def transaction(self) -> AbstractContextManager[None]:
+        """Group several writes into one transaction (nested blocks join the outer one); rolled back on error."""
+        return self._tx()
+
     @contextmanager
     def _tx(self) -> Iterator[None]:
         """One transaction for the outermost block; nested blocks join it. Rolled back on any error."""
