@@ -11,13 +11,17 @@ Demo mode shows a grey banner saying so, so a snapshot is never mistaken for a l
 
 ## See it on localhost
 
-Prerequisites: Node 22 and the Python setup from the README (`pip install -e ".[dev,mcp,server]"`).
+Prerequisites: Node 22, the Python setup from the README (`pip install -e ".[dev,mcp,server]"`), and the
+dashboard's dependencies, installed once for every recipe below:
+
+```bash
+cd dashboard && npm ci
+```
 
 ### 1. Quickest: demo data (no project needed)
 
 ```bash
 cd dashboard
-npm ci
 npm run dev:demo            # open http://localhost:3000
 ```
 

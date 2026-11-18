@@ -15,17 +15,17 @@ CONTRACT = json.loads((ROOT / "dashboard" / "src" / "lib" / "demo-contract.json"
 
 
 @pytest.mark.parametrize(("path", "params", "want"), CONTRACT["names"])
-def test_snapshot_names_match_the_dashboard_client(path, params, want):
+def test_snapshot_names_match_the_dashboard_client(path: str, params: dict[str, str], want: str) -> None:
     # The same cases are checked against the dashboard's demoName() by scripts/check_demo_build.mjs in CI.
     assert demo.snapshot_name(path, params) == want
 
 
-def test_demo_edits_still_apply_to_the_example():
+def test_demo_edits_still_apply_to_the_example() -> None:
     for file, old, _new in demo.EDITS:
         assert old in (demo.EXAMPLE / file).read_text(), f"{file}: {old!r}"
 
 
-def test_normalise_keeps_order_and_drops_run_dependent_values():
+def test_normalise_keeps_order_and_drops_run_dependent_values() -> None:
     answers = {
         "a.json": [{"recorded": 1700000050.5, "x": 1}, {"recorded": 1700000001.2}],
         "b.json": {"suite_seconds": 0.37, "nested": {"recorded": 1700000050.5}},
