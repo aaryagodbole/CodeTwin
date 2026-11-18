@@ -60,6 +60,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         t0 = time.perf_counter()
         response = await call_next(request)
         response.headers["x-request-id"] = rid
+        if request.url.path == "/api/health" and response.status_code == 200:
+            return response         # health probes (every 30 s) would drown the request log; failures are logged
         # one JSON line per request; never the body, query string or any header value
         log.info(json.dumps({"rid": rid, "method": request.method, "path": request.url.path,
                              "status": response.status_code, "ms": round((time.perf_counter() - t0) * 1000, 1)}))

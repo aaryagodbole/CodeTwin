@@ -54,6 +54,12 @@ Rules:
 - Maximum size 256 KB per report. Larger reports are rejected with `413`.
 - `schema` is versioned. The server accepts `v1` and rejects anything else with `422`.
 - Uploads are idempotent on (repository, run id, run attempt, head SHA): a retried job does not duplicate.
+- Outside GitHub Actions, the run id is `cli-` plus a hash of the head commit and the decision, so retrying the
+  same decision is deduplicated while a different decision (or another clone's) is stored as its own report.
+- Scores and alpha are taken from the stored decision only when it matches the JSON file (verdict, mode,
+  threshold and selection); otherwise the report has none rather than another decision's.
+- `codetwin push` never follows a redirect with its token, and treats a malformed decision file or an
+  unexpected or cut-off server answer as an upload failure (exit 1, or a warning with `--best-effort`).
 
 ## API
 
@@ -122,7 +128,7 @@ outcome  (report_id → report primary key, missed, failing jsonb, received_at)
 | Environment | Dashboard and API | Database | Data |
 |---|---|---|---|
 | Local | `npm run dev` + `codetwin serve` | the project's SQLite | your project |
-| Local (cloud stack) | `docker compose up` | Postgres container | uploads from `codetwin push --server http://localhost:8080` |
+| Local (cloud stack) | `docker compose up` (`docs/self-hosting.md`) | Postgres container | uploads from `codetwin push --server http://localhost:8080` |
 | Preview (every PR) | Vercel preview URL | Neon branch `preview/<git-branch>`, deleted with the branch | demo / seeded |
 | Production (`main`) | Vercel production URL | Neon main branch | CodeTwin's own PRs, examples |
 
@@ -158,8 +164,11 @@ outcome  (report_id → report primary key, missed, failing jsonb, received_at)
 3. Cloud API (`cloud/`, its own package and Vercel project): Postgres schema and migrations, OIDC
    verification, upload and read endpoints, retention cron, operator commands, and tests (including the contract
    test). How to run and deploy it: `cloud/README.md`.
-4. `codetwin push [--dry-run]`, `PUBLISH` opt-in for report sections, and an `upload` input in the Action.
-5. Self-hosting: Dockerfile and `docker-compose.yml`.
+4. `codetwin push [--dry-run] [--best-effort]` (`src/codetwin/push.py`), `PUBLISH = True` opt-in for report
+   sections (on now: changed_files, changed_symbols, change_risk, promise, semantic_noop; not contracts or
+   cross_repo), and `upload` / `upload-server` inputs in the Action.
+5. Self-hosting: `cloud/Dockerfile`, `dashboard/Dockerfile`, `compose.yaml` (Postgres + API + dashboard), an
+   end-to-end CI job (`self-host`) and `docs/self-hosting.md`.
 
 After 5: the dashboard reads the cloud API (`NEXT_PUBLIC_DATA_MODE=cloud`), adds a project switcher and GitHub
 login, and CodeTwin uploads its own pull requests.

@@ -10,6 +10,7 @@ from __future__ import annotations
 from ..evidence.noop import classify_change
 
 NAME = "semantic_noop"
+PUBLISH = True    # paths, names and numbers only (docs/data-policy.md)
 
 
 def contribute(ctx) -> dict:

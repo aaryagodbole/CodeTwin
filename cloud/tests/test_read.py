@@ -153,3 +153,26 @@ def test_request_ids_are_short_and_plain(client):
     assert ok.headers["x-request-id"] == "ci-run-42"
     long = client.get("/api/health", headers={"x-request-id": "x" * 500})
     assert long.headers["x-request-id"] != "x" * 500 and len(long.headers["x-request-id"]) <= 64
+
+
+def test_successful_health_probes_are_not_logged(client, caplog):
+    import logging
+
+    caplog.set_level(logging.INFO, logger="codetwin_cloud")
+    assert client.get("/api/health").status_code == 200
+    client.get("/api/v1/projects")
+    paths = [json.loads(r.getMessage()).get("path") for r in caplog.records if r.getMessage().startswith("{")]
+    assert "/api/health" not in paths and "/api/v1/projects" in paths
+
+
+def test_failed_health_probes_are_logged(caplog):
+    import logging
+
+    from fastapi.testclient import TestClient
+
+    from codetwin_cloud.app import Settings, create_app
+
+    caplog.set_level(logging.INFO, logger="codetwin_cloud")
+    broken = Settings(database_url="postgresql://nobody@127.0.0.1:1/none")
+    assert TestClient(create_app(broken)).get("/api/health").status_code == 503
+    assert any('"/api/health"' in r.getMessage() and '"status": 503' in r.getMessage() for r in caplog.records)

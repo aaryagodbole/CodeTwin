@@ -13,6 +13,11 @@ All notable changes to this project are documented here. The format follows
   against the target, skeleton, empty and error states. New pages: interactive dependency graph (search, hover
   highlight, details panel), repository analysis (hub files, files without a test, unresolved links) and a decision
   detail page; plain-language help tips throughout. Reads the same API; no engine change.
+- Self-hosting: `compose.yaml` (Postgres, cloud API, dashboard), Dockerfiles for the API (non-root, health
+  check) and the dashboard (nginx), `docs/self-hosting.md`; CI job `self-host` runs the stack end to end
+- `codetwin push`: uploads the decision report to CodeTwin Cloud (GitHub OIDC in Actions, project token when
+  self-hosting; https only except localhost; `--dry-run` prints what is sent; `--best-effort` never fails CI).
+  Report sections opt in with `PUBLISH = True`. Action inputs `upload` and `upload-server`
 - Cloud API (`cloud/`, package `codetwin-cloud`): uploads authenticated with GitHub OIDC (or project tokens
   when self-hosting), strict `codetwin.report/v1` validation, idempotent storage in Postgres, read endpoints with
   the local API's shapes (contract test), 90-day retention cron, operator commands; CI job `cloud` with Postgres

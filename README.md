@@ -108,6 +108,7 @@ selected 2 test files:
 | `codetwin impact FILE:SYMBOL` | one function, method or class (`src/a.py:Parser.parse`, `src/a.go:42`): tests that execute it, code that refers to it, unknowns |
 | `codetwin graph FILE [--lines 10-24] [--json]` | impact graph around a file or selected lines (importers, dependencies, tests, unknowns) |
 | `codetwin serve` | web dashboard and read-only API on `http://127.0.0.1:8765` |
+| `codetwin push --decision d.json [--dry-run]` | upload the decision report to CodeTwin Cloud (opt-in; never code, see `docs/data-policy.md`) |
 | `codetwin llm [--test]` | LLM settings for explanations (Groq, Gemini) and a connection test |
 | `codetwin learn` | run the full suite, record whether the last selection missed a test, update calibration |
 | `codetwin explain` | the numbers and reasons behind the last decision |
@@ -186,7 +187,9 @@ and risk. Develop with `npm ci && npm run compile`, then press F5.
 **Web dashboard** – `dashboard/` (Next.js): overview, system map, decisions, results (observed miss rate vs
 target) and the impact graph of any file. `codetwin serve` serves it with the API; see
 [dashboard/README.md](dashboard/README.md). Try it without a project: `cd dashboard && npm run dev:demo`. Local
-preview, Vercel deployment and pull-request checks: [docs/dashboard.md](docs/dashboard.md).
+preview, Vercel deployment and pull-request checks: [docs/dashboard.md](docs/dashboard.md). Team reports in
+the cloud (opt-in, never code): [docs/cloud.md](docs/cloud.md); on your own servers:
+[docs/self-hosting.md](docs/self-hosting.md).
 
 **GitHub Actions** – `action/`: on a pull request, records evidence on the base branch, selects tests for the PR,
 writes the decision and risk to the job summary and runs the selected tests:
@@ -205,7 +208,9 @@ writes the decision and risk to the job summary and runs the selected tests:
 ```
 
 With `review: "true"` the action also posts a summary comment and inline comments to the pull request and writes
-a SARIF file for GitHub code scanning (`docs/review.md`).
+a SARIF file for GitHub code scanning (`docs/review.md`). With `upload: "true"` and `upload-server: <url>` it
+sends the decision report to CodeTwin Cloud. The job needs `permissions: id-token: write` (GitHub OIDC, no
+secret), a failed upload only warns, and what is sent is listed in [docs/data-policy.md](docs/data-policy.md).
 
 **AI coding agents (MCP)** – `codetwin-mcp` exposes `verify_change`, `get_impact`, `get_graph`,
 `recommend_tests` and `explain_decision`, so an agent can ask before it opens a pull request. Setup: [docs/mcp.md](docs/mcp.md).

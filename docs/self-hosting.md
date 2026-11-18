@@ -1,0 +1,66 @@
+# Self-hosting CodeTwin Cloud
+
+Run the whole cloud plane (Postgres, the API from `cloud/`, the dashboard) on your own machine or servers with
+Docker Compose, so no report ever leaves your network. The hosted version on Vercel runs the same API code
+(`docs/cloud.md`).
+
+## Start it
+
+Needs Docker Engine 25 or later with Compose v2 (`docker compose version`).
+
+```bash
+printf 'POSTGRES_PASSWORD=%s\nCRON_SECRET=%s\n' "$(openssl rand -hex 24)" "$(openssl rand -hex 24)" > .env
+docker compose up -d --build --wait          # from the repository root; first build takes a few minutes
+docker compose exec api python -m codetwin_cloud add-project OWNER/NAME --public --token
+```
+
+The second command registers a repository and prints an **upload token** once. Store it as a CI secret.
+
+| URL | What |
+|---|---|
+| http://localhost:3000 | dashboard (demo data for now; it reads the API once cloud mode lands) |
+| http://localhost:8080/api/docs | API, with an interactive documentation page |
+| http://localhost:8080/api/health | health check (`"database": "ok"`) |
+
+Ports are bound to `127.0.0.1` only. To expose the stack, put a reverse proxy with TLS in front of it.
+`codetwin push` refuses plain `http` for anything other than localhost.
+
+## Upload from a project
+
+```bash
+codetwin select --json > decision.json
+codetwin push --decision decision.json --server http://localhost:8080 --token ctp_...      # add --dry-run to preview
+```
+
+From CI with no OIDC trust to your server, set `CODETWIN_SERVER` and `CODETWIN_TOKEN` (as a secret) and run the
+same command with `--best-effort`.
+
+## Configuration (`.env` next to `compose.yaml`)
+
+| Variable | Default | Set it when |
+|---|---|---|
+| `POSTGRES_PASSWORD` | none: required | always, **before the first `up`** (Postgres reads it only when it creates its volume; any characters work) |
+| `CRON_SECRET` | empty (retention job disabled) | you want reports older than 90 days deleted |
+| `CODETWIN_CORS_ORIGINS` | `http://localhost:3000` | the dashboard is served from another address |
+| `FORWARDED_ALLOW_IPS` | `127.0.0.1` | a reverse proxy (TLS) sits in front of the API: its address, so `X-Forwarded-*` is trusted |
+
+Retention: without Vercel Cron, call the job daily from the host's scheduler, e.g.
+`curl -H "Authorization: Bearer $(grep '^CRON_SECRET=' /path/to/codetwin/.env | cut -d= -f2-)" http://localhost:8080/api/cron/retention`
+(the secret lives in `.env`, which the host shell does not read).
+
+## Operate it
+
+- Logs: `docker compose logs -f api`. One JSON line per request (except successful health probes), never bodies or
+  tokens.
+- Backups: `docker compose exec -T db pg_dump --clean --if-exists -U codetwin codetwin > backup.sql` (`-T`: no
+  terminal, so the dump is not altered; `--clean`: the dump replaces existing tables when restored).
+  Restore: `docker compose stop api && docker compose exec -T db psql -v ON_ERROR_STOP=1 -U codetwin codetwin <
+  backup.sql && docker compose start api`.
+- Change the database password after the first start: `docker compose exec db psql -U codetwin -c "ALTER USER codetwin
+  PASSWORD 'new-password'"`, then set the same value as `POSTGRES_PASSWORD` in `.env` and `docker compose up -d`.
+  Changing only `.env` is not enough: Postgres keeps the password it was created with.
+- Upgrade: `git pull && docker compose up -d --build`. Migrations run when the API first uses the database.
+- Stop and delete everything, including the data: `docker compose down -v`.
+
+CI checks this setup on every pull request (job `self-host`). It builds the images, starts the stack, uploads a
+real decision with `codetwin push`, and reads it back.

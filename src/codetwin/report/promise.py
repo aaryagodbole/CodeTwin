@@ -8,6 +8,7 @@ from __future__ import annotations
 import math
 
 NAME = "promise"
+PUBLISH = True    # paths, names and numbers only (docs/data-policy.md)
 WINDOW = 50
 
 
