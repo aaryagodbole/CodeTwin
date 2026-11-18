@@ -94,7 +94,8 @@ runs:
         echo "sarif=codetwin-review.sarif" >> "$GITHUB_OUTPUT"
 
     - name: Upload the decision report
-      if: inputs.upload == 'true'
+      # Also when the review step failed (e.g. no pull-requests: write): the upload has its own best-effort rule.
+      if: ${{ !cancelled() && inputs.upload == 'true' && steps.select.outcome == 'success' }}
       shell: bash
       env:
         CODETWIN_SERVER: ${{ inputs.upload-server }}

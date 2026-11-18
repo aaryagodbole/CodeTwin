@@ -298,3 +298,46 @@ def test_odd_event_payloads_and_missing_run_id(toy_repo: Path, capsys: pytest.Ca
             assert push.build_report(eng, decision, env=env)["commit"]["pull_request"] is None
         with pytest.raises(push.PushError, match="GITHUB_RUN_ID"):
             push.build_report(eng, decision, env={**env, "GITHUB_RUN_ID": ""})
+
+
+def test_fit_drops_rows_but_never_the_selection() -> None:
+    """An abstention selects every test; on a big suite the rows go before the selection is ever cut."""
+    sel = [f"tests/test_{i:05d}.py" for i in range(3000)]
+    body = {"schema": "codetwin.report/v1", "decision": {
+        "selected": sel, "tests": [{"id": t, "selected": True, "score": 0.5, "seconds": 0.1} for t in sel]}}
+    small = push.fit(body)
+    assert small["decision"]["selected"] == sel and len(json.dumps(small)) <= push.MAX_REPORT_BYTES
+    huge = {"schema": "codetwin.report/v1", "decision": {"selected": [f"tests/{'x' * 80}_{i}.py" for i in range(5000)],
+                                                         "tests": []}}
+    with pytest.raises(push.PushError, match="too large"):
+        push.fit(huge)
+
+
+def test_reasons_and_mode_fit_the_report_format(toy_repo: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    decision = _decide(toy_repo, capsys)
+    many = {**decision, "reasons": [f"unknown link {i}" for i in range(450)], "mode": None}
+    with Engine(toy_repo) as eng:
+        d = push.build_report(eng, many, env={}, repository="acme/shop")["decision"]
+    assert len(d["reasons"]) == push.MAX_REASONS and d["reasons"][-1] == "... and 251 more"
+    assert d["mode"] == ""
+
+
+def test_a_refusal_with_a_cut_off_body_is_still_a_push_error() -> None:
+    class Short(BaseHTTPRequestHandler):
+        def do_POST(self) -> None:
+            self.rfile.read(int(self.headers.get("content-length") or 0))
+            self.send_response(503)
+            self.send_header("Content-Length", "100")
+            self.end_headers()
+            self.wfile.write(b"partial")
+
+        def log_message(self, *a: object) -> None:
+            pass
+
+    httpd = HTTPServer(("127.0.0.1", 0), Short)
+    threading.Thread(target=httpd.handle_request, daemon=True).start()
+    try:
+        with pytest.raises(push.PushError, match="refused \\(503\\)"):
+            push.send(f"http://localhost:{httpd.server_port}", {"schema": "codetwin.report/v1"}, "ctp_abc")
+    finally:
+        httpd.server_close()

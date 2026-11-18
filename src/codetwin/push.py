@@ -83,6 +83,8 @@ def _clean(value: Any) -> Any:
 
 
 MAX_UNSELECTED_TESTS = 500   # keeps a report of a large suite under the cloud's 256 KB limit
+MAX_REPORT_BYTES = 250 * 1024  # the cloud refuses more than 256 KB (docs/cloud.md); keep a margin
+MAX_REASONS = 200              # the cloud's limit (codetwin.report/v1)
 
 
 def validate_decision(decision: Any) -> dict:
@@ -161,11 +163,11 @@ def build_report(eng: Any, decision: dict, env: dict[str, str] | None = None,
             "residual_risk": _finite(decision["residual_risk"]) or 0.0,
             "alpha": _finite(detail.get("alpha")) if detail else None,
             "threshold": _finite(decision.get("threshold")),
-            "mode": str(decision.get("mode", "")),
+            "mode": decision.get("mode") or "",
             "selected": sorted(selected),
             "tests": [{"id": t, "selected": t in selected, "score": _finite(scores.get(t)),
                        "seconds": _finite(durations.get(t))} for t in tests],
-            "reasons": [str(r) for r in (decision.get("reasons") or [])],
+            "reasons": _reasons(decision.get("reasons") or []),
             # A section that failed carries {"error": "<exception text>"}: free text that may quote source, so it
             # is never published (docs/data-policy.md).
             "sections": {k: _clean(v) for k, v in (decision.get("extras") or {}).items()
@@ -173,6 +175,31 @@ def build_report(eng: Any, decision: dict, env: dict[str, str] | None = None,
         },
         "outcome": None if missed is None else {"missed": bool(missed), "failing": []},
     }
+
+
+def _reasons(reasons: list) -> list[str]:
+    """At most MAX_REASONS lines; the rest summed up in the last one (a large refactor can list hundreds)."""
+    out = [str(r) for r in reasons]
+    if len(out) <= MAX_REASONS:
+        return out
+    return [*out[:MAX_REASONS - 1], f"... and {len(out) - MAX_REASONS + 1} more"]
+
+
+def fit(body: dict) -> dict:
+    """Shrink the per-test rows until the report fits the upload limit; the selection itself is never cut.
+
+    First the unselected rows go, then all rows. If the selection alone is still too large (an abstention on a very
+    large suite), the report cannot be sent faithfully and this is a PushError."""
+    def size(b: dict) -> int:
+        return len(json.dumps(b, allow_nan=False).encode())
+    if size(body) <= MAX_REPORT_BYTES:
+        return body
+    d = body["decision"]
+    for rows in ([t for t in d["tests"] if t["selected"]], []):
+        body = {**body, "decision": {**d, "tests": rows}}
+        if size(body) <= MAX_REPORT_BYTES:
+            return body
+    raise PushError(f"report too large to upload even without per-test rows ({len(d['selected'])} tests selected)")
 
 
 def _cli_run_id(head: str, decision: dict) -> str:
@@ -227,7 +254,10 @@ def send(server: str, body: dict, token: str, timeout: float = 20) -> dict:
         with _opener.open(req, timeout=timeout) as r:  # scheme checked by check_server
             status, raw = r.status, r.read()
     except urllib.error.HTTPError as e:
-        detail = e.read().decode(errors="replace")[:500]
+        try:
+            detail = e.read().decode(errors="replace")[:500]
+        except (http.client.HTTPException, OSError):          # the error body itself was cut off
+            detail = "(no readable answer)"
         raise PushError(f"upload refused ({e.code}): {detail}") from None
     except urllib.error.URLError as e:
         raise PushError(f"cannot reach {server}: {e.reason}") from None

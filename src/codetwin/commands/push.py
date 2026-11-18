@@ -12,7 +12,7 @@ import os
 import sys
 from pathlib import Path
 
-from ..push import PushError, build_report, github_oidc_token, send
+from ..push import PushError, build_report, fit, github_oidc_token, send
 from ._util import engine, print_json
 
 NAME, HELP, ORDER = "push", "upload the decision report to CodeTwin Cloud (opt-in; --dry-run shows what is sent)", 34
@@ -35,7 +35,7 @@ def run(args: argparse.Namespace) -> int:
         raw = sys.stdin.read() if args.decision == "-" else Path(args.decision).read_text(encoding="utf-8")
         decision = json.loads(raw)
         with engine(args) as eng:
-            body = build_report(eng, decision, repository=args.repository)
+            body = fit(build_report(eng, decision, repository=args.repository))
         if args.dry_run:
             print_json(body)
             return 0
