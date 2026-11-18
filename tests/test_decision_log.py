@@ -60,6 +60,10 @@ def test_blind_override_stores_the_risk_of_every_test(toy_repo: Path, monkeypatc
                                                                       set(stored["selected"]), recal))
         assert stored["residual_risk"] == pytest.approx(d.residual_risk)
         assert stored["risk_before"] == pytest.approx(d.risk_before)
+        # the reason states the risk that was stored, not only the risk of the selection that no longer runs
+        assert any(f"{d.risk_before:.1%} for the selection" in r and f"{stored['residual_risk']:.1%}" in r
+                   for r in stored["reasons"])
+        assert not any(r.startswith("estimated residual risk") and "<= target" in r for r in stored["reasons"])
 
 
 def test_stored_decision_matches_the_returned_one(toy_repo: Path) -> None:
@@ -90,6 +94,17 @@ def test_test_only_change_is_stored_and_teaches_no_calibration(toy_repo: Path) -
         assert eng.explain()["mode"] == "no-source-change"
 
 
+def test_learn_refuses_a_test_only_decision_once_source_changed(toy_repo: Path) -> None:
+    with _engine(toy_repo) as eng:
+        t = toy_repo / "tests/test_price.py"
+        t.write_text(t.read_text() + "\ndef test_more():\n    assert True\n")
+        eng.select()
+        _edit_source(toy_repo)                       # source edited after select, before learn
+        with pytest.raises(RuntimeError, match="select` again"):
+            eng.learn()
+        assert not eng.store.has_outcome(eng.store.last_decision()["id"])
+
+
 # ----------------------------------------------------------------------------------------------- E4: report sections
 def test_report_sections_round_trip(toy_repo: Path) -> None:
     with _engine(toy_repo) as eng:
@@ -106,6 +121,10 @@ def test_extras_with_non_finite_numbers_are_stored_as_null(tmp_path: Path) -> No
         did = s.save_decision(base="b" * 40, mode="calibrated", decision="proceed", selected=[],
                               extras={"x": {"v": math.inf, "w": [math.nan, 1.0], "tags": {"b", "a"}}})
         assert s.decision(did)["extras"] == {"x": {"v": None, "w": [None, 1.0], "tags": ["a", "b"]}}
+        did = s.save_decision(base="b" * 40, mode="calibrated", decision="proceed", selected=[],
+                              extras={"y": {"p": Path("src/a.py"), "f": frozenset({2, 1})}})
+        assert s.decision(did)["extras"] == {"y": {"p": "src/a.py", "f": [1, 2]}}
+        assert "extras" not in s.decisions()[0] or s.decisions()[0]["extras"] == {}   # listings skip the sections
 
 
 # ---------------------------------------------------------------------------------------------------- migration 0005
@@ -119,6 +138,10 @@ def test_migration_0005_keeps_existing_decisions(tmp_path: Path, monkeypatch: py
                                scores={"tests/a.py": 0.3, "tests/c.py": 0.1}) for _ in range(3)]
         s.save_outcome(ids[0], False)
         s.add_calibration(0.3, ids[0])
+        # an orphan row from before (foreign keys off at the time) must not stop the migration
+        s.con.execute("pragma foreign_keys = off")
+        s.con.execute("insert into decision_outcome values (999, 0, 0)")
+        s.con.execute("pragma foreign_keys = on")
         before = {t: s.con.execute(f"select count(*) from {t}").fetchone()[0]  # noqa: S608 (constant names)
                   for t in ("decision", "decision_selection", "decision_reason", "decision_score", "decision_outcome",
                             "calibration_point")}
@@ -127,7 +150,7 @@ def test_migration_0005_keeps_existing_decisions(tmp_path: Path, monkeypatch: py
         after = {t: s.con.execute(f"select count(*) from {t}").fetchone()[0] for t in before}  # noqa: S608
         assert after == before
         assert s.con.execute("pragma foreign_keys").fetchone()[0] == 1
-        assert s.con.execute("pragma foreign_key_check").fetchall() == []
+        assert {r[0] for r in s.con.execute("pragma foreign_key_check")} == {"decision_outcome"}   # only the old orphan
         assert [d["id"] for d in s.decisions()] == sorted(ids, reverse=True)
         assert s.decision(ids[1])["reasons"] == ["r1", "r2"] and s.decision(ids[1])["risk_before"] is None
         assert len(s.labelled()) == 1

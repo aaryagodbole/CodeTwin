@@ -54,7 +54,16 @@ def _json_or_none(extras: Any) -> str | None:
         return None
     if not isinstance(extras, dict):
         raise TypeError("extras must be a dict of report sections")
-    return json.dumps(_finite_json(extras), sort_keys=True)
+    return json.dumps(_finite_json(extras), sort_keys=True, default=_json_value)
+
+
+def _json_value(x: Any) -> Any:
+    """Values json cannot write itself (a Path, a numpy number, ...): a finite number if it is one, else text."""
+    try:
+        f = float(x)
+    except (TypeError, ValueError):
+        return str(x)
+    return f if math.isfinite(f) else None
 
 
 def _finite_json(x: Any) -> Any:
@@ -62,8 +71,8 @@ def _finite_json(x: Any) -> Any:
         return x if math.isfinite(x) else None
     if isinstance(x, dict):
         return {str(k): _finite_json(v) for k, v in x.items()}
-    if isinstance(x, (list, tuple, set)):
-        return [_finite_json(v) for v in (sorted(x, key=str) if isinstance(x, set) else x)]
+    if isinstance(x, (list, tuple, set, frozenset)):
+        return [_finite_json(v) for v in (sorted(x, key=str) if isinstance(x, (set, frozenset)) else x)]
     return x
 
 
@@ -117,15 +126,18 @@ class Store:
             # A table rebuild must not cascade to child rows: such a file starts with this marker. The pragma has no
             # effect inside a transaction, so it is set before `begin` and restored after commit or rollback.
             fk_off = sql.startswith("-- requires: foreign_keys off")
+            known: set[tuple] = set()
             if fk_off:
                 self.con.execute("pragma foreign_keys = off")
+                # Fail only on violations this migration adds: an orphan row from before must not lock the store.
+                known = {tuple(r) for r in self.con.execute("pragma foreign_key_check")}
             self._depth = 1
             try:
                 # Inside the try: if the script itself fails part way, its open transaction is rolled back too.
                 self.con.executescript("begin;\n" + sql)   # leaves the transaction open (no implicit commit)
                 if name in STEPS:
                     STEPS[name](self)
-                if fk_off and (bad := self.con.execute("pragma foreign_key_check").fetchall()):
+                if fk_off and (bad := [r for r in self.con.execute("pragma foreign_key_check") if tuple(r) not in known]):
                     raise sqlite3.IntegrityError(f"migration {name} broke {len(bad)} foreign key(s): {bad[:3]}")
                 self.con.execute("insert into migrations values (?,?)", (name, time.time()))
                 self.con.execute("commit")
@@ -403,14 +415,15 @@ class Store:
                                                "where x.decision_id=? order by e.path", (decision_id,))]
 
     def decision(self, decision_id: int) -> dict | None:
-        """One decision with its selection, reasons, scores and outcome (missed: None until learned)."""
-        rows = self.decisions(ids=[decision_id])
+        """One decision with its selection, reasons, outcome (missed: None until learned) and report sections."""
+        rows = self.decisions(ids=[decision_id], extras=True)
         return rows[0] if rows else None
 
-    def decisions(self, limit: int = 100, ids: list[int] | None = None) -> list[dict]:
-        """Newest first."""
-        q = ("select d.id, d.recorded, r.sha, d.mode, d.alpha, d.alpha_t, d.threshold, d.residual_risk, d.verdict, "
-             "o.missed, d.risk_before, d.extras from decision d join revision r on r.id = d.base_revision_id "
+    def decisions(self, limit: int = 100, ids: list[int] | None = None, extras: bool = False) -> list[dict]:
+        """Newest first. `extras` (the report sections) is read only when asked for: listings do not need it."""
+        extras_col = "d.extras" if extras else "null"   # one of two constant column expressions
+        q = ("select d.id, d.recorded, r.sha, d.mode, d.alpha, d.alpha_t, d.threshold, d.residual_risk, d.verdict, "  # noqa: S608 (constant SQL; values bound)
+             f"o.missed, d.risk_before, {extras_col} from decision d join revision r on r.id = d.base_revision_id "
              "left join decision_outcome o on o.decision_id = d.id ")
         rows = (self.con.execute(q + f"where d.id in ({','.join('?' * len(ids))}) order by d.id desc", ids) if ids
                 else self.con.execute(q + "order by d.id desc limit ?", (limit,)))
@@ -437,9 +450,10 @@ class Store:
         row = self.con.execute("select max(id) from decision").fetchone()
         if row[0] is None:
             return None
-        d = self.decision(row[0])
-        if d is None:
+        rows = self.decisions(ids=[row[0]])
+        if not rows:
             return None
+        d = rows[0]
         return {"id": d["id"], "base": d["base"], "mode": d["mode"], "selected": d["selected"],
                 "scores": self.scores(d["id"])}
 

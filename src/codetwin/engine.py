@@ -107,6 +107,7 @@ class Engine:
         if budget is not None:
             sel = budget_select(rows, scores, times, budget * sum(times.values()))
             d = decide(rows, scores, sel, alpha, recal, self.cfg.fallback, mode=f"budget {budget:.0%}")
+            risk_reason = d.reasons[0]
         else:
             level = AdaptiveLevel(alpha, self.cfg.aci_gamma, self.store.alpha_t())
             calib = self.store.calibration()
@@ -117,6 +118,7 @@ class Engine:
                 note = [f"not calibrated yet ({len(calib)} labelled changes); using threshold {lam}"]
             sel = threshold_select(rows, scores, lam)
             d = decide(rows, scores, sel, alpha, recal, self.cfg.fallback, threshold=lam)
+            risk_reason = d.reasons[0]
             d.reasons = note + d.reasons
         unknowns = self.impact([f for f in diff if self.is_source(f)]).unknowns
         d.reasons += unknowns
@@ -126,6 +128,10 @@ class Engine:
             # cannot be estimated. Run everything and say why.
             d.decision, d.selected = "abstain", set(rows)
             d.residual_risk = residual_risk(scores, d.selected, recal)   # the risk of what now runs (E2)
+            # The risk sentence from decide() described the selection that no longer runs: state both risks.
+            d.reasons[d.reasons.index(risk_reason)] = (
+                f"estimated residual risk {d.risk_before:.1%} for the selection; running every test instead "
+                f"(estimated residual risk {d.residual_risk:.1%})")
             for why in sorted(set(blind.values())):
                 fs = sorted(f for f, w in blind.items() if w == why)
                 d.reasons.append(f"{why} for {', '.join(fs[:5])}{' and others' if len(fs) > 5 else ''}: "
@@ -180,15 +186,18 @@ class Engine:
         if self.store.has_outcome(last["id"]):
             raise RuntimeError(f"decision {last['id']} already has an outcome; run `codetwin select` for a new change "
                                "(learning twice from one change would count it twice in the calibration set)")
-        _base, _prev, diff, rows = self.analyse(last["base"])
         if last.get("mode") == "no-source-change":
             # Only tests changed and every changed test ran, so nothing was missed. Such a change says nothing about
             # the risk model: no calibration, recalibration or adaptive-level update (it would shift calibration).
+            if any(self.is_source(f) for f in self.changed(last["base"])):
+                raise RuntimeError("source files changed since the last `codetwin select`, which saw a change to tests "
+                                   "only; run `codetwin select` again before `learn`")
             self.store.save_outcome(last["id"], False)
-            return {"affected": sorted(t for t, r in rows.items() if r["test_changed"]), "missed": [],
+            return {"affected": sorted(last["selected"]), "missed": [],
                     "alpha_t": self.store.alpha_t(self.cfg.alpha), "calibration_size": len(self.store.calibration()),
                     "note": "a change that edits only tests: outcome stored, calibration unchanged"}
-        no_ev =self.without_runtime_evidence(diff, self.store.get_run(last["base"]))
+        _base, _prev, diff, rows = self.analyse(last["base"])
+        no_ev = self.without_runtime_evidence(diff, self.store.get_run(last["base"]))
         blind = [f"{f} ({why})" for f, why in sorted(no_ev.items())]
         if blind:
             raise RuntimeError(f"cannot learn from this change: no runtime evidence for {', '.join(blind[:5])}, so which "
