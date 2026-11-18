@@ -9,7 +9,7 @@ from . import config as cfgmod
 from . import lang as langmod
 from . import report
 from .evidence import diff as diffmod
-from .evidence.model import TestRun
+from .evidence.model import TestRun, incomplete_code
 from .graph.impact import Impact, build_graph, impact_of
 from .risk import features
 from .risk.calibration import AdaptiveLevel, crc_threshold
@@ -29,6 +29,7 @@ class Engine:
         self.lang = langmod.get(self.cfg)
         self.store = Store(self.cfg.db_path)
         self._model: RiskModel | None = None
+        self._history: dict[str, tuple[list[list[str]], str | None]] = {}
 
     @property
     def model(self) -> RiskModel:
@@ -70,20 +71,25 @@ class Engine:
         """
         # "tformat:" is needed: a format with no %-placeholder is otherwise read as the name of a pretty format, and
         # git fails ("invalid --pretty format: @@"), which used to leave co-change evidence silently empty.
-        try:
-            out = diffmod.git(self.root, "log", "--first-parent", "--name-only", "--format=tformat:@@", "-n",
-                              str(HISTORY_COMMITS), base or "HEAD", "--")
-        except RuntimeError:
-            return []
-        return [c.split() for c in out.split("@@") if c.strip()][::-1]
+        return self._read_history(base or "HEAD")[0]
+
+    def _read_history(self, rev: str) -> tuple[list[list[str]], str | None]:
+        """(commits, git error); read once per revision for this engine."""
+        if rev not in self._history:
+            try:
+                out = diffmod.git(self.root, "log", "--first-parent", "--name-only", "--format=tformat:@@", "-n",
+                                  str(HISTORY_COMMITS), rev, "--")
+                self._history[rev] = ([c.split() for c in out.split("@@") if c.strip()][::-1], None)
+            except RuntimeError as e:
+                self._history[rev] = ([], (str(e).splitlines() or ["?"])[-1])
+        return self._history[rev]
 
     def history_note(self, base: str | None = None) -> str | None:
         """Why co-change evidence up to `base` is missing or thin (git error, shallow clone), or None."""
-        try:
-            n = int(diffmod.git(self.root, "rev-list", "--count", "--first-parent", f"--max-count={HISTORY_COMMITS}",
-                                base or "HEAD", "--").strip())
-        except (RuntimeError, ValueError) as e:
-            return f"git history is not available ({str(e).splitlines()[-1] if str(e) else '?'}): no co-change evidence"
+        commits, error = self._read_history(base or "HEAD")
+        if error:
+            return f"git history is not available ({error}): no co-change evidence"
+        n = len(commits)
         try:
             shallow = diffmod.git(self.root, "rev-parse", "--is-shallow-repository").strip() == "true"
         except RuntimeError:
@@ -99,14 +105,16 @@ class Engine:
         sha = self.head()
         run = self.lang.run_suite(sha)
         if run.incomplete:
-            earlier = self.store.get_run(sha)
-            if earlier is not None and not earlier.incomplete:
+            earlier = self.store.run_returncode(sha)
+            if earlier is not None and not incomplete_code(earlier):
                 # Never replace a complete run of this commit with a partial one: keep the evidence that is there.
                 run.notes.append(f"the test run did not complete ({run.returncode}); kept the earlier complete run of "
-                                 f"{sha[:10]}. Fix the cause (or raise [runner] timeout) and record again")
+                                 f"{sha[:10]}. Fix the cause (a hanging or very slow test, a collection error) and "
+                                 "record again")
                 return run
             run.notes.append(f"the test run did not complete ({run.returncode}); it is stored but `select` will not use "
-                             "it as the base. Fix the cause (or raise [runner] timeout) and run `codetwin record` again")
+                             "it as the base. Fix the cause (a hanging or very slow test, a collection error) and run "
+                             "`codetwin record` again")
         facts = self.facts_now()
         # One transaction: a crash between the two must not leave a run without its static facts (E6).
         with self.store.transaction():
@@ -141,6 +149,7 @@ class Engine:
 
     # ------------------------------------------------------------- select
     def select(self, base: str | None = None, alpha: float | None = None, budget: float | None = None) -> Decision:
+        chosen = base is not None                    # the user named the base: nothing was skipped on their behalf
         base, prev, diff, rows = self.analyse(base)
         scores = self.model.scores(rows)
         if not any(self.is_source(f) for f in diff):
@@ -168,7 +177,7 @@ class Engine:
             d.reasons = note + d.reasons
         unknowns = self.impact([f for f in diff if self.is_source(f)]).unknowns
         d.reasons += unknowns
-        d.reasons += self._evidence_notes(base, prev, labels)
+        d.reasons += self._evidence_notes(base, prev, labels, chosen)
         blind = self.without_runtime_evidence(diff, prev)
         if blind:
             # Unknown is not "no dependency": without coverage for these files' tests, the risk of skipping a test
@@ -185,13 +194,13 @@ class Engine:
                                        reasons=d.reasons, scores=scores)
         return d
 
-    def _evidence_notes(self, base: str, prev: TestRun, labels: list[int]) -> list[str]:
+    def _evidence_notes(self, base: str, prev: TestRun, labels: list[int], chosen: bool = False) -> list[str]:
         """What weakens this decision's evidence: thin git history, an incomplete or skipped run, too little feedback."""
         note = self.history_note(base)
         notes = [note] if note else []
         if prev.incomplete:
             notes.append(f"the recorded run of {base[:10]} did not complete ({prev.returncode}): its coverage is partial")
-        skipped = self.store.latest_run_incomplete()
+        skipped = None if chosen else self.store.latest_run_incomplete()
         if skipped and skipped[0] != base:
             notes.append(f"the newest recorded run ({skipped[0][:10]}) did not complete ({skipped[1]}); comparing with "
                          f"the older complete run of {base[:10]} instead")

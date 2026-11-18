@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from ..evidence.model import INCOMPLETE_CODES, FileFacts, TestRun
+from ..evidence.model import FileFacts, TestRun, incomplete_code
 from .base import Language
 
 
@@ -69,7 +69,7 @@ class Multi(Language):
             run.notes += r.notes
             codes.append(r.returncode)
         # An incomplete part makes the whole run incomplete; otherwise the first failure code.
-        run.returncode = next((c for c in codes if str(c) in INCOMPLETE_CODES),
+        run.returncode = next((c for c in codes if incomplete_code(c)),
                               next((c for c in codes if c not in (0, "0")), 0))
         return run
 

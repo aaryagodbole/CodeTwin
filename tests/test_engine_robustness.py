@@ -131,6 +131,45 @@ def test_a_partial_rerun_keeps_the_complete_run_of_the_same_commit(toy_repo: Pat
         assert stored is not None and not stored.incomplete and eng.store.latest_run_sha() == sha
 
 
+def test_record_fails_the_step_when_the_run_is_incomplete(toy_repo: Path, monkeypatch: pytest.MonkeyPatch,
+                                                          capsys: pytest.CaptureFixture[str]) -> None:
+    import codetwin.commands.record as record_cmd
+    main(["-C", str(toy_repo), "init"])
+    real = record_cmd.engine
+
+    import contextlib
+
+    @contextlib.contextmanager
+    def timing_out(args):  # noqa: ANN001
+        with real(args) as eng:
+            monkeypatch.setattr(eng.lang, "run_suite", lambda sha, *a, **k: TestRun(sha=sha, returncode="timeout"))
+            yield eng
+    monkeypatch.setattr(record_cmd, "engine", timing_out)
+    assert main(["-C", str(toy_repo), "record"]) == 1
+    assert "did not complete (timeout)" in capsys.readouterr().out
+
+
+def test_a_named_base_gets_no_skipped_run_note(toy_repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    _recorded(toy_repo)
+    with Engine(toy_repo) as eng:
+        good = eng.head()
+    _git(toy_repo, "commit", "-q", "--allow-empty", "-m", "later")
+    with Engine(toy_repo) as eng:
+        _record_timeout(eng, monkeypatch)
+        monkeypatch.undo()
+        _edit_source(toy_repo)
+        d = eng.select(base=good)
+    assert not any("comparing with the older complete run" in r for r in d.reasons)
+
+
+def test_a_pytest_collection_error_is_an_incomplete_run(toy_repo: Path) -> None:
+    (toy_repo / "tests/test_broken.py").write_text("import does_not_exist\n")
+    main(["-C", str(toy_repo), "init"])
+    with Engine(toy_repo) as eng:
+        run = eng.record()
+    assert run.incomplete and str(run.returncode) == "interrupted:2"
+
+
 def test_select_says_when_it_skipped_a_newer_incomplete_run(toy_repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     _recorded(toy_repo)
     with Engine(toy_repo) as eng:
@@ -156,8 +195,8 @@ def test_learn_refuses_an_incomplete_full_run(toy_repo: Path, monkeypatch: pytes
         assert last is not None and not eng.store.has_outcome(last["id"]) and eng.store.calibration() == []
 
 
-@pytest.mark.parametrize(("code", "incomplete"), [(0, False), (1, False), (5, False), ("2", True), (4, True),
-                                                 ("timeout", True), ("no-runner", False)])
+@pytest.mark.parametrize(("code", "incomplete"), [(0, False), (1, False), (5, False), ("2", False), ("no-runner", False),
+                                                 ("interrupted:2", True), ("timeout", True), (-9, True), ("-15", True)])
 def test_incomplete_return_codes(code: int | str, incomplete: bool) -> None:
     assert TestRun(sha="x", returncode=code).incomplete is incomplete
 

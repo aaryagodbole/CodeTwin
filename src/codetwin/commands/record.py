@@ -15,4 +15,4 @@ def run(args) -> int:
           f"{len(r.failing)} failing test cases, {r.wall:.1f}s")
     for n in r.notes:
         print(f"warning: {n}")
-    return 0
+    return 1 if r.incomplete else 0      # a CI step must not pass when the evidence is partial

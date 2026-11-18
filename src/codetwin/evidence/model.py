@@ -35,7 +35,15 @@ class FileFacts:
     symbols: list[list] = field(default_factory=list)      # [qualified name, kind, first line, last line]
 
 
-INCOMPLETE_CODES = frozenset({"timeout", "2", "3", "4"})
+# Return codes of a run that did not run to the end. Runners translate their own codes into these (the pytest
+# runner maps its interrupted / internal error / usage error codes to "interrupted:<code>"); a negative code is a
+# runner killed by a signal (out of memory, a cancelled CI job).
+INCOMPLETE_CODES = ("timeout", "interrupted")
+
+
+def incomplete_code(code: int | str) -> bool:
+    c = str(code)
+    return c.startswith(INCOMPLETE_CODES) or (c.startswith("-") and c[1:].isdigit())
 
 
 @dataclass
@@ -53,6 +61,6 @@ class TestRun:
 
     @property
     def incomplete(self) -> bool:
-        """The suite did not run to the end: a whole-run timeout, or pytest's interrupted / internal error / usage
-        error exit codes. Its coverage is partial, so it must not be the base of a selection."""
-        return str(self.returncode) in INCOMPLETE_CODES
+        """The suite did not run to the end (timeout, interrupted, killed by a signal): its coverage is partial, so it
+        must not be the base of a selection."""
+        return incomplete_code(self.returncode)

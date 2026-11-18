@@ -17,7 +17,7 @@ from pathlib import Path
 from typing import Any, Self
 
 from .. import __version__
-from ..evidence.model import INCOMPLETE_CODES, FileFacts, TestRun
+from ..evidence.model import FileFacts, TestRun, incomplete_code
 
 MIGRATIONS = "codetwin.store.migrations"
 SYMBOL_KINDS = ("class", "function", "method")
@@ -228,14 +228,22 @@ class Store:
     def latest_run_incomplete(self) -> tuple[str, str] | None:
         """(sha, return code) of the newest run when it did not complete, else None: why `select` skipped it."""
         row = self.con.execute("select sha, returncode from latest_run").fetchone()
-        return (row[0], row[1]) if row and row[1] in INCOMPLETE_CODES else None
+        return (row[0], row[1]) if row and incomplete_code(row[1]) else None
+
+    def run_returncode(self, sha: str) -> str | None:
+        """The stored return code of the run of `sha` (None: no run), without loading its coverage."""
+        row = self.con.execute("select t.returncode from test_run t join revision r on r.id = t.revision_id "
+                               "where r.repository_id = 1 and r.sha = ?", (sha,)).fetchone()
+        return row[0] if row else None
 
     def _latest_complete_run(self) -> tuple | None:
-        marks = ",".join("?" * len(INCOMPLETE_CODES))
-        return self.con.execute(
-            "select r.sha, t.recorded from test_run t join revision r on r.id = t.revision_id "  # noqa: S608 (constant SQL; values bound)
-            f"where r.repository_id = 1 and t.returncode not in ({marks}) order by t.recorded desc, t.id desc limit 1",
-            sorted(INCOMPLETE_CODES)).fetchone()
+        # Newest first; few runs are ever incomplete, so filtering in Python keeps the rule in one place.
+        for sha, recorded, code in self.con.execute(
+                "select r.sha, t.recorded, t.returncode from test_run t join revision r on r.id = t.revision_id "
+                "where r.repository_id = 1 order by t.recorded desc, t.id desc"):
+            if not incomplete_code(code):
+                return sha, recorded
+        return None
 
     def latest_run_recorded(self) -> float | None:
         """When the run returned by `latest_run_sha()` was recorded (same repository and row as that method)."""
