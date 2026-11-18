@@ -37,7 +37,7 @@ function Row({ d }: { d: DecisionRow }) {
             <div className="grid gap-4 text-sm md:grid-cols-2">
               <div>
                 <div className="mb-1.5 text-xs font-medium uppercase tracking-wider text-muted">Why</div>
-                <ul className="list-disc space-y-1 pl-5">{d.reasons.map((r) => <li key={r}>{r}</li>)}</ul>
+                <ul className="list-disc space-y-1 pl-5">{d.reasons.map((r, i) => <li key={i}>{r}</li>)}</ul>
               </div>
               <div>
                 <div className="mb-1.5 text-xs font-medium uppercase tracking-wider text-muted">Selected tests ({d.selected.length})</div>
@@ -54,8 +54,8 @@ function Row({ d }: { d: DecisionRow }) {
   );
 }
 
-export function DecisionTable({ rows }: { rows: DecisionRow[] }) {
-  if (rows.length === 0) return <Empty>No decisions yet. Run <code>codetwin select</code>.</Empty>;
+export function DecisionTable({ rows, empty }: { rows: DecisionRow[]; empty?: React.ReactNode }) {
+  if (rows.length === 0) return <Empty>{empty ?? <>No decisions yet. Run <code>codetwin select</code>.</>}</Empty>;
   return (
     <div className="relative overflow-x-auto">
       {/* relative: the sr-only header below is position:absolute; without a positioned scroller it escapes

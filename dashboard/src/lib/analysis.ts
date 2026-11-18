@@ -24,7 +24,7 @@ export interface RepoAnalysis {
   /** share of source files reached by at least one test, 0..1 */
   reach: number;
   /** links the analysis could not resolve, as sentences */
-  unresolved: { from: string; to: string }[];
+  unresolved: { from: string; to: string | null }[];
 }
 
 /** Files under a tests folder (fixtures, typing samples, conftest) are test support, not source to be covered. */
@@ -39,12 +39,13 @@ export function analyseRepo(g: Graph): RepoAnalysis {
   const seenUse = new Set<string>();
   const seenTest = new Set<string>();
   const types = new Map<string, number>();
-  const unresolved: { from: string; to: string }[] = [];
+  const unresolved: { from: string; to: string | null }[] = [];
   for (const e of g.edges) {
     types.set(e.type, (types.get(e.type) ?? 0) + 1);
     const from = byId.get(e.source);
     const to = byId.get(e.target);
-    if (e.type === "unresolved") unresolved.push({ from: from?.path ?? e.source, to: to?.label ?? e.target });
+    // What could not be resolved: the edge detail when the API gives one; the "?" placeholder node carries no name.
+    if (e.type === "unresolved") unresolved.push({ from: from?.path ?? e.source, to: e.detail ?? (to && to.id !== "?" ? to.label : null) });
     if (!from || !to) continue;
     const t = stat.get(to.id);
     // Reach means the test imports the file (static) or ran it (runtime); co-change is history, not evidence of a test.
@@ -80,30 +81,9 @@ export function analyseRepo(g: Graph): RepoAnalysis {
   };
 }
 
-export interface DecisionStats {
-  total: number;
-  proceed: number;
-  abstain: number;
-  missed: number;
-  labelled: number;
-  abstainRate: number | null;
-}
-
 /** "1 importer", "2 importers" */
 export const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
 
-export function decisionStats(rows: DecisionRow[]): DecisionStats {
-  const proceed = rows.filter((d) => d.decision === "proceed").length;
-  const labelled = rows.filter((d) => d.missed != null).length;
-  return {
-    total: rows.length,
-    proceed,
-    abstain: rows.length - proceed,
-    missed: rows.filter((d) => d.missed === true).length,
-    labelled,
-    abstainRate: rows.length ? (rows.length - proceed) / rows.length : null,
-  };
-}
 
 /** Share of test files left out of a decision, 0..1. `total` is the number of test files of the recorded run
  *  `recorded`; a decision made against another recording had another suite size, so it gets null (unknown). */

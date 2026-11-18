@@ -14,8 +14,10 @@ export const EDGE_STYLES: Record<string, { color: string; style: "solid" | "dash
   unresolved: { color: "#6e6e6e", style: "dotted" },
 };
 
-export function GraphView({ graph, root, onOpen, onSelect, search }: {
+export function GraphView({ graph, root, onOpen, onSelect, search, selected }: {
   graph: Graph; root?: string; onOpen?: (path: string) => void;
+  /** node id to show as selected (e.g. chosen from search results); kept across graph rebuilds */
+  selected?: string | null;
   /** called with the node id on click (or null on background click); lets a page show a side panel */
   onSelect?: (id: string | null) => void;
   /** nodes whose label or path contains this text stay bright, others fade */
@@ -35,6 +37,7 @@ export function GraphView({ graph, root, onOpen, onSelect, search }: {
         ...graph.edges.map((e, i) => ({ data: { id: `e${i}`, ...e } })),
       ];
       const fg = getComputedStyle(document.body).color;
+      const ring = getComputedStyle(document.documentElement).getPropertyValue("--card").trim() || "#ffffff";
       const degree = new Map<string, number>();
       for (const e of graph.edges) {
         degree.set(e.source, (degree.get(e.source) ?? 0) + 1);
@@ -57,7 +60,7 @@ export function GraphView({ graph, root, onOpen, onSelect, search }: {
           ? { name: "breadthfirst", directed: true, roots: [root], spacingFactor: 1.2 }
           : { name: "cose", animate: false, nodeRepulsion: () => 60000, idealEdgeLength: () => 110, nodeOverlap: 24, gravity: 0.4, numIter: 1500 },
         style: [
-          { selector: "node", style: { label: "data(label)", "font-size": 10, color: fg, "text-valign": "bottom", "text-margin-y": 4, width: "data(size)", height: "data(size)", "text-opacity": 0, "min-zoomed-font-size": 6, "background-color": "#8b90a8", "border-width": 2, "border-color": "#ffffff", "border-opacity": 0.6 } },
+          { selector: "node", style: { label: "data(label)", "font-size": 10, color: fg, "text-valign": "bottom", "text-margin-y": 4, width: "data(size)", height: "data(size)", "text-opacity": 0, "min-zoomed-font-size": 6, "background-color": "#8b90a8", "border-width": 2, "border-color": ring, "border-opacity": 0.6 } },
           { selector: "node[kind = 'target']", style: { "background-color": "#f5b324", width: 24, height: 24 } },
           { selector: "node[kind = 'test']", style: { "background-color": "#2fbf71", shape: "round-rectangle" } },
           { selector: "node[kind = 'unknown']", style: { "background-color": "#6e6e6e", shape: "diamond" } },
@@ -104,6 +107,31 @@ export function GraphView({ graph, root, onOpen, onSelect, search }: {
       cy.elements().not(hit).not(hit.connectedEdges()).addClass("search-faded");
     }
   }, [search, graph, ready]);
+  // Selection from outside (search results), and again after a rebuild.
+  useEffect(() => {
+    const cy = cyRef.current;
+    if (!cy) return;
+    cy.nodes(":selected").unselect();
+    if (selected) cy.getElementById(selected).select();
+  }, [selected, graph, ready]);
+  // Label and ring colours follow the theme: the toggle changes data-theme, the system can change its scheme.
+  useEffect(() => {
+    const restyle = () => {
+      const cy = cyRef.current;
+      if (!cy) return;
+      const fg = getComputedStyle(document.body).color;
+      const ring = getComputedStyle(document.documentElement).getPropertyValue("--card").trim() || "#ffffff";
+      cy.style().selector("node").style({ color: fg, "border-color": ring }).update();
+    };
+    const obs = new MutationObserver(restyle);
+    obs.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    const mq = window.matchMedia("(prefers-color-scheme: dark)");
+    mq.addEventListener("change", restyle);
+    return () => {
+      obs.disconnect();
+      mq.removeEventListener("change", restyle);
+    };
+  }, [ready]);
   return <div ref={ref} className="h-[560px] w-full rounded-xl border border-border bg-card-2/40" />;
 }
 

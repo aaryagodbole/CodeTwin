@@ -73,7 +73,7 @@ function Detail() {
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card title="Why CodeTwin decided this">
-          <ul className="list-disc space-y-2 pl-5 text-sm">{d.reasons.map((r) => <li key={r}>{r}</li>)}</ul>
+          <ul className="list-disc space-y-2 pl-5 text-sm">{d.reasons.map((r, i) => <li key={i}>{r}</li>)}</ul>
         </Card>
         <Card title={`Tests selected (${d.selected.length})`}>
           <ul className="divide-y divide-border text-sm">

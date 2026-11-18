@@ -94,7 +94,7 @@ export default function SystemMap() {
               : <Empty>Nothing recorded yet. Run <code>codetwin record</code>.</Empty>
           ) : (
             <div className="grid gap-4 lg:grid-cols-[1fr_18rem]">
-              <GraphView graph={graph} onOpen={onOpen} onSelect={onSelect} search={search} />
+              <GraphView graph={graph} onOpen={onOpen} onSelect={onSelect} search={search} selected={picked} />
               <aside className="rounded-xl border border-border bg-card-2/40 p-4 text-sm" aria-live="polite">
                 {node ? (
                   <div className="space-y-3">

@@ -36,7 +36,7 @@ function ThemeToggle() {
   useEffect(() => {
     try {
       const saved = localStorage.getItem("codetwin-theme");
-      if (saved) {
+      if (saved === "light" || saved === "dark") {      // same rule as the pre-paint script in layout.tsx
         document.documentElement.dataset.theme = saved;
         listeners.forEach((cb) => cb());
       }

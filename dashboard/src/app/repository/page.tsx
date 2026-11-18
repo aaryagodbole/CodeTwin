@@ -1,5 +1,6 @@
 "use client";
 
+import { EDGE_STYLES } from "@/components/graph-view";
 import { useQuery } from "@tanstack/react-query";
 import { AlertTriangle, Boxes, FileCode2, FlaskConical, Link2, ShieldCheck } from "lucide-react";
 import Link from "next/link";
@@ -11,10 +12,6 @@ import { Info, PageHeader } from "@/components/ui/info";
 import { analyseRepo, plural } from "@/lib/analysis";
 import { get, type Graph } from "@/lib/api";
 
-const EDGE_COLOR: Record<string, string> = {
-  static: "var(--muted)", runtime: "var(--accent)", "co-change": "var(--warn)", declared: "var(--accent-2)",
-  suggested: "var(--accent-2)", unresolved: "var(--bad)",
-};
 
 const open = (p: string) => `/graph/?file=${encodeURIComponent(p)}`;
 
@@ -48,7 +45,7 @@ export default function Repository() {
               <li key={e.type}>
                 <div className="mb-1 flex justify-between text-sm"><span>{e.type}</span><span className="tabular-nums text-muted">{e.count}</span></div>
                 <div className="h-2 overflow-hidden rounded-full bg-card-2">
-                  <div className="h-full rounded-full" style={{ width: `${(e.count / maxEdge) * 100}%`, background: EDGE_COLOR[e.type] ?? "var(--accent)" }} />
+                  <div className="h-full rounded-full" style={{ width: `${(e.count / maxEdge) * 100}%`, background: EDGE_STYLES[e.type]?.color ?? "var(--accent)" }} />
                 </div>
               </li>
             ))}
@@ -90,14 +87,14 @@ export default function Repository() {
         </Card>
 
         <Card title="What the analysis cannot see" action={<Info>Links CodeTwin could not resolve, such as dynamic calls. They are reported as unknown, never treated as safe.</Info>}>
-          {a.unresolved.length === 0 && a.unknownNodes === 0 ? (
+          {a.unresolved.length === 0 ? (
             <div className="flex items-center gap-2 py-6 text-sm text-muted"><Boxes size={18} aria-hidden />Nothing unresolved in this repository.</div>
           ) : (
             <ul className="space-y-2 text-sm">
               {a.unresolved.map((u, i) => (
                 <li key={i} className="flex gap-2 rounded-lg bg-bad/10 px-3 py-2">
                   <AlertTriangle size={16} className="mt-0.5 shrink-0 text-bad" aria-hidden />
-                  <span><span className="break-all">{u.from}</span> uses something dynamic: <span className="text-muted">{u.to}</span></span>
+                  <span><span className="break-all">{u.from}</span> uses something CodeTwin could not resolve{u.to ? <>: <span className="text-muted break-all">{u.to}</span></> : null}</span>
                 </li>
               ))}
             </ul>

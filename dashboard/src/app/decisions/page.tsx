@@ -36,7 +36,7 @@ export default function Decisions() {
             ))}
           </div>
         }>
-          <DecisionTable rows={rows} />
+          <DecisionTable rows={rows} empty={filter === "all" ? undefined : "No decision matches this filter."} />
         </Card>
       )}
     </div>

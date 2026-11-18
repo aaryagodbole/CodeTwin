@@ -77,7 +77,9 @@ export function Sparkline({ values, color = "var(--accent)", height = 36 }: { va
 }
 
 /** Horizontal bar for a fraction of a scale, with an optional target marker. */
-export function RiskBar({ value, target, max = 0.5 }: { value: number | null; target?: number | null; max?: number }) {
+export function RiskBar({ value, target, max: minMax = 0.5 }: { value: number | null; target?: number | null; max?: number }) {
+  // Same growing scale as the gauge, so a high risk and a high target never both pin to the end.
+  const max = Math.min(1, Math.max(minMax, Math.ceil(Math.max(value ?? 0, target ?? 0) * 10 + 0.0001) / 10));
   const targetText = target == null ? null : <span className="whitespace-nowrap text-xs text-muted">target {fmtPct(target)}</span>;
   if (value == null) return <span className="text-muted">– {targetText && <> · {targetText}</>}</span>;
   const pct = Math.max(2, Math.min(100, (value / max) * 100));
