@@ -23,7 +23,7 @@ export default function Decisions() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Decisions</h1>
-        <p className="text-sm text-muted">Every change CodeTwin judged: which tests to run and how much risk remains.</p>
+        <p className="text-sm text-muted">The 500 most recent changes CodeTwin judged: which tests to run and how much risk remains. The filters search these.</p>
       </div>
       {q.error ? <ErrorBox error={q.error} /> : !rows ? <Loading /> : (
         <Card action={

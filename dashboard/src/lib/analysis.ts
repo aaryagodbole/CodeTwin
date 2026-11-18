@@ -47,7 +47,8 @@ export function analyseRepo(g: Graph): RepoAnalysis {
     if (e.type === "unresolved") unresolved.push({ from: from?.path ?? e.source, to: to?.label ?? e.target });
     if (!from || !to) continue;
     const t = stat.get(to.id);
-    if (from.kind === "test" && t && e.type !== "unresolved") {
+    // Reach means the test imports the file (static) or ran it (runtime); co-change is history, not evidence of a test.
+    if (from.kind === "test" && t && (e.type === "static" || e.type === "runtime")) {
       const key = `${from.id}>${to.id}`;
       if (!seenTest.has(key)) {
         seenTest.add(key);
@@ -104,7 +105,9 @@ export function decisionStats(rows: DecisionRow[]): DecisionStats {
   };
 }
 
-/** Share of test files left out of a decision, 0..1. `total` is the number of test files in the recorded run. */
-export function skippedShare(d: DecisionRow, total: number): number | null {
-  return total > 0 ? Math.max(0, (total - d.selected.length) / total) : null;
+/** Share of test files left out of a decision, 0..1. `total` is the number of test files of the recorded run
+ *  `recorded`; a decision made against another recording had another suite size, so it gets null (unknown). */
+export function skippedShare(d: DecisionRow, total: number, recorded: string | null | undefined): number | null {
+  if (!recorded || d.base !== recorded || total <= 0) return null;
+  return Math.max(0, (total - d.selected.length) / total);
 }

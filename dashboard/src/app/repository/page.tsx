@@ -23,7 +23,7 @@ export default function Repository() {
   const a = useMemo(() => (q.data ? analyseRepo(q.data) : undefined), [q.data]);
   if (q.error) return <ErrorBox error={q.error} />;
   if (!a) return <Loading />;
-  if (a.files === 0) return <Empty>Nothing recorded yet. Run <code>codetwin record</code> to analyse this repository.</Empty>;
+  if (a.files === 0 && a.tests === 0 && a.edges === 0) return <Empty>Nothing recorded yet. Run <code>codetwin record</code> to analyse this repository.</Empty>;
   const maxEdge = Math.max(...a.edgeTypes.map((e) => e.count), 1);
   const maxUsed = Math.max(...a.hubs.map((h) => h.usedBy), 1);
   return (
@@ -33,11 +33,11 @@ export default function Repository() {
       </PageHeader>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat label="Source files" value={a.files} icon={FileCode2} hint="analysed from the recorded commit" />
-        <Stat label="Test files" value={a.tests} icon={FlaskConical} />
+        <Stat label="Source files" value={a.files} icon={FileCode2} hint="in the current checkout" />
+        <Stat label="Test and support files" value={a.tests} icon={FlaskConical} hint="tests plus fixtures, conftest" />
         <Stat label="Links found" value={a.edges} icon={Link2} hint={`${a.edgeTypes.length} kinds of evidence`} />
         <Stat label={<>Files reached by tests <Info>Share of source files that at least one test file imports or actually ran during recording. A low number means changes there are hard to check.</Info></>}
-          value={`${(a.reach * 100).toFixed(0)}%`} icon={ShieldCheck}
+          value={a.files === 0 ? "–" : `${(a.reach * 100).toFixed(0)}%`} icon={ShieldCheck}
           hint={a.untested.length ? `${a.untested.length} without a test` : "every file has a test"} />
       </div>
 

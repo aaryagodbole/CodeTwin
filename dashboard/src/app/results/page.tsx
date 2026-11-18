@@ -28,7 +28,7 @@ export default function Results() {
         <Stat label="Labelled changes" value={c.labelled} icon={Crosshair} />
         <Stat label="Misses" value={c.misses} icon={ShieldAlert} />
         <Stat label="Observed miss rate" value={rate == null ? "–" : `${rate.toFixed(1)}%`}
-          hint={target == null ? undefined : `${ok ? "within" : "above"} the ${target.toFixed(0)}% target`} icon={Target} />
+          hint={target == null ? undefined : `${ok ? "within" : "above"} the ${Number(target.toFixed(1))}% target`} icon={Target} />
       </div>
       <Card title="Observed miss rate vs target">
         {data.length === 0 ? <Empty>No labelled decisions yet. Run <code>codetwin learn</code> after a few changes.</Empty> : (

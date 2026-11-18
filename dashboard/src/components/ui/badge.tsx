@@ -1,7 +1,8 @@
 const tones = {
-  green: "bg-good/15 text-good",
-  amber: "bg-warn/15 text-warn",
-  red: "bg-bad/15 text-bad",
+  // Text uses the *-ink tokens (at least 4.5:1 on the tinted fill in both themes); the dot keeps the bright colour.
+  green: "bg-good/15 text-good-ink",
+  amber: "bg-warn/15 text-warn-ink",
+  red: "bg-bad/15 text-bad-ink",
   accent: "bg-accent-soft text-accent",
   gray: "bg-muted/15 text-muted",
 } as const;

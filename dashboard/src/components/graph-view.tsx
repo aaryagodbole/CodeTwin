@@ -2,7 +2,7 @@
 
 // Evidence-typed graph, drawn with Cytoscape (same styles as the VS Code impact panel).
 import type { Core, ElementDefinition } from "cytoscape";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Graph } from "@/lib/api";
 
 export const EDGE_STYLES: Record<string, { color: string; style: "solid" | "dashed" | "dotted" }> = {
@@ -23,6 +23,8 @@ export function GraphView({ graph, root, onOpen, onSelect, search }: {
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const cyRef = useRef<Core | undefined>(undefined);
+  // Bumped when a new Cytoscape instance is ready, so the search effect re-applies to it (setup is async).
+  const [ready, setReady] = useState(0);
   useEffect(() => {
     let cy: Core | undefined;
     let cancelled = false;
@@ -40,7 +42,8 @@ export function GraphView({ graph, root, onOpen, onSelect, search }: {
       }
       const sorted = [...degree.values()].sort((a, b) => a - b);
       // In a big graph only the best-connected nodes keep a permanent label; others show it on hover or search.
-      const labelFrom = graph.nodes.length > 25 ? (sorted[Math.floor(sorted.length * 0.8)] ?? 0) : 0;
+      // With no links at all (every link type switched off) no node gets one: Infinity labels nothing.
+      const labelFrom = graph.nodes.length > 25 ? (sorted.length ? sorted[Math.floor(sorted.length * 0.8)] : Infinity) : 0;
       elements.forEach((el) => {
         const d = degree.get(String(el.data.id)) ?? 0;
         el.data.deg = d;
@@ -59,7 +62,6 @@ export function GraphView({ graph, root, onOpen, onSelect, search }: {
           { selector: "node[kind = 'test']", style: { "background-color": "#2fbf71", shape: "round-rectangle" } },
           { selector: "node[kind = 'unknown']", style: { "background-color": "#6e6e6e", shape: "diamond" } },
           { selector: "node[showLabel = 1], node:selected, node.lit, node.hit", style: { "text-opacity": 1 } },
-          { selector: ".faded", style: { opacity: 0.1 } },
           { selector: "edge", style: { opacity: 0.55 } },
           { selector: "node:selected", style: { "border-width": 3, "border-color": "#7c7cff" } },
           { selector: "edge", style: { width: 1.5, "curve-style": "bezier", "target-arrow-shape": "triangle", "arrow-scale": 0.7 } },
@@ -67,15 +69,18 @@ export function GraphView({ graph, root, onOpen, onSelect, search }: {
             selector: `edge[type = '${type}']`,
             style: { "line-color": s.color, "target-arrow-color": s.color, "line-style": s.style },
           })),
+          // Last, so they win over the base edge opacity. Hover and search fade separately, so one never clears the other.
+          { selector: ".hover-faded, .search-faded", style: { opacity: 0.1 } },
         ],
       });
       cyRef.current = cy;
+      setReady((n) => n + 1);
       cy.on("mouseover", "node", (e) => {
         const hood = e.target.closedNeighborhood();
-        cy!.elements().not(hood).addClass("faded");
+        cy!.elements().not(hood).addClass("hover-faded");
         hood.addClass("lit");
       });
-      cy.on("mouseout", "node", () => cy!.elements().removeClass("faded lit"));
+      cy.on("mouseout", "node", () => cy!.elements().removeClass("hover-faded lit"));
       if (onSelect) {
         cy.on("tap", "node", (e) => onSelect(e.target.id()));
         cy.on("tap", (e) => { if (e.target === cy) onSelect(null); });
@@ -92,13 +97,13 @@ export function GraphView({ graph, root, onOpen, onSelect, search }: {
     const cy = cyRef.current;
     if (!cy) return;
     const q = (search ?? "").trim().toLowerCase();
-    cy.elements().removeClass("faded hit");
+    cy.elements().removeClass("search-faded hit");
     if (q) {
       const hit = cy.nodes().filter((n) => `${n.data("label")} ${n.data("path")}`.toLowerCase().includes(q));
       hit.addClass("hit");
-      cy.elements().not(hit).not(hit.connectedEdges()).addClass("faded");
+      cy.elements().not(hit).not(hit.connectedEdges()).addClass("search-faded");
     }
-  }, [search, graph]);
+  }, [search, graph, ready]);
   return <div ref={ref} className="h-[560px] w-full rounded-xl border border-border bg-card-2/40" />;
 }
 

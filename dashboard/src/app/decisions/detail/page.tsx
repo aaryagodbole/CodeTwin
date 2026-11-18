@@ -10,19 +10,35 @@ import { Badge } from "@/components/ui/badge";
 import { Card, Stat } from "@/components/ui/card";
 import { RiskGauge } from "@/components/ui/charts";
 import { Info, PageHeader } from "@/components/ui/info";
-import { get, type DecisionRow, type Summary } from "@/lib/api";
+import { DATA_MODE, get, type DecisionRow, type Summary } from "@/lib/api";
 import { skippedShare } from "@/lib/analysis";
 
 function Detail() {
   const id = Number(useSearchParams().get("id"));
-  const rows = useQuery({ queryKey: ["decisions", 500], queryFn: () => get<DecisionRow[]>("/decisions", { limit: "500" }) });
+  // Live: ask the API for this one decision, so an old one is found however many came after it. The demo snapshot
+  // has no per-decision files, so it looks the decision up in its (complete) list.
+  const one = useQuery({
+    queryKey: ["decision", id, DATA_MODE],
+    queryFn: async (): Promise<DecisionRow | null> => {
+      if (DATA_MODE === "demo") {
+        return (await get<DecisionRow[]>("/decisions", { limit: "500" })).find((r) => r.id === id) ?? null;
+      }
+      try {
+        return await get<DecisionRow>(`/decisions/${id}`);
+      } catch (e) {
+        if (e instanceof Error && e.message.startsWith("404")) return null;
+        throw e;
+      }
+    },
+    enabled: Number.isInteger(id) && id > 0,
+  });
   const summary = useQuery({ queryKey: ["summary"], queryFn: () => get<Summary>("/summary") });
-  if (rows.error) return <ErrorBox error={rows.error} />;
-  if (!rows.data) return <Loading />;
-  const d = rows.data.find((r) => r.id === id);
+  if (one.error) return <ErrorBox error={one.error} />;
+  if (one.isPending && Number.isInteger(id) && id > 0) return <Loading />;
+  const d = one.data;
   if (!d) return <Empty>No decision with that number. <Link href="/decisions/" className="text-accent underline">Back to all decisions</Link></Empty>;
   const total = summary.data?.test_files ?? 0;
-  const skip = skippedShare(d, total);
+  const skip = skippedShare(d, total, summary.data?.recorded_commit);
   const abstain = d.decision === "abstain";
   return (
     <div className="space-y-6">
@@ -46,11 +62,11 @@ function Detail() {
         </Card>
         <div className="grid gap-4 sm:grid-cols-2 lg:col-span-2">
           <Stat label={<>Tests to run <Info>Test files CodeTwin selected for this change.</Info></>} value={d.selected.length}
-            hint={total ? `of ${total} test files` : undefined} />
+            hint={total && d.base === summary.data?.recorded_commit ? `of ${total} test files` : undefined} />
           <Stat label={<>Tests skipped <Info>Share of test files left out. An estimate of effort saved, not of time (it assumes similar test durations).</Info></>}
             value={skip == null ? "–" : `${(skip * 100).toFixed(0)}%`} hint="estimate" />
           <Stat label="Outcome" value={d.missed == null ? "pending" : d.missed ? "missed" : "safe"}
-            hint={d.missed == null ? "run codetwin learn to label it" : "from the later full run"} />
+            hint={d.missed == null ? "not labelled yet: known after a full test run of this change" : "from the later full run"} />
           <Stat label="Selection threshold" value={d.threshold == null ? "–" : d.threshold.toFixed(2)} hint={d.alpha == null ? undefined : `target miss rate ${(d.alpha * 100).toFixed(0)}%`} />
         </div>
       </div>

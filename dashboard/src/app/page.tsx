@@ -21,13 +21,16 @@ export default function Overview() {
   if (!summary.data) return <Loading />;
   const s = summary.data;
   const rows = decisions.data ?? [];
+  // Decision cards wait for their own request: an empty list before it answers is not "no decisions".
+  const decisionState = decisions.error ? <ErrorBox error={decisions.error} /> : !decisions.data ? <Loading /> : null;
   const latest = rows[0];
   const chrono = [...rows].reverse();
   const proceed = rows.filter((d) => d.decision === "proceed").length;
   const missed = rows.filter((d) => d.missed === true).length;
   const pending = rows.filter((d) => d.missed == null).length;
   const safe = rows.length - missed - pending;
-  const shares = rows.map((d) => skippedShare(d, s.test_files)).filter((x): x is number => x != null);
+  // Only decisions against the recording whose suite size we know (see skippedShare).
+  const shares = rows.map((d) => skippedShare(d, s.test_files, s.recorded_commit)).filter((x): x is number => x != null);
   const avgSkipped = shares.length ? shares.reduce((a, b) => a + b, 0) / shares.length : null;
   const observed = calibration.data?.points.map((p) => p.observed_miss_rate) ?? [];
   const rate = calibration.data && calibration.data.labelled ? calibration.data.misses / calibration.data.labelled : null;
@@ -54,21 +57,25 @@ export default function Overview() {
 
       <div className="grid gap-4 lg:grid-cols-3">
         <Card title="Latest residual risk" action={<Info>The estimated chance that skipping the other tests hides a failure. It must stay under the target, otherwise CodeTwin abstains.</Info>}>
-          <RiskGauge value={latest ? (latest.residual_risk ?? null) : null} target={s.alpha} />
-          <p className="mt-1 text-center text-xs text-muted">
-            {latest ? `Decision #${latest.id} · ${latest.decision}` : "No decision yet"}
-          </p>
+          {decisionState ?? (<>
+            {/* The target this decision was made with (its recorded alpha), not today's configuration. */}
+            <RiskGauge value={latest ? (latest.residual_risk ?? null) : null} target={latest ? latest.alpha : null} />
+            <p className="mt-1 text-center text-xs text-muted">
+              {latest ? `Decision #${latest.id} · ${latest.decision}` : "No decision yet"}
+            </p>
+          </>)}
         </Card>
         <div className="grid gap-4 sm:grid-cols-2 lg:col-span-2">
-          <Stat label="Observed miss rate" value={pct(rate)} hint={`target ${pct(s.alpha)} · level ${pct(s.alpha_t)}`} icon={ShieldCheck}>
-            <Sparkline values={observed} />
+          <Stat label="Observed miss rate" value={calibration.error ? "error" : pct(rate)}
+            hint={calibration.error ? "could not load calibration" : `target ${pct(s.alpha)} · level ${pct(s.alpha_t)}`} icon={ShieldCheck}>
+            {calibration.error ? <p className="text-xs text-bad-ink">{String(calibration.error.message ?? calibration.error)}</p> : <Sparkline values={observed} />}
           </Stat>
           <Stat label="Decisions" value={s.decisions} hint={`${s.labelled_decisions} with known outcome`} icon={Database}>
-            <Sparkline values={chrono.map((d) => d.residual_risk ?? 0)} color="var(--accent-2)" />
+            <Sparkline values={chrono.map((d) => d.residual_risk ?? null)} color="var(--accent-2)" />
           </Stat>
           <Stat label="Recorded commit" value={<code className="text-xl">{s.recorded_commit?.slice(0, 8) ?? "none"}</code>}
             hint={`${s.test_files} test files`} icon={GitCommit} />
-          <Stat label={<>Test files skipped <Info>Average share of test files left out of a run in the latest decisions. An estimate of effort saved; it assumes similar test durations.</Info></>}
+          <Stat label={<>Test files skipped <Info>Average share of test files left out of a run, over the latest decisions made against the current recording. An estimate of effort saved; it assumes similar test durations.</Info></>}
             value={avgSkipped == null ? "–" : `${(avgSkipped * 100).toFixed(0)}%`}
             hint={s.suite_seconds == null ? "estimate" : `full suite takes ${s.suite_seconds.toFixed(1)}s`} icon={Zap} />
         </div>
@@ -76,12 +83,14 @@ export default function Overview() {
 
       <div className="grid gap-4 lg:grid-cols-3">
         <Card title="Recent outcomes">
-          <Donut parts={[
-            { label: "Safe", value: safe, color: "var(--good)" },
-            { label: "Missed", value: missed, color: "var(--bad)" },
-            { label: "Pending", value: pending, color: "var(--muted)" },
-          ]} />
-          <p className="mt-4 text-xs text-muted">{proceed} of the last {rows.length} decisions proceeded; the rest abstained and ran more tests.</p>
+          {decisionState ?? (<>
+            <Donut parts={[
+              { label: "Safe", value: safe, color: "var(--good)" },
+              { label: "Missed", value: missed, color: "var(--bad)" },
+              { label: "Pending", value: pending, color: "var(--muted)" },
+            ]} />
+            <p className="mt-4 text-xs text-muted">{proceed} of the last {rows.length} decisions proceeded; the rest abstained and ran more tests.</p>
+          </>)}
         </Card>
         <Card title="Latest decisions" className="lg:col-span-2"
           action={<Link href="/decisions/" className="inline-flex items-center gap-1 text-xs font-medium text-accent hover:underline">All decisions <ArrowRight size={13} /></Link>}>

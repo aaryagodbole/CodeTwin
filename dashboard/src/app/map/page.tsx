@@ -17,14 +17,17 @@ const TYPES: { key: string; hint: string }[] = [
   { key: "unresolved", hint: "The analysis could not tell (for example a dynamic call). Never treated as 'no dependency'." },
 ];
 
-const chip = "inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-border bg-card-2 px-3 py-1 text-xs";
+const chip = "inline-flex items-center gap-1.5 rounded-full border border-border bg-card-2 px-3 py-1 text-xs";
+// Stable defaults: a new array on every render would rebuild the graph (and lose the view) on each keystroke.
+const ALL_TYPES = TYPES.map((t) => t.key);
+const WITHOUT_RUNTIME = ALL_TYPES.filter((k) => k !== "runtime");
 
 export default function SystemMap() {
   const router = useRouter();
   const q = useQuery({ queryKey: ["map"], queryFn: () => get<Graph>("/map") });
   // Big graphs start without runtime links (one per test and file reached) so the structure is readable; the user can switch them on.
   const [picked_types, setTypes] = useState<string[] | null>(null);
-  const types = picked_types ?? (q.data && q.data.edges.length > 150 ? TYPES.map((t) => t.key).filter((k) => k !== "runtime") : TYPES.map((t) => t.key));
+  const types = picked_types ?? (q.data && q.data.edges.length > 150 ? WITHOUT_RUNTIME : ALL_TYPES);
   const [tests, setTests] = useState(true);
   const [search, setSearch] = useState("");
   const [picked, setPicked] = useState<string | null>(null);
@@ -37,9 +40,13 @@ export default function SystemMap() {
   }, [q.data, types, tests]);
   const onOpen = useCallback((p: string) => { if (p !== "?") router.push(`/graph/?file=${encodeURIComponent(p)}`); }, [router]);
   const onSelect = useCallback((id: string | null) => setPicked(id), []);
+  const pathOf = useMemo(() => new Map(graph?.nodes.map((n) => [n.id, n.path]) ?? []), [graph]);
   const node = graph?.nodes.find((n) => n.id === picked);
   const related = node && graph ? graph.edges.filter((e) => e.source === node.id || e.target === node.id) : [];
-  const label = (id: string) => graph?.nodes.find((n) => n.id === id)?.path ?? id;
+  const label = (id: string) => pathOf.get(id) ?? id;
+  // Keyboard path to node details: the search results are a list of buttons that select like a click does.
+  const term = search.trim().toLowerCase();
+  const matches = term && graph ? graph.nodes.filter((n) => `${n.label} ${n.path}`.toLowerCase().includes(term)).slice(0, 8) : [];
   return (
     <div className="space-y-6">
       <PageHeader title="Dependency graph">
@@ -54,20 +61,38 @@ export default function SystemMap() {
               className="w-56 rounded-full border border-border bg-card-2 py-1.5 pl-8 pr-3 text-sm outline-none focus:border-accent" />
           </label>
           {TYPES.map((t) => (
-            <label key={t.key} className={chip}>
-              <input type="checkbox" className="accent-[var(--accent)]" checked={types.includes(t.key)}
-                onChange={(e) => setTypes(e.target.checked ? [...types, t.key] : types.filter((x) => x !== t.key))} />
-              {t.key}
+            <span key={t.key} className={chip}>
+              <label className="inline-flex cursor-pointer items-center gap-1.5">
+                <input type="checkbox" className="accent-[var(--accent)]" checked={types.includes(t.key)}
+                  onChange={(e) => setTypes(e.target.checked ? [...types, t.key] : types.filter((x) => x !== t.key))} />
+                {t.key}
+              </label>
               <Info label={`What is a ${t.key} link?`}>{t.hint}</Info>
-            </label>
+            </span>
           ))}
-          <label className={chip}>
+          <label className={`${chip} cursor-pointer`}>
             <input type="checkbox" className="accent-[var(--accent)]" checked={tests} onChange={(e) => setTests(e.target.checked)} /> tests
           </label>
         </div>
+        {matches.length > 0 && (
+          <ul className="mb-3 flex flex-wrap gap-1.5" aria-label="Matching files and tests">
+            {matches.map((n) => (
+              <li key={n.id}>
+                <button type="button" onClick={() => setPicked(n.id)} aria-pressed={picked === n.id}
+                  className="rounded-full border border-border bg-card px-2.5 py-1 text-xs hover:border-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent">
+                  {n.path}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
         <div className="mb-3"><Legend /></div>
         {q.error ? <ErrorBox error={q.error} /> : graph ? (
-          graph.nodes.length === 0 ? <Empty>Nothing recorded yet. Run <code>codetwin record</code>.</Empty> : (
+          graph.nodes.length === 0 ? (
+            (q.data?.nodes.length ?? 0) > 0
+              ? <Empty>Every node is hidden by the filters above. Switch a filter back on to see them.</Empty>
+              : <Empty>Nothing recorded yet. Run <code>codetwin record</code>.</Empty>
+          ) : (
             <div className="grid gap-4 lg:grid-cols-[1fr_18rem]">
               <GraphView graph={graph} onOpen={onOpen} onSelect={onSelect} search={search} />
               <aside className="rounded-xl border border-border bg-card-2/40 p-4 text-sm" aria-live="polite">

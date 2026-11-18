@@ -17,7 +17,13 @@ const links = [
 const listeners = new Set<() => void>();
 const subscribe = (cb: () => void) => {
   listeners.add(cb);
-  return () => listeners.delete(cb);
+  // With no saved choice the theme follows the system; tell React when the system flips.
+  const mq = window.matchMedia("(prefers-color-scheme: dark)");
+  mq.addEventListener("change", cb);
+  return () => {
+    listeners.delete(cb);
+    mq.removeEventListener("change", cb);
+  };
 };
 const systemDark = () => window.matchMedia("(prefers-color-scheme: dark)").matches;
 const isDarkNow = () => {
@@ -74,14 +80,17 @@ function Logo({ compact = false }: { compact?: boolean }) {
 
 export function Shell({ banner, children }: { banner?: React.ReactNode; children: React.ReactNode }) {
   const path = usePathname();
-  const isActive = (href: string) => (href === "/" ? path === "/" : path.startsWith(href.replace(/\/$/, "")));
+  const norm = (p: string) => p.replace(/\/+$/, "") || "/";
+  // Highlight the section (Decisions also on a decision's detail page); aria-current only on the exact page.
+  const isActive = (href: string) => (href === "/" ? norm(path) === "/" : norm(path).startsWith(norm(href)));
+  const current = (href: string) => (norm(path) === norm(href) ? "page" as const : undefined);
   return (
     <div className="min-h-screen md:flex">
       <aside className="hidden w-60 shrink-0 flex-col border-r border-border bg-card px-4 py-5 md:flex">
         <Logo />
         <nav className="mt-8 flex flex-col gap-1" aria-label="Main">
           {links.map(({ href, label, icon: Icon }) => (
-            <Link key={href} href={href} aria-current={isActive(href) ? "page" : undefined}
+            <Link key={href} href={href} aria-current={current(href)}
               className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition ${
                 isActive(href) ? "bg-accent-soft font-medium text-accent" : "text-muted hover:bg-card-2 hover:text-foreground"}`}>
               <Icon size={17} aria-hidden />
@@ -98,7 +107,7 @@ export function Shell({ banner, children }: { banner?: React.ReactNode; children
           <div className="md:hidden"><Logo compact /></div>
           <nav className="flex gap-1 md:hidden" aria-label="Main (mobile)">
             {links.map(({ href, label, icon: Icon }) => (
-              <Link key={href} href={href} aria-label={label} aria-current={isActive(href) ? "page" : undefined}
+              <Link key={href} href={href} aria-label={label} aria-current={current(href)}
                 className={`grid h-9 w-9 place-items-center rounded-lg ${isActive(href) ? "bg-accent-soft text-accent" : "text-muted"}`}>
                 <Icon size={17} />
               </Link>
