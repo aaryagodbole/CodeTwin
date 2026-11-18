@@ -70,7 +70,7 @@ def test_a_full_clone_has_no_history_note(toy_repo: Path) -> None:
     with Engine(toy_repo) as eng:
         d = eng.select()
         assert not any("shallow" in r or "git history" in r for r in d.reasons)
-        assert eng.history("0" * 40) == [] and "git history is not available" in (eng.history_note or "")
+        assert eng.history("0" * 40) == [] and "git history is not available" in (eng.history_note("0" * 40) or "")
 
 
 # ------------------------------------------------------------------------------------ 2.4 (E6): one transaction
@@ -120,6 +120,42 @@ def test_select_explains_when_the_only_run_is_incomplete(toy_repo: Path, monkeyp
             eng.select()
 
 
+def test_a_partial_rerun_keeps_the_complete_run_of_the_same_commit(toy_repo: Path,
+                                                                    monkeypatch: pytest.MonkeyPatch) -> None:
+    _recorded(toy_repo)
+    with Engine(toy_repo) as eng:
+        sha = eng.head()
+        run = _record_timeout(eng, monkeypatch)
+        assert any("kept the earlier complete run" in n for n in run.notes)
+        stored = eng.store.get_run(sha)
+        assert stored is not None and not stored.incomplete and eng.store.latest_run_sha() == sha
+
+
+def test_select_says_when_it_skipped_a_newer_incomplete_run(toy_repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    _recorded(toy_repo)
+    with Engine(toy_repo) as eng:
+        good = eng.head()
+    _git(toy_repo, "commit", "-q", "--allow-empty", "-m", "later")
+    with Engine(toy_repo) as eng:
+        _record_timeout(eng, monkeypatch)
+        monkeypatch.undo()
+        _edit_source(toy_repo)
+        d = eng.select()
+    assert any(f"comparing with the older complete run of {good[:10]}" in r for r in d.reasons)
+
+
+def test_learn_refuses_an_incomplete_full_run(toy_repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    _recorded(toy_repo)
+    _edit_source(toy_repo)
+    with Engine(toy_repo) as eng:
+        eng.select()
+        last = eng.store.last_decision()
+        monkeypatch.setattr(eng.lang, "run_suite", lambda sha, *a, **k: TestRun(sha=sha, returncode="timeout"))
+        with pytest.raises(RuntimeError, match="did not complete"):
+            eng.learn()
+        assert last is not None and not eng.store.has_outcome(last["id"]) and eng.store.calibration() == []
+
+
 @pytest.mark.parametrize(("code", "incomplete"), [(0, False), (1, False), (5, False), ("2", True), (4, True),
                                                  ("timeout", True), ("no-runner", False)])
 def test_incomplete_return_codes(code: int | str, incomplete: bool) -> None:
@@ -133,8 +169,10 @@ def test_a_broken_model_file_gives_a_clear_error(toy_repo: Path, content: str) -
     with Engine(toy_repo) as eng:
         model = eng.cfg.state_dir / "model.json"
     model.write_text(content)
-    with pytest.raises(RuntimeError, match="delete it to use the built-in prior"):
-        Engine(toy_repo)
+    with Engine(toy_repo) as eng:
+        eng.record()                                  # commands that do not score tests still work
+        with pytest.raises(RuntimeError, match="delete it to use the built-in prior"):
+            eng.select()
 
 
 def test_a_valid_model_file_loads(toy_repo: Path) -> None:

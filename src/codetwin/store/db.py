@@ -77,7 +77,9 @@ class Store:
     def _tx(self) -> Iterator[None]:
         """One transaction for the outermost block; nested blocks join it. Rolled back on any error."""
         if self._depth == 0:
-            self.con.execute("begin")
+            # immediate: take the write lock now. With WAL a deferred transaction that reads before it writes fails
+            # at once (SQLITE_BUSY_SNAPSHOT) when another connection committed meanwhile, instead of waiting.
+            self.con.execute("begin immediate")
         self._depth += 1
         try:
             yield
