@@ -51,15 +51,38 @@ def _pull_request(env: dict[str, str]) -> int | None:
     path = env.get("GITHUB_EVENT_PATH")
     if path and Path(path).is_file():
         try:
-            pr = json.loads(Path(path).read_text(encoding="utf-8")).get("pull_request") or {}
-            return int(pr["number"]) if "number" in pr else None
+            event = json.loads(Path(path).read_text(encoding="utf-8"))
+            pr = event.get("pull_request") if isinstance(event, dict) else None
+            number = pr.get("number") if isinstance(pr, dict) else None
+            return int(number) if isinstance(number, int) and not isinstance(number, bool) and number > 0 else None
         except (ValueError, OSError):
             return None
     return None
 
 
 def _finite(x: Any) -> float | None:
-    return None if x is None or (isinstance(x, float) and math.isnan(x)) else float(x)
+    """A number the cloud can store, or None: NaN and Infinity are not valid JSON and are refused there."""
+    if x is None or isinstance(x, bool):
+        return None
+    try:
+        f = float(x)
+    except (TypeError, ValueError):
+        return None
+    return f if math.isfinite(f) else None
+
+
+def _clean(value: Any) -> Any:
+    """Free-form section content with NaN and Infinity replaced by null (the cloud refuses them)."""
+    if isinstance(value, float):
+        return value if math.isfinite(value) else None
+    if isinstance(value, dict):
+        return {k: _clean(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_clean(v) for v in value]
+    return value
+
+
+MAX_UNSELECTED_TESTS = 500   # keeps a report of a large suite under the cloud's 256 KB limit
 
 
 def validate_decision(decision: Any) -> dict:
@@ -78,6 +101,11 @@ def validate_decision(decision: Any) -> dict:
             raise PushError(f"the decision file's `{key}` must be a {kind.__name__}")
     if decision.get("threshold") is not None and not isinstance(decision["threshold"], (int, float)):
         raise PushError("the decision file's `threshold` must be a number")
+    schema = decision.get("schema")
+    if schema is not None and (not isinstance(schema, int) or isinstance(schema, bool)):
+        raise PushError("the decision file's `schema` must be an integer")
+    if decision.get("mode") is not None and not isinstance(decision["mode"], str):
+        raise PushError("the decision file's `mode` must be a string")
     return decision
 
 
@@ -98,30 +126,31 @@ def build_report(eng: Any, decision: dict, env: dict[str, str] | None = None,
     decision = validate_decision(decision)
     env = dict(os.environ if env is None else env)
     root = Path(eng.root)
-    stored = eng.store.last_decision()
-    full = eng.store.decision(stored["id"]) if stored else None
+    newest = eng.store.decisions(limit=1)
     # Scores and alpha come from the stored decision only when it is the same decision as the JSON file; otherwise
     # the report has none rather than another decision's.
-    same = stored is not None and full is not None and _same_decision({**full, "selected": stored["selected"]},
-                                                                       decision)
-    detail = full if same else None
+    detail = newest[0] if newest and _same_decision(newest[0], decision) else None
     run = eng.store.get_run(detail["base"]) if detail else None
     durations = run.durations if run else {}
-    scores = stored["scores"] if same and stored else {}
+    scores = eng.store.scores(detail["id"]) if detail else {}
     selected = set(decision["selected"])
-    tests = sorted(set(scores) | selected)
+    # Every selected test, plus the highest-scored others, so a large suite stays under the upload size limit.
+    unselected = sorted((t for t in scores if t not in selected), key=lambda t: (-(_finite(scores[t]) or 0.0), t))
+    tests = sorted(selected | set(unselected[:MAX_UNSELECTED_TESTS]))
     published = report.publishable()
     in_actions = env.get("GITHUB_ACTIONS") == "true"
     head = env.get("GITHUB_SHA") if in_actions else _git(root, "rev-parse", "HEAD")
     if not head:
         raise PushError("cannot tell the head commit (not a git repository?)")
-    run_info = ({"source": "github-actions", "id": env.get("GITHUB_RUN_ID", ""),
+    if in_actions and not env.get("GITHUB_RUN_ID"):
+        raise PushError("GITHUB_RUN_ID is not set; cannot identify this workflow run")
+    run_info = ({"source": "github-actions", "id": env["GITHUB_RUN_ID"],
                  "attempt": int(env.get("GITHUB_RUN_ATTEMPT", "1") or 1)} if in_actions else
                 {"source": "cli", "id": _cli_run_id(head, decision), "attempt": 1})
     missed = detail.get("missed") if detail else None
     return {
         "schema": REPORT_SCHEMA,
-        "engine": {"version": __version__, "output_schema": int(decision.get("schema", OUTPUT_SCHEMA))},
+        "engine": {"version": __version__, "output_schema": int(decision.get("schema") or OUTPUT_SCHEMA)},
         "repository": repository or repository_name(root, env),
         "commit": {"head": head, "base": detail["base"] if detail else None,
                    "ref": env.get("GITHUB_REF") or _git(root, "rev-parse", "--abbrev-ref", "HEAD") or None,
@@ -129,16 +158,18 @@ def build_report(eng: Any, decision: dict, env: dict[str, str] | None = None,
         "run": run_info,
         "decision": {
             "decision": decision["decision"],
-            "residual_risk": float(decision["residual_risk"]),
+            "residual_risk": _finite(decision["residual_risk"]) or 0.0,
             "alpha": _finite(detail.get("alpha")) if detail else None,
             "threshold": _finite(decision.get("threshold")),
             "mode": str(decision.get("mode", "")),
             "selected": sorted(selected),
             "tests": [{"id": t, "selected": t in selected, "score": _finite(scores.get(t)),
                        "seconds": _finite(durations.get(t))} for t in tests],
-            "reasons": list(decision.get("reasons", [])),
-            "sections": {k: v for k, v in (decision.get("extras") or {}).items()
-                         if k in published and isinstance(v, dict)},
+            "reasons": [str(r) for r in (decision.get("reasons") or [])],
+            # A section that failed carries {"error": "<exception text>"}: free text that may quote source, so it
+            # is never published (docs/data-policy.md).
+            "sections": {k: _clean(v) for k, v in (decision.get("extras") or {}).items()
+                         if k in published and isinstance(v, dict) and "error" not in v},
         },
         "outcome": None if missed is None else {"missed": bool(missed), "failing": []},
     }
@@ -188,7 +219,7 @@ def github_oidc_token(env: dict[str, str], audience: str = AUDIENCE) -> str:
 
 
 def send(server: str, body: dict, token: str, timeout: float = 20) -> dict:
-    data = json.dumps(body).encode()
+    data = json.dumps(body, allow_nan=False).encode()   # the cloud refuses NaN and Infinity
     req = urllib.request.Request(f"{check_server(server)}/api/v1/reports", data=data, method="POST",  # noqa: S310
                                  headers={"Content-Type": "application/json", "Authorization": f"Bearer {token}",
                                           "User-Agent": f"codetwin/{__version__}"})

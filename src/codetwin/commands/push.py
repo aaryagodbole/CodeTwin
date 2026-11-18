@@ -49,3 +49,8 @@ def run(args: argparse.Namespace) -> int:
     except (PushError, OSError, ValueError, KeyError) as e:
         print(f"{'warning' if args.best_effort else 'error'}: codetwin push: {e}", file=sys.stderr)
         return 0 if args.best_effort else 1
+    except Exception as e:  # noqa: BLE001  --best-effort promises never to fail the job because of the cloud
+        if not args.best_effort:
+            raise
+        print(f"warning: codetwin push: {type(e).__name__}: {e}", file=sys.stderr)
+        return 0

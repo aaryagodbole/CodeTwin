@@ -232,3 +232,69 @@ def test_redirects_are_not_followed_with_the_token() -> None:
         httpd.server_close()
         target.close()
     assert not target.seen, "the token followed the redirect"
+
+
+def test_best_effort_survives_any_error(toy_repo: Path, capsys: pytest.CaptureFixture[str], tmp_path: Path,
+                                        monkeypatch: pytest.MonkeyPatch) -> None:
+    decision = _decide(toy_repo, capsys)
+    f = tmp_path / "d.json"
+    f.write_text(json.dumps(decision), encoding="utf-8")
+
+    def broken(*a, **k):
+        raise RuntimeError("database is locked")
+    monkeypatch.setattr(push, "build_report", broken)
+    from codetwin.commands import push as push_cmd
+    monkeypatch.setattr(push_cmd, "build_report", broken)
+    base = ["-C", str(toy_repo), "push", "--decision", str(f), "--dry-run", "--repository", "acme/shop"]
+    assert main([*base, "--best-effort"]) == 0
+    assert "database is locked" in capsys.readouterr().err
+
+
+def test_nulls_and_non_finite_numbers_never_crash_or_reach_the_body(toy_repo: Path,
+                                                                     capsys: pytest.CaptureFixture[str]) -> None:
+    decision = _decide(toy_repo, capsys)
+    odd = {**decision, "reasons": None, "schema": None,
+           "extras": {"changed_files": {"summary": "x", "weight": float("nan"), "big": float("inf")}}}
+    with Engine(toy_repo) as eng:
+        body = push.build_report(eng, odd, env={}, repository="acme/shop")
+    assert body["decision"]["reasons"] == [] and body["engine"]["output_schema"] >= 1
+    text = json.dumps(body, allow_nan=False)      # raises if any NaN or Infinity is left
+    assert "NaN" not in text and "Infinity" not in text
+
+
+def test_failed_sections_are_not_published(toy_repo: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    """A failed section's error text may quote source code; it never leaves the machine."""
+    decision = _decide(toy_repo, capsys)
+    failed = {**decision, "extras": {**decision.get("extras", {}),
+                                     "changed_files": {"error": "SyntaxError: def secret(): ...",
+                                                       "summary": "section failed: def secret(): ..."}}}
+    with Engine(toy_repo) as eng:
+        body = push.build_report(eng, failed, env={}, repository="acme/shop")
+    assert "changed_files" not in body["decision"]["sections"]
+    assert "secret" not in json.dumps(body)
+
+
+def test_large_suites_stay_under_the_upload_limit(toy_repo: Path, capsys: pytest.CaptureFixture[str],
+                                                  monkeypatch: pytest.MonkeyPatch) -> None:
+    decision = _decide(toy_repo, capsys)
+    with Engine(toy_repo) as eng:
+        many = {f"tests/test_{i:05d}.py": i / 10000 for i in range(5000)}
+        monkeypatch.setattr(eng.store, "scores", lambda _id: many)
+        body = push.build_report(eng, decision, env={}, repository="acme/shop")
+    assert len(json.dumps(body)) < 256 * 1024
+    assert set(decision["selected"]) <= {t["id"] for t in body["decision"]["tests"]}
+    assert "tests/test_04999.py" in {t["id"] for t in body["decision"]["tests"]}      # highest score kept
+
+
+def test_odd_event_payloads_and_missing_run_id(toy_repo: Path, capsys: pytest.CaptureFixture[str],
+                                               tmp_path: Path) -> None:
+    decision = _decide(toy_repo, capsys)
+    event = tmp_path / "event.json"
+    env = {"GITHUB_ACTIONS": "true", "GITHUB_SHA": "c" * 40, "GITHUB_RUN_ID": "7", "GITHUB_REPOSITORY": "acme/shop",
+           "GITHUB_EVENT_PATH": str(event)}
+    with Engine(toy_repo) as eng:
+        for payload in ['{"pull_request": {"number": null}}', '[1, 2]', '{"pull_request": "x"}']:
+            event.write_text(payload, encoding="utf-8")
+            assert push.build_report(eng, decision, env=env)["commit"]["pull_request"] is None
+        with pytest.raises(push.PushError, match="GITHUB_RUN_ID"):
+            push.build_report(eng, decision, env={**env, "GITHUB_RUN_ID": ""})
