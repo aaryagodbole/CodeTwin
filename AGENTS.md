@@ -1,6 +1,7 @@
 # AGENTS.md
 
-Instructions for AI coding agents working in this repository. Humans: see README.md and CONTRIBUTING.md.
+How everyone works in this repository: team members and AI coding agents follow the same steps. New to git or
+GitHub? Start with "Step by step for beginners" below. Background: README.md and CONTRIBUTING.md.
 
 ## Commands
 
@@ -14,6 +15,120 @@ cd dashboard && npm ci && npm run dev    # needs `codetwin serve` running in a p
 
 A change is done only when `scripts/check.sh` passes (ruff, mypy, pytest with coverage, extension and dashboard
 builds) and new behaviour has a test.
+
+## Step by step for beginners (exact commands)
+
+The same workflow as the next section, as commands to copy. Run them in Git Bash (Windows) or a terminal (macOS,
+Linux), from the repository folder. Replace the parts in `<...>`.
+
+**Once, on a new computer**
+
+```bash
+git clone https://github.com/aaryagodbole/CodeTwin.git && cd CodeTwin
+python -m venv .venv && source .venv/bin/activate     # Windows Git Bash: source .venv/Scripts/activate
+pip install -e ".[dev,mcp,server]"
+scripts/check.sh                                       # should pass before you change anything
+```
+
+**1. Start a task (every new issue)**
+
+```bash
+git checkout dev
+git pull                                               # get everything merged so far
+git checkout -b feature/<branch-name-from-the-issue>
+```
+
+Read the issue and its comments first. If you want to do anything differently, comment on the issue and wait.
+
+**2. Every time you sit down to work again**
+
+```bash
+git fetch origin
+git log --oneline HEAD..origin/dev                     # empty = you are up to date
+git merge origin/dev                                   # only if the line above printed commits
+```
+
+If the merge says `CONFLICT`, see "Merge conflicts" in step 3 of the workflow below. To stop a merge you
+are unsure about: `git merge --abort` (nothing is lost), then ask on the pull request.
+
+**3. Save your work (often, in small steps)**
+
+```bash
+git status                                             # what changed; never commit .codetwin/, node_modules/, out/
+git add <files you changed>                            # name the files; avoid `git add .`
+git commit -m "Add <what this commit does>"            # imperative: "Add", "Fix", "Update"
+git push -u origin HEAD                                # first push; afterwards just `git push`
+```
+
+**4. Before opening the pull request**
+
+```bash
+git fetch origin && git merge origin/dev               # latest dev again
+scripts/check.sh                                       # must pass; fix every error it prints
+```
+
+Add a line to `CHANGELOG.md` under *Unreleased*, and update the docs the issue names.
+
+**5. Open the pull request**
+
+```bash
+gh pr create --base dev --fill                         # or use the "Compare & pull request" button on GitHub
+```
+
+Fill in every part of the template: `Closes #<issue>`, the checklist, *Beyond the issue* (write "none" if you
+followed the issue exactly) and a screenshot for a dashboard or VS Code change. Do not open it as a draft
+unless you are still working; drafts are not reviewed.
+
+**6. Wait for CI (the checks at the bottom of the pull request)**
+
+- Green tick: go on.
+- Red cross: click *Details* next to the failed check, scroll to the first red error line, fix it locally,
+  run `scripts/check.sh`, commit and push. Don't ask for reviews while checks are red.
+- If a check fails in code you did not touch, merge the latest `dev` first (step 2); if it still fails, say so
+  on the pull request instead of changing unrelated code.
+
+**7. Ask for reviews**
+
+1. Optional, any time: comment `/review` (PR-Agent findings) or `/improve` (code suggestions).
+2. When checks are green: comment `@coderabbitai full review`. Wait for its review (a few minutes).
+3. The code owner (Aarya) is requested automatically.
+
+**8. Answer every review comment**
+
+For each comment from CodeRabbit, PR-Agent or Aarya:
+
+1. Read it, and check it against the code. AI reviewers are sometimes wrong.
+2. If it is right: fix it, commit, push, then reply in that thread with "Fixed in `<commit id>`" plus one line
+   saying what changed. Find the commit id with `git log --oneline -1`.
+3. If it is wrong or out of scope: reply with the reason and evidence (a test, a line of code, the issue text).
+4. Click *Resolve conversation* only after your fix is pushed, or after the reviewer agrees.
+
+When all fixes are pushed, comment `@coderabbitai review` once (not after every small push).
+
+**9. Merge and clean up**
+
+Aarya merges (squash). Never merge your own pull request. After the merge:
+
+```bash
+git checkout dev && git pull
+git branch -d feature/<branch-name>                    # delete your local branch
+```
+
+Set the Notion card to *Done*, and comment on any issue that was waiting for yours.
+
+**Never**
+
+- `git push --force` / `git push -f`, `git reset --hard` on a pushed branch, or `git rebase` after a review
+  started. Reviewers lose their place, and work can be lost. To undo a pushed commit, use `git revert <id>`.
+- Commit secrets (API keys, tokens, `.env` files). If you pushed one by mistake, tell Aarya at once; the key
+  must be revoked, not only deleted from the file.
+- Commit directly to `dev` or `main`, or work on someone else's branch without asking them.
+- Add `Co-authored-by` or AI-attribution lines to commits.
+
+**When stuck**
+
+Comment on your pull request or the issue: what you ran, the full error message (copy it as text, not a
+screenshot), and what you already tried. Don't wait silently.
 
 ## Workflow: from issue to merged pull request
 
@@ -57,10 +172,11 @@ spec. Follow these steps in order.
      agreed
    - add a screenshot for any VS Code or dashboard change
 7. **Get both reviews.** A pull request is merged only after both:
-   - **CodeRabbit.** Auto-review is off in this repository, so comment exactly `@coderabbitai full review` on the
-     pull request. This must be a mention, not a link. After each new push, comment `@coderabbitai review`.
-     The free plan allows about one review an hour, so ask for it when the pull request is ready, not on every
-     push.
+   - **CodeRabbit.** Auto-review is off in this repository. When the pull request is ready (checks green, your
+     own review done), comment exactly `@coderabbitai full review`. This must be a mention, not a link. After
+     you have pushed fixes for its comments, comment `@coderabbitai review` once. The free plan allows about one
+     review an hour for the whole repository, so do not ask on every push. If it answers "rate limited", wait
+     for the time it gives and ask again; do not comment again before that.
    - **PR-Agent** (optional, free, no hourly limit) runs only when asked. Comment `/review` for findings,
      `/improve` for code suggestions, `/describe` for a summary or `/ask "..."` for a question; comment again
      after you push fixes. Rules: `.pr_agent.toml`. Answer its comments like CodeRabbit's.
