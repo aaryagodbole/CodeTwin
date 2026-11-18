@@ -193,16 +193,19 @@ class Engine:
         scores, selected = last["scores"], set(last["selected"])
         missed = bool(affected - selected)
         non_forced = [scores[t] for t in affected if t in scores and not rows.get(t, {}).get("forced")]
-        self.store.add_calibration(min(non_forced) if non_forced else math.inf, last["id"])
-        calib = self.store.calibration()
-        self.store.add_recal_points(((t, scores[t], int(t in affected)) for t in scores
-                                     if not rows.get(t, {}).get("forced")), last["id"])
-        level = AdaptiveLevel(self.cfg.alpha, self.cfg.aci_gamma, self.store.alpha_t())
-        # The adaptive level tracks misses of the *calibrated* threshold only; a budget-mode selection
-        # missing a test says nothing about it. Scores and labels above are valid in both modes.
-        if last.get("mode", "calibrated") == "calibrated":
-            self.store.set_alpha_t(level.update(missed), last["id"])
-        self.store.save_outcome(last["id"], missed)
+        # One transaction: if learning stops part way, nothing is stored and `learn` can simply run again
+        # (calibration_point.decision_id is unique, so a half-stored label could never be completed).
+        with self.store._tx():
+            self.store.add_calibration(min(non_forced) if non_forced else math.inf, last["id"])
+            calib = self.store.calibration()
+            self.store.add_recal_points(((t, scores[t], int(t in affected)) for t in scores
+                                         if not rows.get(t, {}).get("forced")), last["id"])
+            level = AdaptiveLevel(self.cfg.alpha, self.cfg.aci_gamma, self.store.alpha_t())
+            # The adaptive level tracks misses of the *calibrated* threshold only; a budget-mode selection
+            # missing a test says nothing about it. Scores and labels above are valid in both modes.
+            if last.get("mode", "calibrated") == "calibrated":
+                self.store.set_alpha_t(level.update(missed), last["id"])
+            self.store.save_outcome(last["id"], missed)
         return {"affected": sorted(affected), "missed": sorted(affected - selected), "alpha_t": level.alpha_t,
                 "calibration_size": len(calib)}
 

@@ -43,8 +43,9 @@ def _clean_decision(d: dict) -> dict:
         v = out.get(k)
         if isinstance(v, float) and math.isnan(v):
             out[k] = None
-    out.setdefault("selected", [])
-    out.setdefault("reasons", [])
+    # The keys are always present (from DECISION_KEYS), so a missing list is None here: default it explicitly.
+    out["selected"] = out.get("selected") or []
+    out["reasons"] = out.get("reasons") or []
     return out
 
 

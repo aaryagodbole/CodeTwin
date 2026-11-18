@@ -106,6 +106,24 @@ def commentable(patch: str) -> dict[str, set[int]]:
     return out
 
 
+def _pull_request_base(root: Path) -> str | None:
+    """The base commit of the pull request in a GitHub `pull_request` workflow, if it is in the local history."""
+    import os
+    import subprocess
+
+    path = os.environ.get("GITHUB_EVENT_PATH")
+    try:
+        event = json.loads(Path(path).read_text(encoding="utf-8")) if path else None
+    except (OSError, ValueError):
+        return None
+    pr = event.get("pull_request") if isinstance(event, dict) else None
+    sha = ((pr or {}).get("base") or {}).get("sha") if isinstance(pr, dict) else None
+    if not isinstance(sha, str) or not re.fullmatch(r"[0-9a-f]{40}", sha):
+        return None
+    found = subprocess.run(["git", "cat-file", "-e", f"{sha}^{{commit}}"], cwd=root, capture_output=True, check=False)
+    return sha if found.returncode == 0 else None
+
+
 def run(args: argparse.Namespace) -> int:
     from ..evidence.diff import git
     from ..kg import from_engine
@@ -149,9 +167,13 @@ def run(args: argparse.Namespace) -> int:
             llm = client_from_config(eng.cfg)
             only = sorted({*(only or [m.NAME for m in select_analyzers()]), "llm_review"})
         patch = git(eng.root, "diff", "--unified=3", base, "--") if base else ""
+        # GitHub accepts inline comments only on lines of the pull request's own diff. The recorded base can be an
+        # older commit than the PR's base, so use the PR's base commit when the workflow event provides it.
+        pr_base = _pull_request_base(eng.root)
+        in_pr = git(eng.root, "diff", "--unified=3", f"{pr_base}...HEAD", "--") if pr_base else patch
         ctx = ReviewContext(root=eng.root, decision=decision, changed=changed, cfg=eng.cfg, graph=kg, llm=llm,
                             options={"patch": patch if llm else "", "changed_old": changed_old, "covering": covering},
-                            commentable=commentable(patch))
+                            commentable=commentable(in_pr))
         review = run_review(ctx, select_analyzers(only, skip))
 
     if args.format == "json":
