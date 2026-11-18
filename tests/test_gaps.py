@@ -3,6 +3,9 @@ from __future__ import annotations
 
 import json
 import subprocess
+from pathlib import Path
+
+import pytest
 
 from codetwin.cli import main
 
@@ -283,3 +286,114 @@ def test_opens_block_handles_strings_and_comments():
     assert not _opens_block('x = "a:"')
     assert not _opens_block("y = d[1:]  # slice:")
     assert not _opens_block("z = 1  # note:")
+
+
+# ---- CLI command tests (codetwin gaps) ----
+
+
+def test_gaps_json_matches_select_json(toy_repo: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    """gaps --json output matches select --json's extras.test_gaps."""
+    main(["-C", str(toy_repo), "init"])
+    main(["-C", str(toy_repo), "record"])
+    p = toy_repo / "src/shop/price.py"
+    p.write_text(p.read_text() + "\ndef discount(price, percent):\n    return price * (1 - percent)\n")
+
+    capsys.readouterr()
+    assert main(["-C", str(toy_repo), "select", "--json"]) == 0
+    select_out = json.loads(capsys.readouterr().out)
+    select_gaps = select_out["extras"]["test_gaps"]
+
+    capsys.readouterr()
+    assert main(["-C", str(toy_repo), "gaps", "--json"]) == 0
+    gaps_out = json.loads(capsys.readouterr().out)
+
+    assert gaps_out == select_gaps
+
+
+def test_gaps_does_not_store_decision(toy_repo: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    """Running gaps must not add a decision to the store."""
+    from codetwin.engine import Engine
+
+    main(["-C", str(toy_repo), "init"])
+    main(["-C", str(toy_repo), "record"])
+    p = toy_repo / "src/shop/price.py"
+    p.write_text(p.read_text() + "\ndef discount(price, percent):\n    return price * (1 - percent)\n")
+
+    with Engine(str(toy_repo)) as eng:
+        before = len(eng.store.decisions())
+
+    capsys.readouterr()
+    assert main(["-C", str(toy_repo), "gaps"]) == 0
+
+    with Engine(str(toy_repo)) as eng:
+        after = len(eng.store.decisions())
+
+    assert after == before
+
+
+def test_ranges_helper() -> None:
+    from codetwin.commands.gaps import _ranges
+
+    assert _ranges([1, 2, 3, 7]) == "1-3, 7"
+    assert _ranges([5]) == "5"
+    assert _ranges([1, 2, 3]) == "1-3"
+    assert _ranges([1, 3, 5]) == "1, 3, 5"
+    assert _ranges([]) == ""
+    assert _ranges([10, 11, 12, 20, 21]) == "10-12, 20-21"
+
+
+def test_gaps_error_before_record_goes_to_stderr(toy_repo: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    """Nothing recorded: same as every command (cli.main prints on stderr, exit 2); stdout stays empty for --json."""
+    main(["-C", str(toy_repo), "init"])
+    for extra in ([], ["--json"]):
+        capsys.readouterr()
+        assert main(["-C", str(toy_repo), "gaps", *extra]) == 2
+        out, err = capsys.readouterr()
+        assert out == ""
+        assert "record" in err.lower()
+
+
+def test_gaps_failing_section_is_reported_like_select(
+    toy_repo: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A section error gives select's {"error", "summary"} shape and a non-zero exit, not a traceback."""
+    from codetwin.report import test_gaps
+
+    main(["-C", str(toy_repo), "init"])
+    main(["-C", str(toy_repo), "record"])
+
+    def boom(ctx: object) -> dict:
+        raise ValueError("bad hunk")
+
+    monkeypatch.setattr(test_gaps, "contribute", boom)
+    capsys.readouterr()
+    assert main(["-C", str(toy_repo), "gaps", "--json"]) == 1
+    out = json.loads(capsys.readouterr().out)
+    assert out == {"error": "ValueError: bad hunk", "summary": "section failed: bad hunk"}
+    assert main(["-C", str(toy_repo), "gaps"]) == 1
+    assert "section failed" in capsys.readouterr().err
+
+
+def test_gaps_does_not_compute_feature_rows(
+    toy_repo: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """gaps needs only base, recorded run and diff: it must not run the test listing and feature rows of select."""
+    from codetwin.engine import Engine
+
+    main(["-C", str(toy_repo), "init"])
+    main(["-C", str(toy_repo), "record"])
+
+    def no_analyse(self: object, base: str | None = None) -> None:
+        raise AssertionError("gaps must not call Engine.analyse()")
+
+    monkeypatch.setattr(Engine, "analyse", no_analyse)
+    capsys.readouterr()
+    assert main(["-C", str(toy_repo), "gaps"]) == 0
+
+
+def test_report_build_only_runs_the_named_sections() -> None:
+    from codetwin import report
+
+    ctx = report.Context(cfg=None, store=None, base="x", prev=None, diff={}, rows={}, scores={}, decision=None,
+                         is_source=lambda p: True)
+    assert set(report.build(ctx, only={"test_gaps"})) == {"test_gaps"}
