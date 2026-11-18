@@ -14,7 +14,7 @@ from collections import Counter
 from collections.abc import Iterable, Iterator
 from contextlib import AbstractContextManager, contextmanager
 from importlib import resources
-from pathlib import Path
+from pathlib import Path, PurePath
 from typing import Any, Self
 
 from .. import __version__
@@ -60,6 +60,8 @@ def _json_or_none(extras: Any) -> str | None:
 
 def _json_value(x: Any) -> Any:
     """Values json cannot write itself (a Path, a numpy number, ...): a finite number if it is one, else text."""
+    if isinstance(x, PurePath):
+        return x.as_posix()                       # the same text on every operating system
     try:
         f = float(x)
     except (TypeError, ValueError):
