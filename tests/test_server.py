@@ -10,6 +10,7 @@ from fastapi.testclient import TestClient
 
 from codetwin.cli import main
 from codetwin.engine import Engine
+from codetwin.evidence import model
 from codetwin.server.app import create_app
 
 
@@ -144,3 +145,73 @@ def test_map_edges_carry_the_detail_of_unresolved_links(toy_repo: Path) -> None:
     unresolved = [e for e in edges if e["type"] == "unresolved"]
     assert unresolved, "test setup: a dynamic call must give an unresolved link"
     assert all(e.get("detail") for e in unresolved)
+
+
+def test_runs_list_and_detail(toy_repo: Path) -> None:
+    main(["-C", str(toy_repo), "init"])
+    c = TestClient(create_app(toy_repo))
+    assert c.get("/api/runs").json() == []
+    assert c.get("/api/runs/doesnotexist").status_code == 404
+
+    with Engine(toy_repo) as eng:
+        eng.record()
+        sha1 = eng.store.latest_run_sha()
+    assert sha1 is not None
+
+    runs = c.get("/api/runs").json()
+    assert len(runs) == 1
+    assert runs[0]["sha"] == sha1
+    assert runs[0]["test_files"] == 2
+    assert runs[0]["failing"] == 0
+    assert isinstance(runs[0]["suite_seconds"], float)
+    assert runs[0]["covered_files"] >= 1
+    assert runs[0]["latest"] is True
+
+    detail1 = c.get(f"/api/runs/{sha1}").json()
+    assert detail1["sha"] == sha1
+    assert detail1["latest"] is True
+    assert detail1["failing"] == []
+    assert "tests/test_price.py" in detail1["durations"]
+    assert c.get("/api/runs/nonexistent").status_code == 404
+    assert c.post("/api/runs").status_code == 405
+
+    sha2 = "b" * 40
+    with Engine(toy_repo) as eng:
+        eng.store.save_run(
+            model.TestRun(
+                sha=sha2,
+                durations={"tests/test_fast.py": 0.1, "tests/test_slow.py": 2.5, "tests/test_mid.py": 0.8},
+                failing=["tests/test_slow.py::test_fail"],
+                covered={
+                    "tests/test_fast.py": {"src/shop/price.py": [1, 2]},
+                    "tests/test_slow.py": {"src/shop/price.py": [2, 3], "src/shop/tax.py": [1]},
+                },
+                wall=3.4,
+            ),
+            recorded=time.time() + 10.0,
+        )
+
+    runs2 = c.get("/api/runs").json()
+    assert [r["sha"] for r in runs2] == [sha2, sha1]
+    assert runs2[0]["latest"] is True and runs2[1]["latest"] is False
+    assert runs2[0]["test_files"] == 3
+    assert runs2[0]["failing"] == 1
+    assert runs2[0]["suite_seconds"] == pytest.approx(3.4)
+    assert runs2[0]["covered_files"] == 2
+
+    detail2 = c.get(f"/api/runs/{sha2}").json()
+    assert list(detail2["durations"].keys()) == ["tests/test_slow.py", "tests/test_mid.py", "tests/test_fast.py"]
+    assert detail2["failing"] == ["tests/test_slow.py::test_fail"]
+    assert detail2["latest"] is True
+    assert c.get(f"/api/runs/{sha1}").json()["latest"] is False
+
+    # Empty run (0 tests, 0 covered files) is handled cleanly
+    sha3 = "c" * 40
+    with Engine(toy_repo) as eng:
+        eng.store.save_run(model.TestRun(sha=sha3, wall=0.0), recorded=time.time() + 20.0)
+    detail3 = c.get(f"/api/runs/{sha3}").json()
+    assert detail3["test_files"] == 0
+    assert detail3["covered_files"] == 0
+    assert detail3["durations"] == {}
+    assert detail3["failing"] == []
+    assert detail3["latest"] is True

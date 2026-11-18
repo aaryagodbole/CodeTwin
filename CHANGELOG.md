@@ -7,6 +7,9 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+- Dashboard server endpoints: `GET /api/runs` (recorded test runs, newest first) and `GET /api/runs/{sha}` (single run with `durations` sorted slowest first and `failing` list), plus `RunSummary` and `RunDetail` types in `dashboard/src/lib/api.ts`.
+
 ### Fixed
 - `codetwin run --decision FILE` runs the tests of that `select --json` file; the GitHub Action uses it. A change
   that edits only tests is printed but not stored, so the Action used to run an older decision's tests or none.

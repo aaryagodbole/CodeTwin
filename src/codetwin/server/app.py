@@ -15,6 +15,7 @@ from .. import __version__
 from ..commands.graph import build as build_view
 from ..commands.graph import parse_lines
 from ..engine import Engine
+from ..evidence.model import TestRun
 from ..graph.impact import build_graph
 from ..graph.view import label
 
@@ -34,6 +35,19 @@ DECISION_KEYS = ["id", "recorded", "base", "mode", "alpha", "alpha_t", "threshol
                  "selected", "reasons", "missed"]
 
 _NAN_KEYS = ("threshold", "residual_risk", "alpha", "alpha_t")
+
+
+def _run_summary(run: TestRun, latest_sha: str | None) -> dict:
+    """Summary shape for a recorded test run."""
+    covered_files = len({f for files in run.covered.values() for f in files})
+    return {
+        "sha": run.sha,
+        "test_files": len(run.durations),
+        "failing": len(run.failing),
+        "suite_seconds": run.wall,
+        "covered_files": covered_files,
+        "latest": run.sha == latest_sha,
+    }
 
 
 def _clean_decision(d: dict) -> dict:
@@ -96,6 +110,27 @@ def create_app(root: str | Path = ".", static_dir: str | Path | None = None) -> 
         res = _clean_decision(d)
         res["scores"] = clean_scores
         return res
+
+    @app.get("/api/runs")
+    def runs(eng: Eng) -> list[dict]:
+        """Recorded test runs, newest first."""
+        latest_sha = eng.store.latest_run_sha()
+        out: list[dict] = []
+        for sha in reversed(eng.store.run_shas()):
+            run = eng.store.get_run(sha)
+            if run is not None:
+                out.append(_run_summary(run, latest_sha))
+        return out
+
+    @app.get("/api/runs/{sha}")
+    def run_detail(eng: Eng, sha: str) -> dict:
+        """One recorded test run, with durations sorted slowest first and the failing list."""
+        run = eng.store.get_run(sha)
+        if run is None:
+            raise HTTPException(404, f"run {sha} not found")
+        summary_row = _run_summary(run, eng.store.latest_run_sha())
+        durations = dict(sorted(run.durations.items(), key=lambda kv: (-kv[1], kv[0])))
+        return {**summary_row, "failing": list(run.failing), "durations": durations}
 
     @app.get("/api/flaky")
     def flaky(eng: Eng) -> list[dict]:

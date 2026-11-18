@@ -29,6 +29,8 @@ the API from one process.
 | `GET /api/summary` | Project configuration, recorded commit, and evidence counts |
 | `GET /api/decisions` | Recent decisions list (newest first) |
 | `GET /api/decisions/{id}` | Single decision details with selection reasons, outcome, and per-test risk scores |
+| `GET /api/runs` | Recorded test runs, newest first (`sha`, `test_files`, `failing`, `suite_seconds`, `covered_files`, `latest`) |
+| `GET /api/runs/{sha}` | Single recorded test run with `durations` sorted slowest first and the `failing` list |
 | `GET /api/flaky` | Flaky tests (passed and failed on same commit), grouped by test and sorted by failures |
 | `GET /api/kg` | Code knowledge graph (`nodes`, `edges`, `stats`); `?symbols=false` omits symbol nodes |
 | `GET /api/calibration` | Observed miss rate over time against target alpha |
