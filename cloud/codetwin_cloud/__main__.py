@@ -27,14 +27,14 @@ def main(argv: list[str] | None = None) -> int:
     tok = sub.add_parser("new-token", help="create an upload token for a registered repository")
     tok.add_argument("repository", help="OWNER/NAME")
     args = ap.parse_args(argv)
+    owner, _, name = getattr(args, "repository", "").partition("/")
+    if args.cmd != "migrate" and (not owner or not name):
+        ap.error("repository must be OWNER/NAME")           # before connecting: a typo never touches the database
 
     with db.connect() as c:
         if args.cmd == "migrate":
             print("migrations up to date")      # db.connect() applied any pending migration
             return 0
-        owner, _, name = args.repository.partition("/")
-        if not owner or not name:
-            ap.error("repository must be OWNER/NAME")
         if args.cmd == "add-project":
             # Re-running add-project (e.g. only for --token) keeps the visibility unless --public/--private is given.
             row = c.execute("insert into project (owner, name, public) values (%s, %s, %s) "

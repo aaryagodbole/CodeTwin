@@ -7,7 +7,7 @@ if command -v mypy >/dev/null; then mypy; else echo "mypy not installed: skipped
 python -m pytest --cov --cov-report=term
 if python -c "import codetwin_cloud" 2>/dev/null; then
   # cloud API (cloud/README.md); its database tests run only with CODETWIN_TEST_DATABASE_URL set
-  (cd cloud && ruff check . && python -m pytest -q)
+  (cd cloud && ruff check . && python -m mypy --ignore-missing-imports codetwin_cloud && python -m pytest -q)
 else
   echo "cloud API not installed: skipped (pip install -e 'cloud[dev]')"
 fi

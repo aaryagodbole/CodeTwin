@@ -139,6 +139,10 @@ outcome  (report_id → report primary key, missed, failing jsonb, received_at)
 - **Durability:** an upload is committed before the response is sent, so `201`/`200` means the report is stored.
 - **Outcomes:** an upload of the same run, attempt and commit that now carries an `outcome` adds it to the stored
   report (`200`, `created: false`); the first outcome stored for a report is kept.
+- **Concurrency:** uploads to one project are serialised (a Postgres advisory lock per project), so parallel
+  matrix jobs cannot exceed the hourly limit together.
+- **Probing:** a token's repository is checked against the report before the project is looked up, so a token
+  from one repository cannot learn whether another (or a private) project is registered.
 - **Request size:** a body over the limit is refused (`413`) while it is being read, from `Content-Length` or
   as soon as the stream passes the limit, so it is never buffered in full.
 - **Service levels** (best effort on free tiers): upload p95 < 1 s; dashboard read p95 < 500 ms; a failed

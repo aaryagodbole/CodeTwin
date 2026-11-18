@@ -4,7 +4,9 @@ local `codetwin serve` API, scoped to a project, so the dashboard works against 
 import hmac
 import json
 import logging
+import math
 import os
+import re
 import time
 import uuid
 from collections.abc import Iterator
@@ -25,6 +27,7 @@ from . import auth, db
 from .models import Report
 
 log = logging.getLogger("codetwin_cloud")
+_REQUEST_ID = re.compile(r"[A-Za-z0-9-]{1,64}")
 try:
     __version__ = version("codetwin-cloud")
 except PackageNotFoundError:  # running from a source checkout (Vercel bundles the files)
@@ -51,7 +54,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @app.middleware("http")
     async def access_log(request: Request, call_next):
-        rid, t0 = request.headers.get("x-request-id") or uuid.uuid4().hex[:12], time.perf_counter()
+        given = request.headers.get("x-request-id") or ""
+        # A caller's id is kept only if short and plain, so it cannot bloat or inject into the logs.
+        rid = given if _REQUEST_ID.fullmatch(given) else uuid.uuid4().hex[:12]
+        t0 = time.perf_counter()
         response = await call_next(request)
         response.headers["x-request-id"] = rid
         # one JSON line per request; never the body, query string or any header value
@@ -141,8 +147,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @app.get("/api/v1/projects/{owner}/{repo}/calibration")
     def calibration(owner: str, repo: str, c: Conn) -> dict:
         p = project_of(c, owner, repo)
+        # Same population as the local API (store.labelled("calibrated")): full or fallback runs execute every
+        # test, never miss, and would understate the miss rate.
         rows = c.execute("select r.id, r.alpha, o.missed from report r join outcome o on o.report_id = r.id "
-                         "where r.project_id = %s order by r.id", (p["id"],)).fetchall()
+                         "where r.project_id = %s and r.mode = 'calibrated' order by r.id", (p["id"],)).fetchall()
         points, misses = [], 0
         for i, row in enumerate(rows, 1):
             misses += int(row["missed"])
@@ -152,13 +160,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     # ------------------------------------------------------------------ retention (Vercel Cron, daily)
     @app.get("/api/cron/retention")
-    def retention(request: Request, c: Conn) -> dict:
+    def retention(request: Request) -> dict:
         given = request.headers.get("authorization") or ""
         if not s.cron_secret or not hmac.compare_digest(given.encode(), f"Bearer {s.cron_secret}".encode()):
-            raise HTTPException(401, "cron secret required")
-        cur = c.execute("delete from report where received_at < now() - make_interval(days => %s)",
-                        (s.retention_days,))
-        c.commit()          # before the response: the count we return must be what was deleted
+            raise HTTPException(401, "cron secret required")      # before connecting: no database work for strangers
+        with db.connect(s.database_url) as c:
+            cur = c.execute("delete from report where received_at < now() - make_interval(days => %s)",
+                            (s.retention_days,))
+            c.commit()      # before the response: the count we return must be what was deleted
         return {"deleted": cur.rowcount, "retention_days": s.retention_days}
 
     return app
@@ -212,14 +221,19 @@ def _store(body: bytes, token: str, s: Settings) -> tuple[int, bool]:
             report = Report.model_validate_json(body)
         except ValidationError as e:
             raise HTTPException(422, json.loads(e.json(include_url=False, include_input=False))) from None
+        if not _finite(report.decision.sections):
+            raise HTTPException(422, "report sections contain NaN or Infinity")
+        if caller.kind == "github-oidc":
+            _check_claims(caller, report)          # before the lookup: a token cannot probe other projects
         project = db.find_project(c, *report.owner_name)
         if project is None or not project["uploads_enabled"]:
             raise HTTPException(403, f"{report.repository} is not registered for uploads (cloud/README.md)")
         if caller.kind == "github-oidc":
-            _check_claims(caller, report)
             _check_repository_id(c, project, caller)
         elif caller.project_id != project["id"]:
             raise HTTPException(403, "this project token belongs to another project")
+        # One upload per project at a time from here on, so concurrent uploads cannot all pass the hourly limit.
+        c.execute("select pg_advisory_xact_lock(%s, %s)", (_UPLOAD_LOCK, project["id"]))
         # A retry of a report that is already stored is not a new upload: answer it before the rate limit.
         existing = _existing(c, project["id"], report)
         if existing is not None:
@@ -235,10 +249,26 @@ def _store(body: bytes, token: str, s: Settings) -> tuple[int, bool]:
         return result
 
 
+_UPLOAD_LOCK = 0x0C0D7715             # pg_advisory_xact_lock class for per-project uploads (db.MIGRATION_LOCK + 1)
+
+
+def _finite(value: Any) -> bool:
+    """No NaN or Infinity anywhere inside free-form JSON (they cannot be stored in jsonb or served as JSON)."""
+    if isinstance(value, float):
+        return math.isfinite(value)
+    if isinstance(value, dict):
+        return all(_finite(v) for v in value.values())
+    if isinstance(value, list):
+        return all(_finite(v) for v in value)
+    return True
+
+
 def _check_repository_id(c: psycopg.Connection[Any], project: Any, caller: auth.Caller) -> None:
     """Bind the project to GitHub's repository id on its first OIDC upload, then require that id.
 
     One atomic statement, so two first uploads racing from different repositories cannot both pass."""
+    if project["github_repository_id"] is not None and project["github_repository_id"] == caller.repository_id:
+        return                             # already bound to this repository: no write, no row lock
     ok = c.execute("update project set github_repository_id = coalesce(github_repository_id, %s) "
                    "where id = %s and (github_repository_id is null or github_repository_id = %s) returning id",
                    (caller.repository_id, project["id"], caller.repository_id)).fetchone()

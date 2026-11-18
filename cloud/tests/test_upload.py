@@ -195,3 +195,19 @@ def test_jwks_outage_is_a_503_not_a_bad_token(settings, database):
     register(database)
     r = TestClient(create_app(settings)).post("/api/v1/reports", json=report(), headers=auth_header(oidc()))
     assert r.status_code == 503
+
+
+def test_a_token_cannot_probe_which_projects_exist(client, database):
+    """Registered (even private) and unregistered names answer the same to a token from another repository."""
+    register(database, "victim/secret", public=False)
+    token = oidc(repository="evil/x")
+    known = client.post("/api/v1/reports", json=report(repository="victim/secret"), headers=auth_header(token))
+    unknown = client.post("/api/v1/reports", json=report(repository="victim/nothing"), headers=auth_header(token))
+    assert known.status_code == unknown.status_code == 403
+    assert known.json() == unknown.json()
+
+
+def test_nan_inside_sections_is_refused(client, database):
+    register(database)
+    body = json.dumps(report()).replace('"files": ["src/shop/calc.py"]', '"files": ["src/shop/calc.py"], "x": NaN')
+    assert client.post("/api/v1/reports", content=body, headers=auth_header(oidc())).status_code == 422
