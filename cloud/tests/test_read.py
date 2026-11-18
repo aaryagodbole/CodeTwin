@@ -155,7 +155,7 @@ def test_request_ids_are_short_and_plain(client):
     assert long.headers["x-request-id"] != "x" * 500 and len(long.headers["x-request-id"]) <= 64
 
 
-def test_successful_health_probes_are_not_logged_but_failures_are(client, caplog):
+def test_successful_health_probes_are_not_logged(client, caplog):
     import logging
 
     caplog.set_level(logging.INFO, logger="codetwin_cloud")

@@ -10,7 +10,8 @@ services:
     environment:
       POSTGRES_USER: codetwin
       POSTGRES_DB: codetwin
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-codetwin-local-only}
+      # Required: no default, so a database is never created with a public password (docs/self-hosting.md).
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env next to compose.yaml}
     volumes: [pgdata:/var/lib/postgresql/data]
     healthcheck:
       # Over TCP: the temporary server Postgres runs while it initialises listens on the socket only, so a socket
@@ -26,7 +27,7 @@ services:
     environment:
       # The password goes in PGPASSWORD, not in the URL, so any characters work (no URL-encoding needed).
       DATABASE_URL: postgresql://codetwin@db:5432/codetwin
-      PGPASSWORD: ${POSTGRES_PASSWORD:-codetwin-local-only}
+      PGPASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env next to compose.yaml}
       CRON_SECRET: ${CRON_SECRET:-}
       CODETWIN_CORS_ORIGINS: ${CODETWIN_CORS_ORIGINS:-http://localhost:3000}
       # Addresses of a reverse proxy whose X-Forwarded-* headers uvicorn may trust (e.g. the proxy container's IP).

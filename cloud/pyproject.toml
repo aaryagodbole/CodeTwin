@@ -4,10 +4,12 @@ version = "0.1.0"
 description = "CodeTwin Cloud: receives decision reports (never code) and serves them to the dashboard"
 requires-python = ">=3.12"
 license = "MIT"
+# Major versions are capped: a rebuild (Vercel or `docker compose up --build`) never pulls in a breaking release.
 dependencies = [
-    "fastapi>=0.115",
-    "psycopg[binary]>=3.2",
-    "pyjwt[crypto]>=2.8",
+    "fastapi>=0.115,<1",
+    "psycopg[binary]>=3.2,<4",
+    "pyjwt[crypto]>=2.8,<3",
+    "pydantic>=2,<3",
 ]
 
 [project.optional-dependencies]

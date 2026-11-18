@@ -224,6 +224,8 @@ jobs:
     # The self-hosted stack (compose.yaml) end to end: build the images, start Postgres + API + dashboard, register
     # a project, upload a real decision with `codetwin push`, and read it back (docs/self-hosting.md).
     runs-on: ubuntu-latest
+    env:
+      POSTGRES_PASSWORD: ci-only-password     # compose.yaml requires one; a throwaway database
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
@@ -234,7 +236,7 @@ jobs:
       - name: Health of every service
         run: |
           curl -fsS http://127.0.0.1:8080/api/health | grep -q '"database":"ok"'
-          curl -fsS http://127.0.0.1:3000/ | grep -q "CodeTwin"
+          curl -fsS http://127.0.0.1:3000/ -o "$RUNNER_TEMP/index.html" && grep -q "CodeTwin" "$RUNNER_TEMP/index.html"
       - name: Register a project and upload a real decision
         run: |
           token=$(docker compose exec -T api python -m codetwin_cloud add-project acme/shop --public --token \
