@@ -8,8 +8,15 @@ import { DATA_MODE, type DemoMeta } from "@/lib/api";
 export function DemoBanner() {
   const meta = useQuery({
     queryKey: ["demo-meta"],
-    queryFn: async () => (await fetch("/demo/meta.json")).json() as Promise<DemoMeta>,
+    queryFn: async () => {
+      const res = await fetch("/demo/meta.json");
+      if (!res.ok) {
+        throw new Error(`demo metadata: ${res.status} ${res.statusText}`);
+      }
+      return (await res.json()) as DemoMeta;
+    },
     enabled: DATA_MODE === "demo",
+    retry: false,
   });
   if (DATA_MODE !== "demo") {
     return null;

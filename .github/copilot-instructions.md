@@ -2,7 +2,7 @@
 
 CodeTwin AI selects regression tests, estimates the risk left by a selection and abstains when the
 evidence is weak. Its behaviour is fixed by a research paper, so reviews should check these rules first
-(full list: `AGENTS.md`).
+(full list: `AGENTS.md`; PR-Agent gets the same rules from `.pr_agent.toml`).
 
 ## Flag as a problem
 
@@ -14,6 +14,9 @@ evidence is weak. Its behaviour is fixed by a research paper, so reviews should 
 - **Calibration semantics changed.** `crc_threshold` must return `-1.0` when no threshold is feasible (select
   every test); the adaptive level is updated only after an outcome is known; abstain when the residual risk is
   above the target. Report sections must not change the selection or the decision.
+- **Hard-coded languages or repositories.** CodeTwin must work on any repository in any language. Flag new
+  special cases for one language, file extension, test runner or repository name in shared code. Language facts
+  belong in `src/codetwin/lang/specs/` or `.codetwin.toml`, and runners are detected, not assumed.
 - **Output contract.** Changes to top-level keys of `Decision.to_dict()` without an `OUTPUT_SCHEMA` bump.
 - **Layering.** Analysis logic in `extensions/`, `action/` or `dashboard/`, or features added by editing
   `cli.py`, `mcp_server.py`, `engine.py` or `extension.ts` instead of the auto-discovered extension folders.

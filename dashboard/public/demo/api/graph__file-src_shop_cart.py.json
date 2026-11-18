@@ -20,7 +20,7 @@
  ],
  "evidence": {
   "has_coverage": true,
-  "recorded_commit": "f57aa5b786c028da18068713a6fd200bab13319d"
+  "recorded_commit": "eef6eadce5256127d7536e675b88b567fa8a3d44"
  },
  "nodes": [
   {
@@ -42,7 +42,7 @@
    "path": "src/shop/calc.py"
   }
  ],
- "summary": "used by 0 \u00b7 1 tests \u00b7 0 unknown",
+ "summary": "used by 0 · 1 tests · 0 unknown",
  "target": {
   "id": "src/shop/cart.py",
   "kind": "target",

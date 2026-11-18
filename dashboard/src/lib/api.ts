@@ -3,19 +3,12 @@
 //   "live" (default): a running `codetwin serve`. When the API serves the dashboard itself the base URL is empty.
 //   "demo": static JSON in public/demo/, written by scripts/demo_snapshot.py from a real engine run. Used by the
 //           hosted dashboard (Vercel), which has no API behind it.
+import { demoPath } from "./demo-path.mjs";
+
+export { demoPath };
+
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? "";
 export const DATA_MODE: "live" | "demo" = process.env.NEXT_PUBLIC_DATA_MODE === "demo" ? "demo" : "live";
-
-/** Snapshot file for a request. Must match `snapshot_name()` in scripts/demo_snapshot.py
- *  (tests/test_demo_snapshot.py): "/summary" -> summary.json; "/decisions" {limit:"10"} -> decisions__limit-10.json;
- *  "/graph" {file:"src/shop/calc.py", lines:"3-4"} -> graph__file-src_shop_calc.py__lines-3-4.json */
-export function demoPath(path: string, params: Record<string, string> = {}): string {
-  let name = path.replace(/^\/+|\/+$/g, "").replaceAll("/", "_");
-  for (const k of Object.keys(params).sort()) {
-    name += `__${k}-${params[k]}`;
-  }
-  return `/demo/api/${name.replace(/[^A-Za-z0-9._-]/g, "_")}.json`;
-}
 
 export async function get<T>(path: string, params?: Record<string, string | undefined>): Promise<T> {
   const clean = Object.fromEntries(Object.entries(params ?? {}).filter(([, v]) => v)) as Record<string, string>;
@@ -60,11 +53,59 @@ export interface DecisionRow {
   alpha: number | null;
   alpha_t: number | null;
   threshold: number | null;
-  residual_risk: number;
+  residual_risk: number | null;
   decision: "proceed" | "abstain";
   selected: string[];
   reasons: string[];
   missed: boolean | null;
+}
+
+export interface DecisionDetail extends DecisionRow {
+  scores: Record<string, number | null>;
+}
+
+export interface FlakyTest {
+  test: string;
+  passes: number;
+  failures: number;
+  commits: number;
+  last_sha: string;
+}
+
+export type KgNodeKind = "repository" | "file" | "test" | "symbol" | "unknown";
+export type KgEdgeKind = "contains" | "defines" | "imports" | "covers" | "co_changes" | "unresolved";
+
+export interface KgNode {
+  id: string;
+  kind: KgNodeKind;
+  key?: string;
+  name?: string;
+  file?: string;
+  start?: number;
+  end?: number;
+  symbol_kind?: string;
+  detail?: string;
+  [key: string]: unknown;
+}
+
+export interface KgEdge {
+  source: string;
+  target: string;
+  kind: KgEdgeKind;
+  lines?: number | string;
+  commits?: number;
+  [key: string]: unknown;
+}
+
+export interface KnowledgeGraph {
+  nodes: KgNode[];
+  edges: KgEdge[];
+  stats: {
+    nodes: number;
+    edges: number;
+    node_kinds: Record<string, number>;
+    edge_kinds: Record<string, number>;
+  };
 }
 
 export interface Calibration {

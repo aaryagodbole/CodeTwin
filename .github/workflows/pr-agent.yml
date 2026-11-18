@@ -1,0 +1,54 @@
+name: PR-Agent
+
+# AI pull-request review on request (https://github.com/The-PR-Agent/pr-agent, Apache-2.0), with the project's
+# own Gemini key. Comment on a pull request:
+#   /review      findings at file and line
+#   /improve     code suggestions you can commit
+#   /describe    title and summary
+#   /ask "..."   a question about the change
+# It never runs on its own (not when a pull request opens, not on push). Only people with write access can run
+# it, so nobody else can spend the project's quota. Review rules: .pr_agent.toml.
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions: {}
+
+concurrency:
+  group: pr-agent-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
+jobs:
+  pr-agent:
+    if: >-
+      github.event.issue.pull_request &&
+      github.event.sender.type != 'Bot' &&
+      contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.comment.author_association) &&
+      (startsWith(github.event.comment.body, '/review') ||
+       startsWith(github.event.comment.body, '/improve') ||
+       startsWith(github.event.comment.body, '/describe') ||
+       startsWith(github.event.comment.body, '/ask'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+    steps:
+      # pragent/pr-agent:0.50.0-github_action, pinned by digest
+      - uses: docker://pragent/pr-agent@sha256:548e894a88071180832b2f4233f734d0acd0db1a879e2fcbaa70bac8b8372ebe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GOOGLE_AI_STUDIO.GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          # gemini-3.8-flash: Google's stable model for software engineering, free on the AI Studio free tier, and
+          # listed in PR-Agent's model table (pr_agent/algo/__init__.py). gemini-4-carbon/argon are paid only;
+          # gemini-4-hydrogen is free but PR-Agent 0.50.0 does not list it. Checked 18 Nov 2026.
+          # Override with the repository variable PR_AGENT_MODEL (Settings → Variables) without editing this file.
+          config.model: ${{ vars.PR_AGENT_MODEL || 'gemini/gemini-3.8-flash' }}
+          config.fallback_models: '[]'
+          config.num_retries: "3"
+          github_action_config.auto_review: "false"
+          github_action_config.auto_describe: "false"
+          github_action_config.auto_improve: "false"
+          pr_reviewer.publish_error_details: "true"
