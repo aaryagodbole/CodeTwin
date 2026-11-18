@@ -41,6 +41,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GOOGLE_AI_STUDIO.GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          # gemini-3.8-flash: Google's stable model for software engineering, free on the AI Studio free tier, and
+          # listed in PR-Agent's model table (pr_agent/algo/__init__.py). gemini-4-carbon/argon are paid only;
+          # gemini-4-hydrogen is free but PR-Agent 0.50.0 does not list it. Checked 18 Nov 2026.
           # Override with the repository variable PR_AGENT_MODEL (Settings → Variables) without editing this file.
           config.model: ${{ vars.PR_AGENT_MODEL || 'gemini/gemini-3.8-flash' }}
           config.fallback_models: '[]'
