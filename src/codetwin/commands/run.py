@@ -4,7 +4,7 @@ from __future__ import annotations
 import argparse
 
 from ._util import engine
-from .review import load_decision
+from .review import check_decision_base, load_decision
 
 NAME, HELP, ORDER = "run", "run test files (default: the last selection) with the project's test runner", 37
 
@@ -18,13 +18,15 @@ def add_arguments(p: argparse.ArgumentParser) -> None:
 
 
 def run(args: argparse.Namespace) -> int:
-    if args.tests and args.decision:
+    if args.tests and args.decision is not None:
         raise SystemExit("codetwin run: give test files or --decision, not both")
     with engine(args) as eng:
         if args.tests:
             tests = list(args.tests)
-        elif args.decision:
-            tests = list(load_decision(args.decision)["selected"])   # same checks as `codetwin review --decision`
+        elif args.decision is not None:
+            decision = load_decision(args.decision)                  # same checks as `codetwin review --decision`
+            check_decision_base(decision, eng.store.latest_run_sha(), "the latest recorded commit", base_flag=False)
+            tests = list(decision["selected"])
         else:
             tests = list((eng.store.last_decision() or {}).get("selected", []))
         if not tests:

@@ -54,6 +54,18 @@ def test_run_refuses_a_file_that_is_not_a_decision(toy_repo: Path, tmp_path: Pat
         main(["-C", str(toy_repo), "run", "tests/test_price.py", "--decision", str(bad)])
 
 
+def test_run_refuses_an_empty_or_stale_decision(toy_repo: Path, tmp_path: Path) -> None:
+    """`--decision ""` is an error, not "use the last decision"; a decision made for another commit is refused."""
+    _recorded(toy_repo)
+    with pytest.raises(SystemExit, match="--decision"):
+        main(["-C", str(toy_repo), "run", "--decision", ""])
+    stale = tmp_path / "stale.json"
+    stale.write_text(json.dumps({"decision": "proceed", "residual_risk": 0.02, "selected": ["tests/test_price.py"],
+                                 "reasons": [], "extras": {"changed_files": {"base": "0" * 40}}}), encoding="utf-8")
+    with pytest.raises(SystemExit, match="computed against 000000000000"):
+        main(["-C", str(toy_repo), "run", "--decision", str(stale)])
+
+
 def test_learn_can_be_retried_after_failing_part_way(toy_repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     _recorded(toy_repo)
     p = toy_repo / "src/shop/price.py"

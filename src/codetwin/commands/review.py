@@ -58,6 +58,18 @@ def load_decision(path: str) -> dict:
     return d
 
 
+def check_decision_base(decision: dict, base: str | None, user: str, base_flag: bool = True) -> dict:
+    """Refuse a decision computed against another recorded commit; return its saved `changed_files` extras."""
+    saved = (decision.get("extras") or {}).get("changed_files")
+    saved = saved if isinstance(saved, dict) else {}
+    made_for = saved.get("base")
+    if isinstance(made_for, str) and made_for and base and made_for != base:
+        hint = f" or pass --base {made_for[:12]}" if base_flag else ""
+        raise SystemExit(f"--decision was computed against {made_for[:12]}, but {user} is {base[:12]}; "
+                         f"run `codetwin select --json` again{hint}")
+    return saved
+
+
 _HUNK = re.compile(r"^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@")
 _ESC = {"a": "\a", "b": "\b", "t": "\t", "n": "\n", "v": "\v", "f": "\f", "r": "\r", '"': '"', "\\": "\\"}
 
@@ -109,7 +121,8 @@ def commentable(patch: str) -> dict[str, set[int]]:
 def _pull_request_base(root: Path) -> str | None:
     """The base commit of the pull request in a GitHub `pull_request` workflow, if it is in the local history."""
     import os
-    import subprocess
+
+    from ..evidence.diff import git
 
     path = os.environ.get("GITHUB_EVENT_PATH")
     try:
@@ -122,8 +135,11 @@ def _pull_request_base(root: Path) -> str | None:
     if not isinstance(sha, str) or not re.fullmatch(r"[0-9a-f]{40}|[0-9a-f]{64}", sha):   # SHA-1 or SHA-256
         return None
     # The commit must be here and share history with HEAD (a shallow checkout may have one without the other).
-    merge_base = subprocess.run(["git", "merge-base", sha, "HEAD"], cwd=root, capture_output=True, check=False)
-    return sha if merge_base.returncode == 0 else None
+    try:
+        git(root, "merge-base", sha, "HEAD")
+    except RuntimeError:
+        return None
+    return sha
 
 
 def run(args: argparse.Namespace) -> int:
@@ -136,15 +152,12 @@ def run(args: argparse.Namespace) -> int:
     with engine(args) as eng:
         sec = eng.cfg.section("review")
         sec = sec if isinstance(sec, dict) else {}
-        decision = load_decision(args.decision) if args.decision else eng.select(args.base).to_dict()
+        given = args.decision is not None
+        decision = load_decision(args.decision) if given else eng.select(args.base).to_dict()
         base = args.base or eng.store.latest_run_sha()
-        saved = (decision.get("extras") or {}).get("changed_files") or {}
-        made_for = saved.get("base")
-        if made_for and base and made_for != base:
-            raise SystemExit(f"--decision was computed against {made_for[:12]}, but this review compares with "
-                             f"{base[:12]}; run `codetwin select --json` again or pass --base {made_for[:12]}")
+        saved = check_decision_base(decision, base, "the commit this review compares with")
         diff = eng.changed(base) if base else {}
-        if args.decision and isinstance(saved.get("files"), dict):
+        if given and isinstance(saved.get("files"), dict):
             now = {f: len(d.new) for f, d in diff.items() if eng.is_source(f)}
             if now != saved["files"]:
                 raise SystemExit("--decision does not describe the current change (the changed source files differ "
