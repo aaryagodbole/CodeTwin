@@ -89,9 +89,33 @@ unless you are still working; drafts are not reviewed.
 
 **7. Ask for reviews**
 
-1. Optional, any time: comment `/review` (PR-Agent findings) or `/improve` (code suggestions).
+1. Optional, any time: ask PR-Agent (see below).
 2. When checks are green: comment `@coderabbitai full review`. Wait for its review (a few minutes).
 3. The code owner (Aarya) is requested automatically.
+
+**PR-Agent: the free AI reviewer you can use as often as you like**
+
+PR-Agent runs on the project's Gemini key (model `gemini-3.8-flash`). It never runs by itself. You ask by
+writing a new comment on your pull request (the box at the bottom of the *Conversation* tab), with the
+command at the very start of the comment:
+
+| Write this comment | What you get |
+|---|---|
+| `/review` | a review: possible bugs, security problems, missing tests, with file and line |
+| `/improve` | code changes it suggests, each with a *Commit suggestion* button |
+| `/describe` | a title and summary of your pull request |
+| `/ask "why does select() return -1 here?"` | an answer about your change; put the question in quotes |
+
+- One command per comment, at the start: `/review` works, `please /review` does not.
+- It answers in 1 to 3 minutes, as a comment from **github-actions**. You can watch it run in the *Actions*
+  tab under "PR-Agent".
+- Only team members (people with write access to the repository) can use it. A comment from anyone else is
+  ignored.
+- After you push fixes, write `/review` again in a new comment to check them.
+- Treat its findings like CodeRabbit's: check each one against the code, fix or answer it (step 8). Its
+  *Commit suggestion* buttons commit straight to your branch, so pull (`git pull`) before you work on.
+- If its comment says it failed (for example a quota or key error), wait a few minutes and try once more, then
+  tell Aarya. Don't keep re-posting the command.
 
 **8. Answer every review comment**
 
