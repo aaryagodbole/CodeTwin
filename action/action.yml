@@ -25,7 +25,7 @@ inputs:
       OIDC token, so the job needs `permissions: id-token: write`; no secret is needed. A failed upload only warns.
     default: "false"
   upload-server:
-    description: CodeTwin Cloud API URL (https)
+    description: CodeTwin Cloud API URL (https). Required when `upload` is true; without it the upload is skipped with a warning.
     default: ""
 outputs:
   decision:
@@ -99,7 +99,12 @@ runs:
       shell: bash
       env:
         CODETWIN_SERVER: ${{ inputs.upload-server }}
-      run: codetwin push --decision codetwin-decision.json --best-effort   # never fails the job (docs/cloud.md)
+      run: |
+        if [ -z "$CODETWIN_SERVER" ]; then
+          echo "::warning title=CodeTwin upload skipped::upload is true but upload-server is empty; set it to your CodeTwin Cloud URL"
+          exit 0
+        fi
+        codetwin push --decision codetwin-decision.json --best-effort   # never fails the job (docs/cloud.md)
 
     - name: Run selected tests
       if: inputs.run-selected == 'true' && steps.select.outputs.count != '0'

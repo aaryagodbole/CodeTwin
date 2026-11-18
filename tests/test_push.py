@@ -341,3 +341,33 @@ def test_a_refusal_with_a_cut_off_body_is_still_a_push_error() -> None:
             push.send(f"http://localhost:{httpd.server_port}", {"schema": "codetwin.report/v1"}, "ctp_abc")
     finally:
         httpd.server_close()
+
+
+def test_fit_drops_sections_before_giving_up() -> None:
+    body = {"schema": "codetwin.report/v1", "decision": {"selected": ["tests/test_a.py"], "tests": [], "reasons": [],
+            "sections": {"changed_symbols": {"symbols": [f"pkg.mod.sym_{i}" for i in range(20000)]},
+                         "changed_files": {"files": ["src/a.py"]}}}}
+    small = push.fit(body)
+    assert "changed_symbols" not in small["decision"]["sections"]
+    assert small["decision"]["sections"] == {"changed_files": {"files": ["src/a.py"]}}
+
+
+@pytest.mark.parametrize(("url", "name"), [("git@github.com:acme/shop.git", "acme/shop"),
+                                           ("https://github.com/acme/shop", "acme/shop"),
+                                           ("git@gitlab.com:group/sub/name.git", None)])
+def test_repository_name_from_origin(tmp_path: Path, url: str, name: str | None) -> None:
+    import subprocess
+    subprocess.run(["git", "init", "-q", str(tmp_path)], check=True)
+    subprocess.run(["git", "-C", str(tmp_path), "remote", "add", "origin", url], check=True)
+    if name:
+        assert push.repository_name(tmp_path, {}) == name
+    else:
+        with pytest.raises(push.PushError, match="--repository"):
+            push.repository_name(tmp_path, {})
+
+
+def test_out_of_range_risk_is_refused() -> None:
+    base = {"decision": "proceed", "residual_risk": 0.1, "selected": []}
+    for bad in [{**base, "residual_risk": 7}, {**base, "threshold": True}]:
+        with pytest.raises(push.PushError):
+            push.validate_decision(bad)

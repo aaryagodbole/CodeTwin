@@ -12,7 +12,7 @@ import os
 import sys
 from pathlib import Path
 
-from ..push import PushError, build_report, fit, github_oidc_token, send
+from ..push import PushError, build_report, check_server, fit, github_oidc_token, send
 from ._util import engine, print_json
 
 NAME, HELP, ORDER = "push", "upload the decision report to CodeTwin Cloud (opt-in; --dry-run shows what is sent)", 34
@@ -41,6 +41,7 @@ def run(args: argparse.Namespace) -> int:
             return 0
         if not args.server:
             raise PushError("no server: pass --server or set CODETWIN_SERVER")
+        check_server(args.server)          # before asking GitHub for a token: a bad URL costs nothing
         token = args.token or github_oidc_token(dict(os.environ))
         res = send(args.server, body, token)
         what = "stored" if res.get("created") else "already stored"

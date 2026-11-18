@@ -41,10 +41,12 @@ def repository_name(root: Path, env: dict[str, str]) -> str:
     if env.get("GITHUB_REPOSITORY"):
         return env["GITHUB_REPOSITORY"]
     url = _git(root, "remote", "get-url", "origin")
-    m = re.search(r"[:/]([^/:]+)/([^/]+?)(?:\.git)?/?$", url)
-    if not m:
-        raise PushError("cannot tell the repository name; pass --repository OWNER/NAME")
-    return f"{m.group(1)}/{m.group(2)}"
+    # The path after the host: "owner/name" only. A nested path (GitLab groups) is not guessed from its last parts.
+    m = re.search(r"^(?:[a-z+]+://[^/]+/|[^@/:]+@[^:/]+[:/])(.+?)(?:\.git)?/?$", url)
+    path = m.group(1) if m else ""
+    if path.count("/") != 1:
+        raise PushError("cannot tell the repository name from the origin remote; pass --repository OWNER/NAME")
+    return path
 
 
 def _pull_request(env: dict[str, str]) -> int | None:
@@ -93,15 +95,17 @@ def validate_decision(decision: Any) -> dict:
         raise PushError("the decision file is not a JSON object from `codetwin select --json`")
     if decision.get("decision") not in ("proceed", "abstain"):
         raise PushError("the decision file has no valid `decision` (proceed or abstain)")
-    if not isinstance(decision.get("residual_risk"), (int, float)) or isinstance(decision.get("residual_risk"), bool):
-        raise PushError("the decision file has no numeric `residual_risk`")
+    risk = decision.get("residual_risk")
+    if not isinstance(risk, (int, float)) or isinstance(risk, bool) or not 0 <= risk <= 1:
+        raise PushError("the decision file has no `residual_risk` between 0 and 1")
     selected = decision.get("selected")
     if not isinstance(selected, list) or not all(isinstance(t, str) for t in selected):
         raise PushError("the decision file's `selected` must be a list of test ids")
     for key, kind in (("reasons", list), ("extras", dict)):
         if decision.get(key) is not None and not isinstance(decision[key], kind):
             raise PushError(f"the decision file's `{key}` must be a {kind.__name__}")
-    if decision.get("threshold") is not None and not isinstance(decision["threshold"], (int, float)):
+    threshold = decision.get("threshold")
+    if threshold is not None and (not isinstance(threshold, (int, float)) or isinstance(threshold, bool)):
         raise PushError("the decision file's `threshold` must be a number")
     schema = decision.get("schema")
     if schema is not None and (not isinstance(schema, int) or isinstance(schema, bool)):
@@ -188,8 +192,8 @@ def _reasons(reasons: list) -> list[str]:
 def fit(body: dict) -> dict:
     """Shrink the per-test rows until the report fits the upload limit; the selection itself is never cut.
 
-    First the unselected rows go, then all rows. If the selection alone is still too large (an abstention on a very
-    large suite), the report cannot be sent faithfully and this is a PushError."""
+    First the unselected rows go, then all rows, then the report sections (largest first; a section is extra detail,
+    the decision is not). If the decision alone is still too large, this is a PushError that says what is large."""
     def size(b: dict) -> int:
         return len(json.dumps(b, allow_nan=False).encode())
     if size(body) <= MAX_REPORT_BYTES:
@@ -199,7 +203,14 @@ def fit(body: dict) -> dict:
         body = {**body, "decision": {**d, "tests": rows}}
         if size(body) <= MAX_REPORT_BYTES:
             return body
-    raise PushError(f"report too large to upload even without per-test rows ({len(d['selected'])} tests selected)")
+    sections = dict(d.get("sections") or {})
+    for name in sorted(sections, key=lambda k: -len(json.dumps(sections[k]))):
+        del sections[name]
+        body = {**body, "decision": {**body["decision"], "sections": dict(sections)}}
+        if size(body) <= MAX_REPORT_BYTES:
+            return body
+    raise PushError(f"report too large to upload: {len(d['selected'])} selected tests and "
+                    f"{len(d.get('reasons') or [])} reasons are over {MAX_REPORT_BYTES // 1024} KB without any rows or sections")
 
 
 def _cli_run_id(head: str, decision: dict) -> str:
