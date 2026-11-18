@@ -69,6 +69,9 @@ scripts/check.sh                                       # must pass; fix every er
 
 Add a line to `CHANGELOG.md` under *Unreleased*, and update the docs the issue names.
 
+Your own review comes right after you open the pull request (step 5) and before you ask anyone to review it
+(step 7): see "Self-review of your pull request" below.
+
 **5. Open the pull request**
 
 ```bash
@@ -76,7 +79,8 @@ gh pr create --base dev --fill                         # or use the "Compare & p
 ```
 
 Fill in every part of the template: `Closes #<issue>`, the checklist, *Beyond the issue* (write "none" if you
-followed the issue exactly) and a screenshot for a dashboard or VS Code change. Do not open it as a draft
+followed the issue exactly), *Self-review* (what your review found and what you fixed) and a screenshot for a
+dashboard or VS Code change. Do not open it as a draft
 unless you are still working; drafts are not reviewed.
 
 **6. Wait for CI (the checks at the bottom of the pull request)**
@@ -91,7 +95,9 @@ unless you are still working; drafts are not reviewed.
 
 1. Optional, any time: ask PR-Agent (see below).
 2. When checks are green: comment `@coderabbitai full review`. Wait for its review (a few minutes).
-3. The code owner (Aarya) is requested automatically.
+3. The code owner (Aarya) is requested automatically. When the other reviews are answered, Aarya runs the merge
+   review (see "Merge review" in workflow step 7) as the last step before merging. Its findings arrive as
+   comments on your lines; answer them in step 8 like any other.
 
 **PR-Agent: the free AI reviewer you can use as often as you like**
 
@@ -132,11 +138,14 @@ For each comment from CodeRabbit, PR-Agent or Aarya:
 3. If it is wrong or out of scope: reply with the reason and evidence (a test, a line of code, the issue text).
 4. Click *Resolve conversation* only after your fix is pushed, or after the reviewer agrees.
 
-When all fixes are pushed, comment `@coderabbitai review` once (not after every small push).
+When all fixes are pushed, run your self-review once more on the whole change (see "Self-review of
+your pull request"), update the *Self-review* section, then comment `@coderabbitai review` once (not after every
+small push).
 
 **9. Merge and clean up**
 
-Aarya merges (squash). Never merge your own pull request. After the merge:
+Aarya merges (squash) when the conditions in "Merge review" (workflow step 7) are met. Never merge your own
+pull request (the only exception, for the code owner, is in "Merge review"). After the merge:
 
 ```bash
 git checkout dev && git pull
@@ -147,8 +156,7 @@ Set the Notion card to *Done*, and comment on any issue that was waiting for you
 
 **Never**
 
-- `git push --force` / `git push -f`, `git reset --hard` on a pushed branch, or `git rebase` after a review
-  started. Reviewers lose their place, and work can be lost. To undo a pushed commit, use `git revert <id>`.
+- `git push --force` / `git push -f`, `git reset --hard` or `git rebase` on a branch you have already pushed. Reviewers lose their place, and work can be lost. To undo a pushed commit, use `git revert <id>`.
 - Commit secrets (API keys, tokens, `.env` files). If you pushed one by mistake, tell Aarya at once; the key
   must be revoked, not only deleted from the file.
 - Commit directly to `dev` or `main`, or work on someone else's branch without asking them.
@@ -195,12 +203,15 @@ spec. Follow these steps in order.
    messages. Follow the rules below (no look-ahead, unknowns reported, extension points, output contract).
 5. **Test what the issue lists**, plus one test for each extra case you added. Try the feature by hand as the
    issue describes. Run `scripts/check.sh` until it passes. Update the CHANGELOG and docs named in the issue.
+   Right after opening the pull request (step 6), and before asking for reviews (step 7), do the
+   **self-review** (section "Self-review of your pull request" below) and fix what it finds.
 6. **Open the pull request into `dev`.** Fill in the template:
    - write `Closes #<issue>` in the body
    - list anything you did differently from the issue, and why, with a link to the issue comment where it was
      agreed
+   - fill in *Self-review*: the tool and skills you used, what the review found, what you fixed
    - add a screenshot for any VS Code or dashboard change
-7. **Get both reviews.** A pull request is merged only after both:
+7. **Get the reviews.** CodeRabbit, the code owner and the merge review are required; PR-Agent is optional:
    - **CodeRabbit.** Auto-review is off in this repository. When the pull request is ready (checks green, your
      own review done), comment exactly `@coderabbitai full review`. This must be a mention, not a link. After
      you have pushed fixes for its comments, comment `@coderabbitai review` once. The free plan allows about one
@@ -209,14 +220,28 @@ spec. Follow these steps in order.
    - **PR-Agent** (optional, free, no hourly limit) runs only when asked. Comment `/review` for findings,
      `/improve` for code suggestions, `/describe` for a summary or `/ask "..."` for a question; comment again
      after you push fixes. Rules: `.pr_agent.toml`. Answer its comments like CodeRabbit's.
-   - **Code owner.** `.github/CODEOWNERS` requests Aarya automatically. Don't merge your own pull request.
+   - **Code owner.** `.github/CODEOWNERS` requests Aarya automatically. Don't merge your own pull request
+     (the code owner's own pull requests: see "Merge review").
+   - **Merge review (the one rule for merging).** The code owner runs `/code-review --comment <pull request
+     number>` (Claude Code) on the pull request's **latest commit**, even when CodeRabbit and PR-Agent found
+     nothing; `--comment` posts each finding on the lines it is about. The reviewer reads the linked issue first,
+     so a problem in the issue's Approach is raised on the issue, not blamed on the author. The pull request is
+     merged only when every finding is fixed or answered, every other review comment is resolved and CI is
+     green. If fixes were pushed after the review, it runs again on those new commits only, at most twice. An AI
+     review finds something slightly different on every run, so "nothing new" is not the bar: the pull request
+     is merged when a re-run has no new correctness or security finding. Smaller points left after the second
+     re-run go into a follow-up issue linked from the pull request. A merge of `dev` that git completed on its
+     own is covered by CI; a merge where you solved conflicts by hand is reviewed again. When the code owner is
+     the author, the code owner still runs the merge review and merges with the admin bypass after it passes;
+     this is the only exception to "never merge your own pull request".
 8. **Resolve every review comment yourself**, from CodeRabbit, PR-Agent and the code owner. The author of the pull
    request fixes and resolves; reviewers only comment. For each one, either:
    - fix it, push, and reply with what you changed (commit id), or
    - explain why not (out of scope, conflicts with the issue, a false alarm), with evidence.
 
    Resolve a conversation only when it is fixed or the reviewer agrees. Push new commits; don't force-push over
-   reviewed commits. When all conversations are resolved and CI passes, ask Aarya to merge.
+   reviewed commits. When all conversations are resolved and CI passes, ask Aarya to merge. If you pushed after
+   the last `/code-review`, say so: the review runs again on the latest commit before the merge.
 9. **After merging**, set the Notion card to Done and comment on any issue that was waiting for yours.
 
 AI assistants follow the same steps. In particular: post the step 2 plan on the issue before writing code beyond
@@ -224,11 +249,92 @@ what the issue says, and never resolve a reviewer's conversation without a fix o
 assistant reviews someone else's pull request, it only posts comments: it does not push to that branch or
 resolve its threads, unless the code owner asks for it on that pull request.
 
+## AI coding tools: use your skills
+
+Most AI coding tools come with skills, slash commands, rules, workflows or plugins for common jobs: Claude Code
+skills and slash commands, Codex skills and prompts, Antigravity workflows and rules, Cursor rules, Copilot
+prompts. They encode a better process than an ad-hoc attempt. An AI tool working in this repository must:
+
+1. **Look first.** At the start of each task, check the skills and commands it has (the tool's skill list, its
+   `/` command menu, or its docs), and read the description of any that might fit.
+2. **Use the matching one** whenever a skill exists for the job, instead of doing it by hand:
+
+   | Job | Kind of skill or command to use |
+   |---|---|
+   | Plan a change, design an interface, restructure code | planning, design or architecture skill |
+   | Write a feature or fix a bug test-first | TDD (test-driven development) skill |
+   | A failing test, a crash, wrong output, slow code | debugging or diagnosis skill |
+   | Review a change (self-review, someone's pull request) | code review skill (`/code-review`, `/review`) |
+   | Security-sensitive code (auth, uploads, secrets, workflows) | security review skill |
+   | Simplify or clean up code you wrote | simplify or refactor skill |
+   | Dashboard or VS Code UI | frontend, design or accessibility skill |
+   | Commit messages, pull request text | commit or pull-request skill |
+   | Docs, CHANGELOG, explanations | documentation skill |
+
+3. **Say which it used.** Name the skill or command in the pull request's *Self-review* section, or in the
+   issue comment for a plan, so reviewers know how the work was checked.
+4. **Rules still win.** A skill never overrides this file: the project rules below, the issue's Approach and
+   the review steps apply whatever a skill suggests. If they conflict, follow this file and say so on the issue.
+
+If a tool has no skill for a job, follow the steps in this file by hand.
+
+## Self-review of your pull request
+
+Every author does this, and every AI coding tool (Claude Code, Codex, Antigravity, Copilot, Cursor or any
+other) must do it at two moments: right after the pull request is opened, before anyone is asked to review it,
+and again before it asks for the final
+review after fixing review comments (step 8). Not on every small push. A pull request without a self-review is
+not ready for review.
+
+**1. Run a full review of your whole change** against the latest `dev` (`git fetch origin && git merge
+origin/dev` and `git push` first, so the review sees what CI and the merge will see; then review
+`git diff origin/dev...HEAD`, not only the last commit):
+
+| Tool | How |
+|---|---|
+| Claude Code | `/code-review <pull request number>`. Plain `/code-review` reviews only unpushed work, so always give the number |
+| Codex | `/review`, with `origin/dev` (after `git fetch`) as the base, not your local `dev` |
+| Any other tool or agent (Antigravity, Copilot, Cursor, ...) | ask it to review `git diff origin/dev...HEAD` using the checklist below, and to list each problem with file, line and a concrete failing input |
+| No AI tool | go through the checklist below yourself, file by file |
+
+**2. The checklist** (what the review must look for):
+
+1. **The issue.** Does the change do exactly what the issue's Approach and Done-when say, no more and no less?
+   If the Approach itself looks wrong, comment on the issue instead of silently changing it.
+2. **Correctness.** For each finding, a concrete input and the wrong output: empty input, missing files,
+   `None`/NaN, errors from git or the store, a very large repository, a second run, Windows paths.
+3. **Project rules** (next section): no look-ahead, unknowns reported, no hard-coded language or repository,
+   output contract, layering, extension points.
+4. **Errors and output.** Errors go to stderr with the CLI's exit codes; `--json` prints only valid JSON on
+   stdout; messages are short and say what to do.
+5. **Security.** Input from users, uploads, LLMs and the network is validated; no secrets in code, logs or
+   output; no `${{ ... }}` inside workflow shell code; credentials only over HTTPS.
+6. **Tests.** Every new behaviour and every fixed bug has a test, and that test fails without your change.
+7. **Duplication and size.** No copied blocks that must be kept in step; reuse existing helpers.
+8. **Docs.** CHANGELOG, README and `docs/` match the new behaviour.
+
+**3. Fix and repeat.** Fix every real finding, run `scripts/check.sh`, and review again until nothing new
+comes up. A finding you think is wrong: keep a one-line reason.
+
+**4. Report it** in the pull request's *Self-review* section:
+- the tool you used
+- what the review found
+- what you fixed, with commit ids
+- what you did not change, and why
+
+The code owner still runs `/code-review` before merging. A self-review makes that review short; it does not
+replace it.
+
 ## Rules specific to this project
 
 - **No look-ahead.** Code in `risk/` and `selection.py` may use only evidence that exists *before* a change's
   tests run: the base commit's recorded run, the diff, and static facts of the new code. The new run is used
   only in `Engine.learn()` to compute the ground truth. Using it for features or decisions invalidates the method.
+- **No hard-coded languages or repositories.** CodeTwin must work on any repository in any language. Shared code
+  has no special cases for one language, file name, extension, test runner or repository: language facts belong
+  in `src/codetwin/lang/specs/` or `.codetwin.toml`, runners are detected, and the dashboard treats every file the
+  same way. Existing code that breaks this is fixed in a separate issue for it (open one if none exists, and link
+  it from #71); in other pull requests, flag only new special cases.
 - **Unknown is not "no dependency".** Never drop unresolved links (dynamic calls, unparsed files, new modules);
   report them in `Impact.unknowns` / `Decision.reasons`.
 - **Calibration semantics are fixed by the paper.** `crc_threshold` returns `-1.0` when no threshold is feasible,
