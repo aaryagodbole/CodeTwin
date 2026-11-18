@@ -1,6 +1,6 @@
 [project]
 name = "codetwin-cloud"
-version = "0.1.0"
+version = "0.2.0"
 description = "CodeTwin Cloud: receives decision reports (never code) and serves them to the dashboard"
 requires-python = ">=3.12"
 license = "MIT"

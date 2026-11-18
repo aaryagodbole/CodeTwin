@@ -2,7 +2,7 @@
   "name": "codetwin",
   "displayName": "CodeTwin AI",
   "description": "See which tests your change needs, what the analysis cannot see, and the risk left behind.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "publisher": "codetwin",
   "license": "MIT",
   "engines": {

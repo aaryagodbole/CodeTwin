@@ -7,6 +7,11 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-18
+
+Any repository in any language, pull-request review, a code knowledge graph, a normalized evidence store, the
+cloud plane (API, uploads, self-hosting) and a redesigned dashboard with a hosted demo.
+
 ### Added
 - Dashboard redesign: design tokens with a light and dark theme toggle, sidebar layout, residual-risk gauge, sparklines
   and outcome donut on the overview, filterable decisions with expandable rows, area chart of the observed miss rate
@@ -138,5 +143,6 @@ Baseline release: the structure every later pull request is compared against.
 - Database connections are closed after every CLI command, MCP call and API request.
 - Coverage evidence is merged with sets instead of re-sorting per context (faster on large suites).
 
-[Unreleased]: https://github.com/aaryagodbole/CodeTwin/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/aaryagodbole/CodeTwin/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/aaryagodbole/CodeTwin/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/aaryagodbole/CodeTwin/releases/tag/v0.1.0
