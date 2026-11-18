@@ -20,6 +20,11 @@
 <!-- Anything done differently from, or in addition to, the issue's Approach, and why.
      Link the issue comment where it was agreed. Write "none" if you followed the issue exactly. -->
 
+## Self-review (see AGENTS.md, "Self-review before opening a pull request")
+
+<!-- Tool used (Claude Code /code-review, Codex /review, Antigravity, ... or by hand).
+     What it found, what you fixed (commit ids), and what you left and why. -->
+
 ## Reviews (see AGENTS.md, "Step by step for beginners")
 
 - [ ] Merged the latest `dev` into this branch before asking for review

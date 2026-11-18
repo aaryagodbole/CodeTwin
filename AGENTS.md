@@ -69,6 +69,9 @@ scripts/check.sh                                       # must pass; fix every er
 
 Add a line to `CHANGELOG.md` under *Unreleased*, and update the docs the issue names.
 
+Then **review your own change** before anyone else does: see "Self-review before opening a pull request" below.
+Fix what it finds, run `scripts/check.sh` again, and repeat until the review finds nothing new.
+
 **5. Open the pull request**
 
 ```bash
@@ -76,7 +79,8 @@ gh pr create --base dev --fill                         # or use the "Compare & p
 ```
 
 Fill in every part of the template: `Closes #<issue>`, the checklist, *Beyond the issue* (write "none" if you
-followed the issue exactly) and a screenshot for a dashboard or VS Code change. Do not open it as a draft
+followed the issue exactly), *Self-review* (what your review found and what you fixed) and a screenshot for a
+dashboard or VS Code change. Do not open it as a draft
 unless you are still working; drafts are not reviewed.
 
 **6. Wait for CI (the checks at the bottom of the pull request)**
@@ -198,6 +202,7 @@ spec. Follow these steps in order.
    messages. Follow the rules below (no look-ahead, unknowns reported, extension points, output contract).
 5. **Test what the issue lists**, plus one test for each extra case you added. Try the feature by hand as the
    issue describes. Run `scripts/check.sh` until it passes. Update the CHANGELOG and docs named in the issue.
+   Then do the **self-review** (next section) and fix what it finds before opening the pull request.
 6. **Open the pull request into `dev`.** Fill in the template:
    - write `Closes #<issue>` in the body
    - list anything you did differently from the issue, and why, with a link to the issue comment where it was
@@ -231,6 +236,50 @@ AI assistants follow the same steps. In particular: post the step 2 plan on the 
 what the issue says, and never resolve a reviewer's conversation without a fix or an agreed reason. When an AI
 assistant reviews someone else's pull request, it only posts comments: it does not push to that branch or
 resolve its threads, unless the code owner asks for it on that pull request.
+
+## Self-review before opening a pull request
+
+Every author does this, and every AI coding tool (Claude Code, Codex, Antigravity, Copilot, Cursor or any
+other) must do it before it opens or updates a pull request. A pull request without a self-review is not ready
+for review.
+
+**1. Run a full review of your whole change** against the latest `dev` (`git fetch origin`, then review
+`git diff origin/dev...HEAD`, not only the last commit):
+
+| Tool | How |
+|---|---|
+| Claude Code | `/code-review` |
+| Codex | `/review`, against the base branch `dev` |
+| Any other tool or agent (Antigravity, Copilot, Cursor, ...) | ask it to review `git diff origin/dev...HEAD` using the checklist below, and to list each problem with file, line and a concrete failing input |
+| No AI tool | go through the checklist below yourself, file by file |
+
+**2. The checklist** (what the review must look for):
+
+1. **The issue.** Does the change do exactly what the issue's Approach and Done-when say, no more and no less?
+   If the Approach itself looks wrong, comment on the issue instead of silently changing it.
+2. **Correctness.** For each finding, a concrete input and the wrong output: empty input, missing files,
+   `None`/NaN, errors from git or the store, a very large repository, a second run, Windows paths.
+3. **Project rules** (next section): no look-ahead, unknowns reported, no hard-coded language or repository,
+   output contract, layering, extension points.
+4. **Errors and output.** Errors go to stderr with the CLI's exit codes; `--json` prints only valid JSON on
+   stdout; messages are short and say what to do.
+5. **Security.** Input from users, uploads, LLMs and the network is validated; no secrets in code, logs or
+   output; no `${{ ... }}` inside workflow shell code; credentials only over HTTPS.
+6. **Tests.** Every new behaviour and every fixed bug has a test, and that test fails without your change.
+7. **Duplication and size.** No copied blocks that must be kept in step; reuse existing helpers.
+8. **Docs.** CHANGELOG, README and `docs/` match the new behaviour.
+
+**3. Fix and repeat.** Fix every real finding, run `scripts/check.sh`, and review again until nothing new
+comes up. A finding you think is wrong: keep a one-line reason.
+
+**4. Report it** in the pull request's *Self-review* section:
+- the tool you used
+- what the review found
+- what you fixed, with commit ids
+- what you did not change, and why
+
+The code owner still runs `/code-review` before merging. A self-review makes that review short; it does not
+replace it.
 
 ## Rules specific to this project
 
