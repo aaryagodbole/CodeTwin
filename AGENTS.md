@@ -45,6 +45,10 @@ spec. Follow these steps in order.
 7. **Get both reviews.** A pull request is merged only after both:
    - **CodeRabbit.** Auto-review is off in this repository, so comment exactly `@coderabbitai full review` on the
      pull request. This must be a mention, not a link. After each new push, comment `@coderabbitai review`.
+     The free plan allows about one review an hour, so ask for it when the pull request is ready, not on every
+     push.
+   - **Gemini Code Assist** reviews once when the pull request opens (rules: `.gemini/styleguide.md`). Comment
+     `/gemini review` for another review after you push fixes. Answer its comments like CodeRabbit's.
    - **Code owner.** `.github/CODEOWNERS` requests Aarya automatically. Don't merge your own pull request.
 8. **Resolve every review comment**, from CodeRabbit and the code owner. For each one, either:
    - fix it, push, and reply with what you changed (commit id), or
