@@ -8,6 +8,8 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Added
+- Cloud design: ADR 0003 (a cloud plane that receives decision reports, never code), `docs/cloud.md`
+  (report format, API, OIDC uploads, schema, environments, operations) and `docs/data-policy.md`
 - Hosted dashboard: a demo mode (`npm run dev:demo`, `build:demo`) reads a snapshot of the API written by
   `scripts/demo_snapshot.py` from a real engine run on `examples/python`; Vercel config (`dashboard/vercel.json`);
   CI job `dashboard-demo` checks the deployment build on every pull request; guide in `docs/dashboard.md`
