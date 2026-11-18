@@ -43,7 +43,7 @@ automatically. Shared files (`cli.py`, `mcp_server.py`, `engine.py`, `store/db.p
 | a CLI command (`codetwin gaps`) | `src/codetwin/commands/<name>.py` | `NAME`, `HELP`, `ORDER`, `add_arguments(p)`, `run(args)` |
 | an MCP tool (`close_gap`) | `src/codetwin/mcp_tools/<name>.py` | `register(mcp, root)` with `@mcp.tool()` |
 | a review analyzer (PR comment rule) | `src/codetwin/review/analyzers/<name>.py` + a rule id in `review/rules.py` | `NAME`, `DEFAULT`, `analyze(ctx) -> list[Finding]`; read-only ([review.md](review.md)) |
-| data in every decision (test gaps, blind spots, evidence cards, freshness) | `src/codetwin/report/<name>.py` | `NAME`, `contribute(ctx) -> dict` with a `"summary"`; appears under `extras.<NAME>` in `select --json`, MCP and VS Code |
+| data in every decision (test gaps, blind spots, evidence cards, freshness) | `src/codetwin/report/<name>.py` | `NAME`, `contribute(ctx) -> dict` with a `"summary"`; appears under `extras.<NAME>` in `select --json`, MCP and VS Code; `PUBLISH = True` only if it holds no source text (uploaded by `codetwin push`) |
 | a database table or column | `src/codetwin/store/migrations/NNNN_<name>.sql` (+ a data step in `store/legacy.py` if rows must move) | applied once, tracked by file name; never edit an applied file; see `docs/database.md` |
 | settings for your feature | your own table in `.codetwin.toml`, e.g. `[crossrepo]` | read with `cfg.section("crossrepo")`; no change to `config.py` |
 | a larger module | its own package: `crossrepo/`, `contracts/`, `server/`, `llm/` | purpose and status in the package docstring |

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 NAME = "changed_files"
+PUBLISH = True    # paths, names and numbers only (docs/data-policy.md)
 
 
 def contribute(ctx) -> dict:
