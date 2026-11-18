@@ -109,6 +109,7 @@ def test_a_failing_migration_script_is_rolled_back(tmp_path: Path, monkeypatch: 
 
 
 def test_decision_lists_default_to_empty() -> None:
+    pytest.importorskip("fastapi")
     from codetwin.server.app import _clean_decision
 
     out = _clean_decision({"id": 1, "decision": "proceed"})
