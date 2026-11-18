@@ -95,10 +95,8 @@ unless you are still working; drafts are not reviewed.
 
 1. Optional, any time: ask PR-Agent (see below).
 2. When checks are green: comment `@coderabbitai full review`. Wait for its review (a few minutes).
-3. The code owner (Aarya) is requested automatically, and runs a full code review on every pull request before
-   it can be merged (`/code-review --comment <pull request number>` in Claude Code, which posts each finding as
-   a review comment on the lines it is about). Answer those comments in
-   step 8 like any other.
+3. The code owner (Aarya) is requested automatically and runs the merge review (see "Merge review" in workflow
+   step 7). Its findings arrive as comments on your lines; answer them in step 8 like any other.
 
 **PR-Agent: the free AI reviewer you can use as often as you like**
 
@@ -139,12 +137,14 @@ For each comment from CodeRabbit, PR-Agent or Aarya:
 3. If it is wrong or out of scope: reply with the reason and evidence (a test, a line of code, the issue text).
 4. Click *Resolve conversation* only after your fix is pushed, or after the reviewer agrees.
 
-When all fixes are pushed, comment `@coderabbitai review` once (not after every small push).
+When all fixes are pushed, run your self-review once more on the whole change (see "Self-review before opening
+a pull request"), update the *Self-review* section, then comment `@coderabbitai review` once (not after every
+small push).
 
 **9. Merge and clean up**
 
-Aarya merges (squash) only after the `/code-review` findings are fixed or answered, the other review comments
-are resolved and CI is green. Never merge your own pull request. After the merge:
+Aarya merges (squash) when the conditions in "Merge review" (workflow step 7) are met. Never merge your own
+pull request. After the merge:
 
 ```bash
 git checkout dev && git pull
@@ -211,7 +211,7 @@ spec. Follow these steps in order.
      agreed
    - fill in *Self-review*: the tool and skills you used, what the review found, what you fixed
    - add a screenshot for any VS Code or dashboard change
-7. **Get all the reviews.** A pull request is merged only after all of these:
+7. **Get the reviews.** CodeRabbit, the code owner and the merge review are required; PR-Agent is optional:
    - **CodeRabbit.** Auto-review is off in this repository. When the pull request is ready (checks green, your
      own review done), comment exactly `@coderabbitai full review`. This must be a mention, not a link. After
      you have pushed fixes for its comments, comment `@coderabbitai review` once. The free plan allows about one
@@ -221,10 +221,12 @@ spec. Follow these steps in order.
      `/improve` for code suggestions, `/describe` for a summary or `/ask "..."` for a question; comment again
      after you push fixes. Rules: `.pr_agent.toml`. Answer its comments like CodeRabbit's.
    - **Code owner.** `.github/CODEOWNERS` requests Aarya automatically. Don't merge your own pull request.
-   - **`/code-review` before every merge.** No pull request is merged without a `/code-review` (Claude Code) run
-     on its latest commit, even when CodeRabbit and PR-Agent found nothing. The reviewer reads the linked issue
-     first, so a finding that is really a problem in the issue's Approach is raised on the issue, not blamed on
-     the author.
+   - **Merge review (the one rule for merging).** The code owner runs `/code-review --comment <pull request
+     number>` (Claude Code) on the pull request's **latest commit**, even when CodeRabbit and PR-Agent found
+     nothing; `--comment` posts each finding on the lines it is about. The reviewer reads the linked issue first,
+     so a problem in the issue's Approach is raised on the issue, not blamed on the author. The pull request is
+     merged only when every finding is fixed or answered, every other review comment is resolved, CI is green,
+     and no commit was pushed after that review (otherwise it runs again).
 8. **Resolve every review comment yourself**, from CodeRabbit, PR-Agent and the code owner. The author of the pull
    request fixes and resolves; reviewers only comment. For each one, either:
    - fix it, push, and reply with what you changed (commit id), or
@@ -246,8 +248,8 @@ Most AI coding tools come with skills, slash commands, rules, workflows or plugi
 skills and slash commands, Codex skills and prompts, Antigravity workflows and rules, Cursor rules, Copilot
 prompts. They encode a better process than an ad-hoc attempt. An AI tool working in this repository must:
 
-1. **Look first.** At the start of each task, list the skills and commands it has (for example `/help` or its
-   skill list), and read the description of any that might fit.
+1. **Look first.** At the start of each task, check the skills and commands it has (the tool's skill list, its
+   `/` command menu, or its docs), and read the description of any that might fit.
 2. **Use the matching one** whenever a skill exists for the job, instead of doing it by hand:
 
    | Job | Kind of skill or command to use |
@@ -272,7 +274,8 @@ If a tool has no skill for a job, follow the steps in this file by hand.
 ## Self-review before opening a pull request
 
 Every author does this, and every AI coding tool (Claude Code, Codex, Antigravity, Copilot, Cursor or any
-other) must do it at two moments: before it opens the pull request, and again before it asks for the final
+other) must do it at two moments: when the pull request is opened, before anyone is asked to review it (for
+Claude Code right after opening, see the table), and again before it asks for the final
 review after fixing review comments (step 8). Not on every small push. A pull request without a self-review is
 not ready for review.
 
@@ -281,7 +284,7 @@ not ready for review.
 
 | Tool | How |
 |---|---|
-| Claude Code | `/code-review <pull request number>`, or `/code-review <your branch name>` before the pull request exists. Plain `/code-review` reviews only what is not pushed yet, so always give the target, and check that the files it lists match `git diff --stat origin/dev...HEAD` |
+| Claude Code | open the pull request first (step 5), then `/code-review <pull request number>` before you ask anyone for a review. Plain `/code-review` reviews only unpushed work, so always give the number |
 | Codex | `/review`, against the base branch `dev` |
 | Any other tool or agent (Antigravity, Copilot, Cursor, ...) | ask it to review `git diff origin/dev...HEAD` using the checklist below, and to list each problem with file, line and a concrete failing input |
 | No AI tool | go through the checklist below yourself, file by file |
