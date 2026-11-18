@@ -36,9 +36,10 @@ same command with `--best-effort`.
 
 | Variable | Default | Set it when |
 |---|---|---|
-| `POSTGRES_PASSWORD` | `codetwin-local-only` | always, before anything other than local use |
+| `POSTGRES_PASSWORD` | `codetwin-local-only` | always, **before the first `up`** (Postgres reads it only when it creates its volume; any characters work) |
 | `CRON_SECRET` | empty (retention job disabled) | you want reports older than 90 days deleted |
 | `CODETWIN_CORS_ORIGINS` | `http://localhost:3000` | the dashboard is served from another address |
+| `FORWARDED_ALLOW_IPS` | `127.0.0.1` | a reverse proxy (TLS) sits in front of the API: its address, so `X-Forwarded-*` is trusted |
 
 Retention: without Vercel Cron, call the job daily from the host's scheduler, e.g.
 `curl -H "Authorization: Bearer $CRON_SECRET" http://localhost:8080/api/cron/retention`.
@@ -46,7 +47,11 @@ Retention: without Vercel Cron, call the job daily from the host's scheduler, e.
 ## Operate it
 
 - Logs: `docker compose logs -f api`. One JSON line per request, never bodies or tokens.
-- Backups: `docker compose exec db pg_dump -U codetwin codetwin > backup.sql`.
+- Backups: `docker compose exec -T db pg_dump -U codetwin codetwin > backup.sql` (`-T`: no terminal, so the dump is
+  not altered). Restore: `docker compose exec -T db psql -U codetwin codetwin < backup.sql`.
+- Change the database password after the first start: `docker compose exec db psql -U codetwin -c "ALTER USER codetwin
+  PASSWORD 'new-password'"`, then set the same value as `POSTGRES_PASSWORD` in `.env` and `docker compose up -d`.
+  Changing only `.env` is not enough: Postgres keeps the password it was created with.
 - Upgrade: `git pull && docker compose up -d --build`. Migrations run when the API first uses the database.
 - Stop and delete everything, including the data: `docker compose down -v`.
 

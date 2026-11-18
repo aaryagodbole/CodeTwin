@@ -1,5 +1,6 @@
 # CodeTwin dashboard for self-hosting (compose.yaml): static export served by nginx.
-# DATA_MODE: "demo" (bundled snapshot) or "live" (reads the API at NEXT_PUBLIC_API_URL).
+# DATA_MODE: "demo" (bundled snapshot) or "live". Live reads a local `codetwin serve` API at API_URL (its /api/...
+# shapes); it does not read the cloud API's /api/v1/projects/... yet, so the compose stack uses demo.
 FROM node:22-alpine AS build
 WORKDIR /app
 COPY package.json package-lock.json ./

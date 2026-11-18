@@ -5,9 +5,11 @@ WORKDIR /app
 COPY pyproject.toml README.md ./
 COPY codetwin_cloud ./codetwin_cloud
 COPY app.py ./
-RUN pip install . "uvicorn>=0.29" && useradd --system --uid 10001 codetwin
+# Major versions are capped so `docker compose up --build` after `git pull` cannot pull in a breaking release.
+RUN pip install . "uvicorn>=0.29,<1" "fastapi<1" "psycopg[binary]<4" "pydantic<3" && useradd --system --uid 10001 codetwin
 USER codetwin
 EXPOSE 8080
-HEALTHCHECK --interval=10s --timeout=3s --start-period=10s --retries=5 \
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=5 \
   CMD ["python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/api/health', timeout=2)"]
+# --proxy-headers honours X-Forwarded-* only from FORWARDED_ALLOW_IPS (compose.yaml), which uvicorn reads itself.
 CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8080", "--proxy-headers", "--no-access-log"]

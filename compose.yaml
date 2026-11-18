@@ -2,7 +2,8 @@
 #   docker compose up -d --build
 #   docker compose exec api python -m codetwin_cloud add-project OWNER/NAME --public --token
 # Dashboard http://localhost:3000 · API http://localhost:8080/api/docs
-# Set POSTGRES_PASSWORD and CRON_SECRET in a .env file next to this one before exposing anything beyond localhost.
+# Set POSTGRES_PASSWORD and CRON_SECRET in a .env file next to this one BEFORE the first `up`: Postgres reads the
+# password only when it creates its data volume (docs/self-hosting.md, "Change the database password").
 services:
   db:
     image: postgres:16-alpine
@@ -21,9 +22,13 @@ services:
   api:
     build: ./cloud
     environment:
-      DATABASE_URL: postgresql://codetwin:${POSTGRES_PASSWORD:-codetwin-local-only}@db:5432/codetwin
+      # The password goes in PGPASSWORD, not in the URL, so any characters work (no URL-encoding needed).
+      DATABASE_URL: postgresql://codetwin@db:5432/codetwin
+      PGPASSWORD: ${POSTGRES_PASSWORD:-codetwin-local-only}
       CRON_SECRET: ${CRON_SECRET:-}
       CODETWIN_CORS_ORIGINS: ${CODETWIN_CORS_ORIGINS:-http://localhost:3000}
+      # Addresses of a reverse proxy whose X-Forwarded-* headers uvicorn may trust (e.g. the proxy container's IP).
+      FORWARDED_ALLOW_IPS: ${FORWARDED_ALLOW_IPS:-127.0.0.1}
     ports: ["127.0.0.1:8080:8080"]
     depends_on:
       db: { condition: service_healthy }
