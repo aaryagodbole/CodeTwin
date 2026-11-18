@@ -7,7 +7,20 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Changed
+- Isotonic recalibration of risk scores starts only with at least 5 affected and 5 unaffected test examples from
+  `codetwin learn`; before that the model's scores are used as they are and `select` says so. A fit on a few points
+  used to report 0.0% residual risk (#99).
+- `record` stores a run that did not complete (whole-run timeout; pytest exit codes 2, 3, 4) with a warning, and
+  `select` never uses it as the base (#99).
+
 ### Fixed
+- Co-change evidence was always empty: `git log --format=@@` is not a valid format, and the error was ignored. It now
+  works, reads history only up to the recorded base commit (E5), and a shallow clone or missing history is stated in
+  the decision's reasons (#99).
+- `record` stores the run and the static facts in one transaction (E6); the store uses SQLite WAL and a 5 s busy
+  timeout, so the CLI, the server and the VS Code extension can share it (#99).
+- A corrupt `.codetwin/model.json` gives a clear error instead of a raw JSON traceback (#99).
 - `codetwin run --decision FILE` runs the tests of that `select --json` file; the GitHub Action uses it. A change
   that edits only tests is printed but not stored, so the Action used to run an older decision's tests or none.
 - `codetwin learn` stores its label in one transaction, so a run that stops part way can simply be repeated.

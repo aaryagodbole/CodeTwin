@@ -17,7 +17,7 @@ from pathlib import Path
 from typing import Any, Self
 
 from .. import __version__
-from ..evidence.model import FileFacts, TestRun
+from ..evidence.model import INCOMPLETE_CODES, FileFacts, TestRun
 
 MIGRATIONS = "codetwin.store.migrations"
 SYMBOL_KINDS = ("class", "function", "method")
@@ -59,6 +59,10 @@ class Store:
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self.con = sqlite3.connect(self.path, isolation_level=None)    # transactions are explicit (_tx)
         self.con.execute("pragma foreign_keys = on")
+        # The CLI, `codetwin serve`, MCP and the VS Code extension may open the store at the same time: readers do not
+        # block the writer (WAL), and a writer waits for another instead of failing at once (E6).
+        self.con.execute("pragma busy_timeout = 5000")
+        self.con.execute("pragma journal_mode = wal")   # where WAL is not possible SQLite keeps its default journal
         self._depth = 0
         self._ids: dict[tuple, int] = {}
         self.migrate()
@@ -215,13 +219,26 @@ class Store:
                                                "where r.repository_id=1 order by t.recorded, t.id")]
 
     def latest_run_sha(self) -> str | None:
-        row = self.con.execute("select sha from latest_run").fetchone()
+        """The newest run that completed: an incomplete one (timeout, interrupted) is never the default base."""
+        row = self._latest_complete_run()
         return row[0] if row else None
+
+    def latest_run_incomplete(self) -> tuple[str, str] | None:
+        """(sha, return code) of the newest run when it did not complete, else None: why `select` skipped it."""
+        row = self.con.execute("select sha, returncode from latest_run").fetchone()
+        return (row[0], row[1]) if row and row[1] in INCOMPLETE_CODES else None
+
+    def _latest_complete_run(self) -> tuple | None:
+        marks = ",".join("?" * len(INCOMPLETE_CODES))
+        return self.con.execute(
+            "select r.sha, t.recorded from test_run t join revision r on r.id = t.revision_id "  # noqa: S608 (constant SQL; values bound)
+            f"where r.repository_id = 1 and t.returncode not in ({marks}) order by t.recorded desc, t.id desc limit 1",
+            sorted(INCOMPLETE_CODES)).fetchone()
 
     def latest_run_recorded(self) -> float | None:
         """When the run returned by `latest_run_sha()` was recorded (same repository and row as that method)."""
-        row = self.con.execute("select recorded from latest_run").fetchone()
-        return row[0] if row else None
+        row = self._latest_complete_run()
+        return row[1] if row else None
 
     def tests_covering(self, sha: str, file: str, line: int) -> list[str]:
         """Test files whose recorded run executed `file` at `line` (uses the coverage_by_line index)."""

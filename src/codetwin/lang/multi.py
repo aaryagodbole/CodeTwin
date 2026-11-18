@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from ..evidence.model import FileFacts, TestRun
+from ..evidence.model import INCOMPLETE_CODES, FileFacts, TestRun
 from .base import Language
 
 
@@ -68,7 +68,9 @@ class Multi(Language):
             run.wall += r.wall
             run.notes += r.notes
             codes.append(r.returncode)
-        run.returncode = next((c for c in codes if c not in (0, "0")), 0)
+        # An incomplete part makes the whole run incomplete; otherwise the first failure code.
+        run.returncode = next((c for c in codes if str(c) in INCOMPLETE_CODES),
+                              next((c for c in codes if c not in (0, "0")), 0))
         return run
 
     def _split(self, tests: list[str]) -> dict[int, list[str]]:

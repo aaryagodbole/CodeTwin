@@ -35,6 +35,9 @@ class FileFacts:
     symbols: list[list] = field(default_factory=list)      # [qualified name, kind, first line, last line]
 
 
+INCOMPLETE_CODES = frozenset({"timeout", "2", "3", "4"})
+
+
 @dataclass
 class TestRun:
     """Result of running the suite once with per-test coverage."""
@@ -47,3 +50,9 @@ class TestRun:
     wall: float = 0.0
     notes: list[str] = field(default_factory=list)                         # problems of the run itself (not stored)
     unrun: list[str] = field(default_factory=list)       # listed but not executed (no runner, tool missing): no outcome
+
+    @property
+    def incomplete(self) -> bool:
+        """The suite did not run to the end: a whole-run timeout, or pytest's interrupted / internal error / usage
+        error exit codes. Its coverage is partial, so it must not be the base of a selection."""
+        return str(self.returncode) in INCOMPLETE_CODES
