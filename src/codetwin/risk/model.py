@@ -51,7 +51,9 @@ class RiskModel:
             w = json.loads(p.read_text())
         except (OSError, ValueError) as e:
             raise RuntimeError(f"{p} is not a readable risk model ({e}); delete it to use the built-in prior") from None
-        if not isinstance(w, dict) or not w or not all(
+        if w == {}:
+            return cls()                                     # an empty model means the built-in prior, as before
+        if not isinstance(w, dict) or not all(
                 isinstance(v, (int, float)) and not isinstance(v, bool) and math.isfinite(v) for v in w.values()):
             raise RuntimeError(f"{p} is not a risk model (expected an object of finite feature weights); delete it to "
                                "use the built-in prior")

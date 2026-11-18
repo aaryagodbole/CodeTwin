@@ -12,7 +12,8 @@ All notable changes to this project are documented here. The format follows
   `codetwin learn`; before that the model's scores are used as they are and `select` says so. A fit on a few points
   used to report 0.0% residual risk (#99).
 - `record` stores a run that did not complete (whole-run timeout; pytest exit codes 2, 3, 4) with a warning, and
-  `select` never uses it as the base (#99).
+  `select` never picks it as the default base (a base named with `--base` is used, with a note); `record` then
+  exits 1 (#99).
 
 ### Fixed
 - Co-change evidence was always empty: `git log --format=@@` is not a valid format, and the error was ignored. It now

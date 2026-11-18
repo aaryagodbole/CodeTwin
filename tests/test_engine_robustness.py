@@ -9,6 +9,7 @@ import pytest
 from codetwin.cli import main
 from codetwin.engine import Engine
 from codetwin.evidence.model import TestRun
+from codetwin.risk.model import RiskModel
 from codetwin.risk.residual import Recalibrator
 from codetwin.store.db import Store
 
@@ -62,6 +63,16 @@ def test_a_shallow_clone_says_so_in_the_decision(toy_repo: Path, tmp_path: Path)
     with Engine(clone) as eng:
         d = eng.select()
     assert any(r.startswith("shallow clone: co-change evidence comes from only") for r in d.reasons)
+
+
+def test_history_keeps_paths_with_spaces(toy_repo: Path) -> None:
+    (toy_repo / "docs").mkdir()
+    (toy_repo / "docs" / "My Guide.md").write_text("x\n")
+    _git(toy_repo, "add", "-A")
+    _git(toy_repo, "commit", "-qm", "guide")
+    main(["-C", str(toy_repo), "init"])
+    with Engine(toy_repo) as eng:
+        assert eng.history()[-1] == ["docs/My Guide.md"]
 
 
 def test_a_full_clone_has_no_history_note(toy_repo: Path) -> None:
@@ -129,6 +140,7 @@ def test_a_partial_rerun_keeps_the_complete_run_of_the_same_commit(toy_repo: Pat
         assert any("kept the earlier complete run" in n for n in run.notes)
         stored = eng.store.get_run(sha)
         assert stored is not None and not stored.incomplete and eng.store.latest_run_sha() == sha
+        assert run.stored is False
 
 
 def test_record_fails_the_step_when_the_run_is_incomplete(toy_repo: Path, monkeypatch: pytest.MonkeyPatch,
@@ -202,7 +214,7 @@ def test_incomplete_return_codes(code: int | str, incomplete: bool) -> None:
 
 
 # ------------------------------------------------------------------------------- 2.10: bad model, tiny calibration
-@pytest.mark.parametrize("content", ["{not json", '{"cov_line": "high"}', "[]", '{"cov_line": NaN}', "{}"])
+@pytest.mark.parametrize("content", ["{not json", '{"cov_line": "high"}', "[]", '{"cov_line": NaN}'])
 def test_a_broken_model_file_gives_a_clear_error(toy_repo: Path, content: str) -> None:
     main(["-C", str(toy_repo), "init"])
     with Engine(toy_repo) as eng:
@@ -220,6 +232,9 @@ def test_a_valid_model_file_loads(toy_repo: Path) -> None:
         (eng.cfg.state_dir / "model.json").write_text('{"cov_line": 2, "intercept": -1.5}')
     with Engine(toy_repo) as eng:
         assert eng.model.weights == {"cov_line": 2.0, "intercept": -1.5}
+        (eng.cfg.state_dir / "model.json").write_text("{}")
+    with Engine(toy_repo) as eng:
+        assert eng.model.weights == RiskModel().weights                # empty file: the built-in prior
 
 
 def test_recalibration_waits_for_enough_examples() -> None:

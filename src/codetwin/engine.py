@@ -79,7 +79,9 @@ class Engine:
             try:
                 out = diffmod.git(self.root, "log", "--first-parent", "--name-only", "--format=tformat:@@", "-n",
                                   str(HISTORY_COMMITS), rev, "--")
-                self._history[rev] = ([c.split() for c in out.split("@@") if c.strip()][::-1], None)
+                # one path per line: a path may contain spaces
+                self._history[rev] = ([[f for f in c.splitlines() if f.strip()] for c in out.split("@@") if c.strip()][::-1],
+                                      None)
             except RuntimeError as e:
                 self._history[rev] = ([], (str(e).splitlines() or ["?"])[-1])
         return self._history[rev]
@@ -90,11 +92,13 @@ class Engine:
         if error:
             return f"git history is not available ({error}): no co-change evidence"
         n = len(commits)
+        if n >= HISTORY_COMMITS:
+            return None                              # a full window: whether the clone is shallow does not matter
         try:
             shallow = diffmod.git(self.root, "rev-parse", "--is-shallow-repository").strip() == "true"
         except RuntimeError:
             shallow = False
-        if shallow and n < HISTORY_COMMITS:
+        if shallow:
             return (f"shallow clone: co-change evidence comes from only {n} commit(s); fetch the full history "
                     "(actions/checkout: fetch-depth: 0)")
         return None
@@ -111,6 +115,7 @@ class Engine:
                 run.notes.append(f"the test run did not complete ({run.returncode}); kept the earlier complete run of "
                                  f"{sha[:10]}. Fix the cause (a hanging or very slow test, a collection error) and "
                                  "record again")
+                run.stored = False
                 return run
             run.notes.append(f"the test run did not complete ({run.returncode}); it is stored but `select` will not use "
                              "it as the base. Fix the cause (a hanging or very slow test, a collection error) and run "
@@ -154,7 +159,8 @@ class Engine:
         scores = self.model.scores(rows)
         if not any(self.is_source(f) for f in diff):
             d = Decision({t for t, r in rows.items() if r["forced"]}, "proceed", 0.0, None, "no-source-change",
-                         ["no source file changed; only added or changed tests run"])
+                         ["no source file changed; only added or changed tests run",
+                          *self._evidence_notes(base, prev, [], chosen)])
             return self._with_report(d, base, prev, diff, rows, scores)
         pts = self.store.recal_points()
         labels = [p[1] for p in pts]

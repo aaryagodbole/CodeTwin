@@ -11,7 +11,7 @@ import math
 import sqlite3
 import time
 from collections.abc import Iterable, Iterator
-from contextlib import AbstractContextManager, contextmanager
+from contextlib import AbstractContextManager, contextmanager, suppress
 from importlib import resources
 from pathlib import Path
 from typing import Any, Self
@@ -62,7 +62,10 @@ class Store:
         # The CLI, `codetwin serve`, MCP and the VS Code extension may open the store at the same time: readers do not
         # block the writer (WAL), and a writer waits for another instead of failing at once (E6).
         self.con.execute("pragma busy_timeout = 5000")
-        self.con.execute("pragma journal_mode = wal")   # where WAL is not possible SQLite keeps its default journal
+        # Where WAL is not possible SQLite keeps its default journal. If another process holds the store in the old
+        # mode, the switch fails: carry on and switch on a later open.
+        with suppress(sqlite3.OperationalError):
+            self.con.execute("pragma journal_mode = wal")
         self._depth = 0
         self._ids: dict[tuple, int] = {}
         self.migrate()

@@ -11,8 +11,11 @@ def run(args) -> int:
     with engine(args) as eng:
         r = eng.record()
     with_cov = sum(1 for files in r.covered.values() if files)
-    print(f"recorded {r.sha[:10]}: {len(r.durations)} test files, {with_cov} with coverage, "
-          f"{len(r.failing)} failing test cases, {r.wall:.1f}s")
+    if r.stored:
+        print(f"recorded {r.sha[:10]}: {len(r.durations)} test files, {with_cov} with coverage, "
+              f"{len(r.failing)} failing test cases, {r.wall:.1f}s")
+    else:
+        print(f"not recorded: the run of {r.sha[:10]} did not complete; the earlier complete run is kept")
     for n in r.notes:
         print(f"warning: {n}")
     return 1 if r.incomplete else 0      # a CI step must not pass when the evidence is partial
