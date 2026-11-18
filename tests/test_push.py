@@ -25,7 +25,7 @@ def test_report_holds_ids_and_numbers_never_code(toy_repo, capsys):
     with Engine(toy_repo) as eng:
         body = push.build_report(eng, decision, env={}, repository="acme/shop")
     assert body["schema"] == "codetwin.report/v1" and body["repository"] == "acme/shop"
-    assert body["run"] == {"source": "cli", "id": "cli-1", "attempt": 1}
+    assert body["run"]["source"] == "cli" and body["run"]["id"].startswith("cli-") and body["run"]["attempt"] == 1
     assert set(body["decision"]["sections"]) <= report.publishable()
     assert {"contracts", "cross_repo"}.isdisjoint(body["decision"]["sections"])   # not opted in
     ids = {t["id"] for t in body["decision"]["tests"]}
@@ -130,3 +130,96 @@ def test_github_oidc_token_is_requested_with_our_audience():
     assert headers["Authorization"] == "bearer req-token"
     with pytest.raises(push.PushError, match="id-token: write"):
         push.github_oidc_token({})
+
+
+def test_cli_run_id_follows_the_decision_not_the_local_database(toy_repo, capsys):
+    """Two clones both have decision 1; different decisions must not share a run id (the cloud dedups on it)."""
+    decision = _decide(toy_repo, capsys)
+    other = {**decision, "decision": "abstain" if decision["decision"] == "proceed" else "proceed"}
+    with Engine(toy_repo) as eng:
+        a = push.build_report(eng, decision, env={}, repository="acme/shop")["run"]["id"]
+        again = push.build_report(eng, decision, env={}, repository="acme/shop")["run"]["id"]
+        b = push.build_report(eng, other, env={}, repository="acme/shop")["run"]["id"]
+    assert a == again and a != b
+
+
+def test_scores_come_only_from_the_same_stored_decision(toy_repo, capsys):
+    """A different decision that selects the same tests must not get the stored decision's scores and alpha."""
+    decision = _decide(toy_repo, capsys)
+    other = {**decision, "mode": "fallback"}
+    with Engine(toy_repo) as eng:
+        same = push.build_report(eng, decision, env={}, repository="acme/shop")["decision"]
+        diff = push.build_report(eng, other, env={}, repository="acme/shop")["decision"]
+    assert any(t["score"] is not None for t in same["tests"])
+    assert diff["alpha"] is None and all(t["score"] is None for t in diff["tests"])
+
+
+def test_malformed_decision_json_is_a_push_error(toy_repo, capsys, tmp_path):
+    decision = _decide(toy_repo, capsys)
+    for bad in [{**decision, "selected": None}, {**decision, "residual_risk": "high"}, [1, 2]]:
+        f = tmp_path / "bad.json"
+        f.write_text(json.dumps(bad), encoding="utf-8")
+        base = ["-C", str(toy_repo), "push", "--decision", str(f), "--dry-run", "--repository", "acme/shop"]
+        assert main(base) == 1
+        assert main([*base, "--best-effort"]) == 0
+        assert "codetwin push" in capsys.readouterr().err
+
+
+@pytest.mark.parametrize("body", [b"null", b"[]", b'{"id": "x", "created": true}'])
+def test_unexpected_upload_answers_are_push_errors(body):
+    srv = _Server(status=200, body=body)
+    try:
+        with pytest.raises(push.PushError):
+            push.send(srv.url, {"schema": "codetwin.report/v1"}, "ctp_abc")
+    finally:
+        srv.close()
+
+
+def test_a_truncated_answer_is_a_push_error():
+    """The server promises more bytes than it sends (http.client.IncompleteRead is not an OSError)."""
+    class Short(BaseHTTPRequestHandler):
+        def do_POST(self):
+            self.rfile.read(int(self.headers.get("content-length") or 0))
+            self.send_response(201)
+            self.send_header("Content-Length", "100")
+            self.end_headers()
+            self.wfile.write(b'{"id": 1')
+
+        def log_message(self, *a):
+            pass
+
+    httpd = HTTPServer(("127.0.0.1", 0), Short)
+    threading.Thread(target=httpd.handle_request, daemon=True).start()
+    try:
+        with pytest.raises(push.PushError):
+            push.send(f"http://localhost:{httpd.server_port}", {"schema": "codetwin.report/v1"}, "ctp_abc")
+    finally:
+        httpd.server_close()
+
+
+def test_redirects_are_not_followed_with_the_token():
+    """A redirect could send the bearer token over plain HTTP or to another origin."""
+    target = _Server()
+    redirect = _Server(status=302, body=b"")
+    redirect_to = f"{target.url}/elsewhere"
+
+    class R(BaseHTTPRequestHandler):
+        def do_POST(self):
+            self.rfile.read(int(self.headers.get("content-length") or 0))
+            self.send_response(302)
+            self.send_header("Location", redirect_to)
+            self.end_headers()
+
+        def log_message(self, *a):
+            pass
+
+    redirect.close()
+    httpd = HTTPServer(("127.0.0.1", 0), R)
+    threading.Thread(target=httpd.handle_request, daemon=True).start()
+    try:
+        with pytest.raises(push.PushError, match="redirect"):
+            push.send(f"http://localhost:{httpd.server_port}", {"schema": "codetwin.report/v1"}, "ctp_secret")
+    finally:
+        httpd.server_close()
+        target.close()
+    assert not target.seen, "the token followed the redirect"

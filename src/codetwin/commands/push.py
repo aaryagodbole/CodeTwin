@@ -30,9 +30,9 @@ def add_arguments(p: argparse.ArgumentParser) -> None:
                    help="exit 0 with a warning if the upload fails (CI: never fail a build because of the cloud)")
 
 
-def run(args) -> int:
+def run(args: argparse.Namespace) -> int:
     try:
-        raw = sys.stdin.read() if args.decision == "-" else Path(args.decision).read_text()
+        raw = sys.stdin.read() if args.decision == "-" else Path(args.decision).read_text(encoding="utf-8")
         decision = json.loads(raw)
         with engine(args) as eng:
             body = build_report(eng, decision, repository=args.repository)

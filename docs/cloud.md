@@ -54,6 +54,12 @@ Rules:
 - Maximum size 256 KB per report. Larger reports are rejected with `413`.
 - `schema` is versioned. The server accepts `v1` and rejects anything else with `422`.
 - Uploads are idempotent on (repository, run id, run attempt, head SHA): a retried job does not duplicate.
+- Outside GitHub Actions, the run id is `cli-` plus a hash of the head commit and the decision, so retrying the
+  same decision is deduplicated while a different decision (or another clone's) is stored as its own report.
+- Scores and alpha are taken from the stored decision only when it matches the JSON file (verdict, mode,
+  threshold and selection); otherwise the report has none rather than another decision's.
+- `codetwin push` never follows a redirect with its token, and treats a malformed decision file or an
+  unexpected or cut-off server answer as an upload failure (exit 1, or a warning with `--best-effort`).
 
 ## API
 

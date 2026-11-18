@@ -6,6 +6,8 @@ prints exactly what would be sent.
 """
 from __future__ import annotations
 
+import hashlib
+import http.client
 import json
 import math
 import os
@@ -49,7 +51,7 @@ def _pull_request(env: dict[str, str]) -> int | None:
     path = env.get("GITHUB_EVENT_PATH")
     if path and Path(path).is_file():
         try:
-            pr = json.loads(Path(path).read_text()).get("pull_request") or {}
+            pr = json.loads(Path(path).read_text(encoding="utf-8")).get("pull_request") or {}
             return int(pr["number"]) if "number" in pr else None
         except (ValueError, OSError):
             return None
@@ -60,19 +62,53 @@ def _finite(x: Any) -> float | None:
     return None if x is None or (isinstance(x, float) and math.isnan(x)) else float(x)
 
 
+def validate_decision(decision: Any) -> dict:
+    """The output of `codetwin select --json`, checked before use; anything else is a PushError."""
+    if not isinstance(decision, dict):
+        raise PushError("the decision file is not a JSON object from `codetwin select --json`")
+    if decision.get("decision") not in ("proceed", "abstain"):
+        raise PushError("the decision file has no valid `decision` (proceed or abstain)")
+    if not isinstance(decision.get("residual_risk"), (int, float)) or isinstance(decision.get("residual_risk"), bool):
+        raise PushError("the decision file has no numeric `residual_risk`")
+    selected = decision.get("selected")
+    if not isinstance(selected, list) or not all(isinstance(t, str) for t in selected):
+        raise PushError("the decision file's `selected` must be a list of test ids")
+    for key, kind in (("reasons", list), ("extras", dict)):
+        if decision.get(key) is not None and not isinstance(decision[key], kind):
+            raise PushError(f"the decision file's `{key}` must be a {kind.__name__}")
+    if decision.get("threshold") is not None and not isinstance(decision["threshold"], (int, float)):
+        raise PushError("the decision file's `threshold` must be a number")
+    return decision
+
+
+def _same_decision(stored: dict, decision: dict) -> bool:
+    """Whether the newest stored decision is the one in the JSON file. The JSON carries no decision id, so compare
+    what it does carry: verdict, mode, threshold and selection. (Not residual_risk: for an abstention the stored
+    value can differ from the printed one.)"""
+    def close(a: Any, b: Any) -> bool:
+        return (a is None and b is None) or (a is not None and b is not None and math.isclose(float(a), float(b)))
+    return (stored.get("decision") == decision["decision"] and stored.get("mode") == decision.get("mode")
+            and close(stored.get("threshold"), decision.get("threshold"))
+            and sorted(stored.get("selected", [])) == sorted(decision["selected"]))
+
+
 def build_report(eng: Any, decision: dict, env: dict[str, str] | None = None,
                  repository: str | None = None) -> dict:
     """The upload body for one decision: `decision` is the output of `codetwin select --json`."""
+    decision = validate_decision(decision)
     env = dict(os.environ if env is None else env)
     root = Path(eng.root)
     stored = eng.store.last_decision()
-    # Scores and alpha come from the stored decision only when it is the same decision as the JSON file.
-    same = bool(stored) and sorted(stored["selected"]) == sorted(decision.get("selected", []))
-    detail = eng.store.decision(stored["id"]) if same else None
+    full = eng.store.decision(stored["id"]) if stored else None
+    # Scores and alpha come from the stored decision only when it is the same decision as the JSON file; otherwise
+    # the report has none rather than another decision's.
+    same = stored is not None and full is not None and _same_decision({**full, "selected": stored["selected"]},
+                                                                       decision)
+    detail = full if same else None
     run = eng.store.get_run(detail["base"]) if detail else None
     durations = run.durations if run else {}
-    scores = stored["scores"] if same else {}
-    selected = set(decision.get("selected", []))
+    scores = stored["scores"] if same and stored else {}
+    selected = set(decision["selected"])
     tests = sorted(set(scores) | selected)
     published = report.publishable()
     in_actions = env.get("GITHUB_ACTIONS") == "true"
@@ -81,7 +117,7 @@ def build_report(eng: Any, decision: dict, env: dict[str, str] | None = None,
         raise PushError("cannot tell the head commit (not a git repository?)")
     run_info = ({"source": "github-actions", "id": env.get("GITHUB_RUN_ID", ""),
                  "attempt": int(env.get("GITHUB_RUN_ATTEMPT", "1") or 1)} if in_actions else
-                {"source": "cli", "id": f"cli-{detail['id']}" if detail else f"cli-{head[:12]}", "attempt": 1})
+                {"source": "cli", "id": _cli_run_id(head, decision), "attempt": 1})
     missed = detail.get("missed") if detail else None
     return {
         "schema": REPORT_SCHEMA,
@@ -108,6 +144,25 @@ def build_report(eng: Any, decision: dict, env: dict[str, str] | None = None,
     }
 
 
+def _cli_run_id(head: str, decision: dict) -> str:
+    """A run id for uploads outside CI. The same decision on the same commit gets the same id, so a retry is
+    deduplicated; a different decision (or another clone's) gets another id, so it is not discarded as a duplicate."""
+    canonical = json.dumps({k: decision.get(k) for k in ("decision", "residual_risk", "threshold", "mode",
+                                                         "selected", "reasons")}, sort_keys=True)
+    return "cli-" + hashlib.sha256(f"{head}\n{canonical}".encode()).hexdigest()[:20]
+
+
+class _NoRedirect(urllib.request.HTTPRedirectHandler):
+    """Never follow a redirect with credentials: urllib would resend the Authorization header, possibly over
+    plain HTTP or to another origin."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):  # noqa: ANN001
+        raise PushError(f"refusing to follow a redirect ({code}) to {newurl!r} with credentials")
+
+
+_opener = urllib.request.build_opener(_NoRedirect)
+
+
 def check_server(url: str) -> str:
     """HTTPS only, except for a server on this machine (self-hosting, development)."""
     u = urllib.parse.urlparse(url)
@@ -126,9 +181,9 @@ def github_oidc_token(env: dict[str, str], audience: str = AUDIENCE) -> str:
     req = urllib.request.Request(f"{url}{sep}audience={urllib.parse.quote(audience)}",  # noqa: S310  GitHub URL
                                  headers={"Authorization": f"bearer {bearer}"})
     try:
-        with urllib.request.urlopen(req, timeout=15) as r:  # noqa: S310
+        with _opener.open(req, timeout=15) as r:
             return str(json.loads(r.read())["value"])
-    except (urllib.error.URLError, KeyError, ValueError) as e:
+    except (urllib.error.URLError, http.client.HTTPException, OSError, KeyError, TypeError, ValueError) as e:
         raise PushError(f"could not get a GitHub OIDC token: {e}") from None
 
 
@@ -138,10 +193,21 @@ def send(server: str, body: dict, token: str, timeout: float = 20) -> dict:
                                  headers={"Content-Type": "application/json", "Authorization": f"Bearer {token}",
                                           "User-Agent": f"codetwin/{__version__}"})
     try:
-        with urllib.request.urlopen(req, timeout=timeout) as r:  # noqa: S310  scheme checked by check_server
-            return {"status": r.status, **json.loads(r.read() or b"{}")}
+        with _opener.open(req, timeout=timeout) as r:  # scheme checked by check_server
+            status, raw = r.status, r.read()
     except urllib.error.HTTPError as e:
         detail = e.read().decode(errors="replace")[:500]
         raise PushError(f"upload refused ({e.code}): {detail}") from None
     except urllib.error.URLError as e:
         raise PushError(f"cannot reach {server}: {e.reason}") from None
+    except (http.client.HTTPException, OSError) as e:      # e.g. IncompleteRead: the answer was cut off
+        raise PushError(f"incomplete answer from {server}: {type(e).__name__}") from None
+    try:
+        answer = json.loads(raw or b"{}")
+    except ValueError:
+        raise PushError(f"the server's answer is not JSON (status {status})") from None
+    if not isinstance(answer, dict) or not isinstance(answer.get("id"), int) or not isinstance(
+            answer.get("created"), bool):
+        raise PushError(f"unexpected answer from the server (status {status}): expected an id and created flag")
+    # Not retried here: the upload may already be stored; the next run's push is deduplicated by run id.
+    return {"status": status, **answer}
