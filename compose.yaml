@@ -1,0 +1,48 @@
+# Self-hosted CodeTwin Cloud: Postgres + API + dashboard on your own machine or servers (docs/self-hosting.md).
+#   docker compose up -d --build
+#   docker compose exec api python -m codetwin_cloud add-project OWNER/NAME --public --token
+# Dashboard http://localhost:3000 · API http://localhost:8080/api/docs
+# Set POSTGRES_PASSWORD and CRON_SECRET in a .env file next to this one BEFORE the first `up`: Postgres reads the
+# password only when it creates its data volume (docs/self-hosting.md, "Change the database password").
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: codetwin
+      POSTGRES_DB: codetwin
+      # Required: no default, so a database is never created with a public password (docs/self-hosting.md).
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env next to compose.yaml}
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      # Over TCP: the temporary server Postgres runs while it initialises listens on the socket only, so a socket
+      # check would report healthy just before the restart.
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U codetwin -d codetwin"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  api:
+    build: ./cloud
+    environment:
+      # The password goes in PGPASSWORD, not in the URL, so any characters work (no URL-encoding needed).
+      DATABASE_URL: postgresql://codetwin@db:5432/codetwin
+      PGPASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env next to compose.yaml}
+      CRON_SECRET: ${CRON_SECRET:-}
+      CODETWIN_CORS_ORIGINS: ${CODETWIN_CORS_ORIGINS:-http://localhost:3000}
+      # Addresses of a reverse proxy whose X-Forwarded-* headers uvicorn may trust (e.g. the proxy container's IP).
+      FORWARDED_ALLOW_IPS: ${FORWARDED_ALLOW_IPS:-127.0.0.1}
+    ports: ["127.0.0.1:8080:8080"]
+    depends_on:
+      db: { condition: service_healthy }
+    restart: unless-stopped
+
+  dashboard:
+    build:
+      context: ./dashboard
+      args: { DATA_MODE: demo }
+    ports: ["127.0.0.1:3000:80"]
+    restart: unless-stopped
+
+volumes:
+  pgdata:
