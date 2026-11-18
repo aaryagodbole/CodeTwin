@@ -56,14 +56,15 @@ function ThemeToggle() {
   );
 }
 
-function Logo() {
+function Logo({ compact = false }: { compact?: boolean }) {
   return (
-    <Link href="/" className="flex items-center gap-2.5">
+    <Link href="/" className="flex items-center gap-2.5" aria-label="CodeTwin AI, overview">
       <span className="grid h-9 w-9 place-items-center rounded-xl text-white"
         style={{ background: "linear-gradient(135deg, var(--accent), var(--accent-2))" }}>
         <GitBranch size={18} aria-hidden />
       </span>
-      <span className="leading-tight">
+      {/* On a phone the header also holds five nav icons and the theme toggle: show the name only from sm up. */}
+      <span className={`leading-tight ${compact ? "hidden sm:block" : ""}`}>
         <span className="block text-sm font-semibold tracking-tight">CodeTwin AI</span>
         <span className="block text-[11px] text-muted">risk-calibrated testing</span>
       </span>
@@ -94,7 +95,7 @@ export function Shell({ banner, children }: { banner?: React.ReactNode; children
       </aside>
       <div className="min-w-0 flex-1">
         <header className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-border bg-background/80 px-4 py-3 backdrop-blur md:px-8">
-          <div className="md:hidden"><Logo /></div>
+          <div className="md:hidden"><Logo compact /></div>
           <nav className="flex gap-1 md:hidden" aria-label="Main (mobile)">
             {links.map(({ href, label, icon: Icon }) => (
               <Link key={href} href={href} aria-label={label} aria-current={isActive(href) ? "page" : undefined}

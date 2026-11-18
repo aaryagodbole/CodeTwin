@@ -4,7 +4,7 @@ export function Card({ title, action, children, className = "" }: {
   title?: string; action?: React.ReactNode; children: React.ReactNode; className?: string;
 }) {
   return (
-    <section className={`card-shadow rise rounded-2xl border border-border bg-card p-5 ${className}`}>
+    <section className={`card-shadow rise min-w-0 rounded-2xl border border-border bg-card p-5 ${className}`}>
       {(title || action) && (
         <div className="mb-4 flex items-center justify-between gap-3">
           {title && <h2 className="text-sm font-semibold tracking-tight">{title}</h2>}

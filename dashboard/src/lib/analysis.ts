@@ -72,7 +72,8 @@ export function analyseRepo(g: Graph): RepoAnalysis {
     edgeTypes: [...types].map(([type, count]) => ({ type, count })).sort((a, b) => b.count - a.count),
     perFile,
     hubs: [...perFile].filter((f) => f.usedBy > 0).sort((a, b) => b.usedBy - a.usedBy).slice(0, 8),
-    untested: perFile.filter((f) => f.testedBy === 0 && !/__init__\.py$/.test(f.node.path)),
+    // Same set as `reach`, with no per-language exceptions: a file no test reached is listed, whatever its name.
+    untested: perFile.filter((f) => f.testedBy === 0),
     reach: perFile.length ? tested / perFile.length : 0,
     unresolved,
   };
@@ -86,6 +87,9 @@ export interface DecisionStats {
   labelled: number;
   abstainRate: number | null;
 }
+
+/** "1 importer", "2 importers" */
+export const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
 
 export function decisionStats(rows: DecisionRow[]): DecisionStats {
   const proceed = rows.filter((d) => d.decision === "proceed").length;

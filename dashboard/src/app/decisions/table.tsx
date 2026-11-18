@@ -57,7 +57,9 @@ function Row({ d }: { d: DecisionRow }) {
 export function DecisionTable({ rows }: { rows: DecisionRow[] }) {
   if (rows.length === 0) return <Empty>No decisions yet. Run <code>codetwin select</code>.</Empty>;
   return (
-    <div className="overflow-x-auto">
+    <div className="relative overflow-x-auto">
+      {/* relative: the sr-only header below is position:absolute; without a positioned scroller it escapes
+          the clipping and widens the whole page on phones. */}
       <table className="w-full text-left text-sm">
         <thead className="text-xs uppercase tracking-wider text-muted">
           <tr>

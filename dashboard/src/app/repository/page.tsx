@@ -8,7 +8,7 @@ import { Empty, ErrorBox, Loading } from "@/components/state";
 import { Badge } from "@/components/ui/badge";
 import { Card, Stat } from "@/components/ui/card";
 import { Info, PageHeader } from "@/components/ui/info";
-import { analyseRepo } from "@/lib/analysis";
+import { analyseRepo, plural } from "@/lib/analysis";
 import { get, type Graph } from "@/lib/api";
 
 const EDGE_COLOR: Record<string, string> = {
@@ -63,7 +63,7 @@ export default function Repository() {
                 <li key={h.node.id}>
                   <div className="mb-1 flex items-center justify-between gap-3 text-sm">
                     <Link href={open(h.node.path)} className="truncate hover:text-accent hover:underline">{h.node.path}</Link>
-                    <span className="shrink-0 text-xs tabular-nums text-muted">{h.usedBy} importers · {h.testedBy} tests</span>
+                    <span className="shrink-0 text-xs tabular-nums text-muted">{plural(h.usedBy, "importer")} · {plural(h.testedBy, "test")}</span>
                   </div>
                   <div className="h-2 overflow-hidden rounded-full bg-card-2">
                     <div className="h-full rounded-full" style={{ width: `${(h.usedBy / maxUsed) * 100}%`, background: "linear-gradient(90deg, var(--accent), var(--accent-2))" }} />
@@ -82,7 +82,7 @@ export default function Repository() {
               {a.untested.map((f) => (
                 <li key={f.node.id} className="flex items-center justify-between gap-3 py-2">
                   <Link href={open(f.node.path)} className="truncate hover:text-accent hover:underline">{f.node.path}</Link>
-                  <span className="shrink-0 text-xs text-muted">{f.usedBy} importers</span>
+                  <span className="shrink-0 text-xs text-muted">{plural(f.usedBy, "importer")}</span>
                 </li>
               ))}
             </ul>
