@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { DemoBanner } from "@/components/demo-banner";
 import { Nav } from "@/components/nav";
 import { Providers } from "@/components/providers";
 import "./globals.css";
@@ -19,6 +20,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               <Nav />
             </div>
           </header>
+          <DemoBanner />
           <main className="mx-auto max-w-6xl px-6 py-6">{children}</main>
         </Providers>
       </body>

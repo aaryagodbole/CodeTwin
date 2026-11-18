@@ -8,6 +8,9 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Added
+- Hosted dashboard: a demo mode (`npm run dev:demo`, `build:demo`) reads a snapshot of the API written by
+  `scripts/demo_snapshot.py` from a real engine run on `examples/python`; Vercel config (`dashboard/vercel.json`);
+  CI job `dashboard-demo` checks the deployment build on every pull request; guide in `docs/dashboard.md`
 - Dashboard server endpoints: `GET /api/decisions/{id}` (single decision with selection reasons, per-test risk scores and outcome), `GET /api/flaky` (flaky tests grouped by test and sorted by failure count), and `GET /api/kg` (code knowledge graph with node/edge shapes, `?symbols=false` filtering, and cache).
 - Typed client models in `dashboard/src/lib/api.ts` (`DecisionDetail`, `FlakyTest`, `KgNode`, `KgEdge`, `KnowledgeGraph`).
 - Report section `test_gaps` (`src/codetwin/report/test_gaps.py`): reports changed lines that ran under no test before the change, mapping them to enclosing symbols and working-tree line numbers.

@@ -193,6 +193,33 @@ jobs:
       - uses: actions/upload-artifact@v7
         with: { name: dashboard, path: dashboard/out }
 
+  dashboard-demo:
+    # The hosted dashboard (Vercel) is built in demo mode from the snapshot committed in dashboard/public/demo.
+    # This job checks exactly that build: the committed snapshot is what the current engine and API produce, and
+    # the build answers every request the pages make. If a PR breaks it, the deployment would break too
+    # (docs/dashboard.md).
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with: { python-version: "3.12", cache: pip }
+      - uses: actions/setup-node@v7
+        with: { node-version: "22", cache: npm, cache-dependency-path: dashboard/package-lock.json }
+      - run: pip install -e ".[server]" pytest
+      - name: Demo build of the committed snapshot (what Vercel deploys)
+        working-directory: dashboard
+        run: npm ci && npm run build:demo
+      - name: The build answers every request the dashboard makes
+        working-directory: dashboard
+        run: node ../scripts/check_demo_build.mjs
+      - name: The committed snapshot is up to date with the engine and API
+        run: |
+          python scripts/demo_snapshot.py
+          if ! git diff --exit-code --stat -- dashboard/public/demo/api || [ -n "$(git status --porcelain -- dashboard/public/demo/api)" ]; then
+            echo "::error::dashboard/public/demo is stale: run 'python scripts/demo_snapshot.py' and commit the result"
+            exit 1
+          fi
+
   action:
     # Runs this repository's own GitHub Action on the pull request, installing CodeTwin from the checkout.
     if: github.event_name == 'pull_request'
