@@ -53,7 +53,7 @@ def migrate(conn: psycopg.Connection[DictRow]) -> list[str]:
         done = {r["name"] for r in conn.execute("select name from schema_migrations").fetchall()}
         for name, sql in migration_files():
             if name not in done:
-                conn.execute(sql.encode())  # trusted file shipped with the package  # trusted file shipped with the package
+                conn.execute(sql.encode())  # trusted file shipped with the package
                 conn.execute("insert into schema_migrations (name) values (%s)", (name,))
                 applied.append(name)
     return applied

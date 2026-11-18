@@ -132,3 +132,66 @@ def test_a_token_without_repository_id_is_refused(client, database):
     register(database)
     r = client.post("/api/v1/reports", json=report(), headers=auth_header(oidc(repository_id=None)))
     assert r.status_code == 401
+
+
+def test_repository_id_binding_cannot_be_raced(client, database):
+    """Two first uploads at once: the one that loses the binding must be refused, not stored."""
+    from codetwin_cloud import app as cloud_app
+    from codetwin_cloud.auth import Caller
+
+    pid = register(database)
+    stale = {"id": pid, "github_repository_id": None}          # what both requests read before either bound
+    with db.connect(database) as c:
+        c.execute("update project set github_repository_id = 111 where id = %s", (pid,))   # request A won
+        loser = Caller("github-oidc", repository="acme/shop", repository_id=222, run_id="1001", run_attempt=1,
+                       sha=HEAD)
+        try:
+            cloud_app._check_repository_id(c, stale, loser)
+        except Exception as e:  # noqa: BLE001
+            assert getattr(e, "status_code", None) == 403
+        else:
+            raise AssertionError("a racing upload from another repository id was accepted")
+
+
+def test_an_outcome_sent_with_a_retry_is_stored(client, database):
+    register(database)
+    first = client.post("/api/v1/reports", json=report(), headers=auth_header(oidc()))
+    assert first.status_code == 201
+    later = report(outcome={"missed": True, "failing": ["tests/test_cart.py"]})
+    r = client.post("/api/v1/reports", json=later, headers=auth_header(oidc()))
+    assert r.status_code == 200 and r.json() == {"id": first.json()["id"], "created": False}
+    with db.connect(database) as c:
+        row = c.execute("select missed from outcome where report_id = %s", (first.json()["id"],)).fetchone()
+    assert row == {"missed": True}
+
+
+def test_large_bodies_are_refused_without_reading_them_all(client, database):
+    register(database)
+    huge = {"Content-Length": str(10 * 1024 * 1024), **auth_header(oidc())}
+    assert client.post("/api/v1/reports", content=b"{}", headers=huge).status_code == 413
+
+    def stream():
+        for _ in range(100):
+            yield b" " * 64 * 1024          # 6.4 MB in chunks, no Content-Length
+    assert client.post("/api/v1/reports", content=stream(), headers=auth_header(oidc())).status_code == 413
+
+
+def test_bad_token_wins_over_a_bad_body(client, database):
+    """Unauthenticated callers get 401, never the schema errors of a 422."""
+    register(database)
+    r = client.post("/api/v1/reports", content=b'{"schema": 1}', headers=auth_header("not-a-jwt"))
+    assert r.status_code == 401
+
+
+def test_jwks_outage_is_a_503_not_a_bad_token(settings, database):
+    import jwt as pyjwt
+    from fastapi.testclient import TestClient
+
+    from codetwin_cloud.app import create_app
+
+    def down(_token):
+        raise pyjwt.PyJWKClientConnectionError("timed out")
+    settings.resolve_key = down
+    register(database)
+    r = TestClient(create_app(settings)).post("/api/v1/reports", json=report(), headers=auth_header(oidc()))
+    assert r.status_code == 503

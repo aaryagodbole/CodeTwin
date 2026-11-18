@@ -1,6 +1,7 @@
 """CodeTwin Cloud API (docs/cloud.md). Upload endpoint plus read endpoints with the same response shapes as the
 local `codetwin serve` API, scoped to a project, so the dashboard works against either."""
 
+import hmac
 import json
 import logging
 import os
@@ -85,10 +86,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     async def upload(request: Request) -> JSONResponse:
         # Only reading the body is async. Everything else (psycopg, the JWKS fetch) blocks, so it runs in the
         # thread pool and never stalls the event loop for other requests.
-        body = await request.body()
-        if len(body) > s.max_report_bytes:
-            raise HTTPException(413, f"report larger than {s.max_report_bytes // 1024} KB")
         token = auth.bearer(request.headers.get("authorization"))
+        body = await _read_capped(request, s.max_report_bytes)
         report_id, created = await run_in_threadpool(_store, body, token, s)
         return JSONResponse({"id": report_id, "created": created}, status_code=201 if created else 200)
 
@@ -113,14 +112,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         latest = c.execute("select base_sha, alpha, payload from report where project_id = %s "
                            "order by received_at desc, id desc limit 1", (p["id"],)).fetchone()
         counts = c.execute("select count(r.id) as decisions, count(o.report_id) as labelled from report r "
-                           "left join outcome o on o.report_id = r.id where r.project_id = %s", (p["id"],)).fetchone() or {"decisions": 0, "labelled": 0}
+                           "left join outcome o on o.report_id = r.id where r.project_id = %s", (p["id"],)).fetchone()
         tests = (latest["payload"]["decision"].get("tests", []) if latest else [])
         seconds = [t["seconds"] for t in tests if t.get("seconds") is not None]
         alpha = latest["alpha"] if latest and latest["alpha"] is not None else 0.1
         return {"root": f"{p['owner']}/{p['name']}", "packages": [], "alpha": alpha, "alpha_t": alpha,
-                "calibration_size": counts["labelled"], "recorded_commit": latest["base_sha"] if latest else None,
+                "calibration_size": counts["labelled"] if counts else 0, "recorded_commit": latest["base_sha"] if latest else None,
                 "test_files": len(tests), "suite_seconds": sum(seconds) if seconds else None,
-                "decisions": counts["decisions"], "labelled_decisions": counts["labelled"]}
+                "decisions": counts["decisions"] if counts else 0, "labelled_decisions": counts["labelled"] if counts else 0}
 
     @app.get("/api/v1/projects/{owner}/{repo}/decisions")
     def decisions(owner: str, repo: str, c: Conn, limit: int = Query(100, ge=1, le=1000)) -> list[dict]:
@@ -154,10 +153,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     # ------------------------------------------------------------------ retention (Vercel Cron, daily)
     @app.get("/api/cron/retention")
     def retention(request: Request, c: Conn) -> dict:
-        if not s.cron_secret or request.headers.get("authorization") != f"Bearer {s.cron_secret}":
+        given = request.headers.get("authorization") or ""
+        if not s.cron_secret or not hmac.compare_digest(given.encode(), f"Bearer {s.cron_secret}".encode()):
             raise HTTPException(401, "cron secret required")
         cur = c.execute("delete from report where received_at < now() - make_interval(days => %s)",
                         (s.retention_days,))
+        c.commit()          # before the response: the count we return must be what was deleted
         return {"deleted": cur.rowcount, "retention_days": s.retention_days}
 
     return app
@@ -176,25 +177,42 @@ def _decision_row(r: dict[str, Any]) -> dict:
             "reasons": d.get("reasons", []), "missed": r["missed"]}
 
 
-def _authenticate(c: psycopg.Connection[DictRow], token: str, project: Any, s: Settings) -> auth.Caller:
-    if token.startswith(auth.TOKEN_PREFIX):
-        row = c.execute("update project_token set last_used = now() where token_hash = %s returning project_id",
-                        (auth.hash_token(token),)).fetchone()
-        if row is None:
-            raise auth.AuthError(401, "unknown project token")
-        return auth.Caller("project-token", project_id=row["project_id"])
-    return auth.verify_github_oidc(token, s.resolve_key, s.audience)
+def _project_token(c: psycopg.Connection[DictRow], token: str) -> auth.Caller:
+    row = c.execute("update project_token set last_used = now() where token_hash = %s returning project_id",
+                    (auth.hash_token(token),)).fetchone()
+    if row is None:
+        raise auth.AuthError(401, "unknown project token")
+    return auth.Caller("project-token", project_id=row["project_id"])
+
+
+async def _read_capped(request: Request, limit: int) -> bytes:
+    """The request body, refused with 413 as soon as it is larger than `limit` (never buffered in full)."""
+    declared = request.headers.get("content-length")
+    if declared and declared.isdigit() and int(declared) > limit:
+        raise HTTPException(413, f"report larger than {limit // 1024} KB")
+    chunks, size = [], 0
+    async for chunk in request.stream():
+        size += len(chunk)
+        if size > limit:
+            raise HTTPException(413, f"report larger than {limit // 1024} KB")
+        chunks.append(chunk)
+    return b"".join(chunks)
 
 
 def _store(body: bytes, token: str, s: Settings) -> tuple[int, bool]:
-    """Validate, authenticate and store one report; commits before returning, so a 201 means it is stored."""
-    try:
-        report = Report.model_validate_json(body)
-    except ValidationError as e:
-        raise HTTPException(422, json.loads(e.json(include_url=False, include_input=False))) from None
+    """Authenticate, validate and store one report; commits before returning, so a 201 means it is stored.
+
+    A GitHub OIDC token is verified before anything else and before a database connection is opened, so bad
+    tokens never see schema errors and a slow key fetch never holds a connection."""
+    oidc_caller = None if token.startswith(auth.TOKEN_PREFIX) else auth.verify_github_oidc(token, s.resolve_key,
+                                                                                           s.audience)
     with db.connect(s.database_url) as c:
+        caller = oidc_caller or _project_token(c, token)
+        try:
+            report = Report.model_validate_json(body)
+        except ValidationError as e:
+            raise HTTPException(422, json.loads(e.json(include_url=False, include_input=False))) from None
         project = db.find_project(c, *report.owner_name)
-        caller = _authenticate(c, token, project, s)
         if project is None or not project["uploads_enabled"]:
             raise HTTPException(403, f"{report.repository} is not registered for uploads (cloud/README.md)")
         if caller.kind == "github-oidc":
@@ -205,6 +223,8 @@ def _store(body: bytes, token: str, s: Settings) -> tuple[int, bool]:
         # A retry of a report that is already stored is not a new upload: answer it before the rate limit.
         existing = _existing(c, project["id"], report)
         if existing is not None:
+            _add_outcome(c, existing, report)     # an outcome may arrive with a later upload of the same run
+            c.commit()
             return existing, False
         recent = c.execute("select count(*) as n from report where project_id = %s and "
                            "received_at > now() - interval '1 hour'", (project["id"],)).fetchone()
@@ -215,12 +235,14 @@ def _store(body: bytes, token: str, s: Settings) -> tuple[int, bool]:
         return result
 
 
-def _check_repository_id(c: psycopg.Connection[DictRow], project: DictRow, caller: auth.Caller) -> None:
-    """Bind the project to GitHub's repository id on its first OIDC upload, then require that id."""
-    if project["github_repository_id"] is None:
-        c.execute("update project set github_repository_id = %s where id = %s and github_repository_id is null",
-                  (caller.repository_id, project["id"]))
-    elif project["github_repository_id"] != caller.repository_id:
+def _check_repository_id(c: psycopg.Connection[Any], project: Any, caller: auth.Caller) -> None:
+    """Bind the project to GitHub's repository id on its first OIDC upload, then require that id.
+
+    One atomic statement, so two first uploads racing from different repositories cannot both pass."""
+    ok = c.execute("update project set github_repository_id = coalesce(github_repository_id, %s) "
+                   "where id = %s and (github_repository_id is null or github_repository_id = %s) returning id",
+                   (caller.repository_id, project["id"], caller.repository_id)).fetchone()
+    if ok is None:
         raise HTTPException(403, "the token's repository id does not match this project (renamed or recreated "
                                  "repository); ask the operator to re-register it")
 
@@ -259,7 +281,13 @@ def _insert(c: psycopg.Connection[DictRow], project_id: int, report: Report) -> 
         if existing is None:       # deleted between the two statements (retention); treat as a conflict
             raise HTTPException(409, "report was removed while it was being stored; retry")
         return existing, False
-    if report.outcome is not None:
-        c.execute("insert into outcome (report_id, missed, failing) values (%s, %s, %s)",
-                  (row["id"], report.outcome.missed, Jsonb(report.outcome.failing)))
+    _add_outcome(c, row["id"], report)
     return row["id"], True
+
+
+def _add_outcome(c: psycopg.Connection[DictRow], report_id: int, report: Report) -> None:
+    """Store the outcome if the report has one; the first outcome for a report is kept."""
+    if report.outcome is not None:
+        c.execute("insert into outcome (report_id, missed, failing) values (%s, %s, %s) "
+                  "on conflict (report_id) do nothing",
+                  (report_id, report.outcome.missed, Jsonb(report.outcome.failing)))

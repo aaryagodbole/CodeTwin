@@ -100,3 +100,16 @@ def test_cors_origins_ignore_spaces(monkeypatch):
 
     monkeypatch.setenv("CODETWIN_CORS_ORIGINS", "https://a.example, https://b.example ,")
     assert Settings().cors_origins == ["https://a.example", "https://b.example"]
+
+
+def test_add_project_again_keeps_it_public(database, monkeypatch):
+    from codetwin_cloud.__main__ import main
+
+    monkeypatch.setenv("DATABASE_URL", database)
+    assert main(["add-project", "acme/shop", "--public"]) == 0
+    assert main(["add-project", "acme/shop", "--token"]) == 0           # only to get a token
+    with db.connect(database) as c:
+        assert c.execute("select public from project").fetchone() == {"public": True}
+    assert main(["add-project", "acme/shop", "--private"]) == 0
+    with db.connect(database) as c:
+        assert c.execute("select public from project").fetchone() == {"public": False}

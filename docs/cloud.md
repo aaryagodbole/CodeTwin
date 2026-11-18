@@ -94,7 +94,9 @@ compares the response shapes.
    (`project.github_repository_id`); later uploads with another id get `403`. A repository that is renamed,
    transferred, or deleted and recreated under the same name cannot upload into the old project's history. To
    move a project to a new repository on purpose, the operator clears `github_repository_id`.
-6. The token is not stored or logged.
+6. The token is not stored or logged. It is checked before the report body is read for its content: a bad token
+   gets `401`, never schema errors, and if GitHub's key endpoint cannot be reached the answer is `503` (retry),
+   not `401`.
 
 Self-hosted servers can also accept a per-project token (stored hashed, shown once), for CI systems without OIDC.
 
@@ -135,6 +137,10 @@ outcome  (report_id → report primary key, missed, failing jsonb, received_at)
   stored still gets `200` with its id), 256 KB per report, no NaN or Infinity in numbers (`422`), read endpoints
   paginated (`limit` ≤ 1000).
 - **Durability:** an upload is committed before the response is sent, so `201`/`200` means the report is stored.
+- **Outcomes:** an upload of the same run, attempt and commit that now carries an `outcome` adds it to the stored
+  report (`200`, `created: false`); the first outcome stored for a report is kept.
+- **Request size:** a body over the limit is refused (`413`) while it is being read, from `Content-Length` or
+  as soon as the stream passes the limit, so it is never buffered in full.
 - **Service levels** (best effort on free tiers): upload p95 < 1 s; dashboard read p95 < 500 ms; a failed
   upload never fails the user's CI job. The Action reports a warning, because CodeTwin's decision does not
   depend on the cloud.

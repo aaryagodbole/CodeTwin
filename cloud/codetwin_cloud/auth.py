@@ -54,6 +54,9 @@ def verify_github_oidc(token: str, resolve_key: KeyResolver = github_key, audien
     try:
         claims = jwt.decode(token, resolve_key(token), algorithms=["RS256"], audience=audience, issuer=GITHUB_ISSUER,
                             leeway=60, options={"require": ["exp", "iat", "iss", "aud", "repository", "repository_id", "run_id", "sha"]})
+    except jwt.PyJWKClientConnectionError:
+        # GitHub's key endpoint is unreachable: a transient server-side problem, not a bad token, so clients retry.
+        raise AuthError(503, "cannot reach GitHub to verify the OIDC token; retry later") from None
     except (jwt.PyJWTError, jwt.PyJWKClientError) as e:
         raise AuthError(401, f"invalid GitHub OIDC token: {e}") from None
     return Caller("github-oidc", repository=str(claims["repository"]), repository_id=int(claims["repository_id"]),

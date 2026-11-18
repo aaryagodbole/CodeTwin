@@ -1,5 +1,6 @@
 """The upload format `codetwin.report/v1` (docs/cloud.md, "Report format"). Validated strictly: unknown fields are
-rejected, so nothing outside the documented, policy-approved fields (docs/data-policy.md) can be stored."""
+rejected everywhere except inside `decision.sections`, whose content is free-form per section (what each engine
+report section publishes with PUBLISH = True) and only size-limited. docs/data-policy.md says what may go there."""
 from __future__ import annotations
 
 from typing import Literal
