@@ -22,8 +22,9 @@
 
 ## Self-review (see AGENTS.md, "Self-review before opening a pull request")
 
-<!-- Tool used (Claude Code /code-review, Codex /review, Antigravity, ... or by hand).
-     What it found, what you fixed (commit ids), and what you left and why. -->
+<!-- Tool used (Claude Code /code-review, Codex /review, Antigravity, ... or by hand), and any other skills
+     or commands you used for this change (TDD, debugging, security review, ...).
+     What the review found, what you fixed (commit ids), and what you left and why. -->
 
 ## Reviews (see AGENTS.md, "Step by step for beginners")
 

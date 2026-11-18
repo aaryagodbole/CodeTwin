@@ -237,6 +237,35 @@ what the issue says, and never resolve a reviewer's conversation without a fix o
 assistant reviews someone else's pull request, it only posts comments: it does not push to that branch or
 resolve its threads, unless the code owner asks for it on that pull request.
 
+## AI coding tools: use your skills
+
+Most AI coding tools come with skills, slash commands, rules, workflows or plugins for common jobs: Claude Code
+skills and slash commands, Codex skills and prompts, Antigravity workflows and rules, Cursor rules, Copilot
+prompts. They encode a better process than an ad-hoc attempt. An AI tool working in this repository must:
+
+1. **Look first.** At the start of each task, list the skills and commands it has (for example `/help` or its
+   skill list), and read the description of any that might fit.
+2. **Use the matching one** whenever a skill exists for the job, instead of doing it by hand:
+
+   | Job | Kind of skill or command to use |
+   |---|---|
+   | Plan a change, design an interface, restructure code | planning, design or architecture skill |
+   | Write a feature or fix a bug test-first | TDD (test-driven development) skill |
+   | A failing test, a crash, wrong output, slow code | debugging or diagnosis skill |
+   | Review a change (self-review, someone's pull request) | code review skill (`/code-review`, `/review`) |
+   | Security-sensitive code (auth, uploads, secrets, workflows) | security review skill |
+   | Simplify or clean up code you wrote | simplify or refactor skill |
+   | Dashboard or VS Code UI | frontend, design or accessibility skill |
+   | Commit messages, pull request text | commit or pull-request skill |
+   | Docs, CHANGELOG, explanations | documentation skill |
+
+3. **Say which it used.** Name the skill or command in the pull request's *Self-review* section, or in the
+   issue comment for a plan, so reviewers know how the work was checked.
+4. **Rules still win.** A skill never overrides this file: the project rules below, the issue's Approach and
+   the review steps apply whatever a skill suggests. If they conflict, follow this file and say so on the issue.
+
+If a tool has no skill for a job, follow the steps in this file by hand.
+
 ## Self-review before opening a pull request
 
 Every author does this, and every AI coding tool (Claude Code, Codex, Antigravity, Copilot, Cursor or any
