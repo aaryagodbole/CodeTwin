@@ -113,6 +113,7 @@ selected 2 test files:
 | `codetwin explain` | the numbers and reasons behind the last decision |
 | `codetwin run [TEST...]` | run the last selection (or the given test files) with the project's own test runner |
 | `codetwin weakcheck` | changed functions that tests execute but do not check (extreme mutation) |
+| `codetwin gaps [--json]` | changed lines no recorded test ran (no decision stored); see `docs/output.md` `test_gaps` |
 | `codetwin review [--format markdown\|json\|sarif\|github] [--llm] [--post-github]` | review the change like a reviewer: findings at file and line (untested changed functions, abstention, blind spots, breaking contracts, affected repositories), as a PR comment, inline comments or SARIF; see `docs/review.md` |
 | `codetwin kg stats\|blast\|export` | code knowledge graph of files, symbols and tests with typed evidence edges; blast radius of a change; GraphML/JSON export; see `docs/knowledge-graph.md` |
 

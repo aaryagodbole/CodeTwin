@@ -71,14 +71,21 @@ class Engine:
         return run
 
     # ------------------------------------------------------------- analyse a change
-    def analyse(self, base: str | None = None):
+    def change(self, base: str | None = None):
+        """The recorded commit to compare with, its recorded run, and the working tree's changed lines.
+
+        Raises RuntimeError when nothing is recorded; the CLI prints it and exits with 2.
+        """
         base = base or self.store.latest_run_sha()
         if not base:
             raise RuntimeError("no recorded run yet; run `codetwin record` on a clean checkout first")
         prev = self.store.get_run(base)
         if prev is None:
             raise RuntimeError(f"no recorded run for {base[:10]}; run `codetwin record` there first")
-        diff = self.changed(base)
+        return base, prev, self.changed(base)
+
+    def analyse(self, base: str | None = None):
+        base, prev, diff = self.change(base)
         tests = sorted(set(prev.durations) | set(self.tests_now()))
         rows = features.compute(diff, prev, self.store.get_static(base), self.facts_now(), tests,
                                 self.cfg.src_root, self.is_source, self.history(), self.lang.stem)
@@ -142,11 +149,14 @@ class Engine:
                 out[f] = "no coverage recorded for this project's tests"
         return out
 
+    def report_context(self, d: Decision | None, base, prev, diff, rows, scores) -> report.Context:
+        """The one place a report context is built, so every command gives sections the same inputs."""
+        return report.Context(cfg=self.cfg, store=self.store, base=base, prev=prev, diff=diff, rows=rows,
+                              scores=scores, decision=d, is_source=self.is_source, facts_now=self.facts_now,
+                              impact=self.impact, lang=self.lang)
+
     def _with_report(self, d: Decision, base, prev, diff, rows, scores) -> Decision:
-        ctx = report.Context(cfg=self.cfg, store=self.store, base=base, prev=prev, diff=diff, rows=rows, scores=scores,
-                             decision=d, is_source=self.is_source, facts_now=self.facts_now, impact=self.impact,
-                             lang=self.lang)
-        d.extras = report.build(ctx)
+        d.extras = report.build(self.report_context(d, base, prev, diff, rows, scores))
         return d
 
     def _recalibrator(self) -> Recalibrator:
