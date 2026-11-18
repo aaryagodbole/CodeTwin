@@ -138,8 +138,8 @@ For each comment from CodeRabbit, PR-Agent or Aarya:
 3. If it is wrong or out of scope: reply with the reason and evidence (a test, a line of code, the issue text).
 4. Click *Resolve conversation* only after your fix is pushed, or after the reviewer agrees.
 
-When all fixes are pushed, run your self-review once more on the whole change (see "Self-review before opening
-a pull request"), update the *Self-review* section, then comment `@coderabbitai review` once (not after every
+When all fixes are pushed, run your self-review once more on the whole change (see "Self-review of
+your pull request"), update the *Self-review* section, then comment `@coderabbitai review` once (not after every
 small push).
 
 **9. Merge and clean up**
