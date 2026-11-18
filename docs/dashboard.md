@@ -67,7 +67,9 @@ repository owner):
 1. Sign in at [vercel.com](https://vercel.com) with GitHub. Choose **Add New → Project** and import
    `aaryagodbole/CodeTwin`.
 2. Set **Root Directory** to `dashboard`. Framework, build and output settings come from `vercel.json`; leave
-   them as detected.
+   them as detected. `vercel.json` sets `"framework": null` on purpose: the dashboard is a static export
+   (`out/`), and Vercel's Next.js preset fails on it with `NEXT_NO_ROUTES_MANIFEST`. Do not switch it back to
+   Next.js in `vercel.json` or in the project settings.
 3. Under **Settings → Git**, set the **Production Branch** to `main`. Every other branch, including `dev` and
    every pull request, gets a **preview deployment** with its own URL.
 4. Deploy. Production updates when `main` changes; `dev` and pull requests get previews.
