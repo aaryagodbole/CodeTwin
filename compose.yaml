@@ -13,7 +13,9 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-codetwin-local-only}
     volumes: [pgdata:/var/lib/postgresql/data]
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U codetwin -d codetwin"]
+      # Over TCP: the temporary server Postgres runs while it initialises listens on the socket only, so a socket
+      # check would report healthy just before the restart.
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U codetwin -d codetwin"]
       interval: 5s
       timeout: 5s
       retries: 10

@@ -46,7 +46,8 @@ Retention: without Vercel Cron, call the job daily from the host's scheduler, e.
 
 ## Operate it
 
-- Logs: `docker compose logs -f api`. One JSON line per request, never bodies or tokens.
+- Logs: `docker compose logs -f api`. One JSON line per request (except successful health probes), never bodies or
+  tokens.
 - Backups: `docker compose exec -T db pg_dump -U codetwin codetwin > backup.sql` (`-T`: no terminal, so the dump is
   not altered). Restore: `docker compose exec -T db psql -U codetwin codetwin < backup.sql`.
 - Change the database password after the first start: `docker compose exec db psql -U codetwin -c "ALTER USER codetwin

@@ -243,11 +243,11 @@ jobs:
           git init -q && git add -A && git -c user.email=ci@example.com -c user.name=ci commit -qm example
           codetwin init && codetwin record
           sed -i 's/return a \* b/return a * b * 1/' src/shop/calc.py
-          codetwin select --json > decision.json
+          codetwin select --json > "$RUNNER_TEMP/decision.json"   # outside the repo: not a changed file itself
           # As a self-hoster runs it: outside Actions (source "cli", head from this repository's git), not with the
           # CodeTwin workflow's own GITHUB_* values.
           env -u GITHUB_ACTIONS -u GITHUB_SHA -u GITHUB_REF -u GITHUB_EVENT_PATH -u GITHUB_RUN_ID -u GITHUB_REPOSITORY \
-            codetwin push --decision decision.json --repository acme/shop --server http://localhost:8080 --token "$token"
+            codetwin push --decision "$RUNNER_TEMP/decision.json" --repository acme/shop --server http://localhost:8080 --token "$token"
           curl -fsS http://127.0.0.1:8080/api/v1/projects/acme/shop/decisions \
             | python -c "import json, sys; rows = json.load(sys.stdin); assert len(rows) == 1, rows; print(rows[0]['decision'])"
           curl -fsS http://127.0.0.1:8080/api/v1/projects/acme/shop/decisions/1 | python -c "import json, subprocess, sys; d = json.load(sys.stdin); head = subprocess.run(['git', 'rev-parse', 'HEAD'], capture_output=True, text=True, check=True).stdout.strip(); assert d['run']['source'] == 'cli' and d['commit']['head'] == head, d"
