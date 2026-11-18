@@ -13,6 +13,8 @@ All notable changes to this project are documented here. The format follows
   against the target, skeleton, empty and error states. New pages: interactive dependency graph (search, hover
   highlight, details panel), repository analysis (hub files, files without a test, unresolved links) and a decision
   detail page; plain-language help tips throughout. Reads the same API; no engine change.
+- Cloud design: ADR 0003 (a cloud plane that receives decision reports, never code), `docs/cloud.md`
+  (report format, API, OIDC uploads, schema, environments, operations) and `docs/data-policy.md`
 - Hosted dashboard: a demo mode (`npm run dev:demo`, `build:demo`) reads a snapshot of the API written by
   `scripts/demo_snapshot.py` from a real engine run on `examples/python`; Vercel config (`dashboard/vercel.json`);
   CI job `dashboard-demo` checks the deployment build on every pull request; guide in `docs/dashboard.md`

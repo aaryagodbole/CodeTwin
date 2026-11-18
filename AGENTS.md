@@ -117,7 +117,12 @@ command at the very start of the comment:
 - If its comment says it failed (for example a quota or key error), wait a few minutes and try once more, then
   tell Aarya. Don't keep re-posting the command.
 
-**8. Answer every review comment**
+**8. Answer every review comment (you, the author, do this yourself)**
+
+The review comments on your pull request are yours to fix, answer and resolve. Reviewers (Aarya, CodeRabbit,
+PR-Agent and AI assistants) only comment; they do not push to your branch or resolve your threads. That is how
+you learn the codebase, so don't wait for someone else to fix it. If you are stuck on a comment, reply in that
+thread with what you tried and ask.
 
 For each comment from CodeRabbit, PR-Agent or Aarya:
 
@@ -205,7 +210,8 @@ spec. Follow these steps in order.
      `/improve` for code suggestions, `/describe` for a summary or `/ask "..."` for a question; comment again
      after you push fixes. Rules: `.pr_agent.toml`. Answer its comments like CodeRabbit's.
    - **Code owner.** `.github/CODEOWNERS` requests Aarya automatically. Don't merge your own pull request.
-8. **Resolve every review comment**, from CodeRabbit and the code owner. For each one, either:
+8. **Resolve every review comment yourself**, from CodeRabbit, PR-Agent and the code owner. The author of the pull
+   request fixes and resolves; reviewers only comment. For each one, either:
    - fix it, push, and reply with what you changed (commit id), or
    - explain why not (out of scope, conflicts with the issue, a false alarm), with evidence.
 
@@ -214,7 +220,9 @@ spec. Follow these steps in order.
 9. **After merging**, set the Notion card to Done and comment on any issue that was waiting for yours.
 
 AI assistants follow the same steps. In particular: post the step 2 plan on the issue before writing code beyond
-what the issue says, and never resolve a reviewer's conversation without a fix or an agreed reason.
+what the issue says, and never resolve a reviewer's conversation without a fix or an agreed reason. When an AI
+assistant reviews someone else's pull request, it only posts comments: it does not push to that branch or
+resolve its threads, unless the code owner asks for it on that pull request.
 
 ## Rules specific to this project
 
