@@ -69,8 +69,8 @@ scripts/check.sh                                       # must pass; fix every er
 
 Add a line to `CHANGELOG.md` under *Unreleased*, and update the docs the issue names.
 
-Then **review your own change** before anyone else does: see "Self-review before opening a pull request" below.
-Fix what it finds, run `scripts/check.sh` again, and repeat until the review finds nothing new.
+Your own review comes right after you open the pull request (step 5) and before you ask anyone to review it
+(step 7): see "Self-review of your pull request" below.
 
 **5. Open the pull request**
 
@@ -95,8 +95,9 @@ unless you are still working; drafts are not reviewed.
 
 1. Optional, any time: ask PR-Agent (see below).
 2. When checks are green: comment `@coderabbitai full review`. Wait for its review (a few minutes).
-3. The code owner (Aarya) is requested automatically and runs the merge review (see "Merge review" in workflow
-   step 7). Its findings arrive as comments on your lines; answer them in step 8 like any other.
+3. The code owner (Aarya) is requested automatically. When the other reviews are answered, Aarya runs the merge
+   review (see "Merge review" in workflow step 7) as the last step before merging. Its findings arrive as
+   comments on your lines; answer them in step 8 like any other.
 
 **PR-Agent: the free AI reviewer you can use as often as you like**
 
@@ -203,8 +204,8 @@ spec. Follow these steps in order.
    messages. Follow the rules below (no look-ahead, unknowns reported, extension points, output contract).
 5. **Test what the issue lists**, plus one test for each extra case you added. Try the feature by hand as the
    issue describes. Run `scripts/check.sh` until it passes. Update the CHANGELOG and docs named in the issue.
-   Then do the **self-review** (section "Self-review before opening a pull request" below) and fix what it
-   finds before opening the pull request.
+   Right after opening the pull request (step 6), and before asking for reviews (step 7), do the
+   **self-review** (section "Self-review of your pull request" below) and fix what it finds.
 6. **Open the pull request into `dev`.** Fill in the template:
    - write `Closes #<issue>` in the body
    - list anything you did differently from the issue, and why, with a link to the issue comment where it was
@@ -225,8 +226,11 @@ spec. Follow these steps in order.
      number>` (Claude Code) on the pull request's **latest commit**, even when CodeRabbit and PR-Agent found
      nothing; `--comment` posts each finding on the lines it is about. The reviewer reads the linked issue first,
      so a problem in the issue's Approach is raised on the issue, not blamed on the author. The pull request is
-     merged only when every finding is fixed or answered, every other review comment is resolved, CI is green,
-     and no commit was pushed after that review (otherwise it runs again).
+     merged only when every finding is fixed or answered, every other review comment is resolved and CI is
+     green. If fixes were pushed after the review, it runs once more; when that run finds nothing new (only
+     findings already answered), the pull request is merged. Merging `dev` into the branch without conflicts
+     does not need a new review. When the code owner is the author, the code owner still runs the merge review
+     and merges with the admin bypass after it is clean.
 8. **Resolve every review comment yourself**, from CodeRabbit, PR-Agent and the code owner. The author of the pull
    request fixes and resolves; reviewers only comment. For each one, either:
    - fix it, push, and reply with what you changed (commit id), or
@@ -271,20 +275,21 @@ prompts. They encode a better process than an ad-hoc attempt. An AI tool working
 
 If a tool has no skill for a job, follow the steps in this file by hand.
 
-## Self-review before opening a pull request
+## Self-review of your pull request
 
 Every author does this, and every AI coding tool (Claude Code, Codex, Antigravity, Copilot, Cursor or any
-other) must do it at two moments: when the pull request is opened, before anyone is asked to review it (for
-Claude Code right after opening, see the table), and again before it asks for the final
+other) must do it at two moments: right after the pull request is opened, before anyone is asked to review it,
+and again before it asks for the final
 review after fixing review comments (step 8). Not on every small push. A pull request without a self-review is
 not ready for review.
 
-**1. Run a full review of your whole change** against the latest `dev` (`git fetch origin`, then review
+**1. Run a full review of your whole change** against the latest `dev` (`git fetch origin && git merge
+origin/dev` first, so the review sees what CI and the merge will see; then review
 `git diff origin/dev...HEAD`, not only the last commit):
 
 | Tool | How |
 |---|---|
-| Claude Code | open the pull request first (step 5), then `/code-review <pull request number>` before you ask anyone for a review. Plain `/code-review` reviews only unpushed work, so always give the number |
+| Claude Code | `/code-review <pull request number>`. Plain `/code-review` reviews only unpushed work, so always give the number |
 | Codex | `/review`, against the base branch `dev` |
 | Any other tool or agent (Antigravity, Copilot, Cursor, ...) | ask it to review `git diff origin/dev...HEAD` using the checklist below, and to list each problem with file, line and a concrete failing input |
 | No AI tool | go through the checklist below yourself, file by file |
@@ -325,7 +330,8 @@ replace it.
 - **No hard-coded languages or repositories.** CodeTwin must work on any repository in any language. Shared code
   has no special cases for one language, file name, extension, test runner or repository: language facts belong
   in `src/codetwin/lang/specs/` or `.codetwin.toml`, runners are detected, and the dashboard treats every file the
-  same way.
+  same way. Existing code that breaks this is fixed in its own issue (#71); in other pull requests, flag only
+  new special cases.
 - **Unknown is not "no dependency".** Never drop unresolved links (dynamic calls, unparsed files, new modules);
   report them in `Impact.unknowns` / `Decision.reasons`.
 - **Calibration semantics are fixed by the paper.** `crc_threshold` returns `-1.0` when no threshold is feasible,

@@ -15,7 +15,7 @@
 * Step by step, from issue to merge: [AGENTS.md → Workflow](AGENTS.md#workflow-from-issue-to-merged-pull-request).
   In short: follow the issue's Approach, and suggest any change or addition **on the issue first**, with a reason.
   When you open the pull request, review your own change with your AI tool (Claude Code `/code-review <number>`,
-  Codex `/review`, or the checklist in [AGENTS.md → Self-review](AGENTS.md#self-review-before-opening-a-pull-request))
+  Codex `/review`, or the checklist in [AGENTS.md → Self-review](AGENTS.md#self-review-of-your-pull-request))
   and report it in the template's Self-review section. Then get a CodeRabbit review (comment
   `@coderabbitai full review`) and the code owner's review, which ends with the merge review (`/code-review` on
   the latest commit), and fix or answer every comment before merging. For more AI review between CodeRabbit's

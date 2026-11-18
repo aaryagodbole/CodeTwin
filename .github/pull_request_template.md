@@ -20,7 +20,7 @@
 <!-- Anything done differently from, or in addition to, the issue's Approach, and why.
      Link the issue comment where it was agreed. Write "none" if you followed the issue exactly. -->
 
-## Self-review (see AGENTS.md, "Self-review before opening a pull request")
+## Self-review (see AGENTS.md, "Self-review of your pull request")
 
 <!-- Tool used (Claude Code /code-review, Codex /review, Antigravity, ... or by hand), and any other skills
      or commands you used for this change (TDD, debugging, security review, ...).
@@ -37,4 +37,4 @@
 
 ## Before merge (code owner)
 
-- [ ] Merge review: `/code-review --comment` on the latest commit; every finding fixed or answered
+- [ ] Merge review: `/code-review --comment <pull request number>` on the latest commit; every finding fixed or answered
