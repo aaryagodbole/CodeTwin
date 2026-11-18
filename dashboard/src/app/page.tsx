@@ -67,7 +67,8 @@ export default function Overview() {
         </Card>
         <div className="grid gap-4 sm:grid-cols-2 lg:col-span-2">
           <Stat label="Observed miss rate" value={calibration.error ? "error" : pct(rate)}
-            hint={calibration.error ? "could not load calibration" : `target ${pct(s.alpha)} · level ${pct(s.alpha_t)}`} icon={ShieldCheck}>
+            hint={calibration.error ? "could not load calibration"
+              : `target ${pct(s.alpha)} · level ${pct(s.alpha_t)} · calibrated on ${s.calibration_size} labelled changes`} icon={ShieldCheck}>
             {calibration.error ? <p className="text-xs text-bad-ink">{String(calibration.error.message ?? calibration.error)}</p> : <Sparkline values={observed} />}
           </Stat>
           <Stat label="Decisions" value={s.decisions} hint={`${s.labelled_decisions} with known outcome`} icon={Database}>

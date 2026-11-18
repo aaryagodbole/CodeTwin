@@ -132,3 +132,15 @@ def test_decision_detail_and_flaky_and_kg(toy_repo: Path) -> None:
     kg_updated = c.get("/api/kg").json()
     assert kg_updated["stats"]["nodes"] > kg["stats"]["nodes"]
 
+
+
+def test_map_edges_carry_the_detail_of_unresolved_links(toy_repo: Path) -> None:
+    """The dashboard says what could not be resolved, so /api/map keeps the edge detail (e.g. the dynamic calls)."""
+    (toy_repo / "src/shop/dyn.py").write_text("def call(obj, name):\n    return getattr(obj, name)()\n")
+    main(["-C", str(toy_repo), "init"])
+    with Engine(toy_repo) as eng:
+        eng.record()
+    edges = TestClient(create_app(toy_repo)).get("/api/map").json()["edges"]
+    unresolved = [e for e in edges if e["type"] == "unresolved"]
+    assert unresolved, "test setup: a dynamic call must give an unresolved link"
+    assert all(e.get("detail") for e in unresolved)

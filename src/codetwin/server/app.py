@@ -176,7 +176,10 @@ def create_app(root: str | Path = ".", static_dir: str | Path | None = None) -> 
             key = (u, v, data["type"])
             if key not in seen:
                 seen.add(key)
-                edges.append({"source": u, "target": v, "type": data["type"]})
+                edge = {"source": u, "target": v, "type": data["type"]}
+                if data.get("detail"):          # e.g. the dynamic calls behind an unresolved link
+                    edge["detail"] = data["detail"]
+                edges.append(edge)
         return {"nodes": nodes, "edges": edges, "recorded_commit": base}
 
     @app.get("/api/graph")

@@ -115,7 +115,7 @@ export default function SystemMap() {
                         </li>
                       ))}
                     </ul>
-                    {node.kind !== "test" && (
+                    {(node.kind === "source" || node.kind === "target") && (
                       <button onClick={() => onOpen(node.path)} className="w-full rounded-lg bg-accent px-3 py-2 text-xs font-medium text-white hover:opacity-90">
                         See what a change here affects
                       </button>

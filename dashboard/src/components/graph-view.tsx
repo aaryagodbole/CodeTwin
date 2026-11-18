@@ -1,7 +1,7 @@
 "use client";
 
 // Evidence-typed graph, drawn with Cytoscape (same styles as the VS Code impact panel).
-import type { Core, ElementDefinition } from "cytoscape";
+import type { Core, ElementDefinition, StylesheetJson } from "cytoscape";
 import { useEffect, useRef, useState } from "react";
 import type { Graph } from "@/lib/api";
 
@@ -25,6 +25,7 @@ export function GraphView({ graph, root, onOpen, onSelect, search, selected }: {
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const cyRef = useRef<Core | undefined>(undefined);
+  const searchable = search !== undefined;   // the dependency graph has a search box; the impact view has none
   // Bumped when a new Cytoscape instance is ready, so the search effect re-applies to it (setup is async).
   const [ready, setReady] = useState(0);
   useEffect(() => {
@@ -36,8 +37,7 @@ export function GraphView({ graph, root, onOpen, onSelect, search, selected }: {
         ...graph.nodes.map((n) => ({ data: { ...n } })),
         ...graph.edges.map((e, i) => ({ data: { id: `e${i}`, ...e } })),
       ];
-      const fg = getComputedStyle(document.body).color;
-      const ring = getComputedStyle(document.documentElement).getPropertyValue("--card").trim() || "#ffffff";
+      const [fg, ring] = themeColours();
       const degree = new Map<string, number>();
       for (const e of graph.edges) {
         degree.set(e.source, (degree.get(e.source) ?? 0) + 1);
@@ -46,7 +46,9 @@ export function GraphView({ graph, root, onOpen, onSelect, search, selected }: {
       const sorted = [...degree.values()].sort((a, b) => a - b);
       // In a big graph only the best-connected nodes keep a permanent label; others show it on hover or search.
       // With no links at all (every link type switched off) no node gets one: Infinity labels nothing.
-      const labelFrom = graph.nodes.length > 25 ? (sorted.length ? sorted[Math.floor(sorted.length * 0.8)] : Infinity) : 0;
+      // Only where a search can bring hidden labels back (the dependency graph); the impact view labels every node.
+      const labelFrom = searchable && graph.nodes.length > 25
+        ? (sorted.length ? sorted[Math.floor(sorted.length * 0.8)] : Infinity) : 0;
       elements.forEach((el) => {
         const d = degree.get(String(el.data.id)) ?? 0;
         el.data.deg = d;
@@ -59,22 +61,7 @@ export function GraphView({ graph, root, onOpen, onSelect, search, selected }: {
         layout: root
           ? { name: "breadthfirst", directed: true, roots: [root], spacingFactor: 1.2 }
           : { name: "cose", animate: false, nodeRepulsion: () => 60000, idealEdgeLength: () => 110, nodeOverlap: 24, gravity: 0.4, numIter: 1500 },
-        style: [
-          { selector: "node", style: { label: "data(label)", "font-size": 10, color: fg, "text-valign": "bottom", "text-margin-y": 4, width: "data(size)", height: "data(size)", "text-opacity": 0, "min-zoomed-font-size": 6, "background-color": "#8b90a8", "border-width": 2, "border-color": ring, "border-opacity": 0.6 } },
-          { selector: "node[kind = 'target']", style: { "background-color": "#f5b324", width: 24, height: 24 } },
-          { selector: "node[kind = 'test']", style: { "background-color": "#2fbf71", shape: "round-rectangle" } },
-          { selector: "node[kind = 'unknown']", style: { "background-color": "#6e6e6e", shape: "diamond" } },
-          { selector: "node[showLabel = 1], node:selected, node.lit, node.hit", style: { "text-opacity": 1 } },
-          { selector: "edge", style: { opacity: 0.55 } },
-          { selector: "node:selected", style: { "border-width": 3, "border-color": "#7c7cff" } },
-          { selector: "edge", style: { width: 1.5, "curve-style": "bezier", "target-arrow-shape": "triangle", "arrow-scale": 0.7 } },
-          ...Object.entries(EDGE_STYLES).map(([type, s]) => ({
-            selector: `edge[type = '${type}']`,
-            style: { "line-color": s.color, "target-arrow-color": s.color, "line-style": s.style },
-          })),
-          // Last, so they win over the base edge opacity. Hover and search fade separately, so one never clears the other.
-          { selector: ".hover-faded, .search-faded", style: { opacity: 0.1 } },
-        ],
+        style: graphStyle(fg, ring),
       });
       cyRef.current = cy;
       setReady((n) => n + 1);
@@ -95,7 +82,7 @@ export function GraphView({ graph, root, onOpen, onSelect, search, selected }: {
       cy?.destroy();
       cyRef.current = undefined;
     };
-  }, [graph, root, onOpen, onSelect]);
+  }, [graph, root, onOpen, onSelect, searchable]);
   useEffect(() => {
     const cy = cyRef.current;
     if (!cy) return;
@@ -119,9 +106,8 @@ export function GraphView({ graph, root, onOpen, onSelect, search, selected }: {
     const restyle = () => {
       const cy = cyRef.current;
       if (!cy) return;
-      const fg = getComputedStyle(document.body).color;
-      const ring = getComputedStyle(document.documentElement).getPropertyValue("--card").trim() || "#ffffff";
-      cy.style().selector("node").style({ color: fg, "border-color": ring }).update();
+      const [fg, ring] = themeColours();
+      cy.style(graphStyle(fg, ring));
     };
     const obs = new MutationObserver(restyle);
     obs.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
@@ -133,6 +119,33 @@ export function GraphView({ graph, root, onOpen, onSelect, search, selected }: {
     };
   }, [ready]);
   return <div ref={ref} className="h-[560px] w-full rounded-xl border border-border bg-card-2/40" />;
+}
+
+/** Colours the graph takes from the current theme: label text and the ring around nodes. */
+function themeColours(): [string, string] {
+  const fg = getComputedStyle(document.body).color;
+  const ring = getComputedStyle(document.documentElement).getPropertyValue("--card").trim() || "#ffffff";
+  return [fg, ring];
+}
+
+/** The whole stylesheet; replaced as a unit on a theme change, so rule order (and :selected) is kept. */
+function graphStyle(fg: string, ring: string): StylesheetJson {
+  return [
+    { selector: "node", style: { label: "data(label)", "font-size": 10, color: fg, "text-valign": "bottom", "text-margin-y": 4, width: "data(size)", height: "data(size)", "text-opacity": 0, "min-zoomed-font-size": 6, "background-color": "#8b90a8", "border-width": 2, "border-color": ring, "border-opacity": 0.6 } },
+    { selector: "node[kind = 'target']", style: { "background-color": "#f5b324", width: 24, height: 24 } },
+    { selector: "node[kind = 'test']", style: { "background-color": "#2fbf71", shape: "round-rectangle" } },
+    { selector: "node[kind = 'unknown']", style: { "background-color": "#6e6e6e", shape: "diamond" } },
+    { selector: "node[showLabel = 1], node:selected, node.lit, node.hit", style: { "text-opacity": 1 } },
+    { selector: "edge", style: { opacity: 0.55 } },
+    { selector: "node:selected", style: { "border-width": 3, "border-color": "#7c7cff" } },
+    { selector: "edge", style: { width: 1.5, "curve-style": "bezier", "target-arrow-shape": "triangle", "arrow-scale": 0.7 } },
+    ...Object.entries(EDGE_STYLES).map(([type, s]) => ({
+      selector: `edge[type = '${type}']`,
+      style: { "line-color": s.color, "target-arrow-color": s.color, "line-style": s.style },
+    })),
+    // Last, so they win over the base edge opacity. Hover and search fade separately, so one never clears the other.
+    { selector: ".hover-faded, .search-faded", style: { opacity: 0.1 } },
+  ] as StylesheetJson;
 }
 
 export function Legend() {

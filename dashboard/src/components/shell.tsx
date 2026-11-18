@@ -3,7 +3,7 @@
 import { Activity, FolderTree, GitBranch, LayoutDashboard, ListChecks, Moon, Network, Sun } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useSyncExternalStore } from "react";
+import { useSyncExternalStore } from "react";
 
 const links = [
   { href: "/", label: "Overview", icon: LayoutDashboard },
@@ -33,17 +33,7 @@ const isDarkNow = () => {
 
 function ThemeToggle() {
   const dark = useSyncExternalStore(subscribe, isDarkNow, () => false);
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem("codetwin-theme");
-      if (saved === "light" || saved === "dark") {      // same rule as the pre-paint script in layout.tsx
-        document.documentElement.dataset.theme = saved;
-        listeners.forEach((cb) => cb());
-      }
-    } catch {
-      // storage can be blocked; the system preference still applies
-    }
-  }, []);
+  // A saved theme is applied before the first paint by the script in layout.tsx; the store reads it from there.
   const toggle = () => {
     const next = dark ? "light" : "dark";
     document.documentElement.dataset.theme = next;

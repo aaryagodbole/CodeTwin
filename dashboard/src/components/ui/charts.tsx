@@ -1,9 +1,14 @@
 // Small hand-drawn SVG charts (no extra dependency): risk gauge, sparkline, bar and donut.
 
+/** Upper end of a risk scale: at least `min`, growing in steps of 10 points to fit both the risk and the target,
+ *  so neither is pinned to the end. Shared by the gauge and the bar. */
+export function riskScale(value: number | null | undefined, target: number | null | undefined, min = 0.5): number {
+  return Math.min(1, Math.max(min, Math.ceil(Math.max(value ?? 0, target ?? 0) * 10 + 0.0001) / 10));
+}
+
 /** Semicircle gauge: the arc fills to `value`, a tick marks `target`. Both are fractions (0..1). */
 export function RiskGauge({ value, target, max: minMax = 0.5 }: { value: number | null; target: number | null; max?: number }) {
-  // The scale grows (in steps of 10 points) to fit both the risk and the target, so neither is pinned to the end.
-  const max = Math.min(1, Math.max(minMax, Math.ceil(Math.max(value ?? 0, target ?? 0) * 10 + 0.0001) / 10));
+  const max = riskScale(value, target, minMax);
   const r = 80;
   const cx = 100;
   const cy = 100;
@@ -78,8 +83,7 @@ export function Sparkline({ values, color = "var(--accent)", height = 36 }: { va
 
 /** Horizontal bar for a fraction of a scale, with an optional target marker. */
 export function RiskBar({ value, target, max: minMax = 0.5 }: { value: number | null; target?: number | null; max?: number }) {
-  // Same growing scale as the gauge, so a high risk and a high target never both pin to the end.
-  const max = Math.min(1, Math.max(minMax, Math.ceil(Math.max(value ?? 0, target ?? 0) * 10 + 0.0001) / 10));
+  const max = riskScale(value, target, minMax);
   const targetText = target == null ? null : <span className="whitespace-nowrap text-xs text-muted">target {fmtPct(target)}</span>;
   if (value == null) return <span className="text-muted">– {targetText && <> · {targetText}</>}</span>;
   const pct = Math.max(2, Math.min(100, (value / max) * 100));
