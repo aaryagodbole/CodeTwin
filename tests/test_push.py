@@ -2,6 +2,7 @@
 import json
 import threading
 from http.server import BaseHTTPRequestHandler, HTTPServer
+from pathlib import Path
 
 import pytest
 
@@ -10,7 +11,7 @@ from codetwin.cli import main
 from codetwin.engine import Engine
 
 
-def _decide(toy_repo, capsys) -> dict:
+def _decide(toy_repo: Path, capsys: pytest.CaptureFixture[str]) -> dict:
     main(["-C", str(toy_repo), "init"])
     main(["-C", str(toy_repo), "record"])
     p = toy_repo / "src/shop/price.py"
@@ -20,7 +21,7 @@ def _decide(toy_repo, capsys) -> dict:
     return json.loads(capsys.readouterr().out)
 
 
-def test_report_holds_ids_and_numbers_never_code(toy_repo, capsys):
+def test_report_holds_ids_and_numbers_never_code(toy_repo: Path, capsys: pytest.CaptureFixture[str]) -> None:
     decision = _decide(toy_repo, capsys)
     with Engine(toy_repo) as eng:
         body = push.build_report(eng, decision, env={}, repository="acme/shop")
@@ -37,7 +38,9 @@ def test_report_holds_ids_and_numbers_never_code(toy_repo, capsys):
                 assert line.strip() not in text, line
 
 
-def test_github_actions_identity_comes_from_the_environment(toy_repo, capsys, tmp_path):
+def test_github_actions_identity_comes_from_the_environment(
+    toy_repo: Path, capsys: pytest.CaptureFixture[str], tmp_path: Path
+) -> None:
     decision = _decide(toy_repo, capsys)
     event = tmp_path / "event.json"
     event.write_text(json.dumps({"pull_request": {"number": 63}}))
@@ -49,7 +52,7 @@ def test_github_actions_identity_comes_from_the_environment(toy_repo, capsys, tm
     assert body["commit"]["head"] == "c" * 40 and body["commit"]["pull_request"] == 63
 
 
-def test_dry_run_prints_and_sends_nothing(toy_repo, capsys, tmp_path):
+def test_dry_run_prints_and_sends_nothing(toy_repo: Path, capsys: pytest.CaptureFixture[str], tmp_path: Path) -> None:
     decision = _decide(toy_repo, capsys)
     f = tmp_path / "d.json"
     f.write_text(json.dumps(decision))
@@ -57,7 +60,7 @@ def test_dry_run_prints_and_sends_nothing(toy_repo, capsys, tmp_path):
     assert json.loads(capsys.readouterr().out)["decision"]["decision"] == decision["decision"]
 
 
-def test_https_only_except_localhost():
+def test_https_only_except_localhost() -> None:
     assert push.check_server("https://api.example.com/") == "https://api.example.com"
     assert push.check_server("http://localhost:8080") == "http://localhost:8080"
     for bad in ["http://api.example.com", "ftp://x", "file:///etc/passwd"]:
@@ -92,7 +95,7 @@ class _Server:
         self.httpd.shutdown()
 
 
-def test_send_posts_json_with_the_token():
+def test_send_posts_json_with_the_token() -> None:
     srv = _Server()
     try:
         res = push.send(srv.url, {"schema": "codetwin.report/v1"}, "ctp_abc")
@@ -103,7 +106,9 @@ def test_send_posts_json_with_the_token():
     assert headers["Authorization"] == "Bearer ctp_abc" and json.loads(body) == {"schema": "codetwin.report/v1"}
 
 
-def test_refused_upload_fails_unless_best_effort(toy_repo, capsys, tmp_path):
+def test_refused_upload_fails_unless_best_effort(
+    toy_repo: Path, capsys: pytest.CaptureFixture[str], tmp_path: Path
+) -> None:
     decision = _decide(toy_repo, capsys)
     f = tmp_path / "d.json"
     f.write_text(json.dumps(decision))
@@ -118,7 +123,7 @@ def test_refused_upload_fails_unless_best_effort(toy_repo, capsys, tmp_path):
     assert "upload refused (403)" in capsys.readouterr().err
 
 
-def test_github_oidc_token_is_requested_with_our_audience():
+def test_github_oidc_token_is_requested_with_our_audience() -> None:
     srv = _Server(status=200, body=b'{"value": "jwt.from.github"}')
     try:
         tok = push.github_oidc_token({"ACTIONS_ID_TOKEN_REQUEST_URL": f"{srv.url}/token?x=1",
@@ -132,7 +137,9 @@ def test_github_oidc_token_is_requested_with_our_audience():
         push.github_oidc_token({})
 
 
-def test_cli_run_id_follows_the_decision_not_the_local_database(toy_repo, capsys):
+def test_cli_run_id_follows_the_decision_not_the_local_database(
+    toy_repo: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
     """Two clones both have decision 1; different decisions must not share a run id (the cloud dedups on it)."""
     decision = _decide(toy_repo, capsys)
     other = {**decision, "decision": "abstain" if decision["decision"] == "proceed" else "proceed"}
@@ -143,7 +150,7 @@ def test_cli_run_id_follows_the_decision_not_the_local_database(toy_repo, capsys
     assert a == again and a != b
 
 
-def test_scores_come_only_from_the_same_stored_decision(toy_repo, capsys):
+def test_scores_come_only_from_the_same_stored_decision(toy_repo: Path, capsys: pytest.CaptureFixture[str]) -> None:
     """A different decision that selects the same tests must not get the stored decision's scores and alpha."""
     decision = _decide(toy_repo, capsys)
     other = {**decision, "mode": "fallback"}
@@ -154,7 +161,9 @@ def test_scores_come_only_from_the_same_stored_decision(toy_repo, capsys):
     assert diff["alpha"] is None and all(t["score"] is None for t in diff["tests"])
 
 
-def test_malformed_decision_json_is_a_push_error(toy_repo, capsys, tmp_path):
+def test_malformed_decision_json_is_a_push_error(
+    toy_repo: Path, capsys: pytest.CaptureFixture[str], tmp_path: Path
+) -> None:
     decision = _decide(toy_repo, capsys)
     for bad in [{**decision, "selected": None}, {**decision, "residual_risk": "high"}, [1, 2]]:
         f = tmp_path / "bad.json"
@@ -166,7 +175,7 @@ def test_malformed_decision_json_is_a_push_error(toy_repo, capsys, tmp_path):
 
 
 @pytest.mark.parametrize("body", [b"null", b"[]", b'{"id": "x", "created": true}'])
-def test_unexpected_upload_answers_are_push_errors(body):
+def test_unexpected_upload_answers_are_push_errors(body: bytes) -> None:
     srv = _Server(status=200, body=body)
     try:
         with pytest.raises(push.PushError):
@@ -175,7 +184,7 @@ def test_unexpected_upload_answers_are_push_errors(body):
         srv.close()
 
 
-def test_a_truncated_answer_is_a_push_error():
+def test_a_truncated_answer_is_a_push_error() -> None:
     """The server promises more bytes than it sends (http.client.IncompleteRead is not an OSError)."""
     class Short(BaseHTTPRequestHandler):
         def do_POST(self):
@@ -197,7 +206,7 @@ def test_a_truncated_answer_is_a_push_error():
         httpd.server_close()
 
 
-def test_redirects_are_not_followed_with_the_token():
+def test_redirects_are_not_followed_with_the_token() -> None:
     """A redirect could send the bearer token over plain HTTP or to another origin."""
     target = _Server()
     redirect = _Server(status=302, body=b"")
