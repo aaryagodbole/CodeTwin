@@ -13,7 +13,8 @@ All notable changes to this project are documented here. The format follows
 - `codetwin learn` stores its label in one transaction, so a run that stops part way can simply be repeated.
 - A migration script that fails part way is rolled back.
 - `codetwin review` places inline comments only on lines of the pull request's own diff (its base commit from the
-  workflow event), not of the diff against an older recorded commit.
+  workflow event), not of the diff against an older recorded commit. When that commit is not in the checkout (a
+  shallow clone), it falls back to the recorded diff.
 - `/api/decisions` returns empty lists, not null, for a decision without selected tests or reasons.
 
 ## [0.2.0] - 2026-11-18

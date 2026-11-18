@@ -10,8 +10,12 @@ import json
 import re
 import sys
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from ._util import engine, print_json
+
+if TYPE_CHECKING:
+    from ..engine import Engine
 
 NAME, HELP, ORDER = "review", "review the change like a reviewer: findings at file/line, PR comment, SARIF", 32
 FORMATS = ("markdown", "json", "sarif", "github")
@@ -65,11 +69,11 @@ def check_decision_base(decision: dict, base: str | None, user: str) -> dict:
     made_for = saved.get("base")
     if isinstance(made_for, str) and made_for and base and made_for != base:
         raise SystemExit(f"--decision was computed against {made_for[:12]}, but {user} is {base[:12]}; "
-                         f"run `codetwin select --json` again or pass --base {made_for[:12]}")
+                         f"run `codetwin select --json` again or pass --base {made_for}")
     return saved
 
 
-def check_decision_files(eng, saved: dict, diff: dict) -> None:  # noqa: ANN001
+def check_decision_files(eng: Engine, saved: dict, diff: dict) -> None:
     """Refuse a decision whose changed source files differ from `diff`, the change against its base now."""
     if isinstance(saved.get("files"), dict):
         now = {f: len(d.new) for f, d in diff.items() if eng.is_source(f)}

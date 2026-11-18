@@ -65,7 +65,8 @@ class Store:
 
     # ------------------------------------------------------------- connection, transactions, migrations
     def transaction(self) -> AbstractContextManager[None]:
-        """Group several writes into one transaction (nested blocks join the outer one); rolled back on error."""
+        """Group several writes into one transaction; nested blocks join the outer one, with no rollback of
+        their own. An error rolls back everything only when it reaches the outermost block."""
         return self._tx()
 
     @contextmanager

@@ -111,4 +111,11 @@ runs:
       shell: bash
       # The tests of this decision, from the file select wrote: a change that only edits tests is not stored, so
       # "the last stored decision" would be an older one. The project's own test runner (pytest, jest, go test, ...).
-      run: codetwin run --decision codetwin-decision.json
+      # A `package` pinned to a release before 0.2.0 has no `run --decision`: fall back to the old behaviour.
+      run: |
+        if codetwin run --help | grep -q -- --decision; then
+          codetwin run --decision codetwin-decision.json
+        else
+          echo "::warning::this CodeTwin version has no 'run --decision'; running the last stored decision"
+          codetwin run
+        fi
