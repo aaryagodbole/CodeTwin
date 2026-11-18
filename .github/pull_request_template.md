@@ -26,5 +26,6 @@
 - [ ] Checks are green
 - [ ] Commented `@coderabbitai full review` once ready (and `@coderabbitai review` once after pushing fixes)
 - [ ] Code owner review requested (automatic via CODEOWNERS)
+- [ ] `/code-review` findings fixed or answered (the code owner runs it before merging)
 - [ ] Every review comment fixed or answered with a reason; conversations resolved only when done
 - [ ] Screenshot added (VS Code or dashboard changes)

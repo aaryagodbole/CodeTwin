@@ -91,7 +91,9 @@ unless you are still working; drafts are not reviewed.
 
 1. Optional, any time: ask PR-Agent (see below).
 2. When checks are green: comment `@coderabbitai full review`. Wait for its review (a few minutes).
-3. The code owner (Aarya) is requested automatically.
+3. The code owner (Aarya) is requested automatically, and runs a full code review (`/code-review` in Claude
+   Code) on every pull request before it can be merged. Its findings arrive as review comments; answer them in
+   step 8 like any other.
 
 **PR-Agent: the free AI reviewer you can use as often as you like**
 
@@ -136,7 +138,8 @@ When all fixes are pushed, comment `@coderabbitai review` once (not after every 
 
 **9. Merge and clean up**
 
-Aarya merges (squash). Never merge your own pull request. After the merge:
+Aarya merges (squash) only after the `/code-review` findings are fixed or answered, the other review comments
+are resolved and CI is green. Never merge your own pull request. After the merge:
 
 ```bash
 git checkout dev && git pull
@@ -210,13 +213,18 @@ spec. Follow these steps in order.
      `/improve` for code suggestions, `/describe` for a summary or `/ask "..."` for a question; comment again
      after you push fixes. Rules: `.pr_agent.toml`. Answer its comments like CodeRabbit's.
    - **Code owner.** `.github/CODEOWNERS` requests Aarya automatically. Don't merge your own pull request.
+   - **`/code-review` before every merge.** No pull request is merged without a `/code-review` (Claude Code) run
+     on its latest commit, even when CodeRabbit and PR-Agent found nothing. The reviewer reads the linked issue
+     first, so a finding that is really a problem in the issue's Approach is raised on the issue, not blamed on
+     the author.
 8. **Resolve every review comment yourself**, from CodeRabbit, PR-Agent and the code owner. The author of the pull
    request fixes and resolves; reviewers only comment. For each one, either:
    - fix it, push, and reply with what you changed (commit id), or
    - explain why not (out of scope, conflicts with the issue, a false alarm), with evidence.
 
    Resolve a conversation only when it is fixed or the reviewer agrees. Push new commits; don't force-push over
-   reviewed commits. When all conversations are resolved and CI passes, ask Aarya to merge.
+   reviewed commits. When all conversations are resolved and CI passes, ask Aarya to merge. If you pushed after
+   the last `/code-review`, say so: the review runs again on the latest commit before the merge.
 9. **After merging**, set the Notion card to Done and comment on any issue that was waiting for yours.
 
 AI assistants follow the same steps. In particular: post the step 2 plan on the issue before writing code beyond
