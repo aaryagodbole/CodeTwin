@@ -32,7 +32,7 @@ def changed_lines(repo: str | Path, base: str, head: str | None = None,
         for path in git(repo, "ls-files", "--others", "--exclude-standard").splitlines():
             if path.endswith(extensions):
                 n = len((repo / path).read_text(encoding="utf-8", errors="replace").splitlines())
-                out[path] = FileDiff(status="A", old_path=path, new=list(range(1, n + 1)))
+                out[path] = FileDiff(status="A", old_path=path, new=list(range(1, n + 1)), hunks=[(0, 0, 1, n)])
     cur = None
     for line in git(repo, "diff", "-U0", "-M", *rng, "--", *[f"*{e}" for e in extensions]).splitlines():
         if line.startswith("+++ "):
@@ -46,4 +46,5 @@ def changed_lines(repo: str | Path, base: str, head: str | None = None,
             ns, nc = int(m.group(3)), int(m.group(4) or 1)
             out[cur].old.extend(range(os_, os_ + oc) if oc else [os_])
             out[cur].new.extend(range(ns, ns + nc) if nc else [ns, ns + 1])
+            out[cur].hunks.append((os_, oc, ns, nc))
     return out

@@ -21,6 +21,7 @@ class FileDiff:
     old_path: str
     old: list[int] = field(default_factory=list)   # changed/removed lines in the old version (insertion points included)
     new: list[int] = field(default_factory=list)   # changed/added lines in the new version
+    hunks: list[tuple[int, int, int, int]] = field(default_factory=list)  # (os, oc, ns, nc)
 
 
 @dataclass
