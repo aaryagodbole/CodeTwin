@@ -72,6 +72,20 @@ export interface FlakyTest {
   last_sha: string;
 }
 
+export interface RunSummary {
+  sha: string;
+  test_files: number;
+  failing: number;
+  suite_seconds: number;
+  covered_files: number;
+  latest: boolean;
+}
+
+export interface RunDetail extends Omit<RunSummary, "failing"> {
+  failing: string[];
+  durations: Record<string, number>;
+}
+
 export type KgNodeKind = "repository" | "file" | "test" | "symbol" | "unknown";
 export type KgEdgeKind = "contains" | "defines" | "imports" | "covers" | "co_changes" | "unresolved";
 
