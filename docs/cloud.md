@@ -1,16 +1,17 @@
 # CodeTwin Cloud: architecture and operations
 
 Decision record: [adr/0003-cloud-plane.md](adr/0003-cloud-plane.md). What is stored: [data-policy.md](data-policy.md).
-Status: design; built in the stacked pull requests listed under *Delivery* below.
+Status: being built in the stacked pull requests listed under *Delivery* below. The cloud API lives in `cloud/`
+(a separate package: it does not need the analysis engine, so its function stays small).
 
 ## Two planes
 
 ```
  where the code lives (unchanged)                    CodeTwin Cloud (reports only)
  ──────────────────────────────────                  ──────────────────────────────────────────────
- laptop: CLI · VS Code · MCP ──┐                      Vercel project
-                               │  codetwin push        ├─ dashboard   Next.js (static)
- CI: GitHub Action ────────────┼────────────────────▶  ├─ API         FastAPI, one Vercel Function
+ laptop: CLI · VS Code · MCP ──┐                      Vercel (two projects, one repository)
+                               │  codetwin push        ├─ dashboard/  Next.js (static)
+ CI: GitHub Action ────────────┼────────────────────▶  ├─ cloud/      FastAPI, one Vercel Function
    engine + SQLite evidence    │  report JSON          │    POST /api/v1/reports   (GitHub OIDC)
    (never uploaded)            │  + OIDC token         │    GET  /api/v1/...       (read, same contract)
                                │                       └─ Neon Postgres  (branch per preview deployment)
@@ -67,7 +68,7 @@ Read endpoints keep the shape of the local API (`src/codetwin/server/app.py`), s
 | `GET /api/v1/projects/{owner}/{repo}/decisions?limit=` | same | as `/api/decisions` |
 | `GET /api/v1/projects/{owner}/{repo}/decisions/{id}` | same | as `/api/decisions/{id}`, plus the report sections |
 | `GET /api/v1/projects/{owner}/{repo}/calibration` | same | as `/api/calibration` |
-| `GET /api/v1/projects/{owner}/{repo}/savings` | same | as `/api/savings` |
+| `GET /api/v1/projects/{owner}/{repo}/savings` | same | as `/api/savings` (after the local endpoint, #55, is merged) |
 
 The system map and the per-file impact graph need the code's static facts, so they stay **local-only** views
 (`codetwin serve`). The hosted dashboard hides them and links to `docs/dashboard.md`.
@@ -84,11 +85,18 @@ compares the response shapes.
    - `iss = https://token.actions.githubusercontent.com`
    - `aud = codetwin-cloud`
    - `exp` and `nbf`, with 60 s of leeway
-3. `repository` in the token must equal `repository` in the report. `run_id` and `sha` in the token must equal
-   the report's run id and head commit, so a job can only upload its own result.
+3. `repository` in the token must equal `repository` in the report. `run_id`, `run_attempt` and `sha` in the
+   token must equal the report's run id, attempt and head commit, so a job can only upload its own result (one
+   token cannot store extra reports by changing the attempt).
 4. The repository must be registered (`project` row) and allowed to upload. Unknown repositories get `403`;
    nothing is created implicitly.
-5. The token is not stored or logged.
+5. The token must carry `repository_id`. The first OIDC upload binds the project to that id
+   (`project.github_repository_id`); later uploads with another id get `403`. A repository that is renamed,
+   transferred, or deleted and recreated under the same name cannot upload into the old project's history. To
+   move a project to a new repository on purpose, the operator clears `github_repository_id`.
+6. The token is not stored or logged. It is checked before the report body is read for its content: a bad token
+   gets `401`, never schema errors, and if GitHub's key endpoint cannot be reached the answer is `503` (retry),
+   not `401`.
 
 Self-hosted servers can also accept a per-project token (stored hashed, shown once), for CI systems without OIDC.
 
@@ -105,7 +113,7 @@ outcome  (report_id → report primary key, missed, failing jsonb, received_at)
 
 - Columns for what the dashboard filters and aggregates; the full report in `payload`.
 - Index on `report (project_id, received_at desc)`.
-- Versioned SQL migrations in `src/codetwin/cloud/migrations/`, the same pattern as the local store. They are
+- Versioned SQL migrations in `cloud/codetwin_cloud/migrations/`, the same pattern as the local store. They are
   applied on deploy, and each preview deployment applies them to its own Neon branch.
 - Retention: a daily Vercel Cron job deletes reports older than 90 days (`docs/data-policy.md`).
 
@@ -125,8 +133,18 @@ outcome  (report_id → report primary key, missed, failing jsonb, received_at)
 - **Health:** `GET /api/health` checks the database connection; the Vercel deployment check calls it.
 - **Logs:** one JSON line per request (request id, route, status, duration, project). No payloads, no tokens.
 - **Errors:** Sentry, when `SENTRY_DSN` is set; off by default.
-- **Limits:** at most 120 uploads per project per hour (`429` after that), 256 KB per report, read endpoints
+- **Limits:** at most 120 uploads per project per hour (`429` after that; a retry of a report that is already
+  stored still gets `200` with its id), 256 KB per report, no NaN or Infinity in numbers (`422`), read endpoints
   paginated (`limit` ≤ 1000).
+- **Durability:** an upload is committed before the response is sent, so `201`/`200` means the report is stored.
+- **Outcomes:** an upload of the same run, attempt and commit that now carries an `outcome` adds it to the stored
+  report (`200`, `created: false`); the first outcome stored for a report is kept.
+- **Concurrency:** uploads to one project are serialised (a Postgres advisory lock per project), so parallel
+  matrix jobs cannot exceed the hourly limit together.
+- **Probing:** a token's repository is checked against the report before the project is looked up, so a token
+  from one repository cannot learn whether another (or a private) project is registered.
+- **Request size:** a body over the limit is refused (`413`) while it is being read, from `Content-Length` or
+  as soon as the stream passes the limit, so it is never buffered in full.
 - **Service levels** (best effort on free tiers): upload p95 < 1 s; dashboard read p95 < 500 ms; a failed
   upload never fails the user's CI job. The Action reports a warning, because CodeTwin's decision does not
   depend on the cloud.
@@ -137,8 +155,9 @@ outcome  (report_id → report primary key, missed, failing jsonb, received_at)
 
 1. Deployable dashboard with demo data, Vercel config, deployment check on PRs (`docs/dashboard.md`).
 2. This design: ADR 0003, this document, the data policy.
-3. Cloud API: Postgres schema and migrations, OIDC verification, upload and read endpoints, a Vercel Function
-   entry point, and tests (including the contract test).
+3. Cloud API (`cloud/`, its own package and Vercel project): Postgres schema and migrations, OIDC
+   verification, upload and read endpoints, retention cron, operator commands, and tests (including the contract
+   test). How to run and deploy it: `cloud/README.md`.
 4. `codetwin push [--dry-run]`, `PUBLISH` opt-in for report sections, and an `upload` input in the Action.
 5. Self-hosting: Dockerfile and `docker-compose.yml`.
 

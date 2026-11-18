@@ -8,6 +8,9 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Added
+- Cloud API (`cloud/`, package `codetwin-cloud`): uploads authenticated with GitHub OIDC (or project tokens
+  when self-hosting), strict `codetwin.report/v1` validation, idempotent storage in Postgres, read endpoints with
+  the local API's shapes (contract test), 90-day retention cron, operator commands; CI job `cloud` with Postgres
 - Contributor process (`AGENTS.md`, `CONTRIBUTING.md`, pull request template): every AI coding tool uses its
   matching skills and self-reviews the whole change right after opening a pull request, before asking for review
   (Claude Code `/code-review`, Codex `/review`, or a checklist); the code owner runs `/code-review` before every
