@@ -73,8 +73,16 @@ def _finite_json(x: Any) -> Any:
     if isinstance(x, dict):
         return {str(k): _finite_json(v) for k, v in x.items()}
     if isinstance(x, (list, tuple, set, frozenset)):
-        return [_finite_json(v) for v in (sorted(x, key=str) if isinstance(x, (set, frozenset)) else x)]
+        return [_finite_json(v) for v in (_sorted(x) if isinstance(x, (set, frozenset)) else x)]
     return x
+
+
+def _sorted(values: Iterable[Any]) -> list[Any]:
+    """Natural order when the values compare (numbers, strings), else by their text."""
+    try:
+        return sorted(values)
+    except TypeError:
+        return sorted(values, key=str)
 
 
 def _num(x: float | None) -> float | None:
@@ -417,9 +425,9 @@ class Store:
         return [r[0] for r in self.con.execute(f"select e.path from {table} x join code_entity e on e.id = x.test_id "  # noqa: S608 (constant SQL; values bound)
                                                "where x.decision_id=? order by e.path", (decision_id,))]
 
-    def decision(self, decision_id: int) -> dict | None:
+    def decision(self, decision_id: int, extras: bool = True) -> dict | None:
         """One decision with its selection, reasons, outcome (missed: None until learned) and report sections."""
-        rows = self.decisions(ids=[decision_id], extras=True)
+        rows = self.decisions(ids=[decision_id], extras=extras)
         return rows[0] if rows else None
 
     def decisions(self, limit: int = 100, ids: list[int] | None = None, extras: bool = False) -> list[dict]:
@@ -453,10 +461,9 @@ class Store:
         row = self.con.execute("select max(id) from decision").fetchone()
         if row[0] is None:
             return None
-        rows = self.decisions(ids=[row[0]])
-        if not rows:
+        d = self.decision(row[0], extras=False)
+        if d is None:
             return None
-        d = rows[0]
         return {"id": d["id"], "base": d["base"], "mode": d["mode"], "selected": d["selected"],
                 "scores": self.scores(d["id"])}
 
@@ -466,8 +473,10 @@ class Store:
                                                    "where mode=? order by id", (mode,))]
 
     def counts(self) -> dict[str, int]:
+        # A change that edits only tests teaches calibration nothing, so it is not counted as labelled.
         return {"decisions": self.con.execute("select count(*) from decision").fetchone()[0],
-                "labelled_decisions": self.con.execute("select count(*) from decision_outcome").fetchone()[0]}
+                "labelled_decisions": self.con.execute(
+                    "select count(*) from labelled_decision where mode != 'no-source-change'").fetchone()[0]}
 
     # ------------------------------------------------------------- learning state (append-only histories)
     def calibration(self, window: int = CALIBRATION_WINDOW) -> list[float]:

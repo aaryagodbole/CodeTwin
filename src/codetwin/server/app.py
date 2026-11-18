@@ -85,10 +85,9 @@ def create_app(root: str | Path = ".", static_dir: str | Path | None = None) -> 
     @app.get("/api/decisions/{decision_id}")
     def decision_detail(eng: Eng, decision_id: int) -> dict:
         """One decision by id, including selection, reasons, per-test risk scores and outcome."""
-        found = eng.store.decisions(ids=[decision_id])    # without extras: the API does not return them (yet)
-        if not found:
+        d = eng.store.decision(decision_id, extras=False)   # the API does not return the sections (yet)
+        if d is None:
             raise HTTPException(404, f"decision {decision_id} not found")
-        d = found[0]
         scores = eng.store.scores(decision_id)
         clean_scores = {
             k: (None if s is None or (isinstance(s, float) and math.isnan(s)) else s)

@@ -93,6 +93,7 @@ def test_test_only_change_is_stored_and_teaches_no_calibration(toy_repo: Path) -
         assert eng.store.has_outcome(last["id"])
         assert (len(eng.store.calibration()), len(eng.store.recal_points())) == (calib, recal)
         assert eng.explain()["mode"] == "no-source-change"
+        assert eng.store.counts()["labelled_decisions"] == 0   # taught calibration nothing, so not counted
 
 
 def test_learn_refuses_a_test_only_decision_once_source_changed(toy_repo: Path) -> None:
@@ -144,8 +145,8 @@ def test_extras_with_non_finite_numbers_are_stored_as_null(tmp_path: Path) -> No
                               extras={"x": {"v": math.inf, "w": [math.nan, 1.0], "tags": {"b", "a"}}})
         assert s.decision(did)["extras"] == {"x": {"v": None, "w": [None, 1.0], "tags": ["a", "b"]}}
         did = s.save_decision(base="b" * 40, mode="calibrated", decision="proceed", selected=[],
-                              extras={"y": {"p": Path("src/a.py"), "f": frozenset({2, 1})}})
-        assert s.decision(did)["extras"] == {"y": {"p": "src/a.py", "f": [1, 2]}}
+                              extras={"y": {"p": Path("src/a.py"), "f": frozenset({10, 2})}})
+        assert s.decision(did)["extras"] == {"y": {"p": "src/a.py", "f": [2, 10]}}   # numbers in number order
         assert "extras" not in s.decisions()[0] or s.decisions()[0]["extras"] == {}   # listings skip the sections
 
 

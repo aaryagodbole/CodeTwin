@@ -110,7 +110,7 @@ class Engine:
         if budget is not None:
             sel = budget_select(rows, scores, times, budget * sum(times.values()))
             d = decide(rows, scores, sel, alpha, recal, self.cfg.fallback, mode=f"budget {budget:.0%}")
-            risk_reason = d.reasons[0]
+            risk_at = 0                                    # position of decide()'s risk sentence in d.reasons
         else:
             level = AdaptiveLevel(alpha, self.cfg.aci_gamma, self.store.alpha_t())
             calib = self.store.calibration()
@@ -121,7 +121,7 @@ class Engine:
                 note = [f"not calibrated yet ({len(calib)} labelled changes); using threshold {lam}"]
             sel = threshold_select(rows, scores, lam)
             d = decide(rows, scores, sel, alpha, recal, self.cfg.fallback, threshold=lam)
-            risk_reason = d.reasons[0]
+            risk_at = len(note)
             d.reasons = note + d.reasons
         unknowns = self.impact([f for f in diff if self.is_source(f)]).unknowns
         d.reasons += unknowns
@@ -132,8 +132,7 @@ class Engine:
             d.decision, d.selected = "abstain", set(rows)
             d.residual_risk = residual_risk(scores, d.selected, recal)   # the risk of what now runs (E2)
             # decide()'s sentence describes a selection that no longer runs: keep it and add the risk of what runs.
-            d.reasons[d.reasons.index(risk_reason)] = (
-                f"{risk_reason}; running every test instead (estimated residual risk {d.residual_risk:.1%})")
+            d.reasons[risk_at] += f"; running every test instead (estimated residual risk {d.residual_risk:.1%})"
             for why in sorted(set(blind.values())):
                 fs = sorted(f for f, w in blind.items() if w == why)
                 d.reasons.append(f"{why} for {', '.join(fs[:5])}{' and others' if len(fs) > 5 else ''}: "
