@@ -15,7 +15,7 @@ from .graph.impact import Impact, build_graph, impact_of
 from .risk import features
 from .risk.calibration import AdaptiveLevel, crc_threshold
 from .risk.model import RiskModel
-from .risk.residual import Recalibrator
+from .risk.residual import Recalibrator, residual_risk
 from .selection import Decision, budget_select, decide, threshold_select
 from .store.db import Store
 
@@ -95,12 +95,14 @@ class Engine:
     def select(self, base: str | None = None, alpha: float | None = None, budget: float | None = None) -> Decision:
         base, prev, diff, rows = self.analyse(base)
         scores = self.model.scores(rows)
+        alpha = self.cfg.alpha if alpha is None else alpha
         if not any(self.is_source(f) for f in diff):
             d = Decision({t for t, r in rows.items() if r["forced"]}, "proceed", 0.0, None, "no-source-change",
-                         ["no source file changed; only added or changed tests run"])
-            return self._with_report(d, base, prev, diff, rows, scores)
+                         ["no source file changed; only added or changed tests run"], risk_before=0.0)
+            self._with_report(d, base, prev, diff, rows, scores)
+            self._save(d, base, alpha, scores)   # stored too, so run, learn and explain see this change (E3)
+            return d
         recal = self._recalibrator()
-        alpha = self.cfg.alpha if alpha is None else alpha
         times = {t: prev.durations.get(t, 1.0) for t in rows}
         if budget is not None:
             sel = budget_select(rows, scores, times, budget * sum(times.values()))
@@ -123,16 +125,21 @@ class Engine:
             # Unknown is not "no dependency": without coverage for these files' tests, the risk of skipping a test
             # cannot be estimated. Run everything and say why.
             d.decision, d.selected = "abstain", set(rows)
+            d.residual_risk = residual_risk(scores, d.selected, recal)   # the risk of what now runs (E2)
             for why in sorted(set(blind.values())):
                 fs = sorted(f for f, w in blind.items() if w == why)
                 d.reasons.append(f"{why} for {', '.join(fs[:5])}{' and others' if len(fs) > 5 else ''}: "
                                  "static evidence only, running every test (see docs/languages.md)")
         self._with_report(d, base, prev, diff, rows, scores)
-        self.store.save_decision(base=base, head="working-tree", mode=d.mode, alpha=alpha,
-                                       alpha_t=self.store.alpha_t(alpha), threshold=d.threshold,
-                                       residual_risk=d.residual_risk, decision=d.decision, selected=d.selected,
-                                       reasons=d.reasons, scores=scores)
+        self._save(d, base, alpha, scores)
         return d
+
+    def _save(self, d: Decision, base: str, alpha: float, scores: dict[str, float]) -> int:
+        return self.store.save_decision(base=base, head="working-tree", mode=d.mode, alpha=alpha,
+                                        alpha_t=self.store.alpha_t(alpha), threshold=d.threshold,
+                                        residual_risk=d.residual_risk, risk_before=d.risk_before,
+                                        decision=d.decision, selected=d.selected, reasons=d.reasons,
+                                        scores=scores, extras=d.extras)
 
     def without_runtime_evidence(self, diff, prev) -> dict[str, str]:
         """Changed source files whose tests have no runtime evidence, with the reason: no runner configured, or a
@@ -174,7 +181,14 @@ class Engine:
             raise RuntimeError(f"decision {last['id']} already has an outcome; run `codetwin select` for a new change "
                                "(learning twice from one change would count it twice in the calibration set)")
         _base, _prev, diff, rows = self.analyse(last["base"])
-        no_ev = self.without_runtime_evidence(diff, self.store.get_run(last["base"]))
+        if last.get("mode") == "no-source-change":
+            # Only tests changed and every changed test ran, so nothing was missed. Such a change says nothing about
+            # the risk model: no calibration, recalibration or adaptive-level update (it would shift calibration).
+            self.store.save_outcome(last["id"], False)
+            return {"affected": sorted(t for t, r in rows.items() if r["test_changed"]), "missed": [],
+                    "alpha_t": self.store.alpha_t(self.cfg.alpha), "calibration_size": len(self.store.calibration()),
+                    "note": "a change that edits only tests: outcome stored, calibration unchanged"}
+        no_ev =self.without_runtime_evidence(diff, self.store.get_run(last["base"]))
         blind = [f"{f} ({why})" for f, why in sorted(no_ev.items())]
         if blind:
             raise RuntimeError(f"cannot learn from this change: no runtime evidence for {', '.join(blind[:5])}, so which "
@@ -221,4 +235,5 @@ class Engine:
         row = self.store.decision(last["id"]) if last else None
         if not row:
             return {"message": "no decision yet"}
-        return {k: row[k] for k in ("decision", "residual_risk", "threshold", "alpha", "reasons", "selected")}
+        return {k: row[k] for k in ("decision", "mode", "residual_risk", "risk_before", "threshold", "alpha", "reasons",
+                                     "selected", "extras")}

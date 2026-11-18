@@ -125,12 +125,14 @@ erDiagram
     decision {
         int id PK
         int base_revision_id FK
-        text mode "calibrated | budget N%"
+        text mode "calibrated | budget N% | no-source-change"
         real alpha
         real alpha_t
         real threshold
         real residual_risk "r(c)"
         text verdict "proceed | abstain"
+        real risk_before "risk of the first selection"
+        text extras "report sections, JSON"
     }
     decision_outcome {
         int decision_id PK,FK
@@ -203,6 +205,12 @@ old tables. Learning histories that the old store kept as bare lists come across
 because the old store never recorded which decision they belonged to. The old `last_decision.scores` become the
 scores of that decision. The upgrade was checked on 17 databases from earlier runs: runs, static facts, decisions and
 outcomes all read back identically, and `pragma foreign_key_check` is clean.
+
+Migration 0005 (decision log) adds `decision.risk_before` and `decision.extras` and allows mode `no-source-change`.
+SQLite cannot change a `CHECK` constraint in place, so it rebuilds the `decision` table. A migration file that starts
+with `-- requires: foreign_keys off` runs with foreign keys off, so dropping the old table does not cascade to the
+selections, reasons, scores and outcomes, which keep their decision ids; `pragma foreign_key_check` must be clean
+before it commits (`test_migration_0005_keeps_existing_decisions`).
 
 ## Portability
 

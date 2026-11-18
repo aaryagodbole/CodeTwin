@@ -48,6 +48,25 @@ def outcomes_of(run: TestRun) -> dict[str, list[str]]:
     return out
 
 
+def _json_or_none(extras: Any) -> str | None:
+    """A decision's report sections as stored JSON (NaN and infinity become null); None when there are none."""
+    if not extras:
+        return None
+    if not isinstance(extras, dict):
+        raise TypeError("extras must be a dict of report sections")
+    return json.dumps(_finite_json(extras), sort_keys=True)
+
+
+def _finite_json(x: Any) -> Any:
+    if isinstance(x, float):
+        return x if math.isfinite(x) else None
+    if isinstance(x, dict):
+        return {str(k): _finite_json(v) for k, v in x.items()}
+    if isinstance(x, (list, tuple, set)):
+        return [_finite_json(v) for v in (sorted(x, key=str) if isinstance(x, set) else x)]
+    return x
+
+
 def _num(x: float | None) -> float | None:
     """REAL for SQLite: NaN has no SQL value and is stored as null."""
     return None if x is None or (isinstance(x, float) and math.isnan(x)) else x
@@ -95,13 +114,21 @@ class Store:
         for name, sql in _migrations():
             if name in done:
                 continue
+            # A table rebuild must not cascade to child rows: such a file starts with this marker. The pragma has no
+            # effect inside a transaction, so it is set before `begin` and restored after commit or rollback.
+            fk_off = sql.startswith("-- requires: foreign_keys off")
+            if fk_off:
+                self.con.execute("pragma foreign_keys = off")
             self._depth = 1
             try:
                 # Inside the try: if the script itself fails part way, its open transaction is rolled back too.
                 self.con.executescript("begin;\n" + sql)   # leaves the transaction open (no implicit commit)
                 if name in STEPS:
                     STEPS[name](self)
+                if fk_off and (bad := self.con.execute("pragma foreign_key_check").fetchall()):
+                    raise sqlite3.IntegrityError(f"migration {name} broke {len(bad)} foreign key(s): {bad[:3]}")
                 self.con.execute("insert into migrations values (?,?)", (name, time.time()))
+                self.con.execute("commit")
             except BaseException:
                 if self.con.in_transaction:
                     self.con.execute("rollback")
@@ -109,7 +136,8 @@ class Store:
                 raise
             finally:
                 self._depth = 0
-            self.con.execute("commit")
+                if fk_off:
+                    self.con.execute("pragma foreign_keys = on")
             new.append(name)
         return new
 
@@ -338,7 +366,8 @@ class Store:
     # ------------------------------------------------------------- decisions and their outcomes
     def save_decision(self, **d: Any) -> int:
         """Store a decision: base, head, mode, alpha, alpha_t, threshold, residual_risk, decision ('proceed' or
-        'abstain'), selected tests, reasons and, optionally, the model's score of every candidate test."""
+        'abstain'), selected tests, reasons and, optionally, the model's score of every candidate test, risk_before
+        (risk of the first selection) and extras (report sections, a JSON object)."""
         with self._tx():
             when = d.get("recorded") or time.time()
             cur = self.con.execute(
@@ -349,6 +378,10 @@ class Store:
             did = cur.lastrowid
             if did is None:
                 raise RuntimeError("decision was not stored")
+            # Separate update: the 0003 data migration (store/legacy.py) also calls this, before 0005 adds the columns.
+            if d.get("risk_before") is not None or d.get("extras"):
+                self.con.execute("update decision set risk_before=?, extras=? where id=?",
+                                 (_num(d.get("risk_before")), _json_or_none(d.get("extras")), did))
             self.con.executemany("insert into decision_selection values (?,?)",
                                  [(did, self._entity(t)) for t in sorted(d["selected"])])
             self.con.executemany("insert into decision_reason values (?,?,?)",
@@ -377,15 +410,17 @@ class Store:
     def decisions(self, limit: int = 100, ids: list[int] | None = None) -> list[dict]:
         """Newest first."""
         q = ("select d.id, d.recorded, r.sha, d.mode, d.alpha, d.alpha_t, d.threshold, d.residual_risk, d.verdict, "
-             "o.missed from decision d join revision r on r.id = d.base_revision_id "
+             "o.missed, d.risk_before, d.extras from decision d join revision r on r.id = d.base_revision_id "
              "left join decision_outcome o on o.decision_id = d.id ")
         rows = (self.con.execute(q + f"where d.id in ({','.join('?' * len(ids))}) order by d.id desc", ids) if ids
                 else self.con.execute(q + "order by d.id desc limit ?", (limit,)))
-        keys = ["id", "recorded", "base", "mode", "alpha", "alpha_t", "threshold", "residual_risk", "decision", "missed"]
+        keys = ["id", "recorded", "base", "mode", "alpha", "alpha_t", "threshold", "residual_risk", "decision", "missed",
+                "risk_before", "extras"]
         out = []
         for r in rows.fetchall():
             d = dict(zip(keys, r, strict=True))
             d["missed"] = None if d["missed"] is None else bool(d["missed"])
+            d["extras"] = json.loads(d["extras"]) if d["extras"] else {}
             d["selected"] = self._tests_of("decision_selection", d["id"])
             d["reasons"] = [x[0] for x in self.con.execute("select text from decision_reason where decision_id=? "
                                                            "order by ordinal", (d["id"],))]
