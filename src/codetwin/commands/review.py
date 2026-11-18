@@ -58,16 +58,24 @@ def load_decision(path: str) -> dict:
     return d
 
 
-def check_decision_base(decision: dict, base: str | None, user: str, base_flag: bool = True) -> dict:
+def check_decision_base(decision: dict, base: str | None, user: str) -> dict:
     """Refuse a decision computed against another recorded commit; return its saved `changed_files` extras."""
     saved = (decision.get("extras") or {}).get("changed_files")
     saved = saved if isinstance(saved, dict) else {}
     made_for = saved.get("base")
     if isinstance(made_for, str) and made_for and base and made_for != base:
-        hint = f" or pass --base {made_for[:12]}" if base_flag else ""
         raise SystemExit(f"--decision was computed against {made_for[:12]}, but {user} is {base[:12]}; "
-                         f"run `codetwin select --json` again{hint}")
+                         f"run `codetwin select --json` again or pass --base {made_for[:12]}")
     return saved
+
+
+def check_decision_files(eng, saved: dict, diff: dict) -> None:  # noqa: ANN001
+    """Refuse a decision whose changed source files differ from `diff`, the change against its base now."""
+    if isinstance(saved.get("files"), dict):
+        now = {f: len(d.new) for f, d in diff.items() if eng.is_source(f)}
+        if now != saved["files"]:
+            raise SystemExit("--decision does not describe the current change (the changed source files differ "
+                             "since it was computed); run `codetwin select --json` again")
 
 
 _HUNK = re.compile(r"^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@")
@@ -157,11 +165,8 @@ def run(args: argparse.Namespace) -> int:
         base = args.base or eng.store.latest_run_sha()
         saved = check_decision_base(decision, base, "the commit this review compares with")
         diff = eng.changed(base) if base else {}
-        if given and isinstance(saved.get("files"), dict):
-            now = {f: len(d.new) for f, d in diff.items() if eng.is_source(f)}
-            if now != saved["files"]:
-                raise SystemExit("--decision does not describe the current change (the changed source files differ "
-                                 "since it was computed); run `codetwin select --json` again")
+        if given:
+            check_decision_files(eng, saved, diff)
         changed = {f: sorted(d.new) for f, d in diff.items() if d.status != "D"}
         changed_old = {d.old_path or f: sorted(d.old) for f, d in diff.items()}
         try:

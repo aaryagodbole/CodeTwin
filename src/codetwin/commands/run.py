@@ -4,7 +4,7 @@ from __future__ import annotations
 import argparse
 
 from ._util import engine
-from .review import check_decision_base, load_decision
+from .review import check_decision_files, load_decision
 
 NAME, HELP, ORDER = "run", "run test files (default: the last selection) with the project's test runner", 37
 
@@ -25,7 +25,16 @@ def run(args: argparse.Namespace) -> int:
             tests = list(args.tests)
         elif args.decision is not None:
             decision = load_decision(args.decision)                  # same checks as `codetwin review --decision`
-            check_decision_base(decision, eng.store.latest_run_sha(), "the latest recorded commit", base_flag=False)
+            # Check it against the change since its own base, so a decision made with `select --base` works too.
+            saved = (decision.get("extras") or {}).get("changed_files")
+            saved = saved if isinstance(saved, dict) else {}
+            made_for = saved.get("base")
+            if isinstance(made_for, str) and made_for:
+                try:
+                    check_decision_files(eng, saved, eng.changed(made_for))
+                except RuntimeError:
+                    raise SystemExit(f"--decision was computed against {made_for[:12]}, which is not in this "
+                                     "repository; run `codetwin select --json` again") from None
             tests = list(decision["selected"])
         else:
             tests = list((eng.store.last_decision() or {}).get("selected", []))

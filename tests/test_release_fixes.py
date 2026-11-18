@@ -64,6 +64,15 @@ def test_run_refuses_an_empty_or_stale_decision(toy_repo: Path, tmp_path: Path) 
                                  "reasons": [], "extras": {"changed_files": {"base": "0" * 40}}}), encoding="utf-8")
     with pytest.raises(SystemExit, match="computed against 000000000000"):
         main(["-C", str(toy_repo), "run", "--decision", str(stale)])
+    # Made for the recorded commit, but the source changed since: refused, like `review --decision`.
+    head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=toy_repo, capture_output=True, text=True,
+                          check=True).stdout.strip()
+    stale.write_text(json.dumps({"decision": "proceed", "residual_risk": 0.02, "selected": [], "reasons": [],
+                                 "extras": {"changed_files": {"base": head, "files": {}}}}), encoding="utf-8")
+    p = toy_repo / "src/shop/price.py"
+    p.write_text(p.read_text() + "\n# edited after select\n")
+    with pytest.raises(SystemExit, match="does not describe the current change"):
+        main(["-C", str(toy_repo), "run", "--decision", str(stale)])
 
 
 def test_learn_can_be_retried_after_failing_part_way(toy_repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
