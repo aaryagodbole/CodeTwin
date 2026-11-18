@@ -1,0 +1,41 @@
+{
+ "counts": {
+  "importers": 0,
+  "tests": 0,
+  "unknown": 0
+ },
+ "edges": [
+  {
+   "detail": "imported by this file",
+   "source": "tests/test_cart.py",
+   "target": "src/shop/cart.py",
+   "type": "static"
+  }
+ ],
+ "evidence": {
+  "has_coverage": true,
+  "recorded_commit": "eef6eadce5256127d7536e675b88b567fa8a3d44"
+ },
+ "nodes": [
+  {
+   "id": "tests/test_cart.py",
+   "kind": "target",
+   "label": "test_cart.py",
+   "path": "tests/test_cart.py"
+  },
+  {
+   "id": "src/shop/cart.py",
+   "kind": "source",
+   "label": "cart.py",
+   "path": "src/shop/cart.py"
+  }
+ ],
+ "summary": "used by 0 · 0 tests · 0 unknown",
+ "target": {
+  "id": "tests/test_cart.py",
+  "kind": "target",
+  "label": "test_cart.py",
+  "path": "tests/test_cart.py"
+ },
+ "unknowns": []
+}

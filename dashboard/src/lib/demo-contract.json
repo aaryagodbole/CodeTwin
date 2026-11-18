@@ -1,0 +1,17 @@
+{
+  "_comment": "Shared by scripts/demo_snapshot.py (writes the demo data), dashboard/src/lib/demo-path.mjs (reads it) and scripts/check_demo_build.mjs (CI). `requests` are the API calls the dashboard pages make; besides these, /graph is captured for every node of /map and of each captured graph. `names` are snapshot file names both implementations must produce.",
+  "requests": [
+    ["/health", {}],
+    ["/summary", {}],
+    ["/calibration", {}],
+    ["/map", {}],
+    ["/decisions", {"limit": "10"}],
+    ["/decisions", {"limit": "500"}]
+  ],
+  "names": [
+    ["/summary", {}, "summary.json"],
+    ["/decisions", {"limit": "10"}, "decisions__limit-10.json"],
+    ["/graph", {"file": "src/shop/calc.py", "lines": "3-4"}, "graph__file-src_shop_calc.py__lines-3-4.json"],
+    ["/graph", {"file": "src/😀.py"}, "graph__file-src__.py.json"]
+  ]
+}

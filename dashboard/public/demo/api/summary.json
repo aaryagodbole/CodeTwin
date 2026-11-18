@@ -7,8 +7,8 @@
  "packages": [
   "shop"
  ],
- "recorded_commit": "f57aa5b786c028da18068713a6fd200bab13319d",
+ "recorded_commit": "eef6eadce5256127d7536e675b88b567fa8a3d44",
  "root": "examples/python (demo)",
- "suite_seconds": 0.5419487953186035,
+ "suite_seconds": 1.0,
  "test_files": 2
 }

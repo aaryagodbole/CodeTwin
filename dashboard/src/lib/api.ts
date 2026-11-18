@@ -3,19 +3,12 @@
 //   "live" (default): a running `codetwin serve`. When the API serves the dashboard itself the base URL is empty.
 //   "demo": static JSON in public/demo/, written by scripts/demo_snapshot.py from a real engine run. Used by the
 //           hosted dashboard (Vercel), which has no API behind it.
+import { demoPath } from "./demo-path.mjs";
+
+export { demoPath };
+
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? "";
 export const DATA_MODE: "live" | "demo" = process.env.NEXT_PUBLIC_DATA_MODE === "demo" ? "demo" : "live";
-
-/** Snapshot file for a request. Must match `snapshot_name()` in scripts/demo_snapshot.py
- *  (tests/test_demo_snapshot.py): "/summary" -> summary.json; "/decisions" {limit:"10"} -> decisions__limit-10.json;
- *  "/graph" {file:"src/shop/calc.py", lines:"3-4"} -> graph__file-src_shop_calc.py__lines-3-4.json */
-export function demoPath(path: string, params: Record<string, string> = {}): string {
-  let name = path.replace(/^\/+|\/+$/g, "").replaceAll("/", "_");
-  for (const k of Object.keys(params).sort()) {
-    name += `__${k}-${params[k]}`;
-  }
-  return `/demo/api/${name.replace(/[^A-Za-z0-9._-]/g, "_")}.json`;
-}
 
 export async function get<T>(path: string, params?: Record<string, string | undefined>): Promise<T> {
   const clean = Object.fromEntries(Object.entries(params ?? {}).filter(([, v]) => v)) as Record<string, string>;

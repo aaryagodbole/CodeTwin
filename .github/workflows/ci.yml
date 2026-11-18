@@ -194,9 +194,10 @@ jobs:
         with: { name: dashboard, path: dashboard/out }
 
   dashboard-demo:
-    # The hosted dashboard (Vercel) is built in demo mode from a snapshot of a real engine run. This job proves the
-    # snapshot can still be produced by the current engine and API, and that the demo build serves every file.
-    # If a PR breaks it, the deployment would break too (docs/dashboard.md).
+    # The hosted dashboard (Vercel) is built in demo mode from the snapshot committed in dashboard/public/demo.
+    # This job checks exactly that build: the committed snapshot is what the current engine and API produce, and
+    # the build answers every request the pages make. If a PR breaks it, the deployment would break too
+    # (docs/dashboard.md).
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -205,14 +206,19 @@ jobs:
       - uses: actions/setup-node@v7
         with: { node-version: "22", cache: npm, cache-dependency-path: dashboard/package-lock.json }
       - run: pip install -e ".[server]" pytest
-      - name: Regenerate the demo snapshot from a real run on examples/python
-        run: python scripts/demo_snapshot.py
-      - name: Demo build (what Vercel deploys)
+      - name: Demo build of the committed snapshot (what Vercel deploys)
         working-directory: dashboard
         run: npm ci && npm run build:demo
-      - name: Every snapshot file is in the build
+      - name: The build answers every request the dashboard makes
         working-directory: dashboard
         run: node ../scripts/check_demo_build.mjs
+      - name: The committed snapshot is up to date with the engine and API
+        run: |
+          python scripts/demo_snapshot.py
+          if ! git diff --exit-code --stat -- dashboard/public/demo/api || [ -n "$(git status --porcelain -- dashboard/public/demo/api)" ]; then
+            echo "::error::dashboard/public/demo is stale: run 'python scripts/demo_snapshot.py' and commit the result"
+            exit 1
+          fi
 
   action:
     # Runs this repository's own GitHub Action on the pull request, installing CodeTwin from the checkout.

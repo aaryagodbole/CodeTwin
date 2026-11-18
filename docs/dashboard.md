@@ -88,8 +88,14 @@ python scripts/demo_snapshot.py     # about 10 seconds; rewrites dashboard/publi
 
 The script copies `examples/python` into a temporary git repository, then runs `init` and `record`. For each
 of its edits it runs `select` and `learn`, then reverts the edit. Finally it saves each API answer the dashboard
-uses. It refuses to write a file that contains a local path. Commit the regenerated folder when an API answer's
-shape changes, or when a page starts using a new endpoint.
+uses, plus the graph of every file the system map or a graph links to. It refuses to write a file that contains
+a local path, and it writes the new snapshot to a temporary folder first, so a failed run leaves the old one
+intact. Commits get fixed dates and timestamps are normalised, so an unchanged engine gives identical files.
+
+The requests the pages make, and the file name for each, are listed once in `dashboard/src/lib/demo-contract.json`.
+When a page starts using a new endpoint, add it there and regenerate. CI (job `dashboard-demo`) builds the
+committed snapshot exactly as Vercel does, checks that it answers every request and graph link, and fails if
+regenerating it gives different files. In that case run the script and commit the result.
 
 The demo is a stopgap. The next step (docs/cloud.md, in progress) replaces it with the cloud API, which receives
 real decision reports from CI.
