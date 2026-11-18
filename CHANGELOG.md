@@ -7,6 +7,16 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+- `codetwin run --decision FILE` runs the tests of that `select --json` file; the GitHub Action uses it. A change
+  that edits only tests is printed but not stored, so the Action used to run an older decision's tests or none.
+- `codetwin learn` stores its label in one transaction, so a run that stops part way can simply be repeated.
+- A migration script that fails part way is rolled back.
+- `codetwin review` places inline comments only on lines of the pull request's own diff (its base commit from the
+  workflow event), not of the diff against an older recorded commit. When that commit is not in the checkout (a
+  shallow clone), it falls back to the recorded diff.
+- `/api/decisions` returns empty lists, not null, for a decision without selected tests or reasons.
+
 ## [0.2.0] - 2026-11-18
 
 Any repository in any language, pull-request review, a code knowledge graph, a normalized evidence store, the

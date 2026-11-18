@@ -10,8 +10,12 @@ import json
 import re
 import sys
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from ._util import engine, print_json
+
+if TYPE_CHECKING:
+    from ..engine import Engine
 
 NAME, HELP, ORDER = "review", "review the change like a reviewer: findings at file/line, PR comment, SARIF", 32
 FORMATS = ("markdown", "json", "sarif", "github")
@@ -38,8 +42,8 @@ def _split(s: str | None) -> list[str]:
 def load_decision(path: str) -> dict:
     """A decision from `codetwin select --json`, checked before it is trusted (it is a file from outside)."""
     try:
-        d = json.loads(Path(path).read_text())
-    except (OSError, json.JSONDecodeError) as e:
+        d = json.loads(Path(path).read_text(encoding="utf-8"))
+    except (OSError, ValueError) as e:
         raise SystemExit(f"--decision {path}: cannot read JSON ({e})") from None
     problems = []
     if not isinstance(d, dict):
@@ -56,6 +60,26 @@ def load_decision(path: str) -> dict:
     if problems:
         raise SystemExit(f"--decision {path} is not a `codetwin select --json` output: " + "; ".join(problems))
     return d
+
+
+def check_decision_base(decision: dict, base: str | None, user: str) -> dict:
+    """Refuse a decision computed against another recorded commit; return its saved `changed_files` extras."""
+    saved = (decision.get("extras") or {}).get("changed_files")
+    saved = saved if isinstance(saved, dict) else {}
+    made_for = saved.get("base")
+    if isinstance(made_for, str) and made_for and base and made_for != base:
+        raise SystemExit(f"--decision was computed against {made_for[:12]}, but {user} is {base[:12]}; "
+                         f"run `codetwin select --json` again or pass --base {made_for}")
+    return saved
+
+
+def check_decision_files(eng: Engine, saved: dict, diff: dict) -> None:
+    """Refuse a decision whose changed source files differ from `diff`, the change against its base now."""
+    if isinstance(saved.get("files"), dict):
+        now = {f: len(d.new) for f, d in diff.items() if eng.is_source(f)}
+        if now != saved["files"]:
+            raise SystemExit("--decision does not describe the current change (the changed source files differ "
+                             "since it was computed); run `codetwin select --json` again")
 
 
 _HUNK = re.compile(r"^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@")
@@ -106,6 +130,30 @@ def commentable(patch: str) -> dict[str, set[int]]:
     return out
 
 
+def _pull_request_base(root: Path) -> str | None:
+    """The base commit of the pull request in a GitHub `pull_request` workflow, if it is in the local history."""
+    import os
+
+    from ..evidence.diff import git
+
+    path = os.environ.get("GITHUB_EVENT_PATH")
+    try:
+        event = json.loads(Path(path).read_text(encoding="utf-8")) if path else None
+    except (OSError, ValueError):
+        return None
+    pr = event.get("pull_request") if isinstance(event, dict) else None
+    base = pr.get("base") if isinstance(pr, dict) else None
+    sha = base.get("sha") if isinstance(base, dict) else None
+    if not isinstance(sha, str) or not re.fullmatch(r"[0-9a-f]{40}|[0-9a-f]{64}", sha):   # SHA-1 or SHA-256
+        return None
+    # The commit must be here and share history with HEAD (a shallow checkout may have one without the other).
+    try:
+        git(root, "merge-base", sha, "HEAD")
+    except RuntimeError:
+        return None
+    return sha
+
+
 def run(args: argparse.Namespace) -> int:
     from ..evidence.diff import git
     from ..kg import from_engine
@@ -116,19 +164,13 @@ def run(args: argparse.Namespace) -> int:
     with engine(args) as eng:
         sec = eng.cfg.section("review")
         sec = sec if isinstance(sec, dict) else {}
-        decision = load_decision(args.decision) if args.decision else eng.select(args.base).to_dict()
+        given = args.decision is not None
+        decision = load_decision(args.decision) if given else eng.select(args.base).to_dict()
         base = args.base or eng.store.latest_run_sha()
-        saved = (decision.get("extras") or {}).get("changed_files") or {}
-        made_for = saved.get("base")
-        if made_for and base and made_for != base:
-            raise SystemExit(f"--decision was computed against {made_for[:12]}, but this review compares with "
-                             f"{base[:12]}; run `codetwin select --json` again or pass --base {made_for[:12]}")
+        saved = check_decision_base(decision, base, "the commit this review compares with")
         diff = eng.changed(base) if base else {}
-        if args.decision and isinstance(saved.get("files"), dict):
-            now = {f: len(d.new) for f, d in diff.items() if eng.is_source(f)}
-            if now != saved["files"]:
-                raise SystemExit("--decision does not describe the current change (the changed source files differ "
-                                 "since it was computed); run `codetwin select --json` again")
+        if given:
+            check_decision_files(eng, saved, diff)
         changed = {f: sorted(d.new) for f, d in diff.items() if d.status != "D"}
         changed_old = {d.old_path or f: sorted(d.old) for f, d in diff.items()}
         try:
@@ -149,9 +191,19 @@ def run(args: argparse.Namespace) -> int:
             llm = client_from_config(eng.cfg)
             only = sorted({*(only or [m.NAME for m in select_analyzers()]), "llm_review"})
         patch = git(eng.root, "diff", "--unified=3", base, "--") if base else ""
+        # GitHub accepts inline comments only on lines of the pull request's own diff. The recorded base can be an
+        # older commit than the PR's base, so use the PR's base commit when the workflow event provides it.
+        in_pr = patch
+        if args.post_github or args.format == "github":     # only inline comments need the pull request's diff
+            pr_base = _pull_request_base(eng.root)
+            if pr_base and pr_base != base:
+                try:
+                    in_pr = git(eng.root, "diff", "--unified=3", f"{pr_base}...HEAD", "--")
+                except RuntimeError:
+                    in_pr = patch                           # keep the review working on the recorded diff
         ctx = ReviewContext(root=eng.root, decision=decision, changed=changed, cfg=eng.cfg, graph=kg, llm=llm,
                             options={"patch": patch if llm else "", "changed_old": changed_old, "covering": covering},
-                            commentable=commentable(patch))
+                            commentable=commentable(in_pr))
         review = run_review(ctx, select_analyzers(only, skip))
 
     if args.format == "json":
