@@ -1,0 +1,2 @@
+{"language": "javascript", "file": "src/calc.js", "edit": ["return a * b;", "return a * b * 1;"],
+ "noop": ["return a * b;", "return a * b; // product"], "covering_test": "test/cart.test.js"}

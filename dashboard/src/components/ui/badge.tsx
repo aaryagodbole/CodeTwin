@@ -1,10 +1,17 @@
 const tones = {
-  green: "bg-green-500/15 text-green-600 dark:text-green-400",
-  amber: "bg-amber-500/15 text-amber-700 dark:text-amber-400",
-  red: "bg-red-500/15 text-red-600 dark:text-red-400",
-  gray: "bg-zinc-500/15 text-zinc-600 dark:text-zinc-400",
+  // Text uses the *-ink tokens (at least 4.5:1 on the tinted fill in both themes); the dot keeps the bright colour.
+  green: "bg-good/15 text-good-ink",
+  amber: "bg-warn/15 text-warn-ink",
+  red: "bg-bad/15 text-bad-ink",
+  accent: "bg-accent-soft text-accent",
+  gray: "bg-muted/15 text-muted-ink",
 } as const;
 
 export function Badge({ tone = "gray", children }: { tone?: keyof typeof tones; children: React.ReactNode }) {
-  return <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${tones[tone]}`}>{children}</span>;
+  return (
+    <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${tones[tone]}`}>
+      <span className="h-1.5 w-1.5 rounded-full bg-current" aria-hidden />
+      {children}
+    </span>
+  );
 }

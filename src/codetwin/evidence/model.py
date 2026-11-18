@@ -2,10 +2,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from enum import StrEnum
+from enum import Enum
 
 
-class EvidenceType(StrEnum):
+class EvidenceType(str, Enum):  # noqa: UP042  (Python 3.10 inside benchmark images)
     """How a link between code and tests was found (Section IV-C of the paper)."""
     STATIC = "static"            # found in the syntax tree (imports)
     RUNTIME = "runtime"          # observed by per-test coverage
@@ -21,6 +21,7 @@ class FileDiff:
     old_path: str
     old: list[int] = field(default_factory=list)   # changed/removed lines in the old version (insertion points included)
     new: list[int] = field(default_factory=list)   # changed/added lines in the new version
+    hunks: list[tuple[int, int, int, int]] = field(default_factory=list)  # (os, oc, ns, nc)
 
 
 @dataclass
@@ -30,6 +31,8 @@ class FileFacts:
     dyn_lines: list[int] = field(default_factory=list)
     defs: list[list[int]] = field(default_factory=list)    # [start (incl. decorators), end, first body line]
     mod_lines: list[int] = field(default_factory=list)     # statements that run at import time
+    deps: list[str] = field(default_factory=list)          # project files this file depends on (resolved imports)
+    symbols: list[list] = field(default_factory=list)      # [qualified name, kind, first line, last line]
 
 
 @dataclass
@@ -42,3 +45,5 @@ class TestRun:
     import_lines: dict[str, list[int]] = field(default_factory=dict)     # source file -> lines run at import time
     returncode: int | str = 0
     wall: float = 0.0
+    notes: list[str] = field(default_factory=list)                         # problems of the run itself (not stored)
+    unrun: list[str] = field(default_factory=list)       # listed but not executed (no runner, tool missing): no outcome

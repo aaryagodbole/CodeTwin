@@ -4,10 +4,10 @@ NAME, HELP, ORDER = "init", "write .codetwin.toml with guessed settings", 10
 
 
 def add_arguments(p) -> None:
-    pass
+    p.add_argument("--language", help="python, javascript, go, java, ... or a comma-separated list (default: detected)")
 
 
 def run(args) -> int:
-    path = config.write_template(args.root)
+    path = config.write_template(args.root, getattr(args, "language", None))
     print(f"wrote {path}; review it, then run `codetwin record`")
     return 0

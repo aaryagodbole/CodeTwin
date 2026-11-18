@@ -4,6 +4,11 @@ A section module defines::
 
     NAME = "test_gaps"                          # key in Decision.extras and under "extras" in select --json
     def contribute(ctx: Context) -> dict: ...   # JSON-serialisable; put a one-line text in "summary"
+    PUBLISH = True                              # optional: upload this section with `codetwin push`
+
+``PUBLISH = True`` opts a section into reports sent to CodeTwin Cloud (docs/cloud.md). Only sections that hold
+file paths, symbol names, line numbers, counts and their summary may opt in; never source text. The default is
+not to upload (docs/data-policy.md).
 
 Sections only read the context; they must not change the selection or the decision (that is
 ``selection.py``). Add a new file here for a new section; do not edit ``engine.py``.
@@ -30,12 +35,21 @@ class Context:
     is_source: Any                # callable(path) -> bool
     facts_now: Any = None         # callable() -> static facts of the working tree
     impact: Any = None            # callable(files) -> Impact
+    lang: Any = None              # codetwin.lang.base.Language of the project
     extra: dict = field(default_factory=dict)
 
 
-def build(ctx: Context) -> dict[str, dict]:
+def publishable() -> set[str]:
+    """Names of sections that opted in to `codetwin push` with ``PUBLISH = True``."""
+    return {mod.NAME for mod in discover("codetwin.report") if getattr(mod, "PUBLISH", False) is True}
+
+
+def build(ctx: Context, only: set[str] | None = None) -> dict[str, dict]:
+    """Run every section (or only the named ones). A section that raises gives an "error" entry instead."""
     out: dict[str, dict] = {}
     for mod in discover("codetwin.report"):
+        if only is not None and mod.NAME not in only:
+            continue
         try:
             out[mod.NAME] = mod.contribute(ctx)
         except Exception as e:  # noqa: BLE001 - a broken section must be visible, not silently missing

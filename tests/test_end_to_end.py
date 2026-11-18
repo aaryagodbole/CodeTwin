@@ -43,5 +43,5 @@ def test_budget_mode_does_not_move_adaptive_level(toy_repo):
         p.write_text(p.read_text().replace('i["price"]', 'i["price"] * 1'))
         eng.select(budget=0.01)
         eng.learn()
-        assert eng.store.get_state("alpha_t") is None          # level untouched by budget-mode outcomes
-        assert len(eng.store.get_state("calibration")) == 1    # labels still collected
+        assert eng.store.alpha_t() is None                     # level untouched by budget-mode outcomes
+        assert len(eng.store.calibration()) == 1               # labels still collected

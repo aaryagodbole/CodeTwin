@@ -17,3 +17,5 @@ src/codetwin/server/static/
 .env
 .env.*
 !.env.example
+# Vercel CLI project links (vercel link) in dashboard/ and cloud/: local, never committed.
+.vercel/

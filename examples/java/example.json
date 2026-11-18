@@ -1,0 +1,2 @@
+{"language": "java", "file": "src/main/java/com/example/shop/Calc.java", "edit": ["return a * b;", "return a * b * 1;"],
+ "noop": ["return a * b;", "return a * b; // product"], "covering_test": "src/test/java/com/example/shop/CartTest.java"}

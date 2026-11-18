@@ -1,0 +1,31 @@
+cff-version: 1.2.0
+message: "If you use CodeTwin AI in research, please cite it using these metadata."
+title: "CodeTwin AI: evidence-aware, risk-calibrated regression test selection"
+type: software
+authors:
+  - given-names: Arya
+    family-names: Godbole
+  - given-names: Suhani
+    family-names: Bhati
+  - given-names: Madhura
+    family-names: Suryawanshi
+  - given-names: Shreya
+    family-names: Gole
+  - given-names: T. A.
+    family-names: Kamble
+repository-code: "https://github.com/aaryagodbole/CodeTwin"
+license: MIT
+version: 0.2.0
+date-released: "2026-11-18"
+keywords:
+  - regression test selection
+  - change impact analysis
+  - conformal risk control
+  - code review
+references:
+  - type: data
+    title: "Replication package of the CodeTwin AI empirical study"
+    authors:
+      - given-names: Arya
+        family-names: Godbole
+    doi: 10.5281/zenodo.24196585

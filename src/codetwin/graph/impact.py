@@ -1,12 +1,11 @@
 """Typed impact graph: which tests and modules a change reaches, and how each link is known."""
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 
 import networkx as nx
 
 from ..evidence.model import EvidenceType, FileFacts, TestRun
-from ..evidence.static import module_of
 
 
 @dataclass
@@ -15,20 +14,30 @@ class Impact:
     unknowns: list[str] = field(default_factory=list)              # what the analysis could not see
 
 
-def build_graph(static: dict[str, FileFacts], run: TestRun | None, src_root: str) -> nx.MultiDiGraph:
+def file_deps(static: dict[str, FileFacts], src_root: str | None = None) -> dict[str, list[str]]:
+    """Dependencies of every file as file paths. Language adapters fill `FileFacts.deps`. Snapshots in which no
+    file has any resolved dependency (stored before adapters resolved them, or direct callers of `evidence.static`)
+    have their Python files resolved as Python imports; files of other languages and adapter-resolved snapshots are
+    never re-resolved (an unresolved external import in one file must not discard every other file's edges)."""
+    out = {f: list(v.deps) for f, v in static.items()}
+    if src_root is not None and not any(v.deps for v in static.values()):
+        py = {f: replace(v, deps=[]) for f, v in static.items() if f.endswith(".py")}
+        if any(v.imports for v in py.values()):
+            from ..lang.python import resolve_deps
+            resolve_deps(py, src_root)
+            out.update({f: list(v.deps) for f, v in py.items()})
+    return out
+
+
+def build_graph(static: dict[str, FileFacts], run: TestRun | None, src_root: str | None = None) -> nx.MultiDiGraph:
     """Nodes are files; an edge u -> v means "u depends on v", labelled with its evidence type."""
     g: nx.MultiDiGraph = nx.MultiDiGraph()
-    known = {module_of(f, src_root): f for f in static}
+    deps = file_deps(static, src_root)
     for f, facts in static.items():
         g.add_node(f)
-        for imp in facts.imports:
-            parts = imp.split(".")
-            for k in range(len(parts), 0, -1):
-                tgt = known.get(".".join(parts[:k]))
-                if tgt:
-                    if tgt != f:
-                        g.add_edge(f, tgt, type=EvidenceType.STATIC.value)
-                    break
+        for tgt in deps[f]:
+            if tgt != f:
+                g.add_edge(f, tgt, type=EvidenceType.STATIC.value)
         if facts.dynamic:
             g.add_edge(f, "?", type=EvidenceType.UNRESOLVED.value, detail=",".join(facts.dynamic))
     if run:

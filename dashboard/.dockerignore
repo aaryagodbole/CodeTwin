@@ -1,0 +1,7 @@
+node_modules/
+out/
+.next/
+# Never bake a developer's local settings into the image: next build inlines NEXT_PUBLIC_* values from them.
+.env*
+!.env.example
+.git
