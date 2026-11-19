@@ -8,7 +8,7 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Added
-- Report section `freshness` (`src/codetwin/report/freshness.py`): reports how many commits old the recorded evidence is (including commits brought in by merges, on purpose, so merged code changes count as drift), flags stale evidence when `commits_behind` exceeds `[freshness] stale_after` (default 20), reports `commits_behind = null` with unknown age when the recorded commit is missing or not present in this checkout, not an ancestor of HEAD (different branch or older checkout), or when shallow clone history is incomplete, and suggests running `codetwin record`. Git failures other than an unknown commit (git not installed, root not a repository) are not hidden as an unknown age; the section fails and `report.build()` shows the error.
+- Report section `freshness` (`src/codetwin/report/freshness.py`): how many commits old the recorded evidence is (merged commits count), `stale` when that exceeds `[freshness] stale_after` (default 20) or when the recorded commit is gone from a complete history, with a hint to run `codetwin record`. The age is `null` when it cannot be established (other branch, older checkout, shallow clone). Git failures other than an unknown commit are shown as a broken section, not hidden as an unknown age.
 
 ### Fixed
 - `codetwin run --decision FILE` runs the tests of that `select --json` file; the GitHub Action uses it. A change

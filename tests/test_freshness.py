@@ -222,6 +222,16 @@ def test_shallow_boundary_in_range(tmp_path: Path) -> None:
     assert res["stale"] is False
     assert res["summary"] == "history is incomplete in a shallow clone; age is unknown"
 
+    # The visible count is a lower bound: past the limit it is stale even though the exact age is unknown
+    ctx_low = Context(cfg=Config(root=repo, raw={"freshness": {"stale_after": 1}}), store=None, base=base_sha,
+                      prev=None, diff={}, rows={}, scores={}, decision=None, is_source=lambda _: True)
+    res_low = contribute(ctx_low)
+    assert res_low["commits_behind"] is None
+    assert res_low["stale"] is True
+    assert res_low["summary"] == (
+        "recorded evidence is at least 3 commits old (stale, limit 1; shallow clone); run `codetwin record`"
+    )
+
     # When boundary is base itself (not strictly in range <base>..HEAD), range is complete
     shallow_file.write_text(base_sha + "\n", encoding="utf-8")
     res_base_shallow = contribute(ctx)
@@ -289,7 +299,14 @@ def test_shallow_clone_incomplete_and_unshallow(tmp_path: Path) -> None:
     res = contribute(ctx)
     assert res["commits_behind"] is None
     assert res["stale"] is False
-    assert "age is unknown" in res["summary"]
+    assert res["summary"] == "history is incomplete in a shallow clone; age is unknown"
+
+    # The same shallow clone does not have a commit older than its depth: unknown, not stale
+    ctx_old = Context(cfg=cfg, store=None, base="0" * 40, prev=None, diff={}, rows={}, scores={},
+                      decision=None, is_source=lambda _: True)
+    res_old = contribute(ctx_old)
+    assert res_old["stale"] is False
+    assert res_old["summary"] == "history is incomplete in a shallow clone; age is unknown"
 
     # Unshallow the clone to get full history
     subprocess.run(["git", "-c", "protocol.file.allow=always", "fetch", "--unshallow", "origin"], cwd=clone, check=True)
@@ -372,9 +389,11 @@ def test_freshness_unknown_base_commit(toy_repo: Path) -> None:
     )
     res1: dict[str, Any] = contribute(ctx_missing)
     assert res1["commits_behind"] is None
-    assert res1["stale"] is False
+    assert res1["stale"] is True
     assert res1["stale_after"] == DEFAULT_STALE_AFTER
-    assert res1["summary"] == "recorded commit is not in this checkout; age is unknown"
+    assert res1["summary"] == (
+        "recorded commit is no longer in this history (rewritten or deleted); run `codetwin record`"
+    )
 
     # Empty base commit
     ctx_empty = Context(
@@ -427,4 +446,22 @@ def test_missing_git_binary_is_not_swallowed(toy_repo: Path, monkeypatch: pytest
         is_source=lambda _: True,
     )
     with pytest.raises((RuntimeError, OSError)):
+        contribute(ctx)
+
+
+def test_other_git_failure_on_verify_is_not_swallowed(toy_repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """A git failure while looking up the recorded commit (corrupt repository, lock) is not an unknown age."""
+    import codetwin.report.freshness as freshness
+
+    real_run = subprocess.run
+
+    def run(cmd: list[str], *a: Any, **kw: Any) -> Any:
+        if "--verify" in cmd:
+            return subprocess.CompletedProcess(cmd, 128, "", "fatal: bad object database")
+        return real_run(cmd, *a, **kw)
+
+    monkeypatch.setattr(freshness.subprocess, "run", run)
+    ctx = Context(cfg=Config(root=toy_repo, raw={}), store=None, base="a" * 40, prev=None, diff={}, rows={},
+                  scores={}, decision=None, is_source=lambda _: True)
+    with pytest.raises(RuntimeError, match="bad object database"):
         contribute(ctx)
