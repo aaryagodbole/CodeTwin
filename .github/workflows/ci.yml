@@ -112,16 +112,16 @@ jobs:
       - uses: actions/setup-dotnet@v4
         if: matrix.example == 'csharp'
         with: { dotnet-version: "8.0.x" }
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@39008827e6b4319a349e9a42dfc90579dd25f1ca   # stable
         if: matrix.example == 'rust'
-        with: { components: llvm-tools-preview }
-      - uses: taiki-e/install-action@v2
+        with: { toolchain: stable, components: llvm-tools-preview }   # pinned by SHA, so name the toolchain
+      - uses: taiki-e/install-action@75a7c0f87bd666af3cdb75c5b9e9d03ab6044e6f   # v2.90.6
         if: matrix.example == 'rust'
         with: { tool: cargo-llvm-cov }
-      - uses: ruby/setup-ruby@v1
+      - uses: ruby/setup-ruby@20eb24b0d509e2b9ed9b6d42ddfeb992915e0564   # v1.341.0
         if: matrix.example == 'ruby'
         with: { ruby-version: "3.3" }
-      - uses: shivammathur/setup-php@v2
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962   # 2.40.0
         if: matrix.example == 'php'
         with: { php-version: "8.3", coverage: pcov, tools: composer }
       - name: gcovr for C/C++ coverage
@@ -306,7 +306,9 @@ jobs:
       - run: git config --global user.email ci@example.com && git config --global user.name ci
       - uses: ./action
         with:
-          package: ".[mcp]"
+          # `record` runs this repository's own test suite, on the base branch first: install what the suite
+          # imports (httpx, fastapi) so it is complete there too, also on a base without the importorskip guards.
+          package: ".[mcp,server]"
           run-selected: "false"
           # Pull requests from forks get no OIDC token; the upload then only warns (--best-effort in the Action).
           upload: ${{ github.event.pull_request.head.repo.full_name == github.repository && 'true' || 'false' }}

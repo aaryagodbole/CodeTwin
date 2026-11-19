@@ -4,7 +4,7 @@ name: OpenSSF Scorecard
 # Results appear under Security -> Code scanning and on https://scorecard.dev.
 on:
   push:
-    branches: [main]
+    branches: [dev]          # Scorecard runs only on the default branch (dev)
   schedule:
     - cron: "41 4 * * 1"
   workflow_dispatch:

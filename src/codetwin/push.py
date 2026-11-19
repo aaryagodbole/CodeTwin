@@ -62,6 +62,12 @@ def _pull_request(env: dict[str, str]) -> int | None:
     return None
 
 
+def _level(x: Any) -> float | None:
+    """An adaptive level as the decision used it: clamped to [0, 1] (the cloud rejects values outside)."""
+    v = _finite(x)
+    return None if v is None else min(max(v, 0.0), 1.0)
+
+
 def _finite(x: Any) -> float | None:
     """A number the cloud can store, or None: NaN and Infinity are not valid JSON and are refused there."""
     if x is None or isinstance(x, bool):
@@ -117,8 +123,8 @@ def validate_decision(decision: Any) -> dict:
 
 def _same_decision(stored: dict, decision: dict) -> bool:
     """Whether the newest stored decision is the one in the JSON file. The JSON carries no decision id, so compare
-    what it does carry: verdict, mode, threshold and selection. (Not residual_risk: for an abstention the stored
-    value can differ from the printed one.)"""
+    what it does carry: verdict, mode, threshold and selection. (Not residual_risk: the JSON rounds it to 4
+    decimals.)"""
     def close(a: Any, b: Any) -> bool:
         return (a is None and b is None) or (a is not None and b is not None and math.isclose(float(a), float(b)))
     return (stored.get("decision") == decision["decision"] and stored.get("mode") == decision.get("mode")
@@ -168,7 +174,8 @@ def build_report(eng: Any, decision: dict, env: dict[str, str] | None = None,
             "alpha": _finite(detail.get("alpha")) if detail else None,
             # The adaptive level the decision was made at, and the recorded run it compared with: the cloud shows
             # these as `codetwin serve` does (alpha_t, test_files, suite_seconds) instead of guessing them.
-            "alpha_t": _finite(detail.get("alpha_t")) if detail else None,
+            # The stored state is unclamped (AdaptiveLevel.update); the level a decision uses is clamped to [0, 1].
+            "alpha_t": _level(detail.get("alpha_t")) if detail else None,
             "test_files": len(durations) if run else None,
             "suite_seconds": _finite(run.wall) if run else None,
             "threshold": _finite(decision.get("threshold")),

@@ -12,8 +12,7 @@ NAME, HELP, ORDER = "run", "run test files (default: the last selection) with th
 def add_arguments(p: argparse.ArgumentParser) -> None:
     p.add_argument("tests", nargs="*", help="test files (default: the tests selected by the last `codetwin select`)")
     p.add_argument("--decision", help="run the tests selected in this `codetwin select --json` file (not together "
-                                      "with test files); use it in CI: a change that edits only tests is printed "
-                                      "but not stored, so 'the last selection' would be an older one")
+                                      "with test files); use it in CI, where the file travels between steps")
     p.add_argument("--timeout", type=int, default=3600, help="seconds per test file")
 
 
