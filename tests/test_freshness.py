@@ -180,6 +180,19 @@ def test_different_branch(toy_repo: Path, capsys: Any) -> None:
     assert freshness["stale"] is False
     assert freshness["summary"] == "current checkout is not based on the recorded commit; age is unknown"
 
+    # 5. More commits on HEAD's side since the split than the limit allows: stale although the age is unknown
+    cfg_file = toy_repo / ".codetwin.toml"
+    cfg_file.write_text(cfg_file.read_text() + "\n[freshness]\nstale_after = 0\n")
+    capsys.readouterr()
+    assert main(["-C", str(toy_repo), "select", "--json"]) == 0
+    freshness = json.loads(capsys.readouterr().out)["extras"]["freshness"]
+    assert freshness["commits_behind"] is None
+    assert freshness["stale"] is True
+    assert freshness["summary"] == (
+        "current checkout is not based on the recorded commit and has 1 commit since they split "
+        "(stale, limit 0); run `codetwin record`"
+    )
+
 
 def test_shallow_boundary_in_range(tmp_path: Path) -> None:
     """A shallow repository where a shallow boundary commit lies in <base>..HEAD returns unknown."""

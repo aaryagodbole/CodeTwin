@@ -23,7 +23,9 @@ Output shape:
   based on it (older checkout, other branch, rebase), or a shallow clone cuts the history.
 - `stale`: true when `commits_behind > stale_after`. Also true when the exact count is unknown
   but the evidence is certainly out of date: the recorded commit is gone from a complete
-  (not shallow) history, or a shallow clone already shows more than `stale_after` commits.
+  (not shallow) history, a shallow clone already shows more than `stale_after` commits, or
+  HEAD is not based on the recorded commit and has more than `stale_after` commits since
+  the two histories split.
 - `stale_after`: `[freshness] stale_after` in .codetwin.toml (default 20; 0 means stale after
   one commit).
 - `summary`: one line for people. Consumers show it instead of `commits_behind` when that is
@@ -77,14 +79,15 @@ def get_stale_after(cfg: Any) -> int:
 def _commit_exists(repo: Path, rev: str) -> bool:
     """True if `rev` names a commit here. Any git failure other than "no such commit" raises.
 
-    `rev-parse --verify --quiet` exits 1 without output for an unknown revision; a corrupt
-    object database, a lock or permission problem exits otherwise (usually 128) with a message.
+    `rev-parse --verify --quiet` exits 1 for an unknown revision (git may still print a warning,
+    for example about a broken ref); a corrupt object database, a lock or permission problem
+    exits otherwise (usually 128).
     """
     r = subprocess.run(["git", "rev-parse", "--verify", "--quiet", f"{rev}^{{commit}}"],
                        cwd=repo, capture_output=True, text=True, check=False)
     if r.returncode == 0:
         return True
-    if r.returncode == 1 and not r.stderr.strip():
+    if r.returncode == 1:
         return False
     raise RuntimeError(f"git rev-parse --verify {rev} failed: {r.stderr.strip()}")
 
@@ -113,7 +116,9 @@ def contribute(ctx: Context) -> dict[str, Any]:
     repo = Path(ctx.cfg.root)
     # One probe: fails (not caught) when git is missing or the root is not a repository.
     is_shallow, shallow_path = git(repo, "rev-parse", "--is-shallow-repository", "--git-path", "shallow").split("\n")[:2]
-    shallow = is_shallow.strip().lower() == "true"
+    if is_shallow.strip() not in ("true", "false"):   # git before 2.15 echoes the unknown flag back
+        raise RuntimeError(f"git rev-parse --is-shallow-repository gave {is_shallow.strip()!r}; git 2.15+ is needed")
+    shallow = is_shallow.strip() == "true"
     incomplete = "history is incomplete in a shallow clone; age is unknown"
 
     if not _commit_exists(repo, ctx.base):
@@ -131,6 +136,11 @@ def contribute(ctx: Context) -> dict[str, Any]:
         # history between them was not fetched.
         if shallow:
             return _result(None, False, stale_after, incomplete)
+        # `right` still counts the commits on HEAD's side since the two histories split.
+        if right > stale_after:
+            return _result(None, True, stale_after,
+                           f"current checkout is not based on the recorded commit and has {_commits(right)} "
+                           f"since they split (stale, limit {stale_after}); {_RECORD}")
         return _result(None, False, stale_after,
                        "current checkout is not based on the recorded commit; age is unknown")
 
