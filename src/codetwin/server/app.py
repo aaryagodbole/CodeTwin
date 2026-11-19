@@ -82,7 +82,7 @@ def create_app(root: str | Path = ".", static_dir: str | Path | None = None) -> 
     @app.get("/api/decisions/{decision_id}")
     def decision_detail(eng: Eng, decision_id: int) -> dict:
         """One decision by id, including selection, reasons, per-test risk scores and outcome."""
-        d = eng.store.decision(decision_id)
+        d = eng.store.decision(decision_id, extras=False)   # the API does not return the sections (yet)
         if d is None:
             raise HTTPException(404, f"decision {decision_id} not found")
         scores = eng.store.scores(decision_id)

@@ -123,8 +123,8 @@ def validate_decision(decision: Any) -> dict:
 
 def _same_decision(stored: dict, decision: dict) -> bool:
     """Whether the newest stored decision is the one in the JSON file. The JSON carries no decision id, so compare
-    what it does carry: verdict, mode, threshold and selection. (Not residual_risk: for an abstention the stored
-    value can differ from the printed one.)"""
+    what it does carry: verdict, mode, threshold and selection. (Not residual_risk: the JSON rounds it to 4
+    decimals.)"""
     def close(a: Any, b: Any) -> bool:
         return (a is None and b is None) or (a is not None and b is not None and math.isclose(float(a), float(b)))
     return (stored.get("decision") == decision["decision"] and stored.get("mode") == decision.get("mode")

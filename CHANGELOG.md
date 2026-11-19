@@ -23,11 +23,31 @@ All notable changes to this project are documented here. The format follows
   so the code owner is asked only then; merge-review re-runs cover the whole pull request, at most twice, and a
   correctness or security finding left after the second is fixed and read by the code owner; the self-review
   stops by the same rule.
+- Isotonic recalibration of risk scores starts only with at least 5 affected and 5 unaffected test examples from
+  `codetwin learn`; before that the model's scores are used as they are and `select` says so. A fit on a few points
+  used to report 0.0% residual risk (#99).
+- `record` stores a run that did not complete (whole-run timeout; pytest exit codes 2, 3, 4) with a warning, and
+  `select` never picks it as the default base (a base named with `--base` is used, with a note); `record` then
+  exits 1 (#99).
 ### Added
+- `select --json` and `codetwin explain` report `risk_before`, the estimated residual risk of the first selection,
+  next to `residual_risk`, the risk of the tests that run (#96).
 - Report section `freshness` (`src/codetwin/report/freshness.py`): how many commits old the recorded evidence is (merged commits count), `stale` when that exceeds `[freshness] stale_after` (default 20) or when the recorded commit is gone from a complete history, with a hint to run `codetwin record`. The age is `null` when it cannot be established (other branch, older checkout, shallow clone). Git failures other than an unknown commit are shown as a broken section, not hidden as an unknown age.
 
 ### Fixed
 - VS Code impact graph: the webview ignores messages from any origin but its own (CodeQL `js/missing-origin-check`).
+- Co-change evidence was always empty: `git log --format=@@` is not a valid format, and the error was ignored. It now
+  works, reads history only up to the recorded base commit (E5), and a shallow clone or missing history is stated in
+  the decision's reasons (#99).
+- `record` stores the run and the static facts in one transaction (E6); the store uses SQLite WAL and a 5 s busy
+  timeout, so the CLI, the server and the VS Code extension can share it (#99).
+- A corrupt `.codetwin/model.json` gives a clear error instead of a raw JSON traceback (#99).
+- The stored risk of a decision now describes its stored selection: an abstention to a broader selection keeps
+  both risks and states both in its reason (E1), and the override to every test for files without runtime evidence
+  recomputes the risk (E2) (#96).
+- A change that edits only tests is stored (mode `no-source-change`), so `run`, `learn` and `explain` no longer use
+  an older decision; `learn` stores its outcome without changing calibration (E3) (#96).
+- The report sections (`extras`) of a decision are stored, so `explain` shows them later (E4, migration 0005) (#96).
 - `codetwin run --decision FILE` runs the tests of that `select --json` file; the GitHub Action uses it. A change
   that edits only tests is printed but not stored, so the Action used to run an older decision's tests or none.
 - `codetwin learn` stores its label in one transaction, so a run that stops part way can simply be repeated.

@@ -9,7 +9,7 @@
   "mode": "calibrated",
   "reasons": [
    "not calibrated yet (9 labelled changes); using threshold 0.5",
-   "estimated residual risk 33.3% > target 10%; running the broader file-coverage selection"
+   "estimated residual risk 33.3% > target 10%; running the broader file-coverage selection (estimated residual risk 0.0%)"
   ],
   "recorded": 1767226140.0,
   "residual_risk": 0.0,
@@ -99,18 +99,20 @@
   "alpha": 0.1,
   "alpha_t": 0.10800000000000001,
   "base": "eef6eadce5256127d7536e675b88b567fa8a3d44",
-  "decision": "proceed",
+  "decision": "abstain",
   "id": 5,
   "missed": false,
   "mode": "calibrated",
   "reasons": [
    "not calibrated yet (4 labelled changes); using threshold 0.5",
-   "estimated residual risk 0.0% <= target 10%"
+   "estimated residual risk 24.0% > target 10%; running the broader file-coverage selection (estimated residual risk 0.0%)",
+   "risk scores are not recalibrated yet: 4 affected and 4 unaffected test examples, at least 5 of each are needed (`codetwin learn`)"
   ],
   "recorded": 1767225840.0,
   "residual_risk": 0.0,
   "selected": [
-   "tests/test_calc.py"
+   "tests/test_calc.py",
+   "tests/test_cart.py"
   ],
   "threshold": 0.5
  },
@@ -124,10 +126,11 @@
   "mode": "calibrated",
   "reasons": [
    "not calibrated yet (3 labelled changes); using threshold 0.5",
-   "estimated residual risk 0.0% <= target 10%"
+   "estimated residual risk 0.9% <= target 10%",
+   "risk scores are not recalibrated yet: 3 affected and 3 unaffected test examples, at least 5 of each are needed (`codetwin learn`)"
   ],
   "recorded": 1767225780.0,
-  "residual_risk": 0.0,
+  "residual_risk": 0.009013298652847834,
   "selected": [
    "tests/test_cart.py"
   ],
@@ -137,17 +140,19 @@
   "alpha": 0.1,
   "alpha_t": 0.10400000000000001,
   "base": "eef6eadce5256127d7536e675b88b567fa8a3d44",
-  "decision": "proceed",
+  "decision": "abstain",
   "id": 3,
   "missed": false,
   "mode": "calibrated",
   "reasons": [
    "not calibrated yet (2 labelled changes); using threshold 0.5",
-   "estimated residual risk 0.0% <= target 10%"
+   "estimated residual risk 47.5% > target 10%; running the broader file-coverage selection (estimated residual risk 0.0%)",
+   "risk scores are not recalibrated yet: 2 affected and 2 unaffected test examples, at least 5 of each are needed (`codetwin learn`)"
   ],
   "recorded": 1767225720.0,
   "residual_risk": 0.0,
   "selected": [
+   "tests/test_calc.py",
    "tests/test_cart.py"
   ],
   "threshold": 0.5
@@ -156,18 +161,20 @@
   "alpha": 0.1,
   "alpha_t": 0.10200000000000001,
   "base": "eef6eadce5256127d7536e675b88b567fa8a3d44",
-  "decision": "proceed",
+  "decision": "abstain",
   "id": 2,
   "missed": false,
   "mode": "calibrated",
   "reasons": [
    "not calibrated yet (1 labelled changes); using threshold 0.5",
-   "estimated residual risk 0.0% <= target 10%"
+   "estimated residual risk 24.0% > target 10%; running the broader file-coverage selection (estimated residual risk 0.0%)",
+   "risk scores are not recalibrated yet: 1 affected and 1 unaffected test examples, at least 5 of each are needed (`codetwin learn`)"
   ],
   "recorded": 1767225660.0,
   "residual_risk": 0.0,
   "selected": [
-   "tests/test_calc.py"
+   "tests/test_calc.py",
+   "tests/test_cart.py"
   ],
   "threshold": 0.5
  },
@@ -181,7 +188,7 @@
   "mode": "calibrated",
   "reasons": [
    "not calibrated yet (0 labelled changes); using threshold 0.5",
-   "estimated residual risk 40.1% > target 10%; running the broader file-coverage selection"
+   "estimated residual risk 47.5% > target 10%; running the broader file-coverage selection (estimated residual risk 0.0%)"
   ],
   "recorded": 1767225600.0,
   "residual_risk": 0.0,

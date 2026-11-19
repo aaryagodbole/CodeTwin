@@ -71,7 +71,7 @@ export default function Overview() {
               : `target ${pct(s.alpha)} · level ${pct(s.alpha_t)} · calibrated on ${s.calibration_size} labelled changes`} icon={ShieldCheck}>
             {calibration.error ? <p className="text-xs text-bad-ink">{String(calibration.error.message ?? calibration.error)}</p> : <Sparkline values={observed} />}
           </Stat>
-          <Stat label="Decisions" value={s.decisions} hint={`${s.labelled_decisions} with known outcome`} icon={Database}>
+          <Stat label="Decisions" value={s.decisions} hint={`${s.labelled_decisions} labelled for calibration`} icon={Database}>
             <Sparkline values={chrono.map((d) => d.residual_risk ?? null)} color="var(--accent-2)" />
           </Stat>
           <Stat label="Recorded commit" value={<code className="text-xl">{s.recorded_commit?.slice(0, 8) ?? "none"}</code>}

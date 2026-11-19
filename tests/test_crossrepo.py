@@ -209,8 +209,11 @@ def test_stored_links_follow_the_configuration(toy_repo, app_repo, capsys):
     cfg = toy_repo / ".codetwin.toml"
     base_cfg = cfg.read_text()
     cfg.write_text(base_cfg + f'\n[[repos]]\nname = "app"\npath = "{app_repo.as_posix()}"\npackages = ["nothing_imports_this"]\n')
+    # `shop` is not installed in the dependent, so importing it would stop pytest at collection (an incomplete run,
+    # which is not runtime evidence): give the dependent a test that runs.
+    (app_repo / "tests" / "test_checkout.py").write_text("def test_pay():\n    assert True\n")
     with Engine(app_repo) as dep:
-        dep.record()                                          # the dependent has a recorded run
+        assert not dep.record().incomplete                    # the dependent has a complete recorded run
     p = toy_repo / "src/shop/price.py"
     p.write_text(p.read_text().replace('i["price"]', 'i["price"] * 1'))
     main(["-C", str(toy_repo), "crossrepo", "--json"])

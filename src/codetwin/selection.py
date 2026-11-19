@@ -17,11 +17,15 @@ class Decision:
     mode: str = "calibrated"
     reasons: list[str] = field(default_factory=list)
     extras: dict = field(default_factory=dict)      # report sections (codetwin/report/), by name
+    # Estimated residual risk of the first selection. residual_risk is always the risk of `selected`, the tests
+    # that run; the two differ when the decision abstains to a broader selection or to every test.
+    risk_before: float | None = None
 
     def to_dict(self) -> dict:
         """The output contract of `select --json`, MCP and the VS Code extension (docs/output.md)."""
+        before = None if self.risk_before is None else round(self.risk_before, 4)
         return {"schema": OUTPUT_SCHEMA, "decision": self.decision, "residual_risk": round(self.residual_risk, 4),
-                "threshold": self.threshold, "mode": self.mode, "selected": sorted(self.selected),
+                "risk_before": before, "threshold": self.threshold, "mode": self.mode, "selected": sorted(self.selected),
                 "reasons": self.reasons, "extras": self.extras}
 
 
@@ -50,8 +54,10 @@ def decide(rows, scores, selected, alpha, recal=lambda p: p, fallback: str = "fi
     """Abstain to a broader run when the estimated residual risk exceeds the target."""
     r = residual_risk(scores, selected, recal)
     if r <= alpha:
-        return Decision(selected, "proceed", r, threshold, mode, [f"estimated residual risk {r:.1%} <= target {alpha:.0%}"])
+        return Decision(selected, "proceed", r, threshold, mode, [f"estimated residual risk {r:.1%} <= target {alpha:.0%}"],
+                        risk_before=r)
     broader = set(rows) if fallback == "full" else selected | {t for t, row in rows.items() if row["cov_file"]}
     r2 = residual_risk(scores, broader, recal)
     return Decision(broader, "abstain", r2, threshold, mode,
-                    [f"estimated residual risk {r:.1%} > target {alpha:.0%}; running the broader {fallback} selection"])
+                    [f"estimated residual risk {r:.1%} > target {alpha:.0%}; running the broader {fallback} selection "
+                     f"(estimated residual risk {r2:.1%})"], risk_before=r)
