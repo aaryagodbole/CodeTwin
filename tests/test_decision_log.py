@@ -151,6 +151,37 @@ def test_extras_with_non_finite_numbers_are_stored_as_null(tmp_path: Path) -> No
         assert "extras" not in s.decisions()[0] or s.decisions()[0]["extras"] == {}   # listings skip the sections
 
 
+class _Scalar:
+    """Stands in for a numpy scalar: json cannot write it, `.item()` gives the Python value."""
+
+    def __init__(self, v: object) -> None:
+        self.v = v
+
+    def item(self) -> object:
+        return self.v
+
+    def __float__(self) -> float:
+        return float(self.v)  # type: ignore[arg-type]
+
+
+def test_extras_keep_integer_and_bool_scalars(tmp_path: Path) -> None:
+    with Store(tmp_path / "s.db") as s:
+        did = s.save_decision(base="b" * 40, mode="calibrated", decision="proceed", selected=[],
+                              extras={"x": {"n": _Scalar(5), "ok": _Scalar(True), "r": _Scalar(0.5)}})
+        extras = s.decision(did)["extras"]
+        assert extras == {"x": {"n": 5, "ok": True, "r": 0.5}}
+        assert extras["x"]["ok"] is True and type(extras["x"]["n"]) is int
+
+
+def test_damaged_extras_do_not_hide_the_decision(tmp_path: Path) -> None:
+    with Store(tmp_path / "s.db") as s:
+        did = s.save_decision(base="b" * 40, mode="calibrated", decision="proceed", selected=["t"],
+                              extras={"x": {"summary": "ok"}})
+        s.con.execute("update decision set extras='{not json' where id=?", (did,))
+        d = s.decision(did)
+        assert d is not None and d["decision"] == "proceed" and d["selected"] == ["t"] and d["extras"] == {}
+
+
 # ---------------------------------------------------------------------------------------------------- migration 0005
 def test_migration_0005_keeps_existing_decisions(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     path = tmp_path / "old.db"
