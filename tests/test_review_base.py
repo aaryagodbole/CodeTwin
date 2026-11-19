@@ -33,7 +33,9 @@ def test_a_pull_request_diffs_against_where_it_left_its_base(tmp_path: Path, mon
     event = tmp_path / "event.json"
     event.write_text(json.dumps({"pull_request": {"number": 1, "base": {"sha": pr_base}}}), encoding="utf-8")
     monkeypatch.setenv("GITHUB_EVENT_PATH", str(event))
-    assert review_base(repo, recorded) == pr_base
-    assert "+x = 10" not in _git(repo, "diff", review_base(repo, recorded) or "", "--")     # not changed by the PR
+    assert review_base(repo, recorded) == (pr_base, "HEAD")
+    assert "+x = 10" not in _git(repo, "diff", pr_base, "HEAD", "--")     # not changed by the PR
+    (repo / "a.py").write_text("x = 10\ny = 2\nz = 30\nw = 4\n")      # a CI step changed the working tree
+    assert "+w = 4" not in _git(repo, "diff", *review_base(repo, recorded), "--")   # not a line of the PR
     monkeypatch.delenv("GITHUB_EVENT_PATH")
-    assert review_base(repo, recorded) == recorded            # outside a pull request: the recorded base
+    assert review_base(repo, recorded) == (recorded, None)    # outside a pull request: recorded base to working tree
