@@ -1,7 +1,6 @@
 """FastAPI application. Every endpoint only reads evidence; nothing here changes a decision."""
 from __future__ import annotations
 
-import math
 from collections import Counter
 from collections.abc import Iterator
 from pathlib import Path
@@ -11,7 +10,7 @@ from fastapi import Depends, FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from .. import __version__
+from .. import __version__, views
 from ..commands.graph import build as build_view
 from ..commands.graph import parse_lines
 from ..engine import Engine
@@ -30,23 +29,7 @@ def _engine(request: Request) -> Iterator[Engine]:
 
 Eng = Annotated[Engine, Depends(_engine)]
 
-DECISION_KEYS = ["id", "recorded", "base", "mode", "alpha", "alpha_t", "threshold", "residual_risk", "decision",
-                 "selected", "reasons", "missed"]
-
-_NAN_KEYS = ("threshold", "residual_risk", "alpha", "alpha_t")
-
-
-def _clean_decision(d: dict) -> dict:
-    """Return a copy of a decision dict with NaN floats replaced by None and missing list fields defaulted."""
-    out = {k: d.get(k) for k in DECISION_KEYS}
-    for k in _NAN_KEYS:
-        v = out.get(k)
-        if isinstance(v, float) and math.isnan(v):
-            out[k] = None
-    # The keys are always present (from DECISION_KEYS), so a missing list is None here: default it explicitly.
-    out["selected"] = out.get("selected") or []
-    out["reasons"] = out.get("reasons") or []
-    return out
+_clean_decision = views.decision_row      # kept for callers of the old name
 
 
 def create_app(root: str | Path = ".", static_dir: str | Path | None = None) -> FastAPI:
@@ -63,15 +46,7 @@ def create_app(root: str | Path = ".", static_dir: str | Path | None = None) -> 
 
     @app.get("/api/summary")
     def summary(eng: Eng) -> dict:
-        ch = eng.change(require_run=False)
-        run = ch.prev
-        base = ch.base if run is not None else None
-        counts = eng.store.counts()
-        return {"root": str(eng.root), "packages": eng.cfg.packages, "alpha": eng.cfg.alpha,
-                "alpha_t": eng.store.alpha_t(eng.cfg.alpha),
-                "calibration_size": len(eng.store.calibration()),
-                "recorded_commit": base, "test_files": len(run.durations) if run else 0,
-                "suite_seconds": run.wall if run else None, **counts}
+        return views.summary(eng)
 
     @app.get("/api/llm")
     def llm_status(eng: Eng) -> dict:
@@ -81,22 +56,15 @@ def create_app(root: str | Path = ".", static_dir: str | Path | None = None) -> 
 
     @app.get("/api/decisions")
     def decisions(eng: Eng, limit: int = Query(100, ge=1, le=1000)) -> list[dict]:
-        return [_clean_decision(d) for d in eng.store.decisions(limit)]
+        return [views.decision_row(d) for d in eng.store.decisions(limit)]
 
     @app.get("/api/decisions/{decision_id}")
     def decision_detail(eng: Eng, decision_id: int) -> dict:
         """One decision by id, including selection, reasons, per-test risk scores and outcome."""
-        d = eng.store.decision(decision_id, extras=False)   # the API does not return the sections (yet)
+        d = views.decision_detail(eng.store, decision_id)
         if d is None:
             raise HTTPException(404, f"decision {decision_id} not found")
-        scores = eng.store.scores(decision_id)
-        clean_scores = {
-            k: (None if s is None or (isinstance(s, float) and math.isnan(s)) else s)
-            for k, s in scores.items()
-        }
-        res = _clean_decision(d)
-        res["scores"] = clean_scores
-        return res
+        return d
 
     @app.get("/api/flaky")
     def flaky(eng: Eng) -> list[dict]:
@@ -156,13 +124,7 @@ def create_app(root: str | Path = ".", static_dir: str | Path | None = None) -> 
     @app.get("/api/calibration")
     def calibration(eng: Eng) -> dict:
         """Observed miss rate of labelled decisions over time, against the target alpha."""
-        rows = eng.store.labelled("calibrated")
-        points, misses = [], 0
-        for i, (did, alpha, alpha_t, missed) in enumerate(rows, 1):
-            misses += missed
-            points.append({"n": i, "decision_id": did, "alpha": alpha, "alpha_t": alpha_t,
-                           "observed_miss_rate": misses / i})
-        return {"points": points, "labelled": len(rows), "misses": misses}
+        return views.calibration(eng.store)
 
     @app.get("/api/map")
     def system_map(eng: Eng) -> dict:
