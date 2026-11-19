@@ -8,9 +8,17 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Added
+- `select --json` and `codetwin explain` report `risk_before`, the estimated residual risk of the first selection,
+  next to `residual_risk`, the risk of the tests that run (#96).
 - Report section `freshness` (`src/codetwin/report/freshness.py`): how many commits old the recorded evidence is (merged commits count), `stale` when that exceeds `[freshness] stale_after` (default 20) or when the recorded commit is gone from a complete history, with a hint to run `codetwin record`. The age is `null` when it cannot be established (other branch, older checkout, shallow clone). Git failures other than an unknown commit are shown as a broken section, not hidden as an unknown age.
 
 ### Fixed
+- The stored risk of a decision now describes its stored selection: an abstention to a broader selection keeps
+  both risks and states both in its reason (E1), and the override to every test for files without runtime evidence
+  recomputes the risk (E2) (#96).
+- A change that edits only tests is stored (mode `no-source-change`), so `run`, `learn` and `explain` no longer use
+  an older decision; `learn` stores its outcome without changing calibration (E3) (#96).
+- The report sections (`extras`) of a decision are stored, so `explain` shows them later (E4, migration 0005) (#96).
 - `codetwin run --decision FILE` runs the tests of that `select --json` file; the GitHub Action uses it. A change
   that edits only tests is printed but not stored, so the Action used to run an older decision's tests or none.
 - `codetwin learn` stores its label in one transaction, so a run that stops part way can simply be repeated.

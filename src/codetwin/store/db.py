@@ -10,10 +10,11 @@ import json
 import math
 import sqlite3
 import time
+from collections import Counter
 from collections.abc import Iterable, Iterator
 from contextlib import AbstractContextManager, contextmanager
 from importlib import resources
-from pathlib import Path
+from pathlib import Path, PurePath
 from typing import Any, Self
 
 from .. import __version__
@@ -46,6 +47,52 @@ def outcomes_of(run: TestRun) -> dict[str, list[str]]:
         if f not in unrun:
             out.setdefault(f, []).append(case)
     return out
+
+
+def _json_or_none(extras: Any) -> str | None:
+    """A decision's report sections as stored JSON (NaN and infinity become null); None when there are none."""
+    if not extras:
+        return None
+    if not isinstance(extras, dict):
+        raise TypeError("extras must be a dict of report sections")
+    return json.dumps(_finite_json(extras), sort_keys=True, default=_json_value)
+
+
+def _json_value(x: Any) -> Any:
+    """Values json cannot write itself (a Path, a numpy number, ...): a finite number if it is one, else text."""
+    if isinstance(x, PurePath):
+        return x.as_posix()                       # the same text on every operating system
+    item = getattr(x, "item", None)               # a numpy scalar: its own Python type (int, bool, float)
+    if callable(item):
+        try:
+            v = item()
+        except (TypeError, ValueError):
+            v = None
+        if isinstance(v, (bool, int)):
+            return v
+    try:
+        f = float(x)
+    except (TypeError, ValueError):
+        return str(x)
+    return f if math.isfinite(f) else None
+
+
+def _finite_json(x: Any) -> Any:
+    if isinstance(x, float):
+        return x if math.isfinite(x) else None
+    if isinstance(x, dict):
+        return {str(k): _finite_json(v) for k, v in x.items()}
+    if isinstance(x, (list, tuple, set, frozenset)):
+        return [_finite_json(v) for v in (_sorted(x) if isinstance(x, (set, frozenset)) else x)]
+    return x
+
+
+def _sorted(values: Iterable[Any]) -> list[Any]:
+    """Natural order when the values compare (numbers, strings), else by their text."""
+    try:
+        return sorted(values)
+    except TypeError:
+        return sorted(values, key=str)
 
 
 def _num(x: float | None) -> float | None:
@@ -95,13 +142,26 @@ class Store:
         for name, sql in _migrations():
             if name in done:
                 continue
+            # A table rebuild must not cascade to child rows: such a file starts with this marker. The pragma has no
+            # effect inside a transaction, so it is set before `begin` and restored after commit or rollback.
+            fk_off = sql.lstrip("\ufeff \t\r\n").startswith("-- requires: foreign_keys off")
+            known: Counter[tuple] = Counter()
             self._depth = 1
             try:
+                if fk_off:
+                    self.con.execute("pragma foreign_keys = off")
+                    # Fail only on violations this migration adds, so an orphan row from before cannot lock the store.
+                    # A multiset: `without rowid` tables report every violation with rowid null, so count them.
+                    known = Counter(tuple(r) for r in self.con.execute("pragma foreign_key_check"))
                 # Inside the try: if the script itself fails part way, its open transaction is rolled back too.
                 self.con.executescript("begin;\n" + sql)   # leaves the transaction open (no implicit commit)
                 if name in STEPS:
                     STEPS[name](self)
+                if fk_off and (bad := Counter(tuple(r) for r in self.con.execute("pragma foreign_key_check")) - known):
+                    raise sqlite3.IntegrityError(f"migration {name} broke {bad.total()} foreign key(s): "
+                                                 f"{list(bad)[:3]}")
                 self.con.execute("insert into migrations values (?,?)", (name, time.time()))
+                self.con.execute("commit")
             except BaseException:
                 if self.con.in_transaction:
                     self.con.execute("rollback")
@@ -109,7 +169,8 @@ class Store:
                 raise
             finally:
                 self._depth = 0
-            self.con.execute("commit")
+                if fk_off:
+                    self.con.execute("pragma foreign_keys = on")
             new.append(name)
         return new
 
@@ -338,7 +399,8 @@ class Store:
     # ------------------------------------------------------------- decisions and their outcomes
     def save_decision(self, **d: Any) -> int:
         """Store a decision: base, head, mode, alpha, alpha_t, threshold, residual_risk, decision ('proceed' or
-        'abstain'), selected tests, reasons and, optionally, the model's score of every candidate test."""
+        'abstain'), selected tests, reasons and, optionally, the model's score of every candidate test, risk_before
+        (risk of the first selection) and extras (report sections, a JSON object)."""
         with self._tx():
             when = d.get("recorded") or time.time()
             cur = self.con.execute(
@@ -349,6 +411,10 @@ class Store:
             did = cur.lastrowid
             if did is None:
                 raise RuntimeError("decision was not stored")
+            # Separate update: the 0003 data migration (store/legacy.py) also calls this, before 0005 adds the columns.
+            if d.get("risk_before") is not None or d.get("extras"):
+                self.con.execute("update decision set risk_before=?, extras=? where id=?",
+                                 (_num(d.get("risk_before")), _json_or_none(d.get("extras")), did))
             self.con.executemany("insert into decision_selection values (?,?)",
                                  [(did, self._entity(t)) for t in sorted(d["selected"])])
             self.con.executemany("insert into decision_reason values (?,?,?)",
@@ -369,23 +435,29 @@ class Store:
         return [r[0] for r in self.con.execute(f"select e.path from {table} x join code_entity e on e.id = x.test_id "  # noqa: S608 (constant SQL; values bound)
                                                "where x.decision_id=? order by e.path", (decision_id,))]
 
-    def decision(self, decision_id: int) -> dict | None:
-        """One decision with its selection, reasons, scores and outcome (missed: None until learned)."""
-        rows = self.decisions(ids=[decision_id])
+    def decision(self, decision_id: int, extras: bool = True) -> dict | None:
+        """One decision with its selection, reasons, outcome (missed: None until learned) and report sections."""
+        rows = self.decisions(ids=[decision_id], extras=extras)
         return rows[0] if rows else None
 
-    def decisions(self, limit: int = 100, ids: list[int] | None = None) -> list[dict]:
-        """Newest first."""
-        q = ("select d.id, d.recorded, r.sha, d.mode, d.alpha, d.alpha_t, d.threshold, d.residual_risk, d.verdict, "
-             "o.missed from decision d join revision r on r.id = d.base_revision_id "
+    def decisions(self, limit: int = 100, ids: list[int] | None = None, extras: bool = False) -> list[dict]:
+        """Newest first. `extras` (the report sections) is read only when asked for: listings do not need it."""
+        extras_col = "d.extras" if extras else "null"   # one of two constant column expressions
+        q = ("select d.id, d.recorded, r.sha, d.mode, d.alpha, d.alpha_t, d.threshold, d.residual_risk, d.verdict, "  # noqa: S608 (constant SQL; values bound)
+             f"o.missed, d.risk_before, {extras_col} from decision d join revision r on r.id = d.base_revision_id "
              "left join decision_outcome o on o.decision_id = d.id ")
         rows = (self.con.execute(q + f"where d.id in ({','.join('?' * len(ids))}) order by d.id desc", ids) if ids
                 else self.con.execute(q + "order by d.id desc limit ?", (limit,)))
-        keys = ["id", "recorded", "base", "mode", "alpha", "alpha_t", "threshold", "residual_risk", "decision", "missed"]
+        keys = ["id", "recorded", "base", "mode", "alpha", "alpha_t", "threshold", "residual_risk", "decision", "missed",
+                "risk_before", "extras"]
         out = []
         for r in rows.fetchall():
             d = dict(zip(keys, r, strict=True))
             d["missed"] = None if d["missed"] is None else bool(d["missed"])
+            try:
+                d["extras"] = json.loads(d["extras"]) if d["extras"] else {}
+            except ValueError:                    # a damaged value must not hide the verdict and reasons
+                d["extras"] = {}
             d["selected"] = self._tests_of("decision_selection", d["id"])
             d["reasons"] = [x[0] for x in self.con.execute("select text from decision_reason where decision_id=? "
                                                            "order by ordinal", (d["id"],))]
@@ -402,7 +474,7 @@ class Store:
         row = self.con.execute("select max(id) from decision").fetchone()
         if row[0] is None:
             return None
-        d = self.decision(row[0])
+        d = self.decision(row[0], extras=False)
         if d is None:
             return None
         return {"id": d["id"], "base": d["base"], "mode": d["mode"], "selected": d["selected"],
@@ -414,8 +486,10 @@ class Store:
                                                    "where mode=? order by id", (mode,))]
 
     def counts(self) -> dict[str, int]:
+        # A change that edits only tests teaches calibration nothing, so it is not counted as labelled.
         return {"decisions": self.con.execute("select count(*) from decision").fetchone()[0],
-                "labelled_decisions": self.con.execute("select count(*) from decision_outcome").fetchone()[0]}
+                "labelled_decisions": self.con.execute(
+                    "select count(*) from labelled_decision where mode != 'no-source-change'").fetchone()[0]}
 
     # ------------------------------------------------------------- learning state (append-only histories)
     def calibration(self, window: int = CALIBRATION_WINDOW) -> list[float]:

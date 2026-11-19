@@ -9,7 +9,7 @@
   "mode": "calibrated",
   "reasons": [
    "not calibrated yet (9 labelled changes); using threshold 0.5",
-   "estimated residual risk 33.3% > target 10%; running the broader file-coverage selection"
+   "estimated residual risk 33.3% > target 10%; running the broader file-coverage selection (estimated residual risk 0.0%)"
   ],
   "recorded": 1767226140.0,
   "residual_risk": 0.0,
@@ -181,7 +181,7 @@
   "mode": "calibrated",
   "reasons": [
    "not calibrated yet (0 labelled changes); using threshold 0.5",
-   "estimated residual risk 40.1% > target 10%; running the broader file-coverage selection"
+   "estimated residual risk 40.1% > target 10%; running the broader file-coverage selection (estimated residual risk 0.0%)"
   ],
   "recorded": 1767225600.0,
   "residual_risk": 0.0,
