@@ -22,9 +22,10 @@ def parse_lines(text: str | None) -> tuple[int, int] | None:
 
 
 def build(eng, file: str, lines: tuple[int, int] | None) -> dict:
-    base = eng.store.latest_run_sha()
-    run = eng.store.get_run(base) if base else None
-    view = impact_view(eng.facts_now(), run, eng.cfg.src_root, eng.tests_now(), file, lines)
+    ch = eng.change(require_run=False)
+    run = ch.prev
+    base = ch.base if run is not None else None
+    view = impact_view(ch.facts_now, run, eng.cfg.src_root, ch.tests_now, file, lines)
     view["evidence"] = {"recorded_commit": base, "has_coverage": run is not None}
     if run is None:
         view["unknowns"].append("no recorded run: run `codetwin record` to add runtime evidence")

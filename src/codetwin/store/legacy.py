@@ -8,12 +8,12 @@ from __future__ import annotations
 import json
 import math
 from collections.abc import Callable
-from typing import TYPE_CHECKING
+from typing import Any
 
 from ..evidence.model import FileFacts, TestRun
 
-if TYPE_CHECKING:
-    from .db import Store
+# A codetwin.store.db.Store. Not imported: db imports this module to run the data steps of its migrations.
+Store = Any
 
 OLD_TABLES = ("runs", "static", "decisions", "outcomes", "state", "test_outcomes")
 

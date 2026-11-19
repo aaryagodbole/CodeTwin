@@ -98,6 +98,11 @@ class Language:
 
     name = "base"
     extensions: tuple[str, ...] = ()
+    uses_packages = False          # reads `packages` from the configuration (coverage measured per package)
+    mutates_every_function = False  # extreme_mutant supports every function (None then means it failed)
+    # How a change that leaves the code's meaning untouched is described (report section semantic_noop).
+    noop_description = ("semantic no-op (syntax tree unchanged apart from comments and formatting): only added or "
+                        "changed tests are needed")
 
     def __init__(self, cfg: Config):
         self.cfg = cfg
@@ -187,3 +192,25 @@ class Language:
 
     def describe(self) -> str:
         return self.name
+
+    def config_table(self) -> str:
+        """The `[lang.<name>]` table `codetwin init` writes for this language in a multi-language repository."""
+        from ..config_templates import toml_list as _toml_list
+        g = self.guess_config()
+        runner = g.get("runner") or self.runners_by_folder() or "none found: static evidence only until you set test_command"
+        return (f"[lang.{self.name}]\nsource_dirs = {_toml_list(g['source_dirs'])}\ntests_dir = \"{g['tests_dir']}\"\n"
+                f"# test runner: {runner}; override with a [lang.{self.name}.runner] table (docs/languages.md)\n")
+
+    def runners_by_folder(self) -> str | None:
+        """For a monorepo whose build files sit in sub-folders: which runner each project folder uses, as text."""
+        return None
+
+    def config_file(self) -> str:
+        """The `.codetwin.toml` `codetwin init` writes for a repository in this language only."""
+        from ..config_templates import GENERIC_TEMPLATE
+        from ..config_templates import toml_list as _toml_list
+        g = self.guess_config()
+        return GENERIC_TEMPLATE.format(language=self.name, source_dirs=_toml_list(g["source_dirs"]),
+                                       tests_dir=g["tests_dir"],
+                                       runner=g.get("runner") or "none found (static evidence only until you set "
+                                                                 "test_command)")

@@ -40,8 +40,9 @@ from pathlib import Path
 from xml.etree import ElementTree as ET  # noqa: S405
 
 from ..evidence.model import FileFacts, TestRun
-from . import auto
 from . import coverage_formats as covfmt
+from .auto import IMPORT as AUTO_IMPORT
+from .auto import is_function as auto_is_function
 from .base import Language, glob_match, repo_files, under
 from .spec import Runner, Spec
 
@@ -292,7 +293,7 @@ class Generic(Language):
                 nm = sp.names(n, src)
                 if nm:
                     names.add(nm)
-            if n.type in sp.function_types or (sp.auto and auto.is_function(n.type)):
+            if n.type in sp.function_types or (sp.auto and auto_is_function(n.type)):
                 body = n.child_by_field_name("body") or next(
                     (c for c in n.named_children if c.type in BODY_TYPES), None)
                 if body is not None:
@@ -315,7 +316,7 @@ class Generic(Language):
                 continue
             if ch.type in sp.comment_types or ch.type in sp.decl_types or ch.type in sp.function_types:
                 continue
-            if sp.auto and (auto.is_function(ch.type) or auto.IMPORT.search(ch.type)
+            if sp.auto and (auto_is_function(ch.type) or AUTO_IMPORT.search(ch.type)
                             or any(k in ch.type for k in ("class", "module", "struct", "interface", "type", "package"))):
                 continue
             mod_lines.update(range(line(ch), end_line(ch) + 1))
@@ -608,7 +609,7 @@ class Generic(Language):
         tree = parse(g, b)
         best = None
         for n in walk(tree.root_node):
-            if (n.type in self.spec.function_types or (self.spec.auto and auto.is_function(n.type))) \
+            if (n.type in self.spec.function_types or (self.spec.auto and auto_is_function(n.type))) \
                     and line(n) == fn[0] and end_line(n) == fn[1]:
                 best = n
         if best is None:
@@ -620,6 +621,19 @@ class Generic(Language):
         return (b[:s] + rep.encode("utf-8") + b[e:]).decode("utf-8")
 
     # --------------------------------------------------------------- init
+    def runners_by_folder(self) -> str | None:
+        # monorepo or mixed repository: the build file (package.json, Cargo.toml, go.mod, ...) is in a sub-folder,
+        # and each test runs from its own project folder
+        per: dict[str, str] = {}
+        for t in self.list_tests():
+            r = self.runner_for(t, is_dir=False)
+            if r is not None:
+                per.setdefault(self.project_dir(t) or ".", r.name)
+        if not per:
+            return None
+        return ("per project folder: " + ", ".join(f"{d}/ ({n})" for d, n in sorted(per.items())[:6])
+                + (" and others" if len(per) > 6 else ""))
+
     def guess_config(self) -> dict:
         # the first candidate that exists (src/main/java before src); "." when none does
         dirs = next(([d] for d in self.spec.source_dirs if (self.root / d).is_dir()), ["."])

@@ -9,5 +9,6 @@ accepted; a later record supersedes it.
 | [0001](0001-knowledge-graph-storage.md) | Knowledge graph: NetworkX built from the SQLite evidence store, no graph database | Accepted |
 | [0002](0002-review-findings-and-sarif.md) | Review output: rule ids, evidence-first findings, SARIF 2.1.0 | Accepted |
 | [0003](0003-cloud-plane.md) | Cloud plane: receives decision reports (never code), Vercel + Neon, GitHub OIDC uploads | Accepted |
+| [0004](0004-deep-engine-modules.md) | Deep engine modules: Change, Selection policy, Calibration ledger, read models, language specs | Proposed |
 
 New record: copy the newest file, take the next number, set the status to *Proposed*, and open a pull request.

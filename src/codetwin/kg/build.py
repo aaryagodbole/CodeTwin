@@ -1,7 +1,6 @@
 """Build the knowledge graph from recorded evidence: static facts, a test run and the commit history."""
 from __future__ import annotations
 
-import subprocess
 from collections import Counter
 from collections.abc import Callable, Iterable
 from itertools import combinations
@@ -82,14 +81,15 @@ def from_engine(eng: Any, sha: str | None = None) -> KnowledgeGraph:
     run = eng.store.get_run(sha)
     if not static and run is None:
         raise RuntimeError(f"no recorded evidence for {sha}; record it first or pick another commit")
-    return build(static, run, history_at(eng.root, sha), eng.lang.is_test, eng.cfg.src_root, repo=eng.root.name)
+    return build(static, run, eng.history(sha), eng.lang.is_test, eng.cfg.src_root, repo=eng.root.name)
 
 
 def history_at(root: Any, sha: str, limit: int = 300) -> list[list[str]]:
     """Files changed together per commit, up to and including `sha` (not the current HEAD), oldest first,
-    so co-change edges describe the same commit as the static and runtime evidence."""
-    out = subprocess.run(["git", "log", "--first-parent", "--name-only", "-z", "--format=%x1e", "-n", str(limit), sha,
-                          "--"], cwd=root, capture_output=True, text=True, check=False).stdout
-    # -z: NUL-separated, unquoted paths (spaces and quotes stay intact); %x1e (record separator) frames commits
-    commits = [[p.strip("\n") for p in c.split("\0") if p.strip("\n")] for c in out.split("\x1e")]
-    return [c for c in commits if c][::-1]
+    so co-change edges describe the same commit as the static and runtime evidence. Empty when git cannot read
+    it."""
+    from ..evidence.history import commits_until
+    try:
+        return commits_until(root, sha, limit)
+    except RuntimeError:
+        return []

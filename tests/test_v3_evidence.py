@@ -77,7 +77,7 @@ def test_weakcheck_finds_checked_and_unchecked(toy_repo, capsys):
 
 
 def test_mutate_keeps_header_of_one_line_functions():
-    from codetwin.evidence.weakcheck import _mutate
+    from codetwin.lang.python import _mutate
     src = "def f(x): return x + 1\n\n\ndef g(x):\n    y = x\n    return y\n"
     assert _mutate(src, 1, 1, 1) == "def f(x): return None\n\n\ndef g(x):\n    y = x\n    return y\n"
     assert _mutate(src, 4, 5, 6) == "def f(x): return x + 1\n\n\ndef g(x):\n    return None\n"

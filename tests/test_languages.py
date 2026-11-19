@@ -137,15 +137,14 @@ def test_javascript_end_to_end_with_node_test(tmp_path, monkeypatch):
         d = eng.select()
         assert d.extras["semantic_noop"]["kind"] == "semantic"
         assert "test/util.test.js" in d.selected
-        rows, _ = eng.analyse()[3], None
+        rows = eng.change().rows
         assert rows["test/util.test.js"]["cov_line"] == 1 and rows["test/math.test.js"]["cov_line"] == 0
         assert rows["test/util.test.js"]["static_inv_dist"] == 0.5       # util.test -> util -> math
     from codetwin.evidence.weakcheck import changed_functions, run_checks
     with Engine(tmp_path) as eng:
-        base = eng.store.latest_run_sha()
-        checks = changed_functions(eng.changed(base), eng.store.get_run(base), eng.store.get_static(base),
-                                   eng.facts_now(), eng.is_source)
-        run_checks(eng.root, ".", checks, eng.facts_now(), 120, eng.lang)
+        ch = eng.change()
+        checks = changed_functions(ch.diff, ch.prev, ch.static_base, ch.facts_now, ch.is_source)
+        run_checks(eng.root, ".", checks, ch.facts_now, 120, eng.lang)
     assert [(c.file, c.status) for c in checks] == [("src/math.js", "unchecked")]   # util.test asserts nothing
     assert main(["run", "test/math.test.js"]) == 0
 

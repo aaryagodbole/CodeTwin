@@ -8,6 +8,18 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Changed
+- Engine architecture (ADR 0004, `CONTEXT.md`): one `ChangeContext` per change (`Engine.change()`), a pure selection
+  policy (`selection.choose()`), a calibration ledger (`risk/ledger.py`), read models for the API (`views.py`) and
+  Python described by a language spec like every other language. Decisions and API answers are unchanged; the
+  working tree is parsed once per decision instead of up to six times. `Engine.analyse()` and
+  `Engine.without_runtime_evidence()` are removed; `Engine.change()` returns a `ChangeContext`.
+- The knowledge graph and the co-change features read git history with one reader (`evidence/history.py`).
+- No import cycles left in the package (CodeQL `py/cyclic-import`, #94): `.codetwin.toml` templates live in
+  `config_templates.py`, `codetwin init` writes the file, the Python mutant moved into the Python adapter, the
+  store's legacy import no longer imports the store, and `ChangeContext` is typed against a small `Workspace`
+  protocol.
+- `Store.decisions()` reads selections and reasons with one query per table instead of two per row
+  (`/api/decisions?limit=500` went from about 1,000 queries to 3, #91).
 - `codetwin push` adds `alpha_t`, `test_files` and `suite_seconds` to the report, and the cloud API shows them, so
   its summary, decisions and calibration match `codetwin serve` instead of repeating `alpha` and summing per-test
   times. The cloud no longer invents a target of 10% for a project without one (`alpha` is null).
@@ -29,6 +41,7 @@ All notable changes to this project are documented here. The format follows
 - `record` stores a run that did not complete (whole-run timeout; pytest exit codes 2, 3, 4) with a warning, and
   `select` never picks it as the default base (a base named with `--base` is used, with a note); `record` then
   exits 1 (#99).
+
 ### Added
 - `select --json` and `codetwin explain` report `risk_before`, the estimated residual risk of the first selection,
   next to `residual_risk`, the risk of the tests that run (#96).
