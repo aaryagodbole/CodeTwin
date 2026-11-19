@@ -19,8 +19,13 @@ All notable changes to this project are documented here. The format follows
   reuses the decisions list it already downloaded.
 - AGENTS.md: wording of the review process aligned (merge `dev` before the first and final review only, what plain
   `/code-review` reviews, `git reset --hard origin/<branch>` is allowed, the review rules live in three files).
+- Review process (AGENTS.md, PR template): open pull requests as drafts and mark them ready after the self-review,
+  so the code owner is asked only then; merge-review re-runs cover the whole pull request, at most twice, and a
+  correctness or security finding left after the second is fixed and read by the code owner; the self-review
+  stops by the same rule.
 
 ### Fixed
+- VS Code impact graph: the webview ignores messages from any origin but its own (CodeQL `js/missing-origin-check`).
 - `codetwin run --decision FILE` runs the tests of that `select --json` file; the GitHub Action uses it. A change
   that edits only tests is printed but not stored, so the Action used to run an older decision's tests or none.
 - `codetwin learn` stores its label in one transaction, so a run that stops part way can simply be repeated.

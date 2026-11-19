@@ -69,19 +69,22 @@ scripts/check.sh                                       # must pass; fix every er
 
 Add a line to `CHANGELOG.md` under *Unreleased*, and update the docs the issue names.
 
-Your own review comes right after you open the pull request (step 5) and before you ask anyone to review it
-(step 7): see "Self-review of your pull request" below.
+Your own review comes right after you open the pull request as a draft (step 5) and before you mark it ready,
+which is when reviewers are asked: see "Self-review of your pull request" below.
 
 **5. Open the pull request**
 
 ```bash
-gh pr create --base dev --fill                         # or use the "Compare & pull request" button on GitHub
+gh pr create --base dev --fill --draft                 # or "Create draft pull request" on GitHub
+# ... self-review (see below), fix what it finds, push, then fill in *Self-review* in the body ...
+gh pr ready                                            # or the "Ready for review" button
 ```
 
-Fill in every part of the template: `Closes #<issue>`, the checklist, *Beyond the issue* (write "none" if you
-followed the issue exactly), *Self-review* (what your review found and what you fixed) and a screenshot for a
-dashboard or VS Code change. Do not open it as a draft
-unless you are still working; drafts are not reviewed.
+Open it as a **draft**: GitHub asks the code owner for a review only when a draft is marked ready, so nobody is
+asked before your own review is in. Fill in every part of the template: `Closes #<issue>`, the checklist,
+*Beyond the issue* (write "none" if you followed the issue exactly) and a screenshot for a dashboard or VS Code
+change. Fill in *Self-review* (what your review found and what you fixed) by editing the pull request body after
+the review, then mark it ready.
 
 **6. Wait for CI (the checks at the bottom of the pull request)**
 
@@ -207,14 +210,16 @@ spec. Follow these steps in order.
    messages. Follow the rules below (no look-ahead, unknowns reported, extension points, output contract).
 5. **Test what the issue lists**, plus one test for each extra case you added. Try the feature by hand as the
    issue describes. Run `scripts/check.sh` until it passes. Update the CHANGELOG and docs named in the issue.
-   Right after opening the pull request (step 6), and before asking for reviews (step 7), do the
+   Right after opening the pull request as a draft (step 6), and before marking it ready (step 7), do the
    **self-review** (section "Self-review of your pull request" below) and fix what it finds.
-6. **Open the pull request into `dev`.** Fill in the template:
+6. **Open the pull request into `dev` as a draft** (`gh pr create --draft`). Code owners are asked only when it
+   is marked ready, so the self-review comes first. Fill in the template:
    - write `Closes #<issue>` in the body
    - list anything you did differently from the issue, and why, with a link to the issue comment where it was
      agreed
-   - fill in *Self-review*: the tool and skills you used, what the review found, what you fixed
    - add a screenshot for any VS Code or dashboard change
+   - after the self-review, edit the body to fill in *Self-review* (the tool and skills you used, what the
+     review found, what you fixed), then mark the pull request ready (`gh pr ready`)
 7. **Get the reviews.** CodeRabbit, the code owner and the merge review are required; PR-Agent is optional:
    - **CodeRabbit.** Auto-review is off in this repository. When the pull request is ready (checks green, your
      own review done), comment exactly `@coderabbitai full review`. This must be a mention, not a link. After
@@ -231,10 +236,12 @@ spec. Follow these steps in order.
      nothing; `--comment` posts each finding on the lines it is about. The reviewer reads the linked issue first,
      so a problem in the issue's Approach is raised on the issue, not blamed on the author. The pull request is
      merged only when every finding is fixed or answered, every other review comment is resolved and CI is
-     green. If fixes were pushed after the review, it runs again on those new commits only, at most twice. An AI
-     review finds something slightly different on every run, so "nothing new" is not the bar: the pull request
-     is merged when a re-run has no new correctness or security finding. Smaller points left after the second
-     re-run go into a follow-up issue linked from the pull request. A merge of `dev` that git completed on its
+     green. If fixes were pushed after the review, it runs again on the whole pull request (a run cannot be
+     limited to new commits), at most twice. An AI review finds something slightly different on every run, so
+     "nothing new" is not the bar: the pull request is merged when a re-run has no new correctness or security
+     finding. Smaller points left after the second re-run go into a follow-up issue linked from the pull request.
+     If the second re-run still finds a correctness or security problem, the author fixes it and the code owner
+     reviews that fix by reading it (no further AI run), then merges. A merge of `dev` that git completed on its
      own is covered by CI; a merge where you solved conflicts by hand is reviewed again. When the code owner is
      the author, the code owner still runs the merge review and merges with the admin bypass after it passes;
      this is the only exception to "never merge your own pull request".
@@ -285,9 +292,9 @@ If a tool has no skill for a job, follow the steps in this file by hand.
 ## Self-review of your pull request
 
 Every author does this, and every AI coding tool (Claude Code, Codex, Antigravity, Copilot, Cursor or any
-other) must do it at two moments: right after the pull request is opened, before anyone is asked to review it,
-and again before it asks for the final
-review after fixing review comments (step 8). Not on every small push. A pull request without a self-review is
+other) must do it at two moments: right after the pull request is opened as a draft, before it is marked ready
+(which is when reviewers are asked), and again before it asks for the final review after fixing review comments
+(step 8). Not on every small push. A pull request without a self-review is
 not ready for review.
 
 **1. Run a full review of your whole change** against the latest `dev`: `git fetch origin`, then review
@@ -319,8 +326,9 @@ after review fixes, merge it only if it conflicts, so the next CodeRabbit review
 7. **Duplication and size.** No copied blocks that must be kept in step; reuse existing helpers.
 8. **Docs.** CHANGELOG, README and `docs/` match the new behaviour.
 
-**3. Fix and repeat.** Fix every real finding, run `scripts/check.sh`, and review again until nothing new
-comes up. A finding you think is wrong: keep a one-line reason.
+**3. Fix and repeat.** Fix every real finding, run `scripts/check.sh`, and review again, at most twice: stop
+when a run has no new correctness or security finding (the same bar as the merge review; an AI review always
+finds something slightly different). A finding you think is wrong: keep a one-line reason.
 
 **4. Report it** in the pull request's *Self-review* section:
 - the tool you used
