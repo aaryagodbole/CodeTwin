@@ -16,11 +16,12 @@ def add_arguments(p) -> None:
 def run(args) -> int:
     from ..crossrepo.sources import connected, sync
     with engine(args) as eng:
-        synced = {s["name"]: s for s in sync(eng.cfg)} if args.sync else {}
+        # sync() returns one status per [[repos]] entry, in order: match by position (names may repeat).
+        synced = sync(eng.cfg) if args.sync else []
         rows = [{"name": s.name, "url": s.url, "path": str(s.path) if s.path else None, "ref": s.ref,
                  "available": s.available, "error": s.error,
-                 **({"sync": synced[s.name]["status"], "detail": synced[s.name]["detail"]} if s.name in synced else {})}
-                for s in connected(eng.cfg)]
+                 **({"sync": synced[i]["status"], "detail": synced[i]["detail"]} if i < len(synced) else {})}
+                for i, s in enumerate(connected(eng.cfg))]
     if args.json:
         print_json(rows)
     elif not rows:

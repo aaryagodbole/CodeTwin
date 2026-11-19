@@ -18,8 +18,10 @@ says to run `codetwin crossrepo --sync`. Only `--sync` clones or updates (shallo
 review and the MCP tools stay fast and work offline.
 
 Safety: only https, ssh (`ssh://` or `user@host:path`) and `file://` URLs are accepted; git's `ext::` transport is
-disabled; arguments are separated from URLs with `--`. Credentials are never read from `.codetwin.toml`: private
-repositories use git's own credential setup (a credential helper, an SSH key, or the Action's token).
+disabled; arguments are separated from URLs with `--`. Credentials are never read from `.codetwin.toml`: an https
+URL with any user name (a token is often given as one) and an ssh URL with a password are refused; private
+repositories use git's own credential setup (a credential helper, an SSH key, or the Action's token). The Action
+does not sync for pull requests from forks, whose `.codetwin.toml` could name any URL.
 """
 from __future__ import annotations
 
@@ -64,8 +66,10 @@ def url_problem(url: str) -> str | None:
     """Why a URL is not accepted, or None."""
     if not url or url != url.strip() or url.startswith("-") or any(c in url for c in "\n\r\t "):
         return "the url is empty, starts with '-' or contains whitespace"
-    if url.startswith(("https://", "ssh://")) and ":" in urlsplit(url).netloc.rpartition("@")[0]:
-        return "the url contains a password or token; use git's credential helper or an SSH key instead"
+    userinfo = urlsplit(url).netloc.rpartition("@")[0] if url.startswith(("https://", "ssh://")) else ""
+    # https carries no user at all (a token is often given as the user name); ssh may name a user, never a password.
+    if (url.startswith("https://") and userinfo) or ":" in userinfo:
+        return "the url contains a user name, password or token; use git's credential helper or an SSH key instead"
     if url.startswith(("https://", "ssh://", "file://")) or _SCP.match(url):
         return None
     return "only https://, ssh://, user@host:path and file:// URLs are accepted"
@@ -93,16 +97,19 @@ def connected(cfg: Any) -> list[Source]:
         url = r.get("url")
         path = r.get("path")
         ref = r.get("ref")
-        if url is not None and not isinstance(url, str):
+        bad_url = url is not None and not isinstance(url, str)
+        if bad_url:
             url = None
         default = _name_from_url(url) if url else Path(str(path or "")).name
         name = str(r.get("name") or default or f"repos[{i}]")
         src = Source(name, None, url=url, ref=str(ref) if ref else None, entry=r)
-        if url and path:
+        if bad_url:
+            src.error = "url must be a string"
+        elif url and path:
             src.error = "give either path or url, not both"
         elif not url and not path:
             src.error = "needs a path or a url"
-        elif name in seen:
+        elif name.lower() in seen:         # names become folder names: unique also on case-insensitive filesystems
             src.error = f"the name {name!r} is used by another [[repos]] entry; give each a unique name"
         elif url and not _NAME.match(name):
             src.error = "name must be letters, digits, '.', '_' or '-' (it names the local copy's folder)"
@@ -112,7 +119,7 @@ def connected(cfg: Any) -> list[Source]:
             src.error = "ref must be a branch or tag name"
         else:
             src.path = cache_dir(cfg) / name if url else (Path(cfg.root) / str(path)).resolve()
-        seen.add(name)
+        seen.add(name.lower())
         out.append(src)
     return out
 
@@ -138,6 +145,7 @@ def sync(cfg: Any, timeout: int = 600) -> list[dict]:
             out.append({"name": s.name, "url": None, "status": "local", "detail": str(s.path)})
             continue
         if s.path is None:          # connected() sets a path for every valid entry
+            out.append({"name": s.name, "url": s.url, "status": "invalid", "detail": "no folder"})
             continue
         try:
             out.append({"name": s.name, "url": s.url, **_sync_one(s.url, s.ref, s.path, timeout)})
@@ -146,24 +154,37 @@ def sync(cfg: Any, timeout: int = 600) -> list[dict]:
     return out
 
 
+def _last_line(r: subprocess.CompletedProcess, what: str) -> str:
+    lines = (r.stderr or r.stdout).strip().splitlines()
+    return lines[-1] if lines else f"git {what} exited {r.returncode}"
+
+
 def _sync_one(url: str, ref: str | None, dest: Path, timeout: int) -> dict:
+    """Update the copy in `dest`, or clone it. A failure never leaves a partial folder at `dest` (analysis would
+    read it as synced) and never deletes a working copy (a network or auth error keeps the last good one)."""
     if dest.is_dir() and _origin(dest) == url:
         fetch = _git(["fetch", "--depth", "1", "origin", "--", ref or "HEAD"], cwd=dest, timeout=timeout)
-        if fetch.returncode == 0:
-            reset = _git(["reset", "--hard", "FETCH_HEAD"], cwd=dest, timeout=timeout)   # our own cache folder
-            if reset.returncode == 0:
-                return {"status": "updated", "detail": _head(dest)}
-        # an unusable copy (interrupted clone, rewritten history): clone it again below
-    if dest.exists():
-        shutil.rmtree(dest)          # only ever a folder under .codetwin/repos that CodeTwin created
+        if fetch.returncode != 0:
+            return {"status": "failed", "detail": f"{_last_line(fetch, 'fetch')} (kept the previous copy)"}
+        reset = _git(["reset", "--hard", "FETCH_HEAD"], cwd=dest, timeout=timeout)   # our own cache folder
+        if reset.returncode == 0:
+            return {"status": "updated", "detail": _head(dest)}
+        # an unusable copy: clone it again below and replace it only when the clone succeeded
     dest.parent.mkdir(parents=True, exist_ok=True)
-    args = ["clone", "--depth", "1", "--no-tags", *(["--branch", ref] if ref else []), "--", url, str(dest)]
-    r = _git(args, timeout=timeout)
-    if r.returncode != 0:
+    tmp = dest.with_name(f".{dest.name}.partial")      # never matches a valid name (they cannot start with '.')
+    if tmp.exists():
+        shutil.rmtree(tmp)
+    args = ["clone", "--depth", "1", "--no-tags", *(["--branch", ref] if ref else []), "--", url, str(tmp)]
+    try:
+        r = _git(args, timeout=timeout)
+        if r.returncode != 0:
+            return {"status": "failed", "detail": _last_line(r, "clone")}
         if dest.exists():
-            shutil.rmtree(dest)
-        lines = (r.stderr or r.stdout).strip().splitlines()
-        return {"status": "failed", "detail": lines[-1] if lines else f"git clone exited {r.returncode}"}
+            shutil.rmtree(dest)      # only ever a folder under .codetwin/repos that CodeTwin created
+        tmp.replace(dest)
+    finally:
+        if tmp.exists():
+            shutil.rmtree(tmp, ignore_errors=True)
     return {"status": "cloned", "detail": _head(dest)}
 
 

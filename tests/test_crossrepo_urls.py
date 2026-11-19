@@ -127,7 +127,9 @@ name = "nothing"
     ("https://github.com/acme/web.git", True), ("git@github.com:acme/web.git", True),
     ("ssh://git@github.com/acme/web.git", True), ("file:///srv/git/web.git", True),
     ("-uhttps://x", False), ("ext::sh -c id", False), ("ext::true", False), ("http://github.com/acme/web.git", False),
-    ("https://x:y@github.com/a.git", False), ("https://token@github.com/a.git", True),   # user only: no secret
+    ("https://x:y@github.com/a.git", False),
+    ("https://ghp_token@github.com/a.git", False),          # a token given as the user name
+    ("ssh://git@github.com/a.git", True),                   # ssh names a user, never a secret
 ])
 def test_url_rules(url: str, ok: bool) -> None:
     assert (url_problem(url) is None) is ok
@@ -167,3 +169,43 @@ def test_repos_command_lists_and_syncs(library, capsys: pytest.CaptureFixture[st
     assert main(["-C", str(repo), "repos", "--sync", "--json"]) == 0
     rows = json.loads(capsys.readouterr().out)
     assert [r.get("sync") for r in rows] == ["cloned", "cloned", "local"] and all(r["available"] for r in rows)
+
+
+def test_a_failed_update_keeps_the_last_good_copy(library) -> None:
+    """A network or auth error while updating must not delete the copy analysis was using."""
+    repo, web, _mobile, _admin = library
+    cfg = load(repo)
+    sync(cfg)
+    copy = repo / ".codetwin/repos/web"
+    _git(copy, "remote", "set-url", "origin", web.as_uri())          # still the configured url
+    hidden = web.with_name("web-moved")
+    web.rename(hidden)                                               # the remote is unreachable now
+    try:
+        first = sync(cfg)[0]
+        assert first["status"] == "failed" and "kept the previous copy" in first["detail"]
+        assert (copy / "web" / "use.py").is_file()
+    finally:
+        hidden.rename(web)
+
+
+def test_a_failed_clone_leaves_no_folder_that_looks_synced(toy_repo: Path, tmp_path: Path) -> None:
+    main(["-C", str(toy_repo), "init"])
+    cfg = toy_repo / ".codetwin.toml"
+    cfg.write_text(cfg.read_text() + f'\n[[repos]]\nname = "gone"\nurl = "{(tmp_path / "nowhere").as_uri()}"\n')
+    loaded = load(toy_repo)
+    assert sync(loaded)[0]["status"] == "failed"
+    repos = toy_repo / ".codetwin/repos"
+    assert not (repos / "gone").exists() and not list(repos.glob(".*partial"))
+    assert not connected(loaded)[0].available
+
+
+def test_repeated_names_are_invalid_and_do_not_break_the_analysis(library, capsys: pytest.CaptureFixture[str]) -> None:
+    """Names are compared without case (they become folder names); a repeat is reported, never a crash."""
+    repo, _web, mobile, _admin = library
+    cfg = repo / ".codetwin.toml"
+    cfg.write_text(cfg.read_text() + f'\n[[repos]]\nname = "Mobile"\nurl = "{mobile.as_uri()}"\n'
+                   '\n[[repos]]\nname = "odd"\nurl = ["https://github.com/acme/odd.git"]\npath = "../odd"\n')
+    errors = {s.name: s.error for s in connected(load(repo))}
+    assert "unique name" in (errors["Mobile"] or "") and errors["odd"] == "url must be a string"
+    sync(load(repo))
+    _crossrepo(repo, capsys)                 # stores the analysis: a repeated name must not break its insert

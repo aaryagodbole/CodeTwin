@@ -30,10 +30,14 @@ entry with where its files are and whether they are ready.
 
 - Accepted URLs: `https://`, `ssh://`, `user@host:path` and `file://`. Anything else (for example git's `ext::`
   transport) is refused.
-- Never put a password or token in the URL; such a URL is refused. Private repositories use git's own
-  credentials: a credential helper, an SSH key, or in Actions a token configured for that host.
-- Each entry needs a unique `name` (default: the last part of the URL or path), and either `path` or `url`, not
-  both. An entry that breaks a rule is reported as `invalid` with the reason; it is never skipped silently.
+- Never put a password or token in the URL; such a URL is refused. An `https://` URL may not carry a user name
+  at all (a token is often given as one); an ssh URL may name a user but not a password. Private repositories use
+  git's own credentials: a credential helper, an SSH key, or in Actions a token configured for that host.
+- Each entry needs a unique `name` (default: the last part of the URL or path; compared without case, since it
+  names a folder), and either `path` or `url`, not both. An entry that breaks a rule is reported as `invalid` with
+  the reason; it is never skipped silently.
+- `--sync` never leaves a half-cloned folder behind, and a failed update (network, credentials) keeps the last good
+  copy. The GitHub Action does not sync for pull requests from forks: their `.codetwin.toml` could name any URL.
 
 **Package names** are detected from build files: Python top-level packages, `package.json` `name`, the `go.mod`
 module path, the `Cargo.toml` crate, Java/Kotlin package and C# namespace prefixes, gemspec names and

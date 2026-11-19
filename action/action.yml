@@ -65,7 +65,10 @@ runs:
         git checkout -q --detach "$HEAD_SHA"
 
     - name: Sync connected repositories
-      if: inputs.sync-repos == 'true'
+      # Not for pull requests from forks: their .codetwin.toml could make the runner clone any URL.
+      if: >-
+        inputs.sync-repos == 'true' && (github.event_name != 'pull_request' ||
+        github.event.pull_request.head.repo.full_name == github.repository)
       shell: bash
       run: codetwin repos --sync || echo "::warning::CodeTwin could not sync every connected repository; their impact is reported as unknown"
 
