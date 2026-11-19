@@ -72,7 +72,8 @@ def capture(repo: Path, out: Path) -> list[str]:
             todo += graph_files(fetch("/graph", {"file": f}))
     (out / "api").mkdir(parents=True, exist_ok=True)
     for name, data in answers.items():
-        text = json.dumps(data, indent=1, sort_keys=True, ensure_ascii=False)
+        # one line per file: generated data, not for reading in a diff (.gitattributes marks it generated)
+        text = json.dumps(data, separators=(",", ":"), sort_keys=True, ensure_ascii=False)
         if str(repo) in text or tempfile.gettempdir() in text:
             raise SystemExit(f"refusing to publish a local path in {name}")
         (out / "api" / name).write_text(text + "\n", encoding="utf-8")
