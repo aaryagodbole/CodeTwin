@@ -453,10 +453,6 @@ class Store:
     def has_outcome(self, decision_id: int) -> bool:
         return self.con.execute("select 1 from decision_outcome where decision_id=?", (decision_id,)).fetchone() is not None
 
-    def _tests_of(self, table: str, decision_id: int) -> list[str]:
-        return [r[0] for r in self.con.execute(f"select e.path from {table} x join code_entity e on e.id = x.test_id "  # noqa: S608 (constant SQL; values bound)
-                                               "where x.decision_id=? order by e.path", (decision_id,))]
-
     def decision(self, decision_id: int, extras: bool = True) -> dict | None:
         """One decision with its selection, reasons, outcome (missed: None until learned) and report sections."""
         rows = self.decisions(ids=[decision_id], extras=extras)
@@ -477,10 +473,26 @@ class Store:
             d = dict(zip(keys, r, strict=True))
             d["missed"] = None if d["missed"] is None else bool(d["missed"])
             d["extras"] = json.loads(d["extras"]) if d["extras"] else {}
-            d["selected"] = self._tests_of("decision_selection", d["id"])
-            d["reasons"] = [x[0] for x in self.con.execute("select text from decision_reason where decision_id=? "
-                                                           "order by ordinal", (d["id"],))]
             out.append(d)
+        # Children in one query per table for all rows (not two queries per row: #91).
+        selected = self._children("select x.decision_id, e.path from decision_selection x join code_entity e "
+                                  "on e.id = x.test_id where x.decision_id in ({}) order by x.decision_id, e.path",
+                                  [d["id"] for d in out])
+        reasons = self._children("select decision_id, text from decision_reason where decision_id in ({}) "
+                                 "order by decision_id, ordinal", [d["id"] for d in out])
+        for d in out:
+            d["selected"] = selected.get(d["id"], [])
+            d["reasons"] = reasons.get(d["id"], [])
+        return out
+
+    def _children(self, sql: str, ids: list[int]) -> dict[int, list]:
+        """decision id -> values, for a query with one `in ({})` placeholder list; chunked under SQLite's
+        bound-parameter limit (999 on older builds)."""
+        out: dict[int, list] = {}
+        for i in range(0, len(ids), 900):
+            chunk = ids[i:i + 900]
+            for did, value in self.con.execute(sql.format(",".join("?" * len(chunk))), chunk):
+                out.setdefault(did, []).append(value)
         return out
 
     def scores(self, decision_id: int) -> dict[str, float]:

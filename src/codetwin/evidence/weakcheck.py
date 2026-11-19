@@ -12,7 +12,6 @@ This runs tests, so it is an explicit command (`codetwin weakcheck`), not part o
 """
 from __future__ import annotations
 
-import ast
 import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -60,44 +59,13 @@ def changed_functions(diff, prev_run, prev_static, now_static, is_source) -> lis
     return list(out.values())
 
 
-def _mutate(src: str, def_start: int, body_first: int, end: int) -> str | None:
-    """Replace the body of the function at lines def_start..end with `return None`.
-
-    Uses the AST rather than line numbers alone: for a one-line function (`def f(): return x`) the body
-    starts on the `def` line, so the header is kept and only the part after its colon is replaced.
-    Returns None when the function cannot be located (the caller reports it as an error).
-    """
-    lines = src.splitlines(keepends=True)
-    try:
-        tree = ast.parse(src)
-    except SyntaxError:
-        return None
-    fn = next((n for n in ast.walk(tree) if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))
-               and n.body and n.body[0].lineno == body_first and n.lineno >= def_start
-               and (n.end_lineno or n.lineno) <= end), None)
-    if fn is None:
-        return None
-    first, stop = fn.body[0], fn.end_lineno or end
-    line = lines[first.lineno - 1]
-    head = line[: _col_to_char(line, first.col_offset)]
-    # `head` is the indentation, or for `def f(): return x` the whole header up to the body
-    return "".join(lines[: first.lineno - 1] + [f"{head}return None\n"] + lines[stop:])
-
-
-def _col_to_char(line: str, col: int) -> int:
-    """AST column offsets count UTF-8 bytes; convert to a character index."""
-    return len(line.encode("utf-8")[:col].decode("utf-8", errors="ignore"))
-
-
 def run_checks(root: str | Path, src_root: str, checks: list[FunctionCheck], now_static, timeout: int = 300,
                lang=None) -> list[FunctionCheck]:
     """Mutate each changed function in a scratch copy and run the test files that executed it.
-    `lang` is the project's language adapter (default: the default language's)."""
-    root = Path(root)
+    `lang` is the project's language adapter (it builds the mutants and runs the tests)."""
     if lang is None:
-        from ..config import Config
-        from ..lang import adapter, default_language
-        lang = adapter(Config(root=root, src_root=src_root), default_language())
+        raise ValueError("run_checks needs the project's language adapter (Engine.lang)")
+    root = Path(root)
     with tempfile.TemporaryDirectory(prefix="codetwin-weak-") as tmp:
         work = Path(tmp) / "repo"
         lang.make_copy(work)

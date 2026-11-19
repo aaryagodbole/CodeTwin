@@ -249,3 +249,20 @@ def test_contract_element_kinds_and_diff_cache(tmp_path):
         with pytest.raises(sqlite3.IntegrityError):                     # a site must point at a real change
             s.con.execute("insert into contract_site (target_id, change_id, file_id, line, how) values (1, 99, 1, 1, "
                           "'path-literal')")
+
+
+def test_decisions_reads_children_in_one_query_per_table(tmp_path) -> None:
+    """Listing 30 decisions costs 3 queries (rows, selections, reasons), not 2 per row (#91)."""
+    from codetwin.store.db import Store
+    with Store(tmp_path / "e.db") as st:
+        for i in range(30):
+            st.save_decision(base="b" * 40, head="working-tree", mode="calibrated", alpha=0.1, alpha_t=0.1,
+                             threshold=0.5, residual_risk=0.01, decision="proceed", selected=[f"t{i}", "t_all"],
+                             reasons=[f"why {i}", "and"], scores={f"t{i}": 0.9})
+        seen: list[str] = []
+        st.con.set_trace_callback(seen.append)
+        rows = st.decisions(limit=30)
+        st.con.set_trace_callback(None)
+        assert len([q for q in seen if q.lstrip().lower().startswith("select")]) == 3
+        assert rows[0]["selected"] == ["t29", "t_all"] and rows[0]["reasons"] == ["why 29", "and"]
+        assert rows[-1]["selected"] == ["t0", "t_all"] and st.decisions(limit=1, ids=[999]) == []

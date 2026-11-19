@@ -16,20 +16,32 @@ exists before the change's tests run is reachable from here: the new run belongs
 from __future__ import annotations
 
 from functools import cached_property
-from typing import TYPE_CHECKING, Any
+from typing import Any, Protocol
 
 from .evidence.model import FileDiff, FileFacts, TestRun
 from .graph.impact import Impact, build_graph, impact_of
 from .risk import features
 
-if TYPE_CHECKING:
-    from .engine import Engine
+
+class Workspace(Protocol):
+    """What a change reads from its project (an `Engine`): configuration, language, store, and the git and parser
+    queries. Typed here instead of importing the engine, which imports this module."""
+    cfg: Any
+    lang: Any
+    store: Any
+    root: Any
+
+    def changed(self, base: str, head: str | None = None) -> dict[str, FileDiff]: ...
+    def facts_now(self) -> dict[str, FileFacts]: ...
+    def tests_now(self) -> list[str]: ...
+    def history(self, base: str | None = None) -> list[list[str]]: ...
+    def history_note(self, base: str | None = None) -> str | None: ...
 
 
 class ChangeContext:
     """One change against one recorded base commit. Build it with `Engine.change()`."""
 
-    def __init__(self, engine: Engine, base: str, prev: TestRun | None, diff: dict[str, FileDiff] | None = None,
+    def __init__(self, engine: Workspace, base: str, prev: TestRun | None, diff: dict[str, FileDiff] | None = None,
                  chosen: bool = False):
         self._eng = engine
         self.base = base                  # recorded commit the change is compared with

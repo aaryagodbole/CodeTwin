@@ -5,6 +5,7 @@ unchanged, so results on Python projects are the same as before languages became
 """
 from __future__ import annotations
 
+import ast
 import os
 import posixpath
 import subprocess
@@ -145,7 +146,6 @@ class Python(Language):
         return classify_source(old, new)
 
     def extreme_mutant(self, text: str, fn: list[int], path: str) -> str | None:
-        from ..evidence.weakcheck import _mutate
         return _mutate(text, fn[0], fn[2], fn[1])
 
     def guess_config(self) -> dict:
@@ -153,13 +153,43 @@ class Python(Language):
         return guess(self.root)
 
     def config_table(self) -> str:
-        from ..config import _toml_list
+        from ..config_templates import toml_list as _toml_list
         g = self.guess_config()
         return (f'[lang.python]\nsrc_root = "{g["src_root"]}"\npackages = {_toml_list(g["packages"])}\n'
                 f'source_dirs = {_toml_list(g["source_dirs"] or ["."])}\ntests_dir = "{g["tests_dir"]}"\n')
 
     def config_file(self) -> str:
-        from ..config import TEMPLATE, _toml_list
+        from ..config_templates import TEMPLATE
+        from ..config_templates import toml_list as _toml_list
         g = self.guess_config()
         return TEMPLATE.format(src_root=g["src_root"], packages=_toml_list(g["packages"]),
                                source_dirs=_toml_list(g["source_dirs"]), tests_dir=g["tests_dir"])
+
+
+def _mutate(src: str, def_start: int, body_first: int, end: int) -> str | None:
+    """Replace the body of the function at lines def_start..end with `return None`.
+
+    Uses the AST rather than line numbers alone: for a one-line function (`def f(): return x`) the body
+    starts on the `def` line, so the header is kept and only the part after its colon is replaced.
+    Returns None when the function cannot be located (the caller reports it as an error).
+    """
+    lines = src.splitlines(keepends=True)
+    try:
+        tree = ast.parse(src)
+    except SyntaxError:
+        return None
+    fn = next((n for n in ast.walk(tree) if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))
+               and n.body and n.body[0].lineno == body_first and n.lineno >= def_start
+               and (n.end_lineno or n.lineno) <= end), None)
+    if fn is None:
+        return None
+    first, stop = fn.body[0], fn.end_lineno or end
+    line = lines[first.lineno - 1]
+    head = line[: _col_to_char(line, first.col_offset)]
+    # `head` is the indentation, or for `def f(): return x` the whole header up to the body
+    return "".join(lines[: first.lineno - 1] + [f"{head}return None\n"] + lines[stop:])
+
+
+def _col_to_char(line: str, col: int) -> int:
+    """AST column offsets count UTF-8 bytes; convert to a character index."""
+    return len(line.encode("utf-8")[:col].decode("utf-8", errors="ignore"))

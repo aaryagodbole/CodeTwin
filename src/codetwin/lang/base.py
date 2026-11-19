@@ -195,7 +195,7 @@ class Language:
 
     def config_table(self) -> str:
         """The `[lang.<name>]` table `codetwin init` writes for this language in a multi-language repository."""
-        from ..config import _toml_list
+        from ..config_templates import toml_list as _toml_list
         g = self.guess_config()
         runner = g.get("runner") or self.runners_by_folder() or "none found: static evidence only until you set test_command"
         return (f"[lang.{self.name}]\nsource_dirs = {_toml_list(g['source_dirs'])}\ntests_dir = \"{g['tests_dir']}\"\n"
@@ -207,7 +207,8 @@ class Language:
 
     def config_file(self) -> str:
         """The `.codetwin.toml` `codetwin init` writes for a repository in this language only."""
-        from ..config import GENERIC_TEMPLATE, _toml_list
+        from ..config_templates import GENERIC_TEMPLATE
+        from ..config_templates import toml_list as _toml_list
         g = self.guess_config()
         return GENERIC_TEMPLATE.format(language=self.name, source_dirs=_toml_list(g["source_dirs"]),
                                        tests_dir=g["tests_dir"],

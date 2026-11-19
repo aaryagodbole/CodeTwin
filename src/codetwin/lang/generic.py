@@ -40,8 +40,9 @@ from pathlib import Path
 from xml.etree import ElementTree as ET  # noqa: S405
 
 from ..evidence.model import FileFacts, TestRun
-from . import auto
 from . import coverage_formats as covfmt
+from .auto import IMPORT as AUTO_IMPORT
+from .auto import is_function as auto_is_function
 from .base import Language, glob_match, repo_files, under
 from .spec import Runner, Spec
 
@@ -292,7 +293,7 @@ class Generic(Language):
                 nm = sp.names(n, src)
                 if nm:
                     names.add(nm)
-            if n.type in sp.function_types or (sp.auto and auto.is_function(n.type)):
+            if n.type in sp.function_types or (sp.auto and auto_is_function(n.type)):
                 body = n.child_by_field_name("body") or next(
                     (c for c in n.named_children if c.type in BODY_TYPES), None)
                 if body is not None:
@@ -315,7 +316,7 @@ class Generic(Language):
                 continue
             if ch.type in sp.comment_types or ch.type in sp.decl_types or ch.type in sp.function_types:
                 continue
-            if sp.auto and (auto.is_function(ch.type) or auto.IMPORT.search(ch.type)
+            if sp.auto and (auto_is_function(ch.type) or AUTO_IMPORT.search(ch.type)
                             or any(k in ch.type for k in ("class", "module", "struct", "interface", "type", "package"))):
                 continue
             mod_lines.update(range(line(ch), end_line(ch) + 1))
@@ -608,7 +609,7 @@ class Generic(Language):
         tree = parse(g, b)
         best = None
         for n in walk(tree.root_node):
-            if (n.type in self.spec.function_types or (self.spec.auto and auto.is_function(n.type))) \
+            if (n.type in self.spec.function_types or (self.spec.auto and auto_is_function(n.type))) \
                     and line(n) == fn[0] and end_line(n) == fn[1]:
                 best = n
         if best is None:

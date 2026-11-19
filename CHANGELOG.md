@@ -14,6 +14,12 @@ All notable changes to this project are documented here. The format follows
   working tree is parsed once per decision instead of up to six times. `Engine.analyse()` and
   `Engine.without_runtime_evidence()` are removed; `Engine.change()` returns a `ChangeContext`.
 - The knowledge graph and the co-change features read git history with one reader (`evidence/history.py`).
+- No import cycles left in the package (CodeQL `py/cyclic-import`, #94): `.codetwin.toml` templates live in
+  `config_templates.py`, `codetwin init` writes the file, the Python mutant moved into the Python adapter, the
+  store's legacy import no longer imports the store, and `ChangeContext` is typed against a small `Workspace`
+  protocol.
+- `Store.decisions()` reads selections and reasons with one query per table instead of two per row
+  (`/api/decisions?limit=500` went from about 1,000 queries to 3, #91).
 
 ### Added
 - `select --json` and `codetwin explain` report `risk_before`, the estimated residual risk of the first selection,
