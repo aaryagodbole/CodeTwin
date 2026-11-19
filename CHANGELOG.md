@@ -23,6 +23,8 @@ All notable changes to this project are documented here. The format follows
   so the code owner is asked only then; merge-review re-runs cover the whole pull request, at most twice, and a
   correctness or security finding left after the second is fixed and read by the code owner; the self-review
   stops by the same rule.
+### Added
+- Report section `freshness` (`src/codetwin/report/freshness.py`): how many commits old the recorded evidence is (merged commits count), `stale` when that exceeds `[freshness] stale_after` (default 20) or when the recorded commit is gone from a complete history, with a hint to run `codetwin record`. The age is `null` when it cannot be established (other branch, older checkout, shallow clone). Git failures other than an unknown commit are shown as a broken section, not hidden as an unknown age.
 
 ### Fixed
 - VS Code impact graph: the webview ignores messages from any origin but its own (CodeQL `js/missing-origin-check`).
