@@ -7,7 +7,7 @@ import { Crosshair, ShieldAlert, Target } from "lucide-react";
 import { Area, AreaChart, CartesianGrid, Legend, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Empty, ErrorBox, Loading } from "@/components/state";
 import { Card, Stat } from "@/components/ui/card";
-import { get, type Calibration } from "@/lib/api";
+import { DATA_MODE, get, type Calibration } from "@/lib/api";
 
 export default function Results() {
   const q = useQuery({ queryKey: ["calibration"], queryFn: () => get<Calibration>("/calibration") });
@@ -38,7 +38,9 @@ export default function Results() {
           hint={target == null ? undefined : `${ok ? "within" : "above"} the ${mixed ? "average " : ""}${fmtPct(target / 100)} target`} icon={Target} />
       </div>
       <Card title="Observed miss rate vs target">
-        {data.length === 0 ? <Empty>No labelled calibrated decisions yet. Run <code>codetwin select</code> (calibrated mode) and then <code>codetwin learn</code> after a few changes.</Empty> : (
+        {data.length === 0 ? <Empty>{DATA_MODE === "cloud"
+          ? <>No labelled decisions yet. A decision is labelled when CI uploads the outcome of its full test run.</>
+          : <>No labelled calibrated decisions yet. Run <code>codetwin select</code> (calibrated mode) and then <code>codetwin learn</code> after a few changes.</>}</Empty> : (
           <div className="h-80">
             <ResponsiveContainer>
               <AreaChart data={data} margin={{ top: 8, right: 12, left: -8, bottom: 8 }}>

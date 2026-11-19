@@ -1,13 +1,31 @@
 # Dashboard: see it locally, deploy it, check pull requests
 
-The dashboard (`dashboard/`, Next.js static export) only reads the CodeTwin API. It can get its data in two ways:
+The dashboard (`dashboard/`, Next.js static export) only reads the CodeTwin API. It can get its data in three
+ways (`NEXT_PUBLIC_DATA_MODE`, set at build time):
 
 | Mode | Data comes from | Used for |
 |---|---|---|
 | **live** (default) | a running `codetwin serve` on your project | your own work, on your laptop |
-| **demo** | `dashboard/public/demo/`: JSON answers of the API, written by `scripts/demo_snapshot.py` from a real engine run on `examples/python` | the hosted dashboard (Vercel), and quick previews without setting up a project |
+| **cloud** | decisions, summary and calibration: CodeTwin Cloud (`NEXT_PUBLIC_API_URL`, project `NEXT_PUBLIC_PROJECT` = `owner/name`), the reports the project's CI uploads; dependency graph and impact views: `dashboard/public/snapshot/`, written by `scripts/repo_snapshot.py` from the project's own repository | the hosted dashboard (Vercel): real data of `aaryagodbole/CodeTwin` |
+| **demo** | `dashboard/public/demo/`: JSON answers of the API, written by `scripts/demo_snapshot.py` from a real engine run on `examples/python` | quick previews without setting up a project, and CI's build check |
 
-Demo mode shows a grey banner saying so, so a snapshot is never mistaken for a live project.
+A banner says where the numbers come from in cloud and demo mode. The cloud holds no code-level data (ADR 0003),
+which is why the graph comes from a repository snapshot: file paths, link types and test ids, never source text.
+
+**Real decisions.** CodeTwin's own CI (`ci.yml`, job `action`) runs the Action on every pull request from this
+repository with `upload: true`, so each pull request adds one decision to the cloud, authenticated with GitHub
+OIDC (no secret). Pull requests from forks get no OIDC token and skip the upload.
+
+**Refreshing the graph.** `python scripts/repo_snapshot.py` clones HEAD into a temporary folder, runs
+`codetwin record` there (the full test suite, a few minutes) and rewrites `dashboard/public/snapshot/`. Commit the
+result after larger structural changes; the banner shows the snapshot's commit and date.
+
+**The graph page.** Every node is a card with its name inside, coloured by its area of the repository (the folder
+below the one most files share, e.g. `commands`, `lang`, `store`; at most seven colours, the rest grey "other";
+an area keeps its colour in every view). Tests have a dashed outline. A repository with more than 40 files opens
+in the *Folders* view: one card per folder with its file count, laid out in layers (a folder above depends on
+folders below it), one line per folder pair and link type, thicker for more links. Double-click a folder, or pick
+one in *Files*, to see its files and the files they link to; double-click a file for its impact view.
 
 ## See it on localhost
 
@@ -61,7 +79,8 @@ deployment would fail too. CI runs the same steps (job `dashboard-demo`).
 
 ## Deploy (Vercel)
 
-The hosted dashboard is the demo build, configured in `dashboard/vercel.json`. To set it up (one time, by the
+The hosted dashboard is the cloud build (`npm run build:cloud` with the API URL and project set in
+`dashboard/vercel.json`'s `buildCommand`). To set it up (one time, by the
 repository owner):
 
 1. Sign in at [vercel.com](https://vercel.com) with GitHub. Choose **Add New → Project** and import
@@ -103,5 +122,4 @@ When a page starts using a new endpoint, add it there and regenerate. CI (job `d
 committed snapshot exactly as Vercel does, checks that it answers every request and graph link, and fails if
 regenerating it gives different files. In that case run the script and commit the result.
 
-The demo is a stopgap. The next step (docs/cloud.md, in progress) replaces it with the cloud API, which receives
-real decision reports from CI.
+The hosted dashboard no longer uses the demo (cloud mode, above); the demo stays for previews and CI.

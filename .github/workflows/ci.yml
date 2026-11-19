@@ -291,9 +291,13 @@ jobs:
           fi
 
   action:
-    # Runs this repository's own GitHub Action on the pull request, installing CodeTwin from the checkout.
+    # Runs this repository's own GitHub Action on the pull request, installing CodeTwin from the checkout, and
+    # uploads the decision to CodeTwin Cloud: the hosted dashboard shows these real reports (docs/dashboard.md).
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write          # GitHub OIDC token for the upload; no stored secret (docs/cloud.md)
     steps:
       - uses: actions/checkout@v7
         with: { fetch-depth: 0 }
@@ -306,6 +310,9 @@ jobs:
           # imports (httpx, fastapi) so it is complete there too, also on a base without the importorskip guards.
           package: ".[mcp,server]"
           run-selected: "false"
+          # Pull requests from forks get no OIDC token; the upload then only warns (--best-effort in the Action).
+          upload: ${{ github.event.pull_request.head.repo.full_name == github.repository && 'true' || 'false' }}
+          upload-server: https://codetwin-api.vercel.app
 
   windows:
     # The team develops on Windows: run the whole definition of done there too (in Git Bash).

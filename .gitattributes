@@ -5,3 +5,7 @@
 *.png binary
 *.ico binary
 *.vsix binary
+# Generated data (scripts/repo_snapshot.py, scripts/demo_snapshot.py): collapsed in pull request diffs and
+# left out of the language statistics. Regenerate with the script, never edit by hand.
+dashboard/public/snapshot/** linguist-generated=true
+dashboard/public/demo/** linguist-generated=true

@@ -1,24 +1,47 @@
 // Typed client for the read-only CodeTwin API (src/codetwin/server/app.py).
-// Two data sources, chosen at build time with NEXT_PUBLIC_DATA_MODE (docs/dashboard.md):
+// Three data sources, chosen at build time with NEXT_PUBLIC_DATA_MODE (docs/dashboard.md):
 //   "live" (default): a running `codetwin serve`. When the API serves the dashboard itself the base URL is empty.
-//   "demo": static JSON in public/demo/, written by scripts/demo_snapshot.py from a real engine run. Used by the
-//           hosted dashboard (Vercel), which has no API behind it.
-import { demoPath } from "./demo-path.mjs";
+//   "cloud": the hosted dashboard. Decisions, summary and calibration come from CodeTwin Cloud
+//            (NEXT_PUBLIC_API_URL, project NEXT_PUBLIC_PROJECT = owner/name): real reports uploaded by CI. The cloud
+//            holds no code-level data (ADR 0003), so the dependency graph and impact views come from a snapshot of
+//            the project's repository in public/snapshot/ (scripts/repo_snapshot.py).
+//   "demo": static JSON in public/demo/, written by scripts/demo_snapshot.py from a real run on examples/python.
+import { demoPath, snapshotPath } from "./demo-path.mjs";
 
-export { demoPath };
+export { demoPath, snapshotPath };
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? "";
-export const DATA_MODE: "live" | "demo" = process.env.NEXT_PUBLIC_DATA_MODE === "demo" ? "demo" : "live";
+export const PROJECT = process.env.NEXT_PUBLIC_PROJECT ?? "";
+const MODE = process.env.NEXT_PUBLIC_DATA_MODE;
+export const DATA_MODE: "live" | "demo" | "cloud" = MODE === "demo" ? "demo" : MODE === "cloud" ? "cloud" : "live";
+
+// Endpoints the cloud serves for a project; everything else is read from the repository snapshot.
+const CLOUD_PATHS = /^\/(summary|calibration|decisions(\/\d+)?)$/;
+
+/** Where a request goes in the current data mode. */
+export function urlFor(path: string, params: Record<string, string> = {}): string {
+  const query = Object.keys(params).length ? "?" + new URLSearchParams(params).toString() : "";
+  if (DATA_MODE === "demo") return demoPath(path, params);
+  if (DATA_MODE === "cloud") {
+    if (CLOUD_PATHS.test(path) && !PROJECT.includes("/")) {
+      throw new Error("Cloud mode needs NEXT_PUBLIC_PROJECT=owner/name (see dashboard/.env.example).");
+    }
+    return CLOUD_PATHS.test(path)
+      ? `${BASE}/api/v1/projects/${PROJECT.split("/").map(encodeURIComponent).join("/")}${path}${query}`
+      : snapshotPath(path, params);
+  }
+  return `${BASE}/api${path}${query}`;
+}
 
 export async function get<T>(path: string, params?: Record<string, string | undefined>): Promise<T> {
   const clean = Object.fromEntries(Object.entries(params ?? {}).filter(([, v]) => v)) as Record<string, string>;
-  const url = DATA_MODE === "demo"
-    ? demoPath(path, clean)
-    : `${BASE}/api${path}${Object.keys(clean).length ? "?" + new URLSearchParams(clean).toString() : ""}`;
-  const res = await fetch(url);
+  const res = await fetch(urlFor(path, clean));
   if (!res.ok) {
     if (DATA_MODE === "demo" && res.status === 404) {
       throw new Error("Not in the demo data. Run the dashboard against `codetwin serve` to see this view.");
+    }
+    if (DATA_MODE === "cloud" && res.status === 404 && !CLOUD_PATHS.test(path)) {
+      throw new Error("Not in the repository snapshot (a file added after it was taken). Run `codetwin serve` locally to see it.");
     }
     throw new Error(`${res.status} ${res.statusText}: ${await res.text()}`);
   }
@@ -117,8 +140,10 @@ export interface Calibration {
 export interface GraphNode {
   id: string;
   label: string;
-  kind: "target" | "source" | "test" | "unknown";
+  kind: "target" | "source" | "test" | "unknown" | "module";
   path: string;
+  /** module nodes (a folder in the folder view): how many files it holds */
+  files?: number;
 }
 
 export interface GraphEdge {
@@ -126,6 +151,8 @@ export interface GraphEdge {
   target: string;
   type: string;
   detail?: string;
+  /** folder view: how many file links this edge stands for */
+  weight?: number;
 }
 
 export interface Graph {
