@@ -6,6 +6,8 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
+import pytest
+
 from codetwin.cli import main
 from codetwin.config import Config
 from codetwin.report import Context
@@ -42,6 +44,36 @@ def test_two_commits_after_recording_gives_count_two(toy_repo: Path, capsys: Any
     assert freshness["stale"] is False
     assert freshness["stale_after"] == DEFAULT_STALE_AFTER
     assert freshness["summary"] == "recorded evidence is 2 commits old (not stale)"
+
+
+def test_merge_commits_counted(toy_repo: Path, capsys: Any) -> None:
+    """Commits brought in by merges and the merge commit itself are all counted."""
+    # 1. Initialize and record at the current commit
+    main(["-C", str(toy_repo), "init"])
+    main(["-C", str(toy_repo), "record"])
+
+    # 2. Create side branch with 3 empty commits
+    subprocess.run(["git", "checkout", "-b", "side"], cwd=toy_repo, check=True)
+    for i in range(3):
+        _commit(toy_repo, f"side {i}")
+
+    # 3. Checkout previous branch and merge side with --no-ff
+    subprocess.run(["git", "checkout", "-"], cwd=toy_repo, check=True)
+    subprocess.run(
+        ["git", "-c", "user.email=t@t", "-c", "user.name=t", "merge", "--no-ff", "-m", "merge side", "side"],
+        cwd=toy_repo,
+        check=True,
+    )
+
+    # 4. Run select --json
+    capsys.readouterr()
+    assert main(["-C", str(toy_repo), "select", "--json"]) == 0
+    out = json.loads(capsys.readouterr().out)
+
+    freshness = out["extras"]["freshness"]
+    assert freshness["commits_behind"] == 4
+    assert freshness["stale"] is False
+    assert freshness["summary"] == "recorded evidence is 4 commits old (not stale)"
 
 
 def test_stale_after_one_makes_two_commits_stale(toy_repo: Path, capsys: Any) -> None:
@@ -220,7 +252,6 @@ def test_shallow_clone_incomplete_and_unshallow(tmp_path: Path) -> None:
         )
     except subprocess.CalledProcessError as e:
         if "Could not read from remote repository" in (e.stderr or ""):
-            import pytest
             pytest.skip(f"git clone file:// not supported in this execution environment: {e.stderr.strip()}")
         raise
 
@@ -343,7 +374,7 @@ def test_freshness_unknown_base_commit(toy_repo: Path) -> None:
     assert res1["commits_behind"] is None
     assert res1["stale"] is False
     assert res1["stale_after"] == DEFAULT_STALE_AFTER
-    assert res1["summary"] == "recorded commit not found; age is unknown"
+    assert res1["summary"] == "recorded commit is not in this checkout; age is unknown"
 
     # Empty base commit
     ctx_empty = Context(
@@ -361,3 +392,39 @@ def test_freshness_unknown_base_commit(toy_repo: Path) -> None:
     assert res2["commits_behind"] is None
     assert res2["stale"] is False
     assert res2["summary"] == "recorded commit not found; age is unknown"
+
+
+def test_non_repository_root_is_not_swallowed(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """A root that is not a git repository is a real error, so report.build() can show it."""
+    monkeypatch.setenv("GIT_CEILING_DIRECTORIES", str(tmp_path.parent))
+    ctx = Context(
+        cfg=Config(root=tmp_path, raw={}),
+        store=None,
+        base="a" * 40,
+        prev=None,
+        diff={},
+        rows={},
+        scores={},
+        decision=None,
+        is_source=lambda _: True,
+    )
+    with pytest.raises((RuntimeError, OSError)):
+        contribute(ctx)
+
+
+def test_missing_git_binary_is_not_swallowed(toy_repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Git missing from PATH is a real error and is not reported as an unknown age."""
+    monkeypatch.setenv("PATH", "")
+    ctx = Context(
+        cfg=Config(root=toy_repo, raw={}),
+        store=None,
+        base="a" * 40,
+        prev=None,
+        diff={},
+        rows={},
+        scores={},
+        decision=None,
+        is_source=lambda _: True,
+    )
+    with pytest.raises((RuntimeError, OSError)):
+        contribute(ctx)
