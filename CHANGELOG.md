@@ -14,6 +14,8 @@ All notable changes to this project are documented here. The format follows
 - `record` stores a run that did not complete (whole-run timeout; pytest exit codes 2, 3, 4) with a warning, and
   `select` never picks it as the default base (a base named with `--base` is used, with a note); `record` then
   exits 1 (#99).
+### Added
+- Report section `freshness` (`src/codetwin/report/freshness.py`): how many commits old the recorded evidence is (merged commits count), `stale` when that exceeds `[freshness] stale_after` (default 20) or when the recorded commit is gone from a complete history, with a hint to run `codetwin record`. The age is `null` when it cannot be established (other branch, older checkout, shallow clone). Git failures other than an unknown commit are shown as a broken section, not hidden as an unknown age.
 
 ### Fixed
 - Co-change evidence was always empty: `git log --format=@@` is not a valid format, and the error was ignored. It now
