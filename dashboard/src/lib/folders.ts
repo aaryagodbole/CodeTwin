@@ -25,8 +25,8 @@ export function folderGraph(g: Graph): Graph {
   const nodes: GraphNode[] = [...files].map(([f, c]) => ({
     id: f, path: f, files: c.n,
     label: `${f === "." ? "(root)" : f.split("/").slice(-2).join("/")} · ${c.n}`,
-    // a folder of tests only is drawn as tests; anything else as a module
-    kind: c.tests === c.n ? "test" : "module",
+    // a folder that is mostly tests is drawn as tests (a conftest or helper there is test support code)
+    kind: c.tests * 2 > c.n ? "test" : "module",
   }));
   for (const n of g.nodes) if (n.kind === "unknown") nodes.push(n);
   const weight = new Map<string, GraphEdge>();
@@ -49,9 +49,21 @@ export function folderScope(g: Graph, folder: string): Graph {
   return { nodes: g.nodes.filter((n) => keep.has(n.id)), edges };
 }
 
-/** Folders that hold files, biggest first. */
-export function folderList(g: Graph): { folder: string; files: number }[] {
-  const count = new Map<string, number>();
-  for (const n of g.nodes) if (n.kind !== "unknown") count.set(folderOf(n.path), (count.get(folderOf(n.path)) ?? 0) + 1);
-  return [...count].map(([folder, files]) => ({ folder, files })).sort((a, b) => b.files - a.files || a.folder.localeCompare(b.folder));
+/** Folders that hold files, biggest first, with how many of their files are tests. */
+export function folderList(g: Graph): { folder: string; files: number; tests: number }[] {
+  const count = new Map<string, { files: number; tests: number }>();
+  for (const n of g.nodes) {
+    if (n.kind === "unknown") continue;
+    const c = count.get(folderOf(n.path)) ?? { files: 0, tests: 0 };
+    c.files += 1;
+    if (n.kind === "test") c.tests += 1;
+    count.set(folderOf(n.path), c);
+  }
+  return [...count].map(([folder, c]) => ({ folder, ...c }))
+    .sort((a, b) => b.files - a.files || a.folder.localeCompare(b.folder));
+}
+
+/** The folder the Files view opens on: the biggest folder of code (not of tests). */
+export function defaultFolder(folders: { folder: string; files: number; tests: number }[]): string {
+  return (folders.find((f) => f.tests * 2 <= f.files) ?? folders[0])?.folder ?? "";
 }

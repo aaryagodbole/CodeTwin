@@ -67,7 +67,7 @@ def capture(repo: Path, out: Path) -> list[str]:
     seen: set[str] = set()
     while todo:
         f = todo.pop()
-        if f not in seen:
+        if f not in seen and not f.startswith("?"):     # "?path": a placeholder for unresolved code, not a file
             seen.add(f)
             todo += graph_files(fetch("/graph", {"file": f}))
     (out / "api").mkdir(parents=True, exist_ok=True)
@@ -95,11 +95,13 @@ def main() -> int:
         from codetwin.cli import main as cli
         if not (repo / ".codetwin.toml").exists() and cli(["-C", str(repo), "init"]) != 0:
             raise SystemExit("codetwin init failed")
+        complete = False
         if not args.no_record:
             from codetwin.engine import Engine
             with Engine(repo) as eng:
                 run = eng.record()
-            if getattr(run, "incomplete", False):       # TestRun.incomplete exists from #100 on
+            complete = not getattr(run, "incomplete", False)
+            if not complete:
                 print(f"warning: the test run did not complete ({run.returncode}); runtime links are partial",
                       file=sys.stderr)
         out: Path = args.out
@@ -108,7 +110,9 @@ def main() -> int:
         try:
             files = capture(repo, staging)
             meta = {"generated": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "project": _project(src),
-                    "commit": sha, "recorded": not args.no_record, "files": files,
+                    "commit": sha, "files": files,
+                    # runtime links from a full test run: false for --no-record and for a run that did not complete
+                    "recorded": complete,
                     "how": "python scripts/repo_snapshot.py (see the script docstring)"}
             (staging / "meta.json").write_text(json.dumps(meta, indent=1) + "\n", encoding="utf-8")
             if (out / "api").exists():

@@ -4,8 +4,6 @@
  "commit": "763e5d01a8fcc2d331acea1202f0cddbb0f977f6",
  "recorded": true,
  "files": [
-  "graph__file-_src_codetwin_plugins.py.json",
-  "graph__file-_tests_test_review.py.json",
   "graph__file-src_codetwin___init__.py.json",
   "graph__file-src_codetwin_cli.py.json",
   "graph__file-src_codetwin_commands___init__.py.json",

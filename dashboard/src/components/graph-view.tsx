@@ -255,8 +255,9 @@ function graphStyle(dark: boolean): StylesheetJson {
     { selector: "node:selected", style: { "border-width": 3, "border-color": "#7c7cff", "underlay-color": "#7c7cff", "underlay-opacity": 0.18, "underlay-padding": 4 } },
     { selector: "node.lit, node.hit", style: { "underlay-color": fg, "underlay-opacity": 0.08, "underlay-padding": 4 } },
     // Edges: thin, right-angled, recessive until a node is hovered.
-    { selector: "edge", style: { width: "data(width)", opacity: 0.4, "curve-style": "unbundled-bezier",
-      "control-point-distances": [18], "control-point-weights": [0.5], "target-arrow-shape": "triangle", "arrow-scale": 0.6 } },
+    { selector: "edge", style: { width: "data(width)", opacity: 0.4, "curve-style": "bezier",
+      // bezier spreads parallel edges (one per link type between the same two nodes) instead of drawing them on top
+      "control-point-step-size": 14, "target-arrow-shape": "triangle", "arrow-scale": 0.6 } },
     ...Object.entries(EDGE_STYLES).map(([type, s]) => ({
       selector: `edge[type = '${type}']`,
       style: { "line-color": s.color, "target-arrow-color": s.color, "line-style": s.style },

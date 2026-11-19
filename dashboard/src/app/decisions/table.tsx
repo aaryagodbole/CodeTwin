@@ -56,7 +56,7 @@ function Row({ d }: { d: DecisionRow }) {
 
 export function DecisionTable({ rows, empty }: { rows: DecisionRow[]; empty?: React.ReactNode }) {
   if (rows.length === 0) return <Empty>{empty ?? (DATA_MODE === "cloud"
-    ? <>No reports yet. The project&apos;s CI uploads one decision for every pull request.</>
+    ? <>No reports yet. The project&apos;s CI uploads a decision on every pull request run (each push to a pull request adds one).</>
     : <>No decisions yet. Run <code>codetwin select</code>.</>)}</Empty>;
   return (
     <div className="relative overflow-x-auto">

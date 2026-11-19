@@ -35,7 +35,7 @@ export function DemoBanner() {
       Live data for <code>{PROJECT}</code>: decisions, risk and calibration are the reports its CI uploads to CodeTwin
       Cloud on every pull request.
       {s ? <> The dependency graph is from commit <code>{s.commit.slice(0, 10)}</code> ({new Date(s.generated).toLocaleDateString()}
-        {s.recorded ? ", with runtime links from a full test run" : ", static links only"}).</> : null}
+        {s.recorded ? ", with runtime links from a full test run" : ", without runtime links from a complete test run"}).</> : null}
     </>);
   }
   const when = demo.data ? new Date(demo.data.generated).toLocaleDateString() : "";

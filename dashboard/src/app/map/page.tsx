@@ -9,7 +9,7 @@ import { Empty, ErrorBox, Loading } from "@/components/state";
 import { Card } from "@/components/ui/card";
 import { Info, PageHeader } from "@/components/ui/info";
 import { get, type Graph } from "@/lib/api";
-import { folderGraph, folderList, folderScope } from "@/lib/folders";
+import { defaultFolder, folderGraph, folderList, folderOf, folderScope } from "@/lib/folders";
 
 const TYPES: { key: string; hint: string }[] = [
   { key: "static", hint: "Found by reading the code: one file imports another." },
@@ -39,7 +39,7 @@ export default function SystemMap() {
   const folders = useMemo(() => (q.data ? folderList(q.data) : []), [q.data]);
   // Files of a big repository are shown one folder at a time (with the files they link to); "" is every file.
   const [picked_scope, setScope] = useState<string | null>(null);
-  const scope = picked_scope ?? (big ? folders[0]?.folder ?? "" : "");
+  const scope = picked_scope ?? (big ? defaultFolder(folders) : "");
   const graph = useMemo(() => {
     if (!q.data) return undefined;
     const nodes = q.data.nodes.filter((n) => tests || n.kind !== "test");
@@ -68,8 +68,10 @@ export default function SystemMap() {
   // Exact path or name first, then paths that start with the text, then any other match.
   const rank = (n: { label: string; path: string }) =>
     n.path.toLowerCase() === term || n.label.toLowerCase() === term ? 0 : n.path.toLowerCase().startsWith(term) ? 1 : 2;
-  const matches = term && graph
-    ? graph.nodes.filter((n) => `${n.label} ${n.path}`.toLowerCase().includes(term))
+  // The Folders view has no file nodes: search every file and test, and open a result in its folder's Files view.
+  const pool = view === "folders" ? q.data?.nodes.filter((n) => n.kind !== "unknown") : graph?.nodes;
+  const matches = term && pool
+    ? pool.filter((n) => `${n.label} ${n.path}`.toLowerCase().includes(term))
       .sort((a, b) => rank(a) - rank(b) || a.path.localeCompare(b.path)).slice(0, 8)
     : [];
   // Where keyboard focus goes back to when the details close: the result that opened them, else the search box.
@@ -132,7 +134,11 @@ export default function SystemMap() {
           <ul className="mb-3 flex flex-wrap gap-1.5" aria-label="Matching files and tests">
             {matches.map((n) => (
               <li key={n.id} className="min-w-0 max-w-full">
-                <button type="button" data-result={n.id} onClick={() => { openedFrom.current = n.id; setPicked(n.id); }}
+                <button type="button" data-result={n.id} onClick={() => {
+                    openedFrom.current = n.id;
+                    if (view === "folders") { setView("files"); setScope(folderOf(n.path)); }
+                    setPicked(n.id);
+                  }}
                   aria-pressed={picked === n.id}
                   className="max-w-full break-all rounded-2xl border border-border bg-card px-2.5 py-1 text-left text-xs hover:border-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent">
                   {n.path}

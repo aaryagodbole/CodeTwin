@@ -23,6 +23,9 @@ export function urlFor(path: string, params: Record<string, string> = {}): strin
   const query = Object.keys(params).length ? "?" + new URLSearchParams(params).toString() : "";
   if (DATA_MODE === "demo") return demoPath(path, params);
   if (DATA_MODE === "cloud") {
+    if (CLOUD_PATHS.test(path) && !PROJECT.includes("/")) {
+      throw new Error("Cloud mode needs NEXT_PUBLIC_PROJECT=owner/name (see dashboard/.env.example).");
+    }
     return CLOUD_PATHS.test(path)
       ? `${BASE}/api/v1/projects/${PROJECT.split("/").map(encodeURIComponent).join("/")}${path}${query}`
       : snapshotPath(path, params);
