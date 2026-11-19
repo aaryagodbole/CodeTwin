@@ -193,7 +193,7 @@ def run(args: argparse.Namespace) -> int:
         diff = (ch.diff if (diff_base, diff_head) == (base, None) else eng.changed(diff_base, diff_head)) \
             if diff_base else {}
         if given:
-            check_decision_files(eng, saved, diff if (diff_base, diff_head) == (base, None) else eng.changed(base))
+            check_decision_files(eng, saved, ch.diff)     # the recorded base's diff, as the decision saw it
         changed = {f: sorted(d.new) for f, d in diff.items() if d.status != "D"}
         changed_old = {d.old_path or f: sorted(d.old) for f, d in diff.items()}
         try:

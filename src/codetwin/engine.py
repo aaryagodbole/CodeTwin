@@ -215,6 +215,9 @@ class Engine:
         if blind:
             raise RuntimeError(f"cannot learn from this change: no runtime evidence for {', '.join(blind[:5])}, so which "
                                "tests it affects is unknown (set [runner] test_command, see docs/languages.md)")
+        # Read the change's rows (tests and facts of the tree) before the run, as select saw them: a suite that writes
+        # files, or an edit during a long run, must not change which tests count as changed or forced.
+        forced = {t for t, r in ch.rows.items() if r.get("forced")}
         new = self.lang.run_suite("working-tree")
         if new.incomplete:
             # Partial coverage would label affected tests as unaffected: store nothing, so learn can run again.
@@ -222,7 +225,6 @@ class Engine:
                                "affected is unknown; nothing was learned. Fix the cause and run `codetwin learn` again")
         affected = affected_tests(ch, new)
         selected = set(last["selected"])
-        forced = {t for t, r in ch.rows.items() if r.get("forced")}
         lab = ledger.label(last["id"], last.get("mode", "calibrated"), last["scores"], selected, affected, forced)
         return {"affected": sorted(affected), "missed": sorted(affected - selected), "alpha_t": lab.alpha_t,
                 "calibration_size": lab.calibration_size}
