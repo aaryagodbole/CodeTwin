@@ -30,7 +30,7 @@ def run(args: argparse.Namespace) -> int:
             made_for = saved.get("base")
             if isinstance(made_for, str) and made_for:
                 try:
-                    check_decision_files(eng, saved, eng.changed(made_for))
+                    check_decision_files(eng, saved, eng.change(made_for, require_run=False).diff)
                 except RuntimeError:
                     raise SystemExit(f"--decision was computed against {made_for[:12]}, which is not in this "
                                      "repository; run `codetwin select --json` again") from None

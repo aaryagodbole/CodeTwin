@@ -10,6 +10,7 @@ from pathlib import Path
 
 import pytest
 
+from codetwin.change import ChangeContext
 from codetwin.cli import main
 from codetwin.engine import Engine
 from codetwin.risk.residual import residual_risk
@@ -51,12 +52,12 @@ def test_proceed_has_one_risk() -> None:
 def test_blind_override_stores_the_risk_of_every_test(toy_repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     with _engine(toy_repo) as eng:
         _edit_source(toy_repo)
-        monkeypatch.setattr(eng, "without_runtime_evidence",
-                            lambda diff, prev: {"src/shop/price.py": "no test runner configured"})
+        monkeypatch.setattr(ChangeContext, "without_runtime_evidence",
+                            property(lambda self: {"src/shop/price.py": "no test runner configured"}))
         d = eng.select()
         stored = eng.store.decision(eng.store.last_decision()["id"])
         assert stored["decision"] == "abstain" and set(stored["selected"]) == set(eng.store.scores(stored["id"]))
-        recal = eng._recalibrator()
+        recal = eng.ledger.recalibrator()
         assert stored["residual_risk"] == pytest.approx(residual_risk(eng.store.scores(stored["id"]),
                                                                       set(stored["selected"]), recal))
         assert stored["residual_risk"] == pytest.approx(d.residual_risk)

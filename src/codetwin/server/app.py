@@ -63,8 +63,9 @@ def create_app(root: str | Path = ".", static_dir: str | Path | None = None) -> 
 
     @app.get("/api/summary")
     def summary(eng: Eng) -> dict:
-        base = eng.store.latest_run_sha()
-        run = eng.store.get_run(base) if base else None
+        ch = eng.change(require_run=False)
+        run = ch.prev
+        base = ch.base if run is not None else None
         counts = eng.store.counts()
         return {"root": str(eng.root), "packages": eng.cfg.packages, "alpha": eng.cfg.alpha,
                 "alpha_t": eng.store.alpha_t(eng.cfg.alpha),
@@ -166,10 +167,11 @@ def create_app(root: str | Path = ".", static_dir: str | Path | None = None) -> 
     @app.get("/api/map")
     def system_map(eng: Eng) -> dict:
         """Whole-project graph: files and tests, edges typed by evidence."""
-        base = eng.store.latest_run_sha()
-        run = eng.store.get_run(base) if base else None
-        g = build_graph(eng.facts_now(), run)
-        tests = set(eng.tests_now()) | (set(run.durations) if run else set())
+        ch = eng.change(require_run=False)
+        run = ch.prev
+        base = ch.base if run is not None else None
+        g = build_graph(ch.facts_now, run)
+        tests = set(ch.tests_now) | (set(run.durations) if run else set())
         nodes = [{"id": n, "label": "unresolved" if n == "?" else label(n), "kind": "unknown" if n == "?" else
                   "test" if n in tests else "source", "path": n} for n in g.nodes]
         seen, edges = set(), []

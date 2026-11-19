@@ -49,8 +49,8 @@ def test_history_stops_at_the_base_commit(toy_repo: Path) -> None:
         seen: list[str | None] = []
         real = eng.history
         eng.history = lambda b=None: seen.append(b) or real(b)   # type: ignore[method-assign]
-        eng.analyse(base)
-        assert seen == [base]                                     # analyse reads history up to the base only
+        _ = eng.change(base).rows
+        assert seen == [base]                                     # the change reads history up to the base only
 
 
 # ------------------------------------------------------------------------------------------- 2.7: shallow history

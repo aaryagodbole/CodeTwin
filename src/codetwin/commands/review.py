@@ -166,9 +166,10 @@ def run(args: argparse.Namespace) -> int:
         sec = sec if isinstance(sec, dict) else {}
         given = args.decision is not None
         decision = load_decision(args.decision) if given else eng.select(args.base).to_dict()
-        base = args.base or eng.store.latest_run_sha()
+        ch = eng.change(args.base, require_run=False)
+        base = ch.base if (ch.prev is not None or args.base) else None     # None: nothing recorded yet
         saved = check_decision_base(decision, base, "the commit this review compares with")
-        diff = eng.changed(base) if base else {}
+        diff = ch.diff if base else {}
         if given:
             check_decision_files(eng, saved, diff)
         changed = {f: sorted(d.new) for f, d in diff.items() if d.status != "D"}

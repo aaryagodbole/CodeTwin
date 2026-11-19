@@ -37,6 +37,15 @@ class Context:
     impact: Any = None            # callable(files) -> Impact
     lang: Any = None              # codetwin.lang.base.Language of the project
     extra: dict = field(default_factory=dict)
+    change: Any = None            # codetwin.change.ChangeContext: the same facts, cached (prefer it in new sections)
+
+    @classmethod
+    def of(cls, change: Any, decision: Any, rows: dict, scores: dict) -> Context:
+        """The context of one change. The fields above stay for existing sections; they read the change's cached
+        values, so the working tree is parsed once however many sections ask."""
+        return cls(cfg=change.cfg, store=change.store, base=change.base, prev=change.prev, diff=change.diff,
+                   rows=rows, scores=scores, decision=decision, is_source=change.is_source,
+                   facts_now=lambda: change.facts_now, impact=change.impact, lang=change.lang, change=change)
 
 
 def publishable() -> set[str]:

@@ -1,24 +1,24 @@
 """Ties the layers together: record evidence, analyse a change, select tests, learn from outcomes."""
 from __future__ import annotations
 
-import math
 from pathlib import Path
 from typing import Self
 
 from . import config as cfgmod
 from . import lang as langmod
 from . import report
+from .change import ChangeContext
 from .evidence import diff as diffmod
+from .evidence import history
 from .evidence.model import TestRun, incomplete_code
-from .graph.impact import Impact, build_graph, impact_of
-from .risk import features
-from .risk.calibration import AdaptiveLevel, crc_threshold
+from .graph.impact import Impact
+from .risk.ledger import CalibrationLedger
 from .risk.model import RiskModel
-from .risk.residual import Recalibrator, residual_risk
-from .selection import Decision, budget_select, decide, threshold_select
+from .selection import UNCALIBRATED_THRESHOLD, Decision, choose, only_tests
 from .store.db import Store
 
-UNCALIBRATED_THRESHOLD = 0.5
+__all__ = ["UNCALIBRATED_THRESHOLD", "ChangeContext", "Engine", "affected_tests"]
+
 HISTORY_COMMITS = 300          # first-parent commits read for co-change evidence
 
 
@@ -69,19 +69,13 @@ class Engine:
         Up to the recorded base, not HEAD: commits after it belong to the change being analysed, and counting them
         would let the change explain itself (E5). Empty when git cannot read it; `history_note` says why.
         """
-        # "tformat:" is needed: a format with no %-placeholder is otherwise read as the name of a pretty format, and
-        # git fails ("invalid --pretty format: @@"), which used to leave co-change evidence silently empty.
         return self._read_history(base or "HEAD")[0]
 
     def _read_history(self, rev: str) -> tuple[list[list[str]], str | None]:
         """(commits, git error); read once per revision for this engine."""
         if rev not in self._history:
             try:
-                out = diffmod.git(self.root, "log", "--first-parent", "--name-only", "--format=tformat:@@", "-n",
-                                  str(HISTORY_COMMITS), rev, "--")
-                # one path per line: a path may contain spaces
-                self._history[rev] = ([[f for f in c.splitlines() if f.strip()] for c in out.split("@@") if c.strip()][::-1],
-                                      None)
+                self._history[rev] = (history.commits_until(self.root, rev, HISTORY_COMMITS), None)
             except RuntimeError as e:
                 self._history[rev] = ([], (str(e).splitlines() or ["?"])[-1])
         return self._history[rev]
@@ -127,101 +121,55 @@ class Engine:
             self.store.save_static(sha, facts)
         return run
 
-    # ------------------------------------------------------------- analyse a change
-    def change(self, base: str | None = None):
-        """The recorded commit to compare with, its recorded run, and the working tree's changed lines.
+    # ------------------------------------------------------------- the change
+    def change(self, base: str | None = None, require_run: bool = True) -> ChangeContext:
+        """The change of the working tree against a recorded commit (default: the newest complete run).
 
-        Raises RuntimeError when nothing is recorded; the CLI prints it and exits with 2.
+        Raises RuntimeError when nothing usable is recorded; the CLI prints it and exits with 2. With
+        `require_run=False` (commands that also work without a recording, such as contracts) the base falls back
+        to HEAD and the context has no run.
         """
+        chosen = base is not None                    # the caller named the base: nothing was skipped on their behalf
         base = base or self.store.latest_run_sha()
         if not base:
+            if not require_run:
+                return ChangeContext(self, "HEAD", None, chosen=chosen)
             bad = self.store.latest_run_incomplete()
             if bad:
                 raise RuntimeError(f"the recorded run of {bad[0][:10]} did not complete ({bad[1]}), so it cannot be "
                                    "the base; fix the cause and run `codetwin record` again")
             raise RuntimeError("no recorded run yet; run `codetwin record` on a clean checkout first")
         prev = self.store.get_run(base)
-        if prev is None:
+        if prev is None and require_run:
             raise RuntimeError(f"no recorded run for {base[:10]}; run `codetwin record` there first")
-        return base, prev, self.changed(base)
+        return ChangeContext(self, base, prev, chosen=chosen)
 
-    def analyse(self, base: str | None = None):
-        base, prev, diff = self.change(base)
-        tests = sorted(set(prev.durations) | set(self.tests_now()))
-        rows = features.compute(diff, prev, self.store.get_static(base), self.facts_now(), tests,
-                                self.cfg.src_root, self.is_source, self.history(base), self.lang.stem)
-        return base, prev, diff, rows
+    @property
+    def ledger(self) -> CalibrationLedger:
+        return CalibrationLedger(self.store, self.cfg.alpha, self.cfg.aci_gamma)
 
     # ------------------------------------------------------------- select
     def select(self, base: str | None = None, alpha: float | None = None, budget: float | None = None) -> Decision:
-        chosen = base is not None                    # the user named the base: nothing was skipped on their behalf
-        base, prev, diff, rows = self.analyse(base)
-        scores = self.model.scores(rows)
+        """Decide which tests to run for the working tree's change, store the decision and return it."""
+        ch = self.change(base)
+        scores = self.model.scores(ch.rows)
         alpha = self.cfg.alpha if alpha is None else alpha
-        if not any(self.is_source(f) for f in diff):
-            d = Decision({t for t, r in rows.items() if r["forced"]}, "proceed", 0.0, None, "no-source-change",
-                         ["no source file changed; only added or changed tests run",
-                          *self._evidence_notes(base, prev, [], chosen)], risk_before=0.0)
-            self._with_report(d, base, prev, diff, rows, scores)
-            if diff:
+        if not ch.source_changed:
+            d = only_tests(ch.rows, ch.evidence_notes)
+            self._with_report(d, ch, scores)
+            if ch.diff:
                 # Stored too, so run, learn and explain see this change (E3). Without scores: nothing learns from
                 # them. A clean tree (empty diff) is not a change and replaces no decision.
-                self._save(d, base, alpha, {})
+                self._save(d, ch.base, alpha, {})
             return d
-        pts = self.store.recal_points()
-        labels = [p[1] for p in pts]
-        recal = self._recalibrator(pts)
-        times = {t: prev.durations.get(t, 1.0) for t in rows}
-        if budget is not None:
-            sel = budget_select(rows, scores, times, budget * sum(times.values()))
-            d = decide(rows, scores, sel, alpha, recal, self.cfg.fallback, mode=f"budget {budget:.0%}")
-            risk_at = 0                                    # position of decide()'s risk sentence in d.reasons
-        else:
-            level = AdaptiveLevel(alpha, self.cfg.aci_gamma, self.store.alpha_t())
-            calib = self.store.calibration()
-            lam = crc_threshold(calib, level.level) if len(calib) >= math.ceil(1 / max(level.level, 1e-9)) else -2.0
-            note = []
-            if lam == -2.0:
-                lam = UNCALIBRATED_THRESHOLD
-                note = [f"not calibrated yet ({len(calib)} labelled changes); using threshold {lam}"]
-            sel = threshold_select(rows, scores, lam)
-            d = decide(rows, scores, sel, alpha, recal, self.cfg.fallback, threshold=lam)
-            risk_at = len(note)
-            d.reasons = note + d.reasons
-        unknowns = self.impact([f for f in diff if self.is_source(f)]).unknowns
-        d.reasons += unknowns
-        d.reasons += self._evidence_notes(base, prev, labels, chosen)
-        blind = self.without_runtime_evidence(diff, prev)
-        if blind:
-            # Unknown is not "no dependency": without coverage for these files' tests, the risk of skipping a test
-            # cannot be estimated. Run everything and say why.
-            d.decision, d.selected = "abstain", set(rows)
-            d.residual_risk = residual_risk(scores, d.selected, recal)   # the risk of what now runs (E2)
-            # decide()'s sentence describes a selection that no longer runs: keep it and add the risk of what runs.
-            d.reasons[risk_at] += f"; running every test instead (estimated residual risk {d.residual_risk:.1%})"
-            for why in sorted(set(blind.values())):
-                fs = sorted(f for f, w in blind.items() if w == why)
-                d.reasons.append(f"{why} for {', '.join(fs[:5])}{' and others' if len(fs) > 5 else ''}: "
-                                 "static evidence only, running every test (see docs/languages.md)")
-        self._with_report(d, base, prev, diff, rows, scores)
-        self._save(d, base, alpha, scores)
+        state = self.ledger.state(alpha)
+        times = {t: ch.prev.durations.get(t, 1.0) for t in ch.rows} if ch.prev else {}
+        d = choose(ch.rows, scores, state, alpha=alpha, fallback=self.cfg.fallback, budget=budget, times=times,
+                   blind=ch.without_runtime_evidence,
+                   notes=[*ch.impact().unknowns, *ch.evidence_notes, *state.notes])
+        self._with_report(d, ch, scores)
+        self._save(d, ch.base, alpha, scores)
         return d
-
-    def _evidence_notes(self, base: str, prev: TestRun, labels: list[int], chosen: bool = False) -> list[str]:
-        """What weakens this decision's evidence: thin git history, an incomplete or skipped run, too little feedback."""
-        note = self.history_note(base)
-        notes = [note] if note else []
-        if prev.incomplete:
-            notes.append(f"the recorded run of {base[:10]} did not complete ({prev.returncode}): its coverage is partial")
-        skipped = None if chosen else self.store.latest_run_incomplete()
-        if skipped and skipped[0] != base:
-            notes.append(f"the newest recorded run ({skipped[0][:10]}) did not complete ({skipped[1]}); comparing with "
-                         f"the older complete run of {base[:10]} instead")
-        if labels and not Recalibrator.enough(labels):
-            pos = sum(1 for x in labels if x)
-            notes.append(f"risk scores are not recalibrated yet: {pos} affected and {len(labels) - pos} unaffected test "
-                         f"examples, at least {Recalibrator.MIN_EACH} of each are needed (`codetwin learn`)")
-        return notes
 
     def _save(self, d: Decision, base: str, alpha: float, scores: dict[str, float]) -> int:
         return self.store.save_decision(base=base, head="working-tree", mode=d.mode, alpha=alpha,
@@ -230,34 +178,14 @@ class Engine:
                                         decision=d.decision, selected=d.selected, reasons=d.reasons,
                                         scores=scores, extras=d.extras)
 
-    def without_runtime_evidence(self, diff, prev) -> dict[str, str]:
-        """Changed source files whose tests have no runtime evidence, with the reason: no runner configured, or a
-        runner whose runs recorded no coverage at all for the file's project (e.g. a missing coverage tool)."""
-        # groups of the source files any test executed (a test project may live apart from the code it tests)
-        covered = {self.lang.evidence_group(f) for files in (prev.covered.values() if prev else []) for f in files}
-        out: dict[str, str] = {}
-        for f in diff:
-            if not self.is_source(f):
-                continue
-            if not self.lang.has_runtime_evidence(f):
-                out[f] = "no test runner configured"
-            elif self.lang.evidence_group(f) not in covered:
-                out[f] = "no coverage recorded for this project's tests"
-        return out
-
-    def report_context(self, d: Decision | None, base, prev, diff, rows, scores) -> report.Context:
+    def report_context(self, change: ChangeContext, d: Decision | None, rows: dict | None = None,
+                       scores: dict | None = None) -> report.Context:
         """The one place a report context is built, so every command gives sections the same inputs."""
-        return report.Context(cfg=self.cfg, store=self.store, base=base, prev=prev, diff=diff, rows=rows,
-                              scores=scores, decision=d, is_source=self.is_source, facts_now=self.facts_now,
-                              impact=self.impact, lang=self.lang)
+        return report.Context.of(change, d, change.rows if rows is None else rows, scores or {})
 
-    def _with_report(self, d: Decision, base, prev, diff, rows, scores) -> Decision:
-        d.extras = report.build(self.report_context(d, base, prev, diff, rows, scores))
+    def _with_report(self, d: Decision, change: ChangeContext, scores: dict[str, float]) -> Decision:
+        d.extras = report.build(self.report_context(change, d, change.rows, scores))
         return d
-
-    def _recalibrator(self, pts: list[tuple[float, int]] | None = None) -> Recalibrator:
-        pts = self.store.recal_points() if pts is None else pts
-        return Recalibrator().fit([p[0] for p in pts], [p[1] for p in pts])
 
     # ------------------------------------------------------------- learn from the full run
     def learn(self) -> dict:
@@ -266,25 +194,24 @@ class Engine:
         last = self.store.last_decision()
         if not last:
             raise RuntimeError("no decision to learn from; run `codetwin select` first")
-        if self.store.has_outcome(last["id"]):
+        ledger = self.ledger
+        if ledger.labelled(last["id"]):
             raise RuntimeError(f"decision {last['id']} already has an outcome; run `codetwin select` for a new change "
                                "(learning twice from one change would count it twice in the calibration set)")
+        ch = self.change(last["base"])
         if last.get("mode") == "no-source-change":
             # Only tests changed and every changed test ran, so nothing was missed. Such a change says nothing about
             # the risk model: no calibration, recalibration or adaptive-level update (it would shift calibration).
-            now = self.changed(last["base"])
-            new_tests = (set(now) & set(self.tests_now())) - set(last["selected"])
-            if any(self.is_source(f) for f in now) or new_tests:
+            new_tests = (set(ch.diff) & set(ch.tests_now)) - set(last["selected"])
+            if ch.source_changed or new_tests:
                 raise RuntimeError("the change differs from the one the last `codetwin select` saw (it edited only "
                                    f"{', '.join(last['selected']) or 'tests'}); run `codetwin select` again before "
                                    "`learn`")
-            self.store.save_outcome(last["id"], False)
-            return {"affected": sorted(last["selected"]), "missed": [],
-                    "alpha_t": self.store.alpha_t(self.cfg.alpha), "calibration_size": len(self.store.calibration()),
+            lab = ledger.label_unscored(last["id"])
+            return {"affected": sorted(last["selected"]), "missed": [], "alpha_t": lab.alpha_t,
+                    "calibration_size": lab.calibration_size,
                     "note": "a change that edits only tests: outcome stored, calibration unchanged"}
-        _base, _prev, diff, rows = self.analyse(last["base"])
-        no_ev = self.without_runtime_evidence(diff, self.store.get_run(last["base"]))
-        blind = [f"{f} ({why})" for f, why in sorted(no_ev.items())]
+        blind = [f"{f} ({why})" for f, why in sorted(ch.without_runtime_evidence.items())]
         if blind:
             raise RuntimeError(f"cannot learn from this change: no runtime evidence for {', '.join(blind[:5])}, so which "
                                "tests it affects is unknown (set [runner] test_command, see docs/languages.md)")
@@ -293,41 +220,17 @@ class Engine:
             # Partial coverage would label affected tests as unaffected: store nothing, so learn can run again.
             raise RuntimeError(f"the full test run did not complete ({new.returncode}), so which tests the change "
                                "affected is unknown; nothing was learned. Fix the cause and run `codetwin learn` again")
-        affected = set()
-        for f, d in diff.items():
-            if not self.is_source(f) or d.status == "D":
-                continue
-            for t, files in new.covered.items():
-                if set(d.new) & set(files.get(f, [])):
-                    affected.add(t)
-            if set(d.new) & set(new.import_lines.get(f, [])):
-                affected |= {t for t, files in new.covered.items() if f in files}
-        affected |= {t for t, r in rows.items() if r["test_changed"]}
-        scores, selected = last["scores"], set(last["selected"])
-        missed = bool(affected - selected)
-        non_forced = [scores[t] for t in affected if t in scores and not rows.get(t, {}).get("forced")]
-        # One transaction: if learning stops part way, nothing is stored and `learn` can simply run again
-        # (calibration_point.decision_id is unique, so a half-stored label could never be completed).
-        with self.store.transaction():
-            self.store.add_calibration(min(non_forced) if non_forced else math.inf, last["id"])
-            calib = self.store.calibration()
-            self.store.add_recal_points(((t, scores[t], int(t in affected)) for t in scores
-                                         if not rows.get(t, {}).get("forced")), last["id"])
-            level = AdaptiveLevel(self.cfg.alpha, self.cfg.aci_gamma, self.store.alpha_t())
-            # The adaptive level tracks misses of the *calibrated* threshold only; a budget-mode selection
-            # missing a test says nothing about it. Scores and labels above are valid in both modes.
-            if last.get("mode", "calibrated") == "calibrated":
-                self.store.set_alpha_t(level.update(missed), last["id"])
-            self.store.save_outcome(last["id"], missed)
-        return {"affected": sorted(affected), "missed": sorted(affected - selected), "alpha_t": level.alpha_t,
-                "calibration_size": len(calib)}
+        affected = affected_tests(ch, new)
+        selected = set(last["selected"])
+        forced = {t for t, r in ch.rows.items() if r.get("forced")}
+        lab = ledger.label(last["id"], last.get("mode", "calibrated"), last["scores"], selected, affected, forced)
+        return {"affected": sorted(affected), "missed": sorted(affected - selected), "alpha_t": lab.alpha_t,
+                "calibration_size": lab.calibration_size}
 
     # ------------------------------------------------------------- impact
     def impact(self, files: list[str], base: str | None = None) -> Impact:
-        base = base or self.store.latest_run_sha()
-        run = self.store.get_run(base) if base else None
-        g = build_graph(self.facts_now(), run)
-        return impact_of(g, files, self.tests_now())
+        """Tests that reach `files` in the working tree, with the runtime evidence of `base` (default: newest)."""
+        return self.change(base, require_run=False).impact(files)
 
     def explain(self) -> dict:
         rows = self.store.decisions(limit=1, extras=True)
@@ -336,3 +239,18 @@ class Engine:
         row = rows[0]
         return {k: row[k] for k in ("decision", "mode", "residual_risk", "risk_before", "threshold", "alpha", "reasons",
                                      "selected", "extras")}
+
+
+def affected_tests(change: ChangeContext, new: TestRun) -> set[str]:
+    """The ground truth for `learn`: tests whose run over the changed tree executed a changed line (or imported a
+    module at a changed load-time line), plus the added and changed tests."""
+    affected: set[str] = set()
+    for f, d in change.diff.items():
+        if not change.is_source(f) or d.status == "D":
+            continue
+        for t, files in new.covered.items():
+            if set(d.new) & set(files.get(f, [])):
+                affected.add(t)
+        if set(d.new) & set(new.import_lines.get(f, [])):
+            affected |= {t for t, files in new.covered.items() if f in files}
+    return affected | {t for t, r in change.rows.items() if r["test_changed"]}

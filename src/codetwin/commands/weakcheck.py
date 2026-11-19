@@ -12,16 +12,12 @@ def add_arguments(p) -> None:
 
 def run(args) -> int:
     with engine(args) as eng:
-        base = args.base or eng.store.latest_run_sha()
-        if not base:
-            raise SystemExit("no recorded run yet; run `codetwin record` first")
-        prev = eng.store.get_run(base)
-        if prev is None:
-            raise SystemExit(f"no recorded run for {base}; run `codetwin record` at that commit first")
-        diff = eng.changed(base)
-        now = eng.facts_now()
-        checks = changed_functions(diff, prev, eng.store.get_static(base), now, eng.is_source)
-        run_checks(eng.root, eng.cfg.src_root, checks, now, args.timeout, eng.lang)
+        try:
+            ch = eng.change(args.base)
+        except RuntimeError as e:
+            raise SystemExit(str(e)) from None
+        checks = changed_functions(ch.diff, ch.prev, ch.static_base, ch.facts_now, ch.is_source)
+        run_checks(eng.root, eng.cfg.src_root, checks, ch.facts_now, args.timeout, eng.lang)
     res = [{"file": c.file, "line": c.start, "status": c.status, "tests": c.tests, "killers": c.killers,
             "baseline_failures": c.baseline_failures} for c in checks]
     if args.json:
