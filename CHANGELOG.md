@@ -7,6 +7,9 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+- Report section `freshness` (`src/codetwin/report/freshness.py`): reports how many commits old the recorded evidence is, flags stale evidence when `commits_behind` exceeds `[freshness] stale_after` (default 20), reports `commits_behind = null` with unknown age when the recorded commit is missing, not an ancestor of HEAD (different branch or older checkout), or when shallow clone history is incomplete, and suggests running `codetwin record`.
+
 ### Fixed
 - `codetwin run --decision FILE` runs the tests of that `select --json` file; the GitHub Action uses it. A change
   that edits only tests is printed but not stored, so the Action used to run an older decision's tests or none.
@@ -23,7 +26,6 @@ Any repository in any language, pull-request review, a code knowledge graph, a n
 cloud plane (API, uploads, self-hosting) and a redesigned dashboard with a hosted demo.
 
 ### Added
-- Report section `freshness` (`src/codetwin/report/freshness.py`): reports how many commits old the recorded evidence is, flags stale evidence when `commits_behind` exceeds `[freshness] stale_after` (default 20), and suggests running `codetwin record`.
 - Dashboard redesign: design tokens with a light and dark theme toggle, sidebar layout, residual-risk gauge, sparklines
   and outcome donut on the overview, filterable decisions with expandable rows, area chart of the observed miss rate
   against the target, skeleton, empty and error states. New pages: interactive dependency graph (search, hover

@@ -24,8 +24,11 @@ Rules:
   `contracts` (`breaking`: each breaking contract change with `consumers` and `tests`; see `docs/contracts.md`) and
   `cross_repo` (`repos`: per connected repository its `consumers`, `tests` and `unknowns`; see `docs/crossrepo.md`) and
   `test_gaps` (`files`: changed lines that ran under no test, with `lines`, `changed_lines`, and enclosing `symbols`) and
-  `freshness` (`commits_behind`: commits since recorded commit, `stale`: true when `commits_behind > stale_after`,
-  `stale_after`: limit from `[freshness] stale_after` defaulting to 20).
+  `freshness` (`commits_behind`: number of commits since recorded commit, or `null` when the age cannot be established
+  [recorded commit is missing, not an ancestor of HEAD such as an older checkout or different branch, or history is incomplete
+  in a shallow clone]; `stale`: true when `commits_behind > stale_after`, false when `commits_behind` is `null`;
+  `stale_after`: limit from `[freshness] stale_after` defaulting to 20; `summary`: one-line text; consumers must not do
+  `commits_behind > 0` or print "null commits" when `commits_behind` is `null`, and should display `summary` instead).
 - `extras` holds one object per report section (`src/codetwin/report/<name>.py`). Each has a one-line `summary`;
   the rest is section-specific and documented in the section's module docstring.
 - Adding a section or a key is **not** a breaking change. Renaming or removing a top-level key is: bump

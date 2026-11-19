@@ -7,6 +7,8 @@ from pathlib import Path
 from typing import Any
 
 from codetwin.cli import main
+from codetwin.config import Config
+from codetwin.report import Context
 from codetwin.report.freshness import DEFAULT_STALE_AFTER, contribute, get_stale_after
 
 
@@ -18,27 +20,6 @@ def _commit(repo: Path, msg: str) -> None:
         check=True,
         capture_output=True,
     )
-
-
-class _DummyConfig:
-    """Mock config object for testing get_stale_after with various [freshness] tables."""
-
-    def __init__(self, section_data: Any) -> None:
-        self._data = section_data
-        self.root = Path(".")
-
-    def section(self, name: str) -> Any:
-        if name == "freshness":
-            return self._data
-        return {}
-
-
-class _DummyContext:
-    """Mock Context object for unit testing contribute()."""
-
-    def __init__(self, base: str, cfg: Any = None) -> None:
-        self.base = base
-        self.cfg = cfg
 
 
 def test_two_commits_after_recording_gives_count_two(toy_repo: Path, capsys: Any) -> None:
@@ -60,8 +41,7 @@ def test_two_commits_after_recording_gives_count_two(toy_repo: Path, capsys: Any
     assert freshness["commits_behind"] == 2
     assert freshness["stale"] is False
     assert freshness["stale_after"] == DEFAULT_STALE_AFTER
-    assert "2 commits old" in freshness["summary"]
-    assert "not stale" in freshness["summary"]
+    assert freshness["summary"] == "recorded evidence is 2 commits old (not stale)"
 
 
 def test_stale_after_one_makes_two_commits_stale(toy_repo: Path, capsys: Any) -> None:
@@ -78,7 +58,7 @@ def test_stale_after_one_makes_two_commits_stale(toy_repo: Path, capsys: Any) ->
     _commit(toy_repo, "commit 1")
     _commit(toy_repo, "commit 2")
 
-    # 4. Run select --json and verify freshness is stale
+    # 4. Run select --json and verify freshness is stale with exact summary comparison
     capsys.readouterr()
     assert main(["-C", str(toy_repo), "select", "--json"]) == 0
     out = json.loads(capsys.readouterr().out)
@@ -87,9 +67,206 @@ def test_stale_after_one_makes_two_commits_stale(toy_repo: Path, capsys: Any) ->
     assert freshness["commits_behind"] == 2
     assert freshness["stale"] is True
     assert freshness["stale_after"] == 1
-    assert "2 commits old" in freshness["summary"]
-    assert "stale" in freshness["summary"]
-    assert "codetwin record" in freshness["summary"]
+    assert freshness["summary"] == "recorded evidence is 2 commits old (stale, limit 1); run `codetwin record`"
+
+
+def test_boundary_stale_after_two(toy_repo: Path, capsys: Any) -> None:
+    """With stale_after = 2, exactly 2 commits is not stale; 3 commits is stale."""
+    main(["-C", str(toy_repo), "init"])
+    cfg_file = toy_repo / ".codetwin.toml"
+    cfg_file.write_text(cfg_file.read_text() + "\n[freshness]\nstale_after = 2\n")
+    main(["-C", str(toy_repo), "record"])
+
+    # Exactly 2 commits -> stale False
+    _commit(toy_repo, "commit 1")
+    _commit(toy_repo, "commit 2")
+
+    capsys.readouterr()
+    assert main(["-C", str(toy_repo), "select", "--json"]) == 0
+    out = json.loads(capsys.readouterr().out)
+    freshness = out["extras"]["freshness"]
+    assert freshness["commits_behind"] == 2
+    assert freshness["stale"] is False
+    assert freshness["summary"] == "recorded evidence is 2 commits old (not stale)"
+
+    # 3rd commit -> stale True
+    _commit(toy_repo, "commit 3")
+
+    capsys.readouterr()
+    assert main(["-C", str(toy_repo), "select", "--json"]) == 0
+    out = json.loads(capsys.readouterr().out)
+    freshness = out["extras"]["freshness"]
+    assert freshness["commits_behind"] == 3
+    assert freshness["stale"] is True
+    assert freshness["summary"] == "recorded evidence is 3 commits old (stale, limit 2); run `codetwin record`"
+
+
+def test_head_older_than_recorded_commit(toy_repo: Path, capsys: Any) -> None:
+    """When HEAD is older than the recorded commit (git checkout HEAD~2), age is unknown."""
+    _commit(toy_repo, "commit 1")
+    _commit(toy_repo, "commit 2")
+    main(["-C", str(toy_repo), "init"])
+    main(["-C", str(toy_repo), "record"])
+
+    # Checkout two commits back
+    subprocess.run(["git", "checkout", "-q", "HEAD~2"], cwd=toy_repo, check=True)
+
+    capsys.readouterr()
+    assert main(["-C", str(toy_repo), "select", "--json"]) == 0
+    out = json.loads(capsys.readouterr().out)
+
+    freshness = out["extras"]["freshness"]
+    assert freshness["commits_behind"] is None
+    assert freshness["stale"] is False
+    assert freshness["summary"] == "current checkout is not based on the recorded commit; age is unknown"
+
+
+def test_different_branch(toy_repo: Path, capsys: Any) -> None:
+    """When HEAD is on a branch that diverged from base, age is unknown."""
+    # 1. Start on branch-a and commit
+    subprocess.run(["git", "checkout", "-b", "branch-a"], cwd=toy_repo, check=True, capture_output=True)
+    _commit(toy_repo, "commit on branch a 1")
+
+    # 2. Branch off to branch-b and commit
+    subprocess.run(["git", "checkout", "-b", "branch-b"], cwd=toy_repo, check=True, capture_output=True)
+    _commit(toy_repo, "commit on branch b 1")
+
+    # 3. Checkout branch-a, make another commit, init and record
+    subprocess.run(["git", "checkout", "branch-a"], cwd=toy_repo, check=True, capture_output=True)
+    _commit(toy_repo, "commit on branch a 2")
+    main(["-C", str(toy_repo), "init"])
+    main(["-C", str(toy_repo), "record"])
+
+    # 4. Switch to diverged branch-b and run select --json
+    subprocess.run(["git", "checkout", "branch-b"], cwd=toy_repo, check=True, capture_output=True)
+    capsys.readouterr()
+    assert main(["-C", str(toy_repo), "select", "--json"]) == 0
+    out = json.loads(capsys.readouterr().out)
+
+    freshness = out["extras"]["freshness"]
+    assert freshness["commits_behind"] is None
+    assert freshness["stale"] is False
+    assert freshness["summary"] == "current checkout is not based on the recorded commit; age is unknown"
+
+
+def test_shallow_boundary_in_range(tmp_path: Path) -> None:
+    """A shallow repository where a shallow boundary commit lies in <base>..HEAD returns unknown."""
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    subprocess.run(["git", "init", "-q"], cwd=repo, check=True)
+    subprocess.run(["git", "-c", "user.name=t", "-c", "user.email=t@t", "commit", "--allow-empty", "-m", "1 (base)"], cwd=repo, check=True)
+    base_sha = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repo, capture_output=True, text=True, check=True).stdout.strip()
+
+    # Branch a from base
+    subprocess.run(["git", "checkout", "-b", "branch-a"], cwd=repo, check=True)
+    subprocess.run(["git", "-c", "user.name=t", "-c", "user.email=t@t", "commit", "--allow-empty", "-m", "2 (branch a)"], cwd=repo, check=True)
+
+    # Branch b from base
+    subprocess.run(["git", "checkout", "-b", "branch-b", base_sha], cwd=repo, check=True)
+    subprocess.run(["git", "-c", "user.name=t", "-c", "user.email=t@t", "commit", "--allow-empty", "-m", "3 (branch b)"], cwd=repo, check=True)
+    b_sha = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repo, capture_output=True, text=True, check=True).stdout.strip()
+
+    # Merge branch a into branch b
+    subprocess.run(["git", "-c", "user.name=t", "-c", "user.email=t@t", "merge", "-q", "--no-ff", "-m", "merge", "branch-a"], cwd=repo, check=True)
+
+    # Mark b_sha as a shallow root inside <base>..HEAD
+    shallow_file = repo / ".git" / "shallow"
+    shallow_file.write_text(b_sha + "\n", encoding="utf-8")
+
+    cfg = Config(root=repo)
+    ctx = Context(
+        cfg=cfg,
+        store=None,
+        base=base_sha,
+        prev=None,
+        diff={},
+        rows={},
+        scores={},
+        decision=None,
+        is_source=lambda _: True,
+    )
+    res = contribute(ctx)
+    assert res["commits_behind"] is None
+    assert res["stale"] is False
+    assert res["summary"] == "history is incomplete in a shallow clone; age is unknown"
+
+    # When boundary is base itself (not strictly in range <base>..HEAD), range is complete
+    shallow_file.write_text(base_sha + "\n", encoding="utf-8")
+    res_base_shallow = contribute(ctx)
+    assert res_base_shallow["commits_behind"] == 3
+    assert res_base_shallow["stale"] is False
+    assert res_base_shallow["summary"] == "recorded evidence is 3 commits old (not stale)"
+
+
+def test_shallow_clone_incomplete_and_unshallow(tmp_path: Path) -> None:
+    """A shallow clone where recorded commit and HEAD are disconnected gives unknown; unshallow gives 25."""
+    src = tmp_path / "src"
+    src.mkdir()
+    subprocess.run(["git", "init", "-q"], cwd=src, check=True)
+    subprocess.run(
+        ["git", "-c", "user.name=t", "-c", "user.email=t@t", "commit", "--allow-empty", "-m", "init"],
+        cwd=src,
+        check=True,
+    )
+
+    clone = tmp_path / "clone"
+    url = src.resolve().as_uri()
+    try:
+        subprocess.run(
+            ["git", "-c", "protocol.file.allow=always", "clone", "--depth", "1", url, str(clone)],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    except subprocess.CalledProcessError as e:
+        if "Could not read from remote repository" in (e.stderr or ""):
+            import pytest
+            pytest.skip(f"git clone file:// not supported in this execution environment: {e.stderr.strip()}")
+        raise
+
+    sha_a = subprocess.run(
+        ["git", "rev-parse", "HEAD"], cwd=clone, capture_output=True, text=True, check=True
+    ).stdout.strip()
+
+    for i in range(25):
+        subprocess.run(
+            ["git", "-c", "user.name=t", "-c", "user.email=t@t", "commit", "--allow-empty", "-m", f"c{i}"],
+            cwd=src,
+            check=True,
+        )
+
+    subprocess.run(
+        ["git", "-c", "protocol.file.allow=always", "fetch", "--depth", "1", "origin"], cwd=clone, check=True
+    )
+    fetch_sha = subprocess.run(
+        ["git", "rev-parse", "FETCH_HEAD"], cwd=clone, capture_output=True, text=True, check=True
+    ).stdout.strip()
+    subprocess.run(["git", "checkout", "-q", fetch_sha], cwd=clone, check=True)
+
+    cfg = Config(root=clone)
+    ctx = Context(
+        cfg=cfg,
+        store=None,
+        base=sha_a,
+        prev=None,
+        diff={},
+        rows={},
+        scores={},
+        decision=None,
+        is_source=lambda _: True,
+    )
+    res = contribute(ctx)
+    assert res["commits_behind"] is None
+    assert res["stale"] is False
+    assert "age is unknown" in res["summary"]
+
+    # Unshallow the clone to get full history
+    subprocess.run(["git", "-c", "protocol.file.allow=always", "fetch", "--unshallow", "origin"], cwd=clone, check=True)
+    res_unshallow = contribute(ctx)
+    assert res_unshallow["commits_behind"] == 25
+    assert res_unshallow["stale"] is True
+    assert res_unshallow["stale_after"] == DEFAULT_STALE_AFTER
+    assert res_unshallow["summary"] == "recorded evidence is 25 commits old (stale, limit 20); run `codetwin record`"
 
 
 def test_zero_commits_at_record(toy_repo: Path, capsys: Any) -> None:
@@ -121,48 +298,66 @@ def test_one_commit_singular_wording(toy_repo: Path, capsys: Any) -> None:
     freshness = out["extras"]["freshness"]
     assert freshness["commits_behind"] == 1
     assert freshness["stale"] is False
-    assert "1 commit old" in freshness["summary"]
-    assert "not stale" in freshness["summary"]
+    assert freshness["summary"] == "recorded evidence is 1 commit old (not stale)"
 
 
-def test_get_stale_after_defaults_and_fallbacks() -> None:
-    """Verify that get_stale_after handles valid, invalid, negative, and missing settings."""
-    # Missing cfg or missing table falls back to default 20
-    assert get_stale_after(None) == DEFAULT_STALE_AFTER
-    assert get_stale_after(_DummyConfig({})) == DEFAULT_STALE_AFTER
-    assert get_stale_after(_DummyConfig("not a dict")) == DEFAULT_STALE_AFTER
+def test_get_stale_after_defaults_and_fallbacks(toy_repo: Path) -> None:
+    """Verify that get_stale_after handles valid, invalid, negative, and missing settings using real Config."""
+    # Missing [freshness] table falls back to default 20
+    assert get_stale_after(Config(root=toy_repo, raw={})) == DEFAULT_STALE_AFTER
 
     # Valid positive integer or zero
-    assert get_stale_after(_DummyConfig({"stale_after": 10})) == 10
-    assert get_stale_after(_DummyConfig({"stale_after": 0})) == 0
+    assert get_stale_after(Config(root=toy_repo, raw={"freshness": {"stale_after": 10}})) == 10
+    assert get_stale_after(Config(root=toy_repo, raw={"freshness": {"stale_after": 0}})) == 0
 
     # Negative integer falls back to default 20
-    assert get_stale_after(_DummyConfig({"stale_after": -5})) == DEFAULT_STALE_AFTER
+    assert get_stale_after(Config(root=toy_repo, raw={"freshness": {"stale_after": -5}})) == DEFAULT_STALE_AFTER
 
     # Non-integer types fall back to default 20
-    assert get_stale_after(_DummyConfig({"stale_after": "10"})) == DEFAULT_STALE_AFTER
-    assert get_stale_after(_DummyConfig({"stale_after": 15.5})) == DEFAULT_STALE_AFTER
-    assert get_stale_after(_DummyConfig({"stale_after": True})) == DEFAULT_STALE_AFTER
-    assert get_stale_after(_DummyConfig({"stale_after": False})) == DEFAULT_STALE_AFTER
+    assert get_stale_after(Config(root=toy_repo, raw={"freshness": {"stale_after": "10"}})) == DEFAULT_STALE_AFTER
+    assert get_stale_after(Config(root=toy_repo, raw={"freshness": {"stale_after": 15.5}})) == DEFAULT_STALE_AFTER
+    assert get_stale_after(Config(root=toy_repo, raw={"freshness": {"stale_after": True}})) == DEFAULT_STALE_AFTER
+    assert get_stale_after(Config(root=toy_repo, raw={"freshness": {"stale_after": False}})) == DEFAULT_STALE_AFTER
+
+    # List value for section (e.g. [[freshness]] array of tables in TOML)
+    assert get_stale_after(Config(root=toy_repo, raw={"freshness": [{"stale_after": 5}]})) == DEFAULT_STALE_AFTER
 
 
 def test_freshness_unknown_base_commit(toy_repo: Path) -> None:
     """When the base commit does not exist or is empty, freshness returns unknown age."""
-    # Non-existent commit SHA
-    ctx_missing = _DummyContext(base="0000000000000000000000000000000000000000", cfg=_DummyConfig({}))
-    ctx_missing.cfg.root = toy_repo  # type: ignore[attr-defined]
-    res1: dict[str, Any] = contribute(ctx_missing)  # type: ignore[arg-type]
+    cfg = Config(root=toy_repo, raw={})
 
+    # Non-existent commit SHA
+    ctx_missing = Context(
+        cfg=cfg,
+        store=None,
+        base="0000000000000000000000000000000000000000",
+        prev=None,
+        diff={},
+        rows={},
+        scores={},
+        decision=None,
+        is_source=lambda _: True,
+    )
+    res1: dict[str, Any] = contribute(ctx_missing)
     assert res1["commits_behind"] is None
     assert res1["stale"] is False
     assert res1["stale_after"] == DEFAULT_STALE_AFTER
-    assert "age is unknown" in res1["summary"]
+    assert res1["summary"] == "recorded commit not found; age is unknown"
 
     # Empty base commit
-    ctx_empty = _DummyContext(base="", cfg=_DummyConfig({}))
-    res2: dict[str, Any] = contribute(ctx_empty)  # type: ignore[arg-type]
-
+    ctx_empty = Context(
+        cfg=cfg,
+        store=None,
+        base="",
+        prev=None,
+        diff={},
+        rows={},
+        scores={},
+        decision=None,
+        is_source=lambda _: True,
+    )
+    res2: dict[str, Any] = contribute(ctx_empty)
     assert res2["commits_behind"] is None
     assert res2["stale"] is False
-    assert "age is unknown" in res2["summary"]
-
+    assert res2["summary"] == "recorded commit not found; age is unknown"
