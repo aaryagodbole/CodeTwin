@@ -8,6 +8,21 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Changed
+- `codetwin push` adds `alpha_t`, `test_files` and `suite_seconds` to the report, and the cloud API shows them, so
+  its summary, decisions and calibration match `codetwin serve` instead of repeating `alpha` and summing per-test
+  times. The cloud no longer invents a target of 10% for a project without one (`alpha` is null).
+- `codetwin review` chooses the commit it diffs against once: in a pull request, where the branch left the PR's
+  base; elsewhere the recorded base. Findings, the LLM patch, SARIF and inline comments all use that diff, so a
+  cached store with an older recorded base no longer reports lines the pull request did not change.
+- Dashboard: the theme toggle has a third "system" state that drops the saved choice; theme colours are defined
+  once (`light-dark()`); every percentage uses one formatter; SVG gradients have unique ids; the demo detail page
+  reuses the decisions list it already downloaded.
+- AGENTS.md: wording of the review process aligned (merge `dev` before the first and final review only, what plain
+  `/code-review` reviews, `git reset --hard origin/<branch>` is allowed, the review rules live in three files).
+- Review process (AGENTS.md, PR template): open pull requests as drafts and mark them ready after the self-review,
+  so the code owner is asked only then; merge-review re-runs cover the whole pull request, at most twice, and a
+  correctness or security finding left after the second is fixed and read by the code owner; the self-review
+  stops by the same rule.
 - Isotonic recalibration of risk scores starts only with at least 5 affected and 5 unaffected test examples from
   `codetwin learn`; before that the model's scores are used as they are and `select` says so. A fit on a few points
   used to report 0.0% residual risk (#99).
@@ -20,6 +35,7 @@ All notable changes to this project are documented here. The format follows
 - Report section `freshness` (`src/codetwin/report/freshness.py`): how many commits old the recorded evidence is (merged commits count), `stale` when that exceeds `[freshness] stale_after` (default 20) or when the recorded commit is gone from a complete history, with a hint to run `codetwin record`. The age is `null` when it cannot be established (other branch, older checkout, shallow clone). Git failures other than an unknown commit are shown as a broken section, not hidden as an unknown age.
 
 ### Fixed
+- VS Code impact graph: the webview ignores messages from any origin but its own (CodeQL `js/missing-origin-check`).
 - Co-change evidence was always empty: `git log --format=@@` is not a valid format, and the error was ignored. It now
   works, reads history only up to the recorded base commit (E5), and a shallow clone or missing history is stated in
   the decision's reasons (#99).

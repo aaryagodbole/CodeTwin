@@ -2,7 +2,8 @@
 
 CodeTwin AI selects regression tests, estimates the risk left by a selection and abstains when the
 evidence is weak. Its behaviour is fixed by a research paper, so reviews should check these rules first
-(full list: `AGENTS.md`; PR-Agent gets the same rules from `.pr_agent.toml`).
+(full list: `AGENTS.md`; PR-Agent gets the same rules from `.pr_agent.toml`; change this file, `.pr_agent.toml`
+and the self-review checklist in `AGENTS.md` together).
 
 ## Flag as a problem
 

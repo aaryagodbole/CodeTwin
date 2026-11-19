@@ -154,6 +154,24 @@ def _pull_request_base(root: Path) -> str | None:
     return sha
 
 
+def review_base(root: Path, recorded: str | None) -> tuple[str | None, str | None]:
+    """(base, head) the review diffs, chosen once for the changed lines, the patch and the inline comments.
+
+    In a pull request it is where the branch left the PR's base, up to HEAD (`git diff base...HEAD`): a recorded
+    base older than the PR's base (a cached store) does not bring in lines the PR did not change, and files a CI
+    step changed in the working tree are not commentable lines of the PR. Elsewhere it is the recorded base up to
+    the working tree (head None). Covering tests still come from the recorded run."""
+    from ..evidence.diff import git
+
+    pr = _pull_request_base(root)
+    if pr is None:
+        return recorded, None
+    try:
+        return git(root, "merge-base", pr, "HEAD").strip(), "HEAD"
+    except RuntimeError:
+        return recorded, None
+
+
 def run(args: argparse.Namespace) -> int:
     from ..evidence.diff import git
     from ..kg import from_engine
@@ -168,9 +186,10 @@ def run(args: argparse.Namespace) -> int:
         decision = load_decision(args.decision) if given else eng.select(args.base).to_dict()
         base = args.base or eng.store.latest_run_sha()
         saved = check_decision_base(decision, base, "the commit this review compares with")
-        diff = eng.changed(base) if base else {}
+        diff_base, diff_head = review_base(eng.root, base) if base else (None, None)
+        diff = eng.changed(diff_base, diff_head) if diff_base else {}
         if given:
-            check_decision_files(eng, saved, diff)
+            check_decision_files(eng, saved, diff if (diff_base, diff_head) == (base, None) else eng.changed(base))
         changed = {f: sorted(d.new) for f, d in diff.items() if d.status != "D"}
         changed_old = {d.old_path or f: sorted(d.old) for f, d in diff.items()}
         try:
@@ -190,20 +209,11 @@ def run(args: argparse.Namespace) -> int:
             from ..llm import client_from_config
             llm = client_from_config(eng.cfg)
             only = sorted({*(only or [m.NAME for m in select_analyzers()]), "llm_review"})
-        patch = git(eng.root, "diff", "--unified=3", base, "--") if base else ""
-        # GitHub accepts inline comments only on lines of the pull request's own diff. The recorded base can be an
-        # older commit than the PR's base, so use the PR's base commit when the workflow event provides it.
-        in_pr = patch
-        if args.post_github or args.format == "github":     # only inline comments need the pull request's diff
-            pr_base = _pull_request_base(eng.root)
-            if pr_base and pr_base != base:
-                try:
-                    in_pr = git(eng.root, "diff", "--unified=3", f"{pr_base}...HEAD", "--")
-                except RuntimeError:
-                    in_pr = patch                           # keep the review working on the recorded diff
+        patch = git(eng.root, "diff", "--unified=3", diff_base, *([diff_head] if diff_head else []), "--") \
+            if diff_base else ""
         ctx = ReviewContext(root=eng.root, decision=decision, changed=changed, cfg=eng.cfg, graph=kg, llm=llm,
                             options={"patch": patch if llm else "", "changed_old": changed_old, "covering": covering},
-                            commentable=commentable(in_pr))
+                            commentable=commentable(patch))
         review = run_review(ctx, select_analyzers(only, skip))
 
     if args.format == "json":

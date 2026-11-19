@@ -1,4 +1,5 @@
 // Small hand-drawn SVG charts (no extra dependency): risk gauge, sparkline, bar and donut.
+import { useId } from "react";
 
 /** Upper end of a risk scale: at least `min`, growing in steps of 10 points to fit both the risk and the target,
  *  so neither is pinned to the end. Shared by the gauge and the bar. */
@@ -9,6 +10,7 @@ export function riskScale(value: number | null | undefined, target: number | nul
 /** Semicircle gauge: the arc fills to `value`, a tick marks `target`. Both are fractions (0..1). */
 export function RiskGauge({ value, target, max: minMax = 0.5 }: { value: number | null; target: number | null; max?: number }) {
   const max = riskScale(value, target, minMax);
+  const gradient = useId();      // unique per gauge: two gauges on one page must not share a gradient id
   const r = 80;
   const cx = 100;
   const cy = 100;
@@ -24,22 +26,22 @@ export function RiskGauge({ value, target, max: minMax = 0.5 }: { value: number 
   const [tx2, ty2] = target == null ? [0, 0] : point(target, r + 10);
   return (
     <svg viewBox="0 0 200 120" className="w-full" role="img"
-      aria-label={`${value == null ? "No residual risk yet" : `Residual risk ${(value * 100).toFixed(1)} percent`}${
-        target == null ? "" : `, target ${(target * 100).toFixed(1)} percent${value != null && value > target ? ", above target" : ""}`}`}>
+      aria-label={`${value == null ? "No residual risk yet" : `Residual risk ${fmtPct(value)}`}${
+        target == null ? "" : `, target ${fmtPct(target)}${value != null && value > target ? ", above target" : ""}`}`}>
       <defs>
-        <linearGradient id="gauge" x1="0" x2="1">
+        <linearGradient id={gradient} x1="0" x2="1">
           <stop offset="0%" stopColor="var(--accent)" />
           <stop offset="100%" stopColor="var(--accent-2)" />
         </linearGradient>
       </defs>
       <path d={arc} fill="none" stroke="var(--card-2)" strokeWidth="16" strokeLinecap="round" />
       {value != null && (
-        <path d={arc} fill="none" stroke={over ? "var(--bad)" : "url(#gauge)"} strokeWidth="16" strokeLinecap="round"
+        <path d={arc} fill="none" stroke={over ? "var(--bad)" : `url(#${gradient})`} strokeWidth="16" strokeLinecap="round"
           strokeDasharray={`${len * frac(value)} ${len}`} style={{ transition: "stroke-dasharray 0.6s ease" }} />
       )}
       {target != null && <line x1={tx1} y1={ty1} x2={tx2} y2={ty2} stroke="var(--foreground)" strokeWidth="2.5" strokeLinecap="round" />}
       <text x={cx} y={cy - 12} textAnchor="middle" fontSize="28" fontWeight="600" fill="var(--foreground)">
-        {value == null ? "–" : `${(value * 100).toFixed(1)}%`}
+        {value == null ? "–" : fmtPct(value)}
       </text>
       <text x={cx} y={cy + 8} textAnchor="middle" fontSize="9" fill="var(--muted)">
         {target == null ? "residual risk" : `residual risk · target ${fmtPct(target)}`}
@@ -48,7 +50,8 @@ export function RiskGauge({ value, target, max: minMax = 0.5 }: { value: number 
   );
 }
 
-/** "12.5%" or "10%": a target keeps its fraction when it has one, so a status next to it never contradicts it. */
+/** "12.5%" or "10%": every percentage on the dashboard goes through this, so one value never reads 12.5% in one
+ *  place and 13% in another. */
 export const fmtPct = (x: number) => `${Number((x * 100).toFixed(1))}%`;
 
 /** A small trend line. `null` is an unknown value and leaves a gap; it is never drawn as zero. */
@@ -94,7 +97,7 @@ export function RiskBar({ value, target, max: minMax = 0.5 }: { value: number | 
         <div className="h-full rounded-full" style={{ width: `${pct}%`, background: over ? "var(--bad)" : "var(--good)" }} />
         {target != null && <div className="absolute inset-y-0 w-0.5 bg-foreground/60" style={{ left: `${Math.min(100, (target / max) * 100)}%` }} />}
       </div>
-      <span className="w-12 text-right tabular-nums text-xs">{(value * 100).toFixed(1)}%</span>
+      <span className="w-12 text-right tabular-nums text-xs">{fmtPct(value)}</span>
       {targetText}
     </div>
   );
