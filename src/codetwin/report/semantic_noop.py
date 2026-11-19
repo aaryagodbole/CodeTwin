@@ -8,6 +8,7 @@ time; the summary says so.
 from __future__ import annotations
 
 from ..evidence.noop import classify_change
+from ..lang import adapter_class, default_language
 from ..lang.base import Language
 
 NAME = "semantic_noop"
@@ -18,7 +19,9 @@ def contribute(ctx) -> dict:
     kind, files = classify_change(ctx.cfg.root, ctx.base, ctx.diff, ctx.is_source,
                                   ctx.lang.classify_source if ctx.lang is not None else None)
     forced = sorted(t for t, r in ctx.rows.items() if r.get("forced"))
-    text = {"noop": getattr(ctx.lang, "noop_description", Language.noop_description),
+    # Without a language (a Context built by hand) the default language's wording applies, as before.
+    lang = ctx.lang if ctx.lang is not None else adapter_class(default_language())
+    text = {"noop": getattr(lang, "noop_description", Language.noop_description),
             "annotation": "annotation-only change: low risk, but annotations can be read at run time, so tests still run",
             "semantic": "behaviour-changing edit",
             "no-source": "no source file changed"}[kind]

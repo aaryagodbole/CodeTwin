@@ -8,6 +8,7 @@ files in the repository.
 """
 from __future__ import annotations
 
+import functools
 from collections.abc import Callable
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -24,13 +25,19 @@ ALIASES = {"js": "javascript", "ts": "javascript", "typescript": "javascript", "
            "py": "python"}
 
 
-def load_specs() -> dict[str, Spec]:
+@functools.cache
+def _specs() -> dict[str, Spec]:
     out = {}
     for mod in discover("codetwin.lang.specs"):
         spec = getattr(mod, "SPEC", None)
         if isinstance(spec, Spec):
             out[spec.name] = spec
     return out
+
+
+def load_specs() -> dict[str, Spec]:
+    """Every language spec by name (discovered once per process; a copy, so callers cannot change the cache)."""
+    return dict(_specs())
 
 
 def names() -> list[str]:
@@ -46,7 +53,7 @@ def default_language() -> str:
 
 def adapter_class(name: str) -> Any:
     """The adapter class of a language: built in (ADAPTERS) or the generic tree-sitter adapter."""
-    spec = load_specs().get(name)
+    spec = load_specs().get(ALIASES.get(name.lower(), name.lower()))
     kind = spec.adapter if spec is not None else "generic"
     if kind == "generic":
         from .generic import Generic

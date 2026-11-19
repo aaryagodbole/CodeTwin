@@ -40,7 +40,7 @@ def decision_detail(store: Any, decision_id: int) -> dict | None:
 
 def run_numbers(run: Any) -> dict:
     """What the dashboard shows about a recorded run: how many test files it ran and its wall time."""
-    return {"test_files": len(run.durations) if run else 0, "suite_seconds": run.wall if run else None}
+    return {"test_files": len(run.durations) if run else 0, "suite_seconds": _finite(run.wall) if run else None}
 
 
 def summary(eng: Any) -> dict:
