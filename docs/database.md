@@ -294,7 +294,7 @@ erDiagram
         int analysis_id FK
         int repository_id FK
         int revision_id FK "dependent HEAD"
-        text status "analysed | not-found | no-package | unsupported"
+        text status "analysed | not-found | not-synced | invalid | no-package | unsupported"
         int runtime_evidence
     }
 ```

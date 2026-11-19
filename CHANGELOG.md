@@ -7,6 +7,15 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+- Connected repositories by URL: `[[repos]]` entries take `url` (https, ssh or file; optional `ref`) as well as
+  `path`, any number of each. `codetwin repos --sync` (or `crossrepo --sync`) clones them into `.codetwin/repos`;
+  analysis stays offline and reports an unsynced entry as an unknown. `codetwin repos` lists every entry and its
+  state. The Action syncs before selecting (`sync-repos`, default on). URLs with credentials, `ext::` and
+  duplicate names are refused with a stated reason. Migration 0006 adds the `not-synced` and `invalid` statuses.
+- `select --json` and `codetwin explain` report `risk_before`, the estimated residual risk of the first selection,
+  next to `residual_risk`, the risk of the tests that run (#96).
+
 ### Changed
 - Engine architecture (ADR 0004, `CONTEXT.md`): one `ChangeContext` per change (`Engine.change()`), a pure selection
   policy (`selection.choose()`), a calibration ledger (`risk/ledger.py`), read models for the API (`views.py`) and
@@ -20,12 +29,6 @@ All notable changes to this project are documented here. The format follows
   protocol.
 - `Store.decisions()` reads selections and reasons with one query per table instead of two per row
   (`/api/decisions?limit=500` went from about 1,000 queries to 3, #91).
-
-### Added
-- `select --json` and `codetwin explain` report `risk_before`, the estimated residual risk of the first selection,
-  next to `residual_risk`, the risk of the tests that run (#96).
-
-### Changed
 - Isotonic recalibration of risk scores starts only with at least 5 affected and 5 unaffected test examples from
   `codetwin learn`; before that the model's scores are used as they are and `select` says so. A fit on a few points
   used to report 0.0% residual risk (#99).

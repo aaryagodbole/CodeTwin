@@ -100,13 +100,13 @@ def save_crossrepo(store: Store, cfg, base: str, out: dict, symbols: list[dict],
         unknowns: list[tuple[int | None, str]] = []
         current = []
         for ri in repos:
-            rid = store.repository(ri.name, ri.path)
+            rid = store.repository(ri.name, getattr(ri, "url", None) or ri.path or None)
             current.append(rid)
             store.con.execute("insert into repository_link (consumer_id, provider_id, first_seen, last_seen) "
                               "values (?,?,?,?) on conflict (consumer_id, provider_id) do update set "
                               "last_seen=excluded.last_seen, ended=null", (rid, SELF, now, now))
-            tid = _target(store, aid, rid, ri.path if ri.status != "not-found" else None, ri.language, ri.status,
-                          ri.runtime)
+            here = ri.path if ri.path and ri.status not in ("not-found", "not-synced", "invalid") else None
+            tid = _target(store, aid, rid, here, ri.language, ri.status, ri.runtime)
             for c in ri.consumers:
                 cid = store.con.execute("insert into consumer_file (target_id, file_id, link, is_test) values (?,?,?,?)",
                                         (tid, store._entity(c["file"], repo=rid), c["link"], int(c["is_test"]))).lastrowid
