@@ -23,7 +23,7 @@ def contribute(ctx) -> dict:
     z = features(ctx.rows, ctx.scores, set(d.selected), recal, trig)
     model = ChangeRiskModel.fit(ctx.store.change_points())
     q = model(z)
-    if d.mode != "no-source-change":   # no-source decisions are not saved, so there is nothing to label
+    if d.mode != "no-source-change":   # `learn` adds no change point for a change that edits only tests
         # labelled by `codetwin learn` (commands/learn.py) only if it matches the saved last decision
         ctx.store.set_state("pending_change_features", {"base": ctx.base, "mode": d.mode,
                                                         "selected": sorted(d.selected), "features": z})

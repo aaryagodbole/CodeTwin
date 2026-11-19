@@ -109,8 +109,8 @@ runs:
     - name: Run selected tests
       if: inputs.run-selected == 'true' && steps.select.outputs.count != '0'
       shell: bash
-      # The tests of this decision, from the file select wrote: a change that only edits tests is not stored, so
-      # "the last stored decision" would be an older one. The project's own test runner (pytest, jest, go test, ...).
+      # The tests of this decision, from the file select wrote (the same decision review and push use). The
+      # project's own test runner (pytest, jest, go test, ...).
       # A `package` pinned to a release before 0.2.0 has no `run --decision`: fall back to the old behaviour.
       run: |
         if codetwin run --help | grep -q -- --decision; then
