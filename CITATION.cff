@@ -15,8 +15,8 @@ authors:
     family-names: Kamble
 repository-code: "https://github.com/aaryagodbole/CodeTwin"
 license: MIT
-version: 0.1.0
-date-released: "2026-11-13"
+version: 0.2.0
+date-released: "2026-11-18"
 keywords:
   - regression test selection
   - change impact analysis

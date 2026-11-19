@@ -31,7 +31,7 @@ _REQUEST_ID = re.compile(r"[A-Za-z0-9-]{1,64}")
 try:
     __version__ = version("codetwin-cloud")
 except PackageNotFoundError:  # running from a source checkout (Vercel bundles the files)
-    __version__ = "0.1.0"
+    __version__ = "0.2.0"
 
 
 @dataclass

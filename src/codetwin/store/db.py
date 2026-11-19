@@ -11,7 +11,7 @@ import math
 import sqlite3
 import time
 from collections.abc import Iterable, Iterator
-from contextlib import contextmanager
+from contextlib import AbstractContextManager, contextmanager
 from importlib import resources
 from pathlib import Path
 from typing import Any, Self
@@ -64,6 +64,11 @@ class Store:
         self.migrate()
 
     # ------------------------------------------------------------- connection, transactions, migrations
+    def transaction(self) -> AbstractContextManager[None]:
+        """Group several writes into one transaction; nested blocks join the outer one, with no rollback of
+        their own. An error rolls back everything only when it reaches the outermost block."""
+        return self._tx()
+
     @contextmanager
     def _tx(self) -> Iterator[None]:
         """One transaction for the outermost block; nested blocks join it. Rolled back on any error."""
@@ -90,14 +95,16 @@ class Store:
         for name, sql in _migrations():
             if name in done:
                 continue
-            self.con.executescript("begin;\n" + sql)       # leaves the transaction open (no implicit commit)
             self._depth = 1
             try:
+                # Inside the try: if the script itself fails part way, its open transaction is rolled back too.
+                self.con.executescript("begin;\n" + sql)   # leaves the transaction open (no implicit commit)
                 if name in STEPS:
                     STEPS[name](self)
                 self.con.execute("insert into migrations values (?,?)", (name, time.time()))
             except BaseException:
-                self.con.execute("rollback")
+                if self.con.in_transaction:
+                    self.con.execute("rollback")
                 self._ids.clear()
                 raise
             finally:
