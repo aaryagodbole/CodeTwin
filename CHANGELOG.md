@@ -17,6 +17,9 @@ All notable changes to this project are documented here. The format follows
   a *Folders* view laid out in layers (dagre) with line thickness for the number of links, the default above 40
   files; a *Files* view of one folder and its neighbours (force layout that respects card sizes); full-width canvas
   with a dot grid, floating details, a legend of areas and a Fit button.
+- `select --json` and `codetwin explain` report `risk_before`, the estimated residual risk of the first selection,
+  next to `residual_risk`, the risk of the tests that run (#96).
+- Report section `freshness` (`src/codetwin/report/freshness.py`): how many commits old the recorded evidence is (merged commits count), `stale` when that exceeds `[freshness] stale_after` (default 20) or when the recorded commit is gone from a complete history, with a hint to run `codetwin record`. The age is `null` when it cannot be established (other branch, older checkout, shallow clone). Git failures other than an unknown commit are shown as a broken section, not hidden as an unknown age.
 
 ### Changed
 - `codetwin push` adds `alpha_t`, `test_files` and `suite_seconds` to the report, and the cloud API shows them, so
@@ -40,10 +43,6 @@ All notable changes to this project are documented here. The format follows
 - `record` stores a run that did not complete (whole-run timeout; pytest exit codes 2, 3, 4) with a warning, and
   `select` never picks it as the default base (a base named with `--base` is used, with a note); `record` then
   exits 1 (#99).
-### Added
-- `select --json` and `codetwin explain` report `risk_before`, the estimated residual risk of the first selection,
-  next to `residual_risk`, the risk of the tests that run (#96).
-- Report section `freshness` (`src/codetwin/report/freshness.py`): how many commits old the recorded evidence is (merged commits count), `stale` when that exceeds `[freshness] stale_after` (default 20) or when the recorded commit is gone from a complete history, with a hint to run `codetwin record`. The age is `null` when it cannot be established (other branch, older checkout, shallow clone). Git failures other than an unknown commit are shown as a broken section, not hidden as an unknown age.
 
 ### Fixed
 - VS Code impact graph: the webview ignores messages from any origin but its own (CodeQL `js/missing-origin-check`).
