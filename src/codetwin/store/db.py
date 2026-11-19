@@ -12,13 +12,13 @@ import sqlite3
 import time
 from collections import Counter
 from collections.abc import Iterable, Iterator
-from contextlib import AbstractContextManager, contextmanager
+from contextlib import AbstractContextManager, contextmanager, suppress
 from importlib import resources
 from pathlib import Path, PurePath
 from typing import Any, Self
 
 from .. import __version__
-from ..evidence.model import FileFacts, TestRun
+from ..evidence.model import FileFacts, TestRun, incomplete_code
 
 MIGRATIONS = "codetwin.store.migrations"
 SYMBOL_KINDS = ("class", "function", "method")
@@ -106,6 +106,13 @@ class Store:
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self.con = sqlite3.connect(self.path, isolation_level=None)    # transactions are explicit (_tx)
         self.con.execute("pragma foreign_keys = on")
+        # The CLI, `codetwin serve`, MCP and the VS Code extension may open the store at the same time: readers do not
+        # block the writer (WAL), and a writer waits for another instead of failing at once (E6).
+        self.con.execute("pragma busy_timeout = 5000")
+        # Where WAL is not possible SQLite keeps its default journal. If another process holds the store in the old
+        # mode, the switch fails: carry on and switch on a later open.
+        with suppress(sqlite3.OperationalError):
+            self.con.execute("pragma journal_mode = wal")
         self._depth = 0
         self._ids: dict[tuple, int] = {}
         self.migrate()
@@ -120,7 +127,9 @@ class Store:
     def _tx(self) -> Iterator[None]:
         """One transaction for the outermost block; nested blocks join it. Rolled back on any error."""
         if self._depth == 0:
-            self.con.execute("begin")
+            # immediate: take the write lock now. With WAL a deferred transaction that reads before it writes fails
+            # at once (SQLITE_BUSY_SNAPSHOT) when another connection committed meanwhile, instead of waiting.
+            self.con.execute("begin immediate")
         self._depth += 1
         try:
             yield
@@ -276,13 +285,34 @@ class Store:
                                                "where r.repository_id=1 order by t.recorded, t.id")]
 
     def latest_run_sha(self) -> str | None:
-        row = self.con.execute("select sha from latest_run").fetchone()
+        """The newest run that completed: an incomplete one (timeout, interrupted) is never the default base."""
+        row = self._latest_complete_run()
         return row[0] if row else None
+
+    def latest_run_incomplete(self) -> tuple[str, str] | None:
+        """(sha, return code) of the newest run when it did not complete, else None: why `select` skipped it."""
+        row = self.con.execute("select sha, returncode from latest_run").fetchone()
+        return (row[0], row[1]) if row and incomplete_code(row[1]) else None
+
+    def run_returncode(self, sha: str) -> str | None:
+        """The stored return code of the run of `sha` (None: no run), without loading its coverage."""
+        row = self.con.execute("select t.returncode from test_run t join revision r on r.id = t.revision_id "
+                               "where r.repository_id = 1 and r.sha = ?", (sha,)).fetchone()
+        return row[0] if row else None
+
+    def _latest_complete_run(self) -> tuple | None:
+        # Newest first; few runs are ever incomplete, so filtering in Python keeps the rule in one place.
+        for sha, recorded, code in self.con.execute(
+                "select r.sha, t.recorded, t.returncode from test_run t join revision r on r.id = t.revision_id "
+                "where r.repository_id = 1 order by t.recorded desc, t.id desc"):
+            if not incomplete_code(code):
+                return sha, recorded
+        return None
 
     def latest_run_recorded(self) -> float | None:
         """When the run returned by `latest_run_sha()` was recorded (same repository and row as that method)."""
-        row = self.con.execute("select recorded from latest_run").fetchone()
-        return row[0] if row else None
+        row = self._latest_complete_run()
+        return row[1] if row else None
 
     def tests_covering(self, sha: str, file: str, line: int) -> list[str]:
         """Test files whose recorded run executed `file` at `line` (uses the coverage_by_line index)."""

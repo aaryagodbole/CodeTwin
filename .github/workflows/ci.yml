@@ -302,7 +302,9 @@ jobs:
       - run: git config --global user.email ci@example.com && git config --global user.name ci
       - uses: ./action
         with:
-          package: ".[mcp]"
+          # `record` runs this repository's own test suite, on the base branch first: install what the suite
+          # imports (httpx, fastapi) so it is complete there too, also on a base without the importorskip guards.
+          package: ".[mcp,server]"
           run-selected: "false"
 
   windows:

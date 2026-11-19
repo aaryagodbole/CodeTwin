@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import math
-import subprocess
 from pathlib import Path
 from typing import Self
 
@@ -10,7 +9,7 @@ from . import config as cfgmod
 from . import lang as langmod
 from . import report
 from .evidence import diff as diffmod
-from .evidence.model import TestRun
+from .evidence.model import TestRun, incomplete_code
 from .graph.impact import Impact, build_graph, impact_of
 from .risk import features
 from .risk.calibration import AdaptiveLevel, crc_threshold
@@ -20,6 +19,7 @@ from .selection import Decision, budget_select, decide, threshold_select
 from .store.db import Store
 
 UNCALIBRATED_THRESHOLD = 0.5
+HISTORY_COMMITS = 300          # first-parent commits read for co-change evidence
 
 
 class Engine:
@@ -28,7 +28,15 @@ class Engine:
         self.root = self.cfg.root
         self.lang = langmod.get(self.cfg)
         self.store = Store(self.cfg.db_path)
-        self.model = RiskModel.load(self.cfg.state_dir / "model.json")
+        self._model: RiskModel | None = None
+        self._history: dict[str, tuple[list[list[str]], str | None]] = {}
+
+    @property
+    def model(self) -> RiskModel:
+        """Loaded on first use, so a broken model.json stops only the commands that score tests."""
+        if self._model is None:
+            self._model = RiskModel.load(self.cfg.state_dir / "model.json")
+        return self._model
 
     def close(self) -> None:
         self.store.close()
@@ -55,19 +63,68 @@ class Engine:
     def changed(self, base: str, head: str | None = None):
         return diffmod.changed_lines(self.root, base, head, self.lang.extensions)
 
-    def history(self) -> list[list[str]]:
-        out = subprocess.run(["git", "log", "--first-parent", "--name-only", "--format=@@", "-n", "300"],
-                             cwd=self.root, capture_output=True, text=True, check=False).stdout
-        commits = [c.split() for c in out.split("@@") if c.strip()]
-        return commits[::-1]
+    def history(self, base: str | None = None) -> list[list[str]]:
+        """Files of the last 300 first-parent commits up to `base` (default HEAD), oldest first, for co-change.
+
+        Up to the recorded base, not HEAD: commits after it belong to the change being analysed, and counting them
+        would let the change explain itself (E5). Empty when git cannot read it; `history_note` says why.
+        """
+        # "tformat:" is needed: a format with no %-placeholder is otherwise read as the name of a pretty format, and
+        # git fails ("invalid --pretty format: @@"), which used to leave co-change evidence silently empty.
+        return self._read_history(base or "HEAD")[0]
+
+    def _read_history(self, rev: str) -> tuple[list[list[str]], str | None]:
+        """(commits, git error); read once per revision for this engine."""
+        if rev not in self._history:
+            try:
+                out = diffmod.git(self.root, "log", "--first-parent", "--name-only", "--format=tformat:@@", "-n",
+                                  str(HISTORY_COMMITS), rev, "--")
+                # one path per line: a path may contain spaces
+                self._history[rev] = ([[f for f in c.splitlines() if f.strip()] for c in out.split("@@") if c.strip()][::-1],
+                                      None)
+            except RuntimeError as e:
+                self._history[rev] = ([], (str(e).splitlines() or ["?"])[-1])
+        return self._history[rev]
+
+    def history_note(self, base: str | None = None) -> str | None:
+        """Why co-change evidence up to `base` is missing or thin (git error, shallow clone), or None."""
+        commits, error = self._read_history(base or "HEAD")
+        if error:
+            return f"git history is not available ({error}): no co-change evidence"
+        n = len(commits)
+        if n >= HISTORY_COMMITS:
+            return None                              # a full window: whether the clone is shallow does not matter
+        try:
+            shallow = diffmod.git(self.root, "rev-parse", "--is-shallow-repository").strip() == "true"
+        except RuntimeError:
+            shallow = False
+        if shallow:
+            return (f"shallow clone: co-change evidence comes from only {n} commit(s); fetch the full history "
+                    "(actions/checkout: fetch-depth: 0)")
+        return None
 
     # ------------------------------------------------------------- record
     def record(self) -> TestRun:
         """Run the full suite with per-test coverage on the current checkout and store it as evidence."""
         sha = self.head()
         run = self.lang.run_suite(sha)
-        self.store.save_run(run)
-        self.store.save_static(sha, self.facts_now())
+        if run.incomplete:
+            earlier = self.store.run_returncode(sha)
+            if earlier is not None and not incomplete_code(earlier):
+                # Never replace a complete run of this commit with a partial one: keep the evidence that is there.
+                run.notes.append(f"the test run did not complete ({run.returncode}); kept the earlier complete run of "
+                                 f"{sha[:10]}. Fix the cause (a hanging or very slow test, a collection error) and "
+                                 "record again")
+                run.stored = False
+                return run
+            run.notes.append(f"the test run did not complete ({run.returncode}); it is stored but `select` will not use "
+                             "it as the base. Fix the cause (a hanging or very slow test, a collection error) and run "
+                             "`codetwin record` again")
+        facts = self.facts_now()
+        # One transaction: a crash between the two must not leave a run without its static facts (E6).
+        with self.store.transaction():
+            self.store.save_run(run)
+            self.store.save_static(sha, facts)
         return run
 
     # ------------------------------------------------------------- analyse a change
@@ -78,6 +135,10 @@ class Engine:
         """
         base = base or self.store.latest_run_sha()
         if not base:
+            bad = self.store.latest_run_incomplete()
+            if bad:
+                raise RuntimeError(f"the recorded run of {bad[0][:10]} did not complete ({bad[1]}), so it cannot be "
+                                   "the base; fix the cause and run `codetwin record` again")
             raise RuntimeError("no recorded run yet; run `codetwin record` on a clean checkout first")
         prev = self.store.get_run(base)
         if prev is None:
@@ -88,24 +149,28 @@ class Engine:
         base, prev, diff = self.change(base)
         tests = sorted(set(prev.durations) | set(self.tests_now()))
         rows = features.compute(diff, prev, self.store.get_static(base), self.facts_now(), tests,
-                                self.cfg.src_root, self.is_source, self.history(), self.lang.stem)
+                                self.cfg.src_root, self.is_source, self.history(base), self.lang.stem)
         return base, prev, diff, rows
 
     # ------------------------------------------------------------- select
     def select(self, base: str | None = None, alpha: float | None = None, budget: float | None = None) -> Decision:
+        chosen = base is not None                    # the user named the base: nothing was skipped on their behalf
         base, prev, diff, rows = self.analyse(base)
         scores = self.model.scores(rows)
         alpha = self.cfg.alpha if alpha is None else alpha
         if not any(self.is_source(f) for f in diff):
             d = Decision({t for t, r in rows.items() if r["forced"]}, "proceed", 0.0, None, "no-source-change",
-                         ["no source file changed; only added or changed tests run"], risk_before=0.0)
+                         ["no source file changed; only added or changed tests run",
+                          *self._evidence_notes(base, prev, [], chosen)], risk_before=0.0)
             self._with_report(d, base, prev, diff, rows, scores)
             if diff:
                 # Stored too, so run, learn and explain see this change (E3). Without scores: nothing learns from
                 # them. A clean tree (empty diff) is not a change and replaces no decision.
                 self._save(d, base, alpha, {})
             return d
-        recal = self._recalibrator()
+        pts = self.store.recal_points()
+        labels = [p[1] for p in pts]
+        recal = self._recalibrator(pts)
         times = {t: prev.durations.get(t, 1.0) for t in rows}
         if budget is not None:
             sel = budget_select(rows, scores, times, budget * sum(times.values()))
@@ -125,6 +190,7 @@ class Engine:
             d.reasons = note + d.reasons
         unknowns = self.impact([f for f in diff if self.is_source(f)]).unknowns
         d.reasons += unknowns
+        d.reasons += self._evidence_notes(base, prev, labels, chosen)
         blind = self.without_runtime_evidence(diff, prev)
         if blind:
             # Unknown is not "no dependency": without coverage for these files' tests, the risk of skipping a test
@@ -140,6 +206,22 @@ class Engine:
         self._with_report(d, base, prev, diff, rows, scores)
         self._save(d, base, alpha, scores)
         return d
+
+    def _evidence_notes(self, base: str, prev: TestRun, labels: list[int], chosen: bool = False) -> list[str]:
+        """What weakens this decision's evidence: thin git history, an incomplete or skipped run, too little feedback."""
+        note = self.history_note(base)
+        notes = [note] if note else []
+        if prev.incomplete:
+            notes.append(f"the recorded run of {base[:10]} did not complete ({prev.returncode}): its coverage is partial")
+        skipped = None if chosen else self.store.latest_run_incomplete()
+        if skipped and skipped[0] != base:
+            notes.append(f"the newest recorded run ({skipped[0][:10]}) did not complete ({skipped[1]}); comparing with "
+                         f"the older complete run of {base[:10]} instead")
+        if labels and not Recalibrator.enough(labels):
+            pos = sum(1 for x in labels if x)
+            notes.append(f"risk scores are not recalibrated yet: {pos} affected and {len(labels) - pos} unaffected test "
+                         f"examples, at least {Recalibrator.MIN_EACH} of each are needed (`codetwin learn`)")
+        return notes
 
     def _save(self, d: Decision, base: str, alpha: float, scores: dict[str, float]) -> int:
         return self.store.save_decision(base=base, head="working-tree", mode=d.mode, alpha=alpha,
@@ -173,8 +255,8 @@ class Engine:
         d.extras = report.build(self.report_context(d, base, prev, diff, rows, scores))
         return d
 
-    def _recalibrator(self) -> Recalibrator:
-        pts = self.store.recal_points()
+    def _recalibrator(self, pts: list[tuple[float, int]] | None = None) -> Recalibrator:
+        pts = self.store.recal_points() if pts is None else pts
         return Recalibrator().fit([p[0] for p in pts], [p[1] for p in pts])
 
     # ------------------------------------------------------------- learn from the full run
@@ -207,6 +289,10 @@ class Engine:
             raise RuntimeError(f"cannot learn from this change: no runtime evidence for {', '.join(blind[:5])}, so which "
                                "tests it affects is unknown (set [runner] test_command, see docs/languages.md)")
         new = self.lang.run_suite("working-tree")
+        if new.incomplete:
+            # Partial coverage would label affected tests as unaffected: store nothing, so learn can run again.
+            raise RuntimeError(f"the full test run did not complete ({new.returncode}), so which tests the change "
+                               "affected is unknown; nothing was learned. Fix the cause and run `codetwin learn` again")
         affected = set()
         for f, d in diff.items():
             if not self.is_source(f) or d.status == "D":

@@ -51,6 +51,8 @@ def run_suite(repo: str | Path, sha: str, tests_dir: str, packages: list[str], s
             rc = subprocess.run(cmd, cwd=repo, env=env, capture_output=True, text=True, timeout=timeout, check=False).returncode
         except subprocess.TimeoutExpired:
             rc = "timeout"
+        if rc in (2, 3, 4):              # pytest: interrupted (e.g. a collection error), internal error, usage error
+            rc = f"interrupted:{rc}"
         run = TestRun(sha=sha, returncode=rc)
         if junit.exists():
             # junit.xml is written by our own pytest run in a private temp dir, not external input

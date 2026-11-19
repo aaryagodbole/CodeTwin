@@ -1,7 +1,10 @@
 import json
 
-import httpx
 import pytest
+
+pytest.importorskip("httpx")  # an optional extra ([server] or [llm]): skip without it
+
+import httpx
 
 from codetwin.cli import main
 from codetwin.review import ReviewContext, Severity, Source, run, select_analyzers
