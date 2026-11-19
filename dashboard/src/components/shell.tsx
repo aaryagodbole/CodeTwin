@@ -1,6 +1,6 @@
 "use client";
 
-import { Activity, FolderTree, GitBranch, LayoutDashboard, ListChecks, Moon, Network, Sun } from "lucide-react";
+import { Activity, FolderTree, GitBranch, LayoutDashboard, ListChecks, Monitor, Moon, Network, Sun } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSyncExternalStore } from "react";
@@ -17,37 +17,39 @@ const links = [
 const listeners = new Set<() => void>();
 const subscribe = (cb: () => void) => {
   listeners.add(cb);
-  // With no saved choice the theme follows the system; tell React when the system flips.
-  const mq = window.matchMedia("(prefers-color-scheme: dark)");
-  mq.addEventListener("change", cb);
   return () => {
     listeners.delete(cb);
-    mq.removeEventListener("change", cb);
   };
 };
-const systemDark = () => window.matchMedia("(prefers-color-scheme: dark)").matches;
-const isDarkNow = () => {
+type Theme = "system" | "light" | "dark";
+const NEXT: Record<Theme, Theme> = { system: "light", light: "dark", dark: "system" };
+const ICON = { system: Monitor, light: Sun, dark: Moon };
+const themeNow = (): Theme => {
   const t = document.documentElement.dataset.theme;
-  return t ? t === "dark" : systemDark();
+  return t === "light" || t === "dark" ? t : "system";
 };
 
 function ThemeToggle() {
-  const dark = useSyncExternalStore(subscribe, isDarkNow, () => false);
+  const theme = useSyncExternalStore(subscribe, themeNow, (): Theme => "system");
   // A saved theme is applied before the first paint by the script in layout.tsx; the store reads it from there.
+  // The button cycles system -> light -> dark -> system; "system" removes the saved choice.
   const toggle = () => {
-    const next = dark ? "light" : "dark";
-    document.documentElement.dataset.theme = next;
+    const next = NEXT[theme];
+    if (next === "system") delete document.documentElement.dataset.theme;
+    else document.documentElement.dataset.theme = next;
     listeners.forEach((cb) => cb());
     try {
-      localStorage.setItem("codetwin-theme", next);
+      if (next === "system") localStorage.removeItem("codetwin-theme");
+      else localStorage.setItem("codetwin-theme", next);
     } catch {
       // not persisted; fine
     }
   };
+  const Icon = ICON[theme];
   return (
-    <button onClick={toggle} aria-label={dark ? "Switch to light theme" : "Switch to dark theme"}
+    <button onClick={toggle} aria-label={`Theme: ${theme}. Switch to ${NEXT[theme]}`} title={`Theme: ${theme}`}
       className="grid h-9 w-9 place-items-center rounded-lg border border-border bg-card text-muted transition hover:text-foreground">
-      {dark ? <Sun size={16} /> : <Moon size={16} />}
+      <Icon size={16} />
     </button>
   );
 }

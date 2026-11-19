@@ -6,12 +6,12 @@ import Link from "next/link";
 import { DecisionTable } from "@/app/decisions/table";
 import { ErrorBox, Loading } from "@/components/state";
 import { Card, Stat } from "@/components/ui/card";
-import { Donut, RiskGauge, Sparkline } from "@/components/ui/charts";
+import { Donut, fmtPct, RiskGauge, Sparkline } from "@/components/ui/charts";
 import { Info } from "@/components/ui/info";
 import { skippedShare } from "@/lib/analysis";
 import { get, type Calibration, type DecisionRow, type Summary } from "@/lib/api";
 
-const pct = (x: number | null | undefined) => (x == null ? "–" : `${(x * 100).toFixed(1)}%`);
+const pct = (x: number | null | undefined) => (x == null ? "–" : fmtPct(x));
 
 export default function Overview() {
   const summary = useQuery({ queryKey: ["summary"], queryFn: () => get<Summary>("/summary") });
@@ -71,7 +71,7 @@ export default function Overview() {
               : `target ${pct(s.alpha)} · level ${pct(s.alpha_t)} · calibrated on ${s.calibration_size} labelled changes`} icon={ShieldCheck}>
             {calibration.error ? <p className="text-xs text-bad-ink">{String(calibration.error.message ?? calibration.error)}</p> : <Sparkline values={observed} />}
           </Stat>
-          <Stat label="Decisions" value={s.decisions} hint={`${s.labelled_decisions} with known outcome`} icon={Database}>
+          <Stat label="Decisions" value={s.decisions} hint={`${s.labelled_decisions} labelled for calibration`} icon={Database}>
             <Sparkline values={chrono.map((d) => d.residual_risk ?? null)} color="var(--accent-2)" />
           </Stat>
           <Stat label="Recorded commit" value={<code className="text-xl">{s.recorded_commit?.slice(0, 8) ?? "none"}</code>}

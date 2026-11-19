@@ -36,6 +36,7 @@ One report per decision. Built by `codetwin push` from the stored decision (id, 
   "run": {"source": "github-actions", "id": "12345678", "attempt": 1},
   "decision": {
     "decision": "proceed", "residual_risk": 0.031, "alpha": 0.1, "threshold": 0.42, "mode": "calibrated",
+    "alpha_t": 0.09, "test_files": 42, "suite_seconds": 31.5,
     "selected": ["tests/test_cart.py"],
     "tests": [{"id": "tests/test_cart.py", "selected": true, "score": 0.71, "seconds": 0.4}],
     "reasons": ["estimated residual risk 3.1% <= target 10%"],
@@ -56,8 +57,12 @@ Rules:
 - Uploads are idempotent on (repository, run id, run attempt, head SHA): a retried job does not duplicate.
 - Outside GitHub Actions, the run id is `cli-` plus a hash of the head commit and the decision, so retrying the
   same decision is deduplicated while a different decision (or another clone's) is stored as its own report.
-- Scores and alpha are taken from the stored decision only when it matches the JSON file (verdict, mode,
-  threshold and selection); otherwise the report has none rather than another decision's.
+- Scores, alpha and `alpha_t` (the adaptive level the decision was made at) are taken from the stored decision
+  only when it matches the JSON file (verdict, mode, threshold and selection); otherwise the report has none
+  rather than another decision's. `test_files` and `suite_seconds` describe the recorded run that decision compared
+  with, so the cloud's summary shows the same numbers as `codetwin serve`. All three are optional: reports from
+  older clients omit them, and the cloud then estimates them from the `tests` rows and shows `alpha` as the level.
+  A cloud older than these fields refuses reports that carry them (`422`), so deploy the cloud first.
 - `codetwin push` never follows a redirect with its token, and treats a malformed decision file or an
   unexpected or cut-off server answer as an upload failure (exit 1, or a warning with `--best-effort`).
 

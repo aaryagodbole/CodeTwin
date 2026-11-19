@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, CheckCircle2, ShieldAlert } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -8,20 +8,24 @@ import { Suspense } from "react";
 import { Empty, ErrorBox, Loading } from "@/components/state";
 import { Badge } from "@/components/ui/badge";
 import { Card, Stat } from "@/components/ui/card";
-import { RiskGauge } from "@/components/ui/charts";
+import { fmtPct, RiskGauge } from "@/components/ui/charts";
 import { Info, PageHeader } from "@/components/ui/info";
 import { DATA_MODE, get, type DecisionRow, type Summary } from "@/lib/api";
 import { skippedShare } from "@/lib/analysis";
 
 function Detail() {
   const id = Number(useSearchParams().get("id"));
+  const qc = useQueryClient();
   // Live: ask the API for this one decision, so an old one is found however many came after it. The demo snapshot
   // has no per-decision files, so it looks the decision up in its (complete) list.
   const one = useQuery({
     queryKey: ["decision", id, DATA_MODE],
     queryFn: async (): Promise<DecisionRow | null> => {
       if (DATA_MODE === "demo") {
-        return (await get<DecisionRow[]>("/decisions", { limit: "500" })).find((r) => r.id === id) ?? null;
+        // Same query key as the decisions page, so the list is downloaded once and shared.
+        const rows = await qc.fetchQuery({ queryKey: ["decisions", 500],
+          queryFn: () => get<DecisionRow[]>("/decisions", { limit: "500" }) });
+        return rows.find((r) => r.id === id) ?? null;
       }
       try {
         return await get<DecisionRow>(`/decisions/${id}`);
@@ -68,7 +72,7 @@ function Detail() {
             hint={summary.error ? "could not load the test count" : "estimate"} />
           <Stat label="Outcome" value={d.missed == null ? "pending" : d.missed ? "missed" : "safe"}
             hint={d.missed == null ? "not labelled yet: known after a full test run of this change" : "from the later full run"} />
-          <Stat label="Selection threshold" value={d.threshold == null ? "–" : d.threshold.toFixed(2)} hint={d.alpha == null ? undefined : `target miss rate ${(d.alpha * 100).toFixed(0)}%`} />
+          <Stat label="Selection threshold" value={d.threshold == null ? "–" : d.threshold.toFixed(2)} hint={d.alpha == null ? undefined : `target miss rate ${fmtPct(d.alpha)}`} />
         </div>
       </div>
 

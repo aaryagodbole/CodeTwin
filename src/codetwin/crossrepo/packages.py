@@ -61,7 +61,7 @@ def detect(root: Path, python_packages: list[str] | None = None) -> list[str]:
             if n:
                 names.append(n)
         except json.JSONDecodeError:
-            pass
+            pass  # a broken manifest names no package; the other manifests may still name one
     gm = root / "go.mod"
     if gm.exists():
         m = re.search(r"^module\s+(\S+)", _read(gm), re.M)
@@ -74,7 +74,7 @@ def detect(root: Path, python_packages: list[str] | None = None) -> list[str]:
             if n:
                 names += sorted({n, n.replace("-", "_")})
         except tomllib.TOMLDecodeError:
-            pass
+            pass  # a broken manifest names no package; the other manifests may still name one
     if (root / "pom.xml").exists() or any(root.glob("build.gradle*")) or any(root.glob("settings.gradle*")):
         names += _namespace_prefixes(root, (".java", ".kt"), r"^\s*package\s+([\w.]+)", 2)
     if any(root.glob("*.csproj")) or any(root.glob("*.sln")):
@@ -89,14 +89,14 @@ def detect(root: Path, python_packages: list[str] | None = None) -> list[str]:
             psr = json.loads(_read(cj)).get("autoload", {}).get("psr-4", {})
             names += [k.rstrip("\\") for k in psr]
         except json.JSONDecodeError:
-            pass
+            pass  # a broken manifest names no package; the other manifests may still name one
     if not names and (root / "pyproject.toml").exists():
         try:
             n = tomllib.loads(_read(root / "pyproject.toml")).get("project", {}).get("name")
             if n:
                 names.append(n.replace("-", "_"))
         except tomllib.TOMLDecodeError:
-            pass
+            pass  # a broken pyproject.toml names no package
     seen: list[str] = []
     for n in names:
         if n and n not in seen:

@@ -62,6 +62,14 @@ def _json_value(x: Any) -> Any:
     """Values json cannot write itself (a Path, a numpy number, ...): a finite number if it is one, else text."""
     if isinstance(x, PurePath):
         return x.as_posix()                       # the same text on every operating system
+    item = getattr(x, "item", None)               # a numpy scalar: its own Python type (int, bool, float)
+    if callable(item):
+        try:
+            v = item()
+        except (TypeError, ValueError):
+            v = None
+        if isinstance(v, (bool, int)):
+            return v
     try:
         f = float(x)
     except (TypeError, ValueError):
@@ -472,7 +480,10 @@ class Store:
         for r in rows.fetchall():
             d = dict(zip(keys, r, strict=True))
             d["missed"] = None if d["missed"] is None else bool(d["missed"])
-            d["extras"] = json.loads(d["extras"]) if d["extras"] else {}
+            try:
+                d["extras"] = json.loads(d["extras"]) if d["extras"] else {}
+            except ValueError:                    # a damaged value must not hide the verdict and reasons
+                d["extras"] = {}
             out.append(d)
         # Children in one query per table for all rows (not two queries per row: #91).
         selected = self._children("select x.decision_id, e.path from decision_selection x join code_entity e "

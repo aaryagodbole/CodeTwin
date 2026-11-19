@@ -121,12 +121,18 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                            "order by received_at desc, id desc limit 1", (p["id"],)).fetchone()
         counts = c.execute("select count(r.id) as decisions, count(o.report_id) as labelled from report r "
                            "left join outcome o on o.report_id = r.id where r.project_id = %s", (p["id"],)).fetchone()
-        tests = (latest["payload"]["decision"].get("tests", []) if latest else [])
+        d = latest["payload"]["decision"] if latest else {}
+        tests = d.get("tests", [])
         seconds = [t["seconds"] for t in tests if t.get("seconds") is not None]
-        alpha = latest["alpha"] if latest and latest["alpha"] is not None else 0.1
-        return {"root": f"{p['owner']}/{p['name']}", "packages": [], "alpha": alpha, "alpha_t": alpha,
+        # Reports from clients before 0.3 carry no test_files, suite_seconds or alpha_t: estimate them from the
+        # per-test rows and the target, as before.
+        files, suite = d.get("test_files"), d.get("suite_seconds")
+        files = len(tests) if files is None else files
+        suite = (sum(seconds) if seconds else None) if suite is None else suite
+        alpha = latest["alpha"] if latest else None
+        return {"root": f"{p['owner']}/{p['name']}", "packages": [], "alpha": alpha, "alpha_t": _alpha_t(d, alpha),
                 "calibration_size": counts["labelled"] if counts else 0, "recorded_commit": latest["base_sha"] if latest else None,
-                "test_files": len(tests), "suite_seconds": sum(seconds) if seconds else None,
+                "test_files": files, "suite_seconds": suite,
                 "decisions": counts["decisions"] if counts else 0, "labelled_decisions": counts["labelled"] if counts else 0}
 
     @app.get("/api/v1/projects/{owner}/{repo}/decisions")
@@ -151,12 +157,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         p = project_of(c, owner, repo)
         # Same population as the local API (store.labelled("calibrated")): full or fallback runs execute every
         # test, never miss, and would understate the miss rate.
-        rows = c.execute("select r.id, r.alpha, o.missed from report r join outcome o on o.report_id = r.id "
+        rows = c.execute("select r.id, r.alpha, r.payload, o.missed from report r join outcome o on o.report_id = r.id "
                          "where r.project_id = %s and r.mode = 'calibrated' order by r.id", (p["id"],)).fetchall()
         points, misses = [], 0
         for i, row in enumerate(rows, 1):
             misses += int(row["missed"])
-            points.append({"n": i, "decision_id": row["id"], "alpha": row["alpha"], "alpha_t": row["alpha"],
+            points.append({"n": i, "decision_id": row["id"], "alpha": row["alpha"],
+                           "alpha_t": _alpha_t(row["payload"]["decision"], row["alpha"]),
                            "observed_miss_rate": misses / i})
         return {"points": points, "labelled": len(rows), "misses": misses}
 
@@ -183,9 +190,15 @@ def _decision_row(r: dict[str, Any]) -> dict:
     """Same keys as `/api/decisions` of `codetwin serve`."""
     d = r["payload"]["decision"]
     return {"id": r["id"], "recorded": r["received_at"].timestamp(), "base": r["base_sha"] or r["head_sha"],
-            "mode": r["mode"], "alpha": r["alpha"], "alpha_t": r["alpha"], "threshold": r["threshold"],
+            "mode": r["mode"], "alpha": r["alpha"], "alpha_t": _alpha_t(d, r["alpha"]), "threshold": r["threshold"],
             "residual_risk": r["residual_risk"], "decision": r["decision"], "selected": d["selected"],
             "reasons": d.get("reasons", []), "missed": r["missed"]}
+
+
+def _alpha_t(decision: dict, alpha: float | None) -> float | None:
+    """The adaptive level a decision was made at; the target alpha for reports that do not carry it."""
+    a = decision.get("alpha_t")
+    return a if a is not None else alpha
 
 
 def _project_token(c: psycopg.Connection[DictRow], token: str) -> auth.Caller:

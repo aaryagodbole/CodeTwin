@@ -45,6 +45,10 @@ class Decision(Strict):
     decision: Literal["proceed", "abstain"]
     residual_risk: float = Field(ge=0, le=1)
     alpha: float | None = Field(default=None, gt=0, lt=1)
+    # Added after the first release; optional so older clients' reports stay valid.
+    alpha_t: float | None = Field(default=None, ge=0, le=1)       # adaptive level the decision was made at
+    test_files: int | None = Field(default=None, ge=0)           # test files in the recorded run compared with
+    suite_seconds: float | None = Field(default=None, ge=0)      # that run's wall time
     threshold: float | None = None
     mode: str = Field(max_length=80)
     selected: list[str] = Field(max_length=20000)
