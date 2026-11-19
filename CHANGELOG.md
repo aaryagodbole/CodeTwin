@@ -10,6 +10,7 @@ All notable changes to this project are documented here. The format follows
 ### Added
 - `select --json` and `codetwin explain` report `risk_before`, the estimated residual risk of the first selection,
   next to `residual_risk`, the risk of the tests that run (#96).
+- Report section `freshness` (`src/codetwin/report/freshness.py`): how many commits old the recorded evidence is (merged commits count), `stale` when that exceeds `[freshness] stale_after` (default 20) or when the recorded commit is gone from a complete history, with a hint to run `codetwin record`. The age is `null` when it cannot be established (other branch, older checkout, shallow clone). Git failures other than an unknown commit are shown as a broken section, not hidden as an unknown age.
 
 ### Fixed
 - The stored risk of a decision now describes its stored selection: an abstention to a broader selection keeps
