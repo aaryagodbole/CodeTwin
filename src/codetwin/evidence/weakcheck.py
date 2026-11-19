@@ -92,12 +92,12 @@ def _col_to_char(line: str, col: int) -> int:
 def run_checks(root: str | Path, src_root: str, checks: list[FunctionCheck], now_static, timeout: int = 300,
                lang=None) -> list[FunctionCheck]:
     """Mutate each changed function in a scratch copy and run the test files that executed it.
-    `lang` is the project's language adapter (default: Python)."""
+    `lang` is the project's language adapter (default: the default language's)."""
     root = Path(root)
     if lang is None:
         from ..config import Config
-        from ..lang.python import Python
-        lang = Python(Config(root=root, src_root=src_root))
+        from ..lang import adapter, default_language
+        lang = adapter(Config(root=root, src_root=src_root), default_language())
     with tempfile.TemporaryDirectory(prefix="codetwin-weak-") as tmp:
         work = Path(tmp) / "repo"
         lang.make_copy(work)
@@ -118,7 +118,8 @@ def run_checks(root: str | Path, src_root: str, checks: list[FunctionCheck], now
             original = target.read_text(encoding="utf-8")
             mutant = lang.extreme_mutant(original, fn, c.file) if fn else None
             if mutant is None:
-                c.status = "unsupported" if fn and lang.name != "python" else "error"
+                # an adapter that can mutate every function failed on this one: an error, not a gap in support
+                c.status = "error" if not fn or lang.mutates_every_function else "unsupported"
                 continue
             try:
                 target.write_text(mutant, encoding="utf-8")

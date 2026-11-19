@@ -620,6 +620,19 @@ class Generic(Language):
         return (b[:s] + rep.encode("utf-8") + b[e:]).decode("utf-8")
 
     # --------------------------------------------------------------- init
+    def runners_by_folder(self) -> str | None:
+        # monorepo or mixed repository: the build file (package.json, Cargo.toml, go.mod, ...) is in a sub-folder,
+        # and each test runs from its own project folder
+        per: dict[str, str] = {}
+        for t in self.list_tests():
+            r = self.runner_for(t, is_dir=False)
+            if r is not None:
+                per.setdefault(self.project_dir(t) or ".", r.name)
+        if not per:
+            return None
+        return ("per project folder: " + ", ".join(f"{d}/ ({n})" for d, n in sorted(per.items())[:6])
+                + (" and others" if len(per) > 6 else ""))
+
     def guess_config(self) -> dict:
         # the first candidate that exists (src/main/java before src); "." when none does
         dirs = next(([d] for d in self.spec.source_dirs if (self.root / d).is_dir()), ["."])

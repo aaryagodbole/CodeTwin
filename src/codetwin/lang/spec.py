@@ -67,3 +67,7 @@ class Spec:
     runners: list[Runner] = field(default_factory=list)
     test_ids: Callable[[Path, str], list[str]] | None = None  # extra test ids in a source file (Rust unit tests)
     auto: bool = False                                        # built by lang/auto.py: generic node-type rules
+    # Which adapter analyses and runs this language: "generic" (tree-sitter and runner presets above) or a
+    # built-in adapter registered in lang/__init__.py (ADAPTERS), e.g. "python" (ast, pytest and coverage.py).
+    adapter: str = "generic"
+    default: bool = False     # assumed when no language is detected, and preferred when two are equally common

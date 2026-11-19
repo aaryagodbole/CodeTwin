@@ -1,14 +1,16 @@
 """Pluggable language support.
 
-`get(cfg)` returns the adapter for a project: Python (built in, no extra dependency) or the generic tree-sitter
-adapter configured by a spec from `lang/specs/` (one file per language, discovered automatically). The
+`get(cfg)` returns the adapter for a project. Every language is a spec in `lang/specs/` (one file per language,
+discovered automatically); the spec's `adapter` names the adapter that analyses and runs it: the generic
+tree-sitter adapter, or a built-in one from ADAPTERS (Python: ast, pytest and coverage.py). The
 language comes from `[project] language` in `.codetwin.toml`; "auto" or a missing value is detected from the
 files in the repository.
 """
 from __future__ import annotations
 
+from collections.abc import Callable
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from ..plugins import discover
 from .base import SAMPLE_DIRS, Language, glob_match, repo_files
@@ -32,17 +34,40 @@ def load_specs() -> dict[str, Spec]:
 
 
 def names() -> list[str]:
-    return ["python", *sorted(load_specs())]
+    """Languages with a spec, the default language first."""
+    specs = load_specs()
+    return sorted(specs, key=lambda n: (not specs[n].default, n))
 
 
-PY_MARKERS = ["pyproject.toml", "setup.py", "setup.cfg"]
+def default_language() -> str:
+    """The language assumed when nothing is detected (the spec with `default=True`)."""
+    return names()[0]
+
+
+def adapter_class(name: str) -> Any:
+    """The adapter class of a language: built in (ADAPTERS) or the generic tree-sitter adapter."""
+    spec = load_specs().get(name)
+    kind = spec.adapter if spec is not None else "generic"
+    if kind == "generic":
+        from .generic import Generic
+        return Generic
+    return ADAPTERS[kind]()
+
+
+def _python_adapter() -> Callable[..., Language]:
+    from .python import Python
+    return Python
+
+
+# Built-in adapters, by the name a spec gives in `adapter` (loaded lazily: each brings its own dependencies).
+ADAPTERS: dict[str, Callable[[], Callable[..., Language]]] = {"python": _python_adapter}
 
 
 def _candidates(root: Path) -> dict[str, tuple[tuple[str, ...], list[str], list[str]]]:
     """Every language with files in the repository: name -> (extensions, markers, test globs)."""
     from . import auto
-    out: dict[str, tuple[tuple[str, ...], list[str], list[str]]] = {"python": ((".py",), PY_MARKERS, ["test_*.py", "*_test.py", "**/tests/**/*.py", "**/test/**/*.py"])}
-    known_exts = {".py"}
+    out: dict[str, tuple[tuple[str, ...], list[str], list[str]]] = {}
+    known_exts: set[str] = set()
     for name, sp in load_specs().items():
         out[name] = (tuple(sp.grammars), sp.markers, sp.test_globs)
         known_exts |= set(sp.grammars)
@@ -74,8 +99,10 @@ def detect_all(root: str | Path) -> list[str]:
     if tested:
         return sorted(tested, key=lambda n: (-(census[n][0] + census[n][1]), n))
     if not census:
-        return ["python"]
-    return [max(census, key=lambda n: (census[n][2], census[n][0] + census[n][1], n == "python"))]
+        return [default_language()]
+    specs = load_specs()
+    preferred = {n for n, s in specs.items() if s.default}
+    return [max(census, key=lambda n: (census[n][2], census[n][0] + census[n][1], n in preferred))]
 
 
 def detect(root: str | Path) -> str:
@@ -95,20 +122,18 @@ def sub_config(cfg: Config, name: str) -> Config:
         elif len(cfg.raw.get("lang", {})) > 0:
             raw.pop(key, None)
     return replace(cfg, language=name, src_root=t.get("src_root", cfg.src_root),
-                   packages=list(t.get("packages", cfg.packages if name == "python" else [])),
+                   packages=list(t.get("packages", cfg.packages if adapter_class(name).uses_packages else [])),
                    source_dirs=list(t.get("source_dirs", cfg.source_dirs)), tests_dir=t.get("tests_dir", cfg.tests_dir),
                    raw=raw)
 
 
 def adapter(cfg: Config, name: str) -> Language:
     name = ALIASES.get(name.lower(), name.lower())
-    if name == "python":
-        from .python import Python
-        return Python(cfg)
     from .generic import Generic
     all_specs = load_specs()
     if name in all_specs:
-        return Generic(cfg, all_specs[name])
+        spec = all_specs[name]
+        return Generic(cfg, spec) if spec.adapter == "generic" else ADAPTERS[spec.adapter]()(cfg, spec)
     custom = custom_spec(name, cfg.section("language"))
     if custom is not None:
         return Generic(cfg, custom)
@@ -129,8 +154,9 @@ def get(cfg: Config) -> Language:
         if name != "auto":
             names_ = [name]
         elif cfg.packages:
-            # configurations written before languages were pluggable list Python packages and no language
-            names_ = ["python"]
+            # configurations written before languages were pluggable list packages and no language: the language
+            # whose adapter measures packages
+            names_ = [next(n for n in names() if adapter_class(n).uses_packages)]
         else:
             names_ = detect_all(cfg.root)
     if len(names_) == 1:

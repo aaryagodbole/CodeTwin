@@ -16,6 +16,21 @@
             LCOV / Go / JaCoCo / Cobertura / Clover coverage, configured by lang/specs/<language>.py)
 ```
 
+## Modules of the engine (ADR 0004)
+
+Domain words: [CONTEXT.md](../CONTEXT.md).
+
+| Module | Interface | Holds |
+|---|---|---|
+| Change (`change.py`) | `Engine.change(base) -> ChangeContext` | the base rule, the recorded run and static facts at the base, the diff, the working tree's facts (parsed once), history up to the base, feature rows, impact, evidence notes |
+| Selection policy (`selection.py`) | `choose(rows, scores, state, ...) -> Decision`, `only_tests(...)` | every rule from scores to a decision (Algorithm 1); pure, nothing edits a decision afterwards |
+| Calibration ledger (`risk/ledger.py`) | `state()`, `label()`, `label_unscored()` | calibration set, recalibration points, adaptive level, outcomes, and the rules that keep them consistent |
+| Read models (`views.py`) | `summary()`, `decision_row()`, `decision_detail()`, `calibration()` | every number the dashboard shows, defined once |
+| Language specs (`lang/specs/`) | `SPEC = Spec(..., adapter=...)` | per language: files, tests, markers, and which adapter analyses and runs it |
+
+`Engine` wires them: `select()` = change → model scores → ledger state → policy → report sections → store.
+`learn()` = change → full run → affected tests → ledger label.
+
 ## Data flow of `codetwin select`
 
 1. Load the recorded run of the base commit (coverage per test file, run times, import-time lines).
@@ -39,7 +54,7 @@ automatically. Shared files (`cli.py`, `mcp_server.py`, `engine.py`, `store/db.p
 
 | You are adding | Put it in | Contract |
 |---|---|---|
-| a programming language | `src/codetwin/lang/specs/<name>.py` | `SPEC = Spec(...)`: grammars, test globs, import rules, runner presets ([languages.md](languages.md)) |
+| a programming language | `src/codetwin/lang/specs/<name>.py` | `SPEC = Spec(...)`: grammars, test globs, import rules, runner presets ([languages.md](languages.md)); `adapter` names a built-in adapter when tree-sitter is not used (Python) |
 | a CLI command (`codetwin gaps`) | `src/codetwin/commands/<name>.py` | `NAME`, `HELP`, `ORDER`, `add_arguments(p)`, `run(args)` |
 | an MCP tool (`close_gap`) | `src/codetwin/mcp_tools/<name>.py` | `register(mcp, root)` with `@mcp.tool()` |
 | a review analyzer (PR comment rule) | `src/codetwin/review/analyzers/<name>.py` + a rule id in `review/rules.py` | `NAME`, `DEFAULT`, `analyze(ctx) -> list[Finding]`; read-only ([review.md](review.md)) |
@@ -52,5 +67,6 @@ automatically. Shared files (`cli.py`, `mcp_server.py`, `engine.py`, `store/db.p
 | a dashboard API endpoint | `src/codetwin/server/app.py` (`GET /api/...`, read-only) | test in `tests/test_server.py` |
 
 Report sections only read the `report.Context` (pre-change evidence; no look-ahead) and must not change the
-selection or the decision. A section that raises is shown as `{"error": ...}`, never dropped silently.
+selection or the decision. New sections should read `ctx.change` (the `ChangeContext`: cached facts, impact,
+history); the other fields stay for existing sections. A section that raises is shown as `{"error": ...}`, never dropped silently.
 The JSON contract is described in [output.md](output.md).

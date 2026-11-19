@@ -54,12 +54,18 @@ def resolve_deps(files: dict[str, FileFacts], src_root: str, extra_roots: list[s
 class Python(Language):
     name = "python"
     extensions = (".py",)
+    uses_packages = True
+    mutates_every_function = True
+    noop_description = ("semantic no-op (AST unchanged apart from docstrings/comments/formatting): only added or "
+                        "changed tests are needed, unless code reads docstrings at run time (__doc__, help(), "
+                        "doctest, docstring parsers)")
 
     copy_ignore = (".git", ".codetwin", "node_modules", "__pycache__", ".venv", "venv", ".tox", "*.pyc")
     link_dirs = ()
 
-    def __init__(self, cfg):
+    def __init__(self, cfg, spec=None):
         super().__init__(cfg)
+        self.spec = spec
         # A configuration with packages is a Python project as before. Without packages (Python as one part of
         # a larger repository), import roots are found from the package folders and tests anywhere.
         self.discovered = not cfg.packages
@@ -145,3 +151,15 @@ class Python(Language):
     def guess_config(self) -> dict:
         from ..config import guess
         return guess(self.root)
+
+    def config_table(self) -> str:
+        from ..config import _toml_list
+        g = self.guess_config()
+        return (f'[lang.python]\nsrc_root = "{g["src_root"]}"\npackages = {_toml_list(g["packages"])}\n'
+                f'source_dirs = {_toml_list(g["source_dirs"] or ["."])}\ntests_dir = "{g["tests_dir"]}"\n')
+
+    def config_file(self) -> str:
+        from ..config import TEMPLATE, _toml_list
+        g = self.guess_config()
+        return TEMPLATE.format(src_root=g["src_root"], packages=_toml_list(g["packages"]),
+                               source_dirs=_toml_list(g["source_dirs"]), tests_dir=g["tests_dir"])

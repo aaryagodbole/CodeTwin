@@ -7,6 +7,14 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Changed
+- Engine architecture (ADR 0004, `CONTEXT.md`): one `ChangeContext` per change (`Engine.change()`), a pure selection
+  policy (`selection.choose()`), a calibration ledger (`risk/ledger.py`), read models for the API (`views.py`) and
+  Python described by a language spec like every other language. Decisions and API answers are unchanged; the
+  working tree is parsed once per decision instead of up to six times. `Engine.analyse()` and
+  `Engine.without_runtime_evidence()` are removed; `Engine.change()` returns a `ChangeContext`.
+- The knowledge graph and the co-change features read git history with one reader (`evidence/history.py`).
+
 ### Added
 - `select --json` and `codetwin explain` report `risk_before`, the estimated residual risk of the first selection,
   next to `residual_risk`, the risk of the tests that run (#96).

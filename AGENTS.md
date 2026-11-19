@@ -1,7 +1,8 @@
 # AGENTS.md
 
 How everyone works in this repository: team members and AI coding agents follow the same steps. New to git or
-GitHub? Start with "Step by step for beginners" below. Background: README.md and CONTRIBUTING.md.
+GitHub? Start with "Step by step for beginners" below. Background: README.md and CONTRIBUTING.md. Domain words
+(change, base, decision, calibration ledger, ...): CONTEXT.md. Engine modules: docs/architecture.md and docs/adr/.
 
 ## Commands
 

@@ -114,29 +114,9 @@ languages = {languages}          # every language of this repository; each has i
 
 
 def _lang_table(root: Path, name: str) -> str:
+    """The `[lang.<name>]` table of a multi-language repository, written by the language's adapter."""
     from . import lang
-    if name == "python":
-        g = guess(root)
-        return (f'[lang.python]\nsrc_root = "{g["src_root"]}"\npackages = {_toml_list(g["packages"])}\n'
-                f'source_dirs = {_toml_list(g["source_dirs"] or ["."])}\ntests_dir = "{g["tests_dir"]}"\n')
-    a = lang.adapter(Config(root=root, language=name), name)
-    g = a.guess_config()
-    runner = g.get("runner")
-    if not runner:
-        # monorepo or mixed repository: the build file (package.json, Cargo.toml, go.mod, ...) is in a sub-folder,
-        # and each test runs from its own project folder
-        from .lang.generic import Generic
-        per: dict[str, str] = {}
-        if isinstance(a, Generic):
-            for t in a.list_tests():
-                r = a.runner_for(t, is_dir=False)
-                if r is not None:
-                    per.setdefault(a.project_dir(t) or ".", r.name)
-        runner = ("per project folder: " + ", ".join(f"{d}/ ({n})" for d, n in sorted(per.items())[:6])
-                  + (" and others" if len(per) > 6 else "")) if per else \
-            "none found: static evidence only until you set test_command"
-    return (f"[lang.{name}]\nsource_dirs = {_toml_list(g['source_dirs'])}\ntests_dir = \"{g['tests_dir']}\"\n"
-            f"# test runner: {runner}; override with a [lang.{name}.runner] table (docs/languages.md)\n")
+    return lang.adapter(Config(root=root, language=name), name).config_table()
 
 
 def write_template(root: str | Path = ".", language: str | None = None) -> Path:
@@ -150,15 +130,8 @@ def write_template(root: str | Path = ".", language: str | None = None) -> Path:
     if len(names) > 1:
         text = MULTI_HEAD.format(languages=_toml_list(names)) + "\n".join(_lang_table(root, n) for n in names) \
             + "\n" + SELECTION
-    elif name == "python":
-        g = guess(root)
-        text = TEMPLATE.format(src_root=g["src_root"], packages=_toml_list(g["packages"]),
-                               source_dirs=_toml_list(g["source_dirs"]), tests_dir=g["tests_dir"])
     else:
-        g = lang.adapter(Config(root=root, language=name), name).guess_config()
-        text = GENERIC_TEMPLATE.format(language=name, source_dirs=_toml_list(g["source_dirs"]),
-                                       tests_dir=g["tests_dir"],
-                                       runner=g.get("runner") or "none found (static evidence only until you set test_command)")
+        text = lang.adapter(Config(root=root, language=name), name).config_file()
     path = root / CONFIG_FILE
     path.write_text(text)
     return path
