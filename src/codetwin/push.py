@@ -166,6 +166,11 @@ def build_report(eng: Any, decision: dict, env: dict[str, str] | None = None,
             "decision": decision["decision"],
             "residual_risk": _finite(decision["residual_risk"]) or 0.0,
             "alpha": _finite(detail.get("alpha")) if detail else None,
+            # The adaptive level the decision was made at, and the recorded run it compared with: the cloud shows
+            # these as `codetwin serve` does (alpha_t, test_files, suite_seconds) instead of guessing them.
+            "alpha_t": _finite(detail.get("alpha_t")) if detail else None,
+            "test_files": len(durations) if run else None,
+            "suite_seconds": _finite(run.wall) if run else None,
             "threshold": _finite(decision.get("threshold")),
             "mode": decision.get("mode") or "",
             "selected": sorted(selected),

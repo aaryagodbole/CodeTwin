@@ -7,6 +7,19 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Changed
+- `codetwin push` adds `alpha_t`, `test_files` and `suite_seconds` to the report, and the cloud API shows them, so
+  its summary, decisions and calibration match `codetwin serve` instead of repeating `alpha` and summing per-test
+  times. The cloud no longer invents a target of 10% for a project without one (`alpha` is null).
+- `codetwin review` chooses the commit it diffs against once: in a pull request, where the branch left the PR's
+  base; elsewhere the recorded base. Findings, the LLM patch, SARIF and inline comments all use that diff, so a
+  cached store with an older recorded base no longer reports lines the pull request did not change.
+- Dashboard: the theme toggle has a third "system" state that drops the saved choice; theme colours are defined
+  once (`light-dark()`); every percentage uses one formatter; SVG gradients have unique ids; the demo detail page
+  reuses the decisions list it already downloaded.
+- AGENTS.md: wording of the review process aligned (merge `dev` before the first and final review only, what plain
+  `/code-review` reviews, `git reset --hard origin/<branch>` is allowed, the review rules live in three files).
+
 ### Fixed
 - `codetwin run --decision FILE` runs the tests of that `select --json` file; the GitHub Action uses it. A change
   that edits only tests is printed but not stored, so the Action used to run an older decision's tests or none.

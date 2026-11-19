@@ -478,7 +478,7 @@ class Generic(Language):
                 f.write(f"\n=== {test}  (exit {rc}, cwd {cwd})\n$ {shlex.join(argv)}\nfiles in cov_dir: {produced[:20]}\n"
                         f"{output[-6000:]}\n")
         except OSError:
-            pass
+            pass  # the log is a debugging aid only; a read-only checkout must not fail the test run
 
     def batches(self, tests: list[str]) -> list[list[str]]:
         """Units of parallel work: one test file each, except that all test files of a project whose runner is

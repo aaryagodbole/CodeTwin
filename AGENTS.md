@@ -140,7 +140,8 @@ For each comment from CodeRabbit, PR-Agent or Aarya:
 
 When all fixes are pushed, run your self-review once more on the whole change (see "Self-review of
 your pull request"), update the *Self-review* section, then comment `@coderabbitai review` once (not after every
-small push).
+small push). Don't merge `dev` before this review unless your branch conflicts with it: CodeRabbit would review
+`dev`'s changes too. Merge `dev` once more only when Aarya asks for it before the merge.
 
 **9. Merge and clean up**
 
@@ -156,7 +157,10 @@ Set the Notion card to *Done*, and comment on any issue that was waiting for you
 
 **Never**
 
-- `git push --force` / `git push -f`, `git reset --hard` or `git rebase` on a branch you have already pushed. Reviewers lose their place, and work can be lost. To undo a pushed commit, use `git revert <id>`.
+- Rewrite history you have already pushed: `git push --force` / `git push -f`, or `git rebase` or
+  `git reset --hard <older commit>` followed by a push. Reviewers lose their place, and work can be lost. To undo a
+  pushed commit, use `git revert <id>`. (`git reset --hard origin/<branch>`, to make your local copy match the
+  pushed branch, for example after a PR-Agent *Commit suggestion*, rewrites nothing and is fine.)
 - Commit secrets (API keys, tokens, `.env` files). If you pushed one by mistake, tell Aarya at once; the key
   must be revoked, not only deleted from the file.
 - Commit directly to `dev` or `main`, or work on someone else's branch without asking them.
@@ -286,25 +290,27 @@ and again before it asks for the final
 review after fixing review comments (step 8). Not on every small push. A pull request without a self-review is
 not ready for review.
 
-**1. Run a full review of your whole change** against the latest `dev` (`git fetch origin && git merge
-origin/dev` and `git push` first, so the review sees what CI and the merge will see; then review
-`git diff origin/dev...HEAD`, not only the last commit):
+**1. Run a full review of your whole change** against the latest `dev`: `git fetch origin`, then review
+`git diff origin/dev...HEAD`, not only the last commit. Before the first self-review also merge `dev`
+(`git merge origin/dev` and `git push`), so the review sees what CI and the merge will see; for the second one,
+after review fixes, merge it only if it conflicts, so the next CodeRabbit review covers your changes only.
 
 | Tool | How |
 |---|---|
-| Claude Code | `/code-review <pull request number>`. Plain `/code-review` reviews only unpushed work, so always give the number |
+| Claude Code | `/code-review <pull request number>`. Plain `/code-review` reviews your local changes (uncommitted and unpushed, or `main...HEAD` / the last commit without an upstream), not the pull request, so always give the number |
 | Codex | `/review`, with `origin/dev` (after `git fetch`) as the base, not your local `dev` |
 | Any other tool or agent (Antigravity, Copilot, Cursor, ...) | ask it to review `git diff origin/dev...HEAD` using the checklist below, and to list each problem with file, line and a concrete failing input |
 | No AI tool | go through the checklist below yourself, file by file |
 
-**2. The checklist** (what the review must look for):
+**2. The checklist** (what the review must look for; the same rules are in `.pr_agent.toml` and
+`.github/copilot-instructions.md`, so change all three together):
 
 1. **The issue.** Does the change do exactly what the issue's Approach and Done-when say, no more and no less?
    If the Approach itself looks wrong, comment on the issue instead of silently changing it.
 2. **Correctness.** For each finding, a concrete input and the wrong output: empty input, missing files,
    `None`/NaN, errors from git or the store, a very large repository, a second run, Windows paths.
 3. **Project rules** (next section): no look-ahead, unknowns reported, no hard-coded language or repository,
-   output contract, layering, extension points.
+   calibration semantics, LLM explains but never decides, output contract, layering, extension points.
 4. **Errors and output.** Errors go to stderr with the CLI's exit codes; `--json` prints only valid JSON on
    stdout; messages are short and say what to do.
 5. **Security.** Input from users, uploads, LLMs and the network is validated; no secrets in code, logs or

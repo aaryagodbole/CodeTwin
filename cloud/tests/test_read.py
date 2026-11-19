@@ -176,3 +176,23 @@ def test_failed_health_probes_are_logged(caplog):
     broken = Settings(database_url="postgresql://nobody@127.0.0.1:1/none")
     assert TestClient(create_app(broken)).get("/api/health").status_code == 503
     assert any('"/api/health"' in r.getMessage() and '"status": 503' in r.getMessage() for r in caplog.records)
+
+
+def test_values_carried_by_the_report_match_the_local_api(client, database):
+    """A report from a 0.3 client carries alpha_t, test_files and suite_seconds; the cloud shows those, not values
+    estimated from the per-test rows (#77). Older reports keep the estimate (test_read_values)."""
+    register(database)
+    r = report(outcome={"missed": False, "failing": []})
+    r["decision"] |= {"alpha_t": 0.08, "test_files": 5, "suite_seconds": 2.5}
+    assert client.post("/api/v1/reports", json=r, headers=auth_header(oidc())).status_code in (200, 201)
+    base = "/api/v1/projects/acme/shop"
+    s = client.get(f"{base}/summary").json()
+    assert (s["alpha"], s["alpha_t"], s["test_files"], s["suite_seconds"]) == (0.1, 0.08, 5, 2.5)
+    assert client.get(f"{base}/decisions").json()[0]["alpha_t"] == 0.08
+    assert client.get(f"{base}/calibration").json()["points"][0]["alpha_t"] == 0.08
+
+
+def test_an_empty_project_has_no_made_up_target(client, database):
+    register(database)
+    s = client.get("/api/v1/projects/acme/shop/summary").json()
+    assert s["alpha"] is None and s["alpha_t"] is None and s["test_files"] == 0

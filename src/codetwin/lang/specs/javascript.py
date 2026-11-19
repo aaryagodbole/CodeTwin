@@ -155,7 +155,7 @@ def _jest_config(root: Path) -> list[str]:
         if "jest" in json.loads((root / "package.json").read_text(encoding="utf-8")):
             return []
     except (OSError, ValueError):
-        pass
+        pass  # no readable package.json: look for a config file one or two levels down instead
     for p in sorted(root.glob("*/jest.config.*")) + sorted(root.glob("*/*/jest.config.*")):
         if "node_modules" not in p.parts:
             return ["--config", p.relative_to(root).as_posix()]

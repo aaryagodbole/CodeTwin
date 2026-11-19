@@ -38,4 +38,5 @@
 
 ## Before merge (only the code owner ticks this)
 
-- [ ] Merge review: `/code-review --comment <pull request number>` on the latest commit; every finding fixed or answered
+- [ ] Merge review: `/code-review --comment <pull request number>` on the latest commit (a later merge of `dev`
+      that git completed on its own needs no new run); every finding fixed or answered

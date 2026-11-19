@@ -6,12 +6,12 @@ import Link from "next/link";
 import { DecisionTable } from "@/app/decisions/table";
 import { ErrorBox, Loading } from "@/components/state";
 import { Card, Stat } from "@/components/ui/card";
-import { Donut, RiskGauge, Sparkline } from "@/components/ui/charts";
+import { Donut, fmtPct, RiskGauge, Sparkline } from "@/components/ui/charts";
 import { Info } from "@/components/ui/info";
 import { skippedShare } from "@/lib/analysis";
 import { get, type Calibration, type DecisionRow, type Summary } from "@/lib/api";
 
-const pct = (x: number | null | undefined) => (x == null ? "–" : `${(x * 100).toFixed(1)}%`);
+const pct = (x: number | null | undefined) => (x == null ? "–" : fmtPct(x));
 
 export default function Overview() {
   const summary = useQuery({ queryKey: ["summary"], queryFn: () => get<Summary>("/summary") });

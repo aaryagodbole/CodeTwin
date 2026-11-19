@@ -8,17 +8,13 @@ export interface FileStat {
   usedBy: number;
   /** how many test files reach it (static or runtime edge from a test) */
   testedBy: number;
-  /** how many files it imports */
-  uses: number;
 }
 
 export interface RepoAnalysis {
   files: number;
   tests: number;
-  unknownNodes: number;
   edges: number;
   edgeTypes: { type: string; count: number }[];
-  perFile: FileStat[];
   hubs: FileStat[];
   untested: FileStat[];
   /** share of source files reached by at least one test, 0..1 */
@@ -34,7 +30,7 @@ export function analyseRepo(g: Graph): RepoAnalysis {
   const byId = new Map(g.nodes.map((n) => [n.id, n]));
   const stat = new Map<string, FileStat>();
   for (const n of g.nodes) {
-    if ((n.kind === "source" || n.kind === "target") && !isTestSupport(n.path)) stat.set(n.id, { node: n, usedBy: 0, testedBy: 0, uses: 0 });
+    if ((n.kind === "source" || n.kind === "target") && !isTestSupport(n.path)) stat.set(n.id, { node: n, usedBy: 0, testedBy: 0 });
   }
   const seenUse = new Set<string>();
   const seenTest = new Set<string>();
@@ -60,7 +56,6 @@ export function analyseRepo(g: Graph): RepoAnalysis {
       if (!seenUse.has(key)) {
         seenUse.add(key);
         t.usedBy += 1;
-        stat.get(from.id)!.uses += 1;
       }
     }
   }
@@ -69,10 +64,8 @@ export function analyseRepo(g: Graph): RepoAnalysis {
   return {
     files: perFile.length,
     tests: g.nodes.filter((n) => n.kind === "test" || isTestSupport(n.path)).length,
-    unknownNodes: g.nodes.filter((n) => n.kind === "unknown").length,
     edges: g.edges.length,
     edgeTypes: [...types].map(([type, count]) => ({ type, count })).sort((a, b) => b.count - a.count),
-    perFile,
     hubs: [...perFile].filter((f) => f.usedBy > 0).sort((a, b) => b.usedBy - a.usedBy).slice(0, 8),
     // Same set as `reach`, with no per-language exceptions: a file no test reached is listed, whatever its name.
     untested: perFile.filter((f) => f.testedBy === 0),
