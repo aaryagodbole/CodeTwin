@@ -144,3 +144,10 @@ def test_map_edges_carry_the_detail_of_unresolved_links(toy_repo: Path) -> None:
     unresolved = [e for e in edges if e["type"] == "unresolved"]
     assert unresolved, "test setup: a dynamic call must give an unresolved link"
     assert all(e.get("detail") for e in unresolved)
+
+
+def test_views_never_return_nan_or_null_lists() -> None:
+    from codetwin import views
+    row = views.decision_row({"id": 1, "decision": "proceed", "threshold": float("nan"), "selected": None})
+    assert row["threshold"] is None and row["selected"] == [] and row["reasons"] == []
+    assert views.run_numbers(None) == {"test_files": 0, "suite_seconds": None}

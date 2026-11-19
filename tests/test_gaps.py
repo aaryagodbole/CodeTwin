@@ -378,15 +378,16 @@ def test_gaps_does_not_compute_feature_rows(
     toy_repo: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """gaps needs only base, recorded run and diff: it must not run the test listing and feature rows of select."""
-    from codetwin.engine import Engine
-
     main(["-C", str(toy_repo), "init"])
     main(["-C", str(toy_repo), "record"])
 
-    def no_analyse(self: object, base: str | None = None) -> None:
-        raise AssertionError("gaps must not call Engine.analyse()")
+    from codetwin.change import ChangeContext
 
-    monkeypatch.setattr(Engine, "analyse", no_analyse)
+    def no_rows(self: object) -> None:
+        raise AssertionError("gaps must not compute feature rows")
+
+    monkeypatch.setattr(ChangeContext, "rows", property(no_rows))
+    monkeypatch.setattr(ChangeContext, "tests", property(no_rows))
     capsys.readouterr()
     assert main(["-C", str(toy_repo), "gaps"]) == 0
 

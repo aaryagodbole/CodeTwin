@@ -17,11 +17,28 @@ All notable changes to this project are documented here. The format follows
   a *Folders* view laid out in layers (dagre) with line thickness for the number of links, the default above 40
   files; a *Files* view of one folder and its neighbours (force layout that respects card sizes); full-width canvas
   with a dot grid, floating details, a legend of areas and a Fit button.
+- Connected repositories by URL: `[[repos]]` entries take `url` (https, ssh or file; optional `ref`) as well as
+  `path`, any number of each. `codetwin repos --sync` (or `crossrepo --sync`) clones them into `.codetwin/repos`;
+  analysis stays offline and reports an unsynced entry as an unknown. `codetwin repos` lists every entry and its
+  state. The Action syncs before selecting (`sync-repos`, default on). URLs with credentials, `ext::` and
+  duplicate names are refused with a stated reason. Migration 0006 adds the `not-synced` and `invalid` statuses.
 - `select --json` and `codetwin explain` report `risk_before`, the estimated residual risk of the first selection,
   next to `residual_risk`, the risk of the tests that run (#96).
 - Report section `freshness` (`src/codetwin/report/freshness.py`): how many commits old the recorded evidence is (merged commits count), `stale` when that exceeds `[freshness] stale_after` (default 20) or when the recorded commit is gone from a complete history, with a hint to run `codetwin record`. The age is `null` when it cannot be established (other branch, older checkout, shallow clone). Git failures other than an unknown commit are shown as a broken section, not hidden as an unknown age.
 
 ### Changed
+- Engine architecture (ADR 0004, `CONTEXT.md`): one `ChangeContext` per change (`Engine.change()`), a pure selection
+  policy (`selection.choose()`), a calibration ledger (`risk/ledger.py`), read models for the API (`views.py`) and
+  Python described by a language spec like every other language. Decisions and API answers are unchanged; the
+  working tree is parsed once per decision instead of up to six times. `Engine.analyse()` and
+  `Engine.without_runtime_evidence()` are removed; `Engine.change()` returns a `ChangeContext`.
+- The knowledge graph and the co-change features read git history with one reader (`evidence/history.py`).
+- No import cycles left in the package (CodeQL `py/cyclic-import`, #94): `.codetwin.toml` templates live in
+  `config_templates.py`, `codetwin init` writes the file, the Python mutant moved into the Python adapter, the
+  store's legacy import no longer imports the store, and `ChangeContext` is typed against a small `Workspace`
+  protocol.
+- `Store.decisions()` reads selections and reasons with one query per table instead of two per row
+  (`/api/decisions?limit=500` went from about 1,000 queries to 3, #91).
 - `codetwin push` adds `alpha_t`, `test_files` and `suite_seconds` to the report, and the cloud API shows them, so
   its summary, decisions and calibration match `codetwin serve` instead of repeating `alpha` and summing per-test
   times. The cloud no longer invents a target of 10% for a project without one (`alpha` is null).

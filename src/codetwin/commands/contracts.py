@@ -13,8 +13,7 @@ def add_arguments(p) -> None:
 def run(args) -> int:
     from ..contracts import for_change
     with engine(args) as eng:
-        base = args.base or eng.store.latest_run_sha() or "HEAD"
-        out = for_change(eng.cfg, eng.lang, base, eng.store)
+        out = for_change(eng.cfg, eng.lang, eng.change(args.base, require_run=False).base, eng.store)
     if args.json:
         print_json(out)
     else:

@@ -10,11 +10,10 @@ def register(mcp, root: str) -> None:
         from ..graph.symbols import find, parse_target, symbol_impact
         path, query = parse_target(target)
         with Engine(root) as eng:
-            facts = eng.facts_now()
-            base = eng.store.latest_run_sha()
-            run = eng.store.get_run(base) if base else None
-            base_facts = eng.store.get_static(base) if base else None
+            ch = eng.change(require_run=False)
+            facts = ch.facts_now
+            base_facts = ch.static_base if ch.prev is not None else None
             hits = find(facts, path, query or "")
-            return [symbol_impact(eng.root, facts, run, eng.tests_now(), s, eng.lang.is_test, base_facts).to_dict()
+            return [symbol_impact(eng.root, facts, ch.prev, ch.tests_now, s, eng.lang.is_test, base_facts).to_dict()
                     for s in hits] \
                 or [{"symbol": {"name": query, "file": path}, "unknowns": [f"no symbol '{query}' in {path}"]}]

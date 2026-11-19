@@ -1,4 +1,6 @@
 """`codetwin crossrepo`: files and tests in connected repositories that the current change may affect."""
+import sys
+
 from ._util import engine, print_json
 
 NAME, HELP, ORDER = "crossrepo", "files and tests in connected repositories ([[repos]]) affected by the change", 55
@@ -7,13 +9,19 @@ NAME, HELP, ORDER = "crossrepo", "files and tests in connected repositories ([[r
 def add_arguments(p) -> None:
     p.add_argument("--base", help="compare with this commit (default: the last recorded run, else HEAD)")
     p.add_argument("--json", action="store_true")
+    p.add_argument("--sync", action="store_true",
+                   help="first clone or update every [[repos]] entry given by url (into .codetwin/repos/), then analyse")
 
 
 def run(args) -> int:
     from ..crossrepo.analysis import for_change
     with engine(args) as eng:
-        base = args.base or eng.store.latest_run_sha() or "HEAD"
-        out = for_change(eng.cfg, eng.facts_now(), eng.changed(base), eng.is_source, eng.store, base)
+        if args.sync:
+            from ..crossrepo.sources import sync
+            for st in sync(eng.cfg):      # on stderr, so --json output stays one JSON document
+                print(f"sync {st['name']}: {st['status']} ({st['detail']})", file=sys.stderr)
+        ch = eng.change(args.base, require_run=False)
+        out = for_change(eng.cfg, ch.facts_now, ch.diff, ch.is_source, eng.store, ch.base)
     if args.json:
         print_json(out)
         return 0

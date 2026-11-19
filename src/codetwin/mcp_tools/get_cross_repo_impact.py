@@ -9,5 +9,5 @@ def register(mcp, root: str) -> None:
         the dependents' tests that reach them, and what cannot be seen (unknowns)."""
         from ..crossrepo.analysis import for_change
         with Engine(root) as eng:
-            b = base or eng.store.latest_run_sha() or "HEAD"
-            return for_change(eng.cfg, eng.facts_now(), eng.changed(b), eng.is_source, eng.store, b)
+            ch = eng.change(base, require_run=False)
+            return for_change(eng.cfg, ch.facts_now, ch.diff, ch.is_source, eng.store, ch.base)

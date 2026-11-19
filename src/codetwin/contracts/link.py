@@ -6,7 +6,8 @@ from pathlib import Path
 from typing import Any
 
 from .. import lang as langmod
-from ..crossrepo.analysis import _dependent_config, _recorded_run, declared
+from ..crossrepo.analysis import _dependent_config, _recorded_run
+from ..crossrepo.sources import connected
 from ..graph.impact import build_graph, impact_of
 from ..store.analyses import ContractDoc, Scope
 from .diff import ContractChange, at_commit, contract_files_at, diff_documents, find_contract_files, load, renames
@@ -151,13 +152,13 @@ def _analyse(cfg, lang_adapter, base: str):
     scopes.append(("this repository", root, facts, src, tests, run, lang_adapter.is_test))
     scopes_rec.append(Scope("this repository", str(root), "analysed", getattr(lang_adapter, "name", None),
                             run is not None, is_self=True))
-    for r in declared(cfg):
-        path = (root / str(r["path"])).resolve()
-        name = str(r.get("name") or path.name)
-        if not path.exists():
-            unknowns.append(f"repository {name} not found at {path}: its uses of the contract are unknown")
-            scopes_rec.append(Scope(name, None, "not-found"))
+    for src in connected(cfg):
+        name = src.name
+        if not src.available or src.path is None:
+            unknowns.append(src.missing().replace("its consumers are unknown", "its uses of the contract are unknown"))
+            scopes_rec.append(Scope(name, None, "invalid" if src.error else "not-synced" if src.url else "not-found"))
             continue
+        path = src.path
         dcfg = _dependent_config(path)
         try:
             ad = langmod.get(dcfg)

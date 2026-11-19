@@ -1,11 +1,16 @@
 """Cross-repository evidence: which files and tests in connected repositories a change in this one may affect.
 
-Connected repositories are declared in `.codetwin.toml`; each one depends on (uses) this repository::
+Connected repositories are declared in `.codetwin.toml`, as many as needed; each one depends on (uses) this
+repository and is either a local folder or a git URL (cloned by `codetwin crossrepo --sync`, see `sources.py`)::
 
     [[repos]]
     name = "web"
     path = "../web"                 # relative to this repository
     # packages = ["@acme/core"]     # optional: how `web` imports this repository (default: detected)
+
+    [[repos]]
+    name = "mobile"
+    url = "https://github.com/acme/mobile.git"
 
 For a change, every dependent's files that import one of this repository's package names are *consumers*.
 A consumer that also names a changed function, method or class is a `uses-changed-symbol` link; one that only
@@ -21,5 +26,6 @@ in code, not in comments or strings, so `uses-changed-symbol` means "names it", 
 from __future__ import annotations
 
 from .analysis import RepoImpact, analyse, declared
+from .sources import Source, connected, sync
 
-__all__ = ["RepoImpact", "analyse", "declared"]
+__all__ = ["RepoImpact", "Source", "analyse", "connected", "declared", "sync"]

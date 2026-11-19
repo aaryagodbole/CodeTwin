@@ -42,8 +42,7 @@ def run(args: argparse.Namespace) -> int:
     with engine(args) as eng:
         # Only what the section needs: no test listing, history or feature rows, and nothing is stored.
         # Nothing recorded raises RuntimeError; the CLI prints it on stderr and exits with 2, like every command.
-        base, prev, diff = eng.change(args.base)
-        ctx = eng.report_context(None, base, prev, diff, rows={}, scores={})
+        ctx = eng.report_context(eng.change(args.base), None, rows={}, scores={})
         # Through report.build, so a failing section gives the same {"error", "summary"} as in `select`.
         gaps = report.build(ctx, only={test_gaps.NAME})[test_gaps.NAME]
 

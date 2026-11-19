@@ -184,12 +184,16 @@ def run(args: argparse.Namespace) -> int:
         sec = sec if isinstance(sec, dict) else {}
         given = args.decision is not None
         decision = load_decision(args.decision) if given else eng.select(args.base).to_dict()
-        base = args.base or eng.store.latest_run_sha()
+        ch = eng.change(args.base, require_run=False)
+        base = ch.base if (ch.prev is not None or args.base) else None     # None: nothing recorded yet
         saved = check_decision_base(decision, base, "the commit this review compares with")
         diff_base, diff_head = review_base(eng.root, base) if base else (None, None)
-        diff = eng.changed(diff_base, diff_head) if diff_base else {}
+        # The change already holds the diff from the recorded base to the working tree; a pull request diffs its own
+        # merge-base up to HEAD instead (#92).
+        diff = (ch.diff if (diff_base, diff_head) == (base, None) else eng.changed(diff_base, diff_head)) \
+            if diff_base else {}
         if given:
-            check_decision_files(eng, saved, diff if (diff_base, diff_head) == (base, None) else eng.changed(base))
+            check_decision_files(eng, saved, ch.diff)     # the recorded base's diff, as the decision saw it
         changed = {f: sorted(d.new) for f, d in diff.items() if d.status != "D"}
         changed_old = {d.old_path or f: sorted(d.old) for f, d in diff.items()}
         try:

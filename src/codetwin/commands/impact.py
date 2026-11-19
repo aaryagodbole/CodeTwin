@@ -10,11 +10,9 @@ def add_arguments(p) -> None:
 
 def _symbols(eng, targets: list[tuple[str, str]]) -> list[dict]:
     from ..graph.symbols import find, symbol_impact
-    facts = eng.facts_now()
-    base = eng.store.latest_run_sha()
-    run = eng.store.get_run(base) if base else None
-    base_facts = eng.store.get_static(base) if base else None
-    tests = eng.tests_now()
+    ch = eng.change(require_run=False)
+    facts, run, tests = ch.facts_now, ch.prev, ch.tests_now
+    base_facts = ch.static_base if run is not None else None
     out = []
     for path, query in targets:
         hits = find(facts, path, query)
@@ -33,7 +31,7 @@ def run(args) -> int:
     syms = [(p, q) for p, q in parsed if q is not None]
     files = [p for p, q in parsed if not q]
     with engine(args) as eng:
-        imp = eng.impact(files) if files else None
+        imp = eng.change(require_run=False).impact(files) if files else None
         sym_out = _symbols(eng, syms) if syms else []
     if args.json:
         if imp is not None and not sym_out:
