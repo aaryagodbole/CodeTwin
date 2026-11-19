@@ -27,3 +27,12 @@ export function demoName(path, params = {}) {
 export function demoPath(path, params = {}) {
   return `/demo/api/${demoName(path, params)}`;
 }
+
+/**
+ * @param {string} path
+ * @param {Record<string, string>} [params]
+ * @returns {string} the URL of the repository snapshot file (scripts/repo_snapshot.py) in the static build
+ */
+export function snapshotPath(path, params = {}) {
+  return `/snapshot/api/${demoName(path, params)}`;
+}

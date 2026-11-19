@@ -1,0 +1,113 @@
+{
+ "counts": {
+  "importers": 0,
+  "tests": 0,
+  "unknown": 0
+ },
+ "edges": [
+  {
+   "detail": "imported by this file",
+   "source": "tests/test_kg.py",
+   "target": "src/codetwin/cli.py",
+   "type": "static"
+  },
+  {
+   "detail": "imported by this file",
+   "source": "tests/test_kg.py",
+   "target": "src/codetwin/engine.py",
+   "type": "static"
+  },
+  {
+   "detail": "imported by this file",
+   "source": "tests/test_kg.py",
+   "target": "src/codetwin/evidence/model.py",
+   "type": "static"
+  },
+  {
+   "detail": "imported by this file",
+   "source": "tests/test_kg.py",
+   "target": "src/codetwin/kg/__init__.py",
+   "type": "static"
+  },
+  {
+   "detail": "imported by this file",
+   "source": "tests/test_kg.py",
+   "target": "src/codetwin/kg/build.py",
+   "type": "static"
+  },
+  {
+   "detail": "imported by this file",
+   "source": "tests/test_kg.py",
+   "target": "src/codetwin/kg/export.py",
+   "type": "static"
+  },
+  {
+   "detail": "imported by this file",
+   "source": "tests/test_kg.py",
+   "target": "src/codetwin/kg/schema.py",
+   "type": "static"
+  }
+ ],
+ "evidence": {
+  "has_coverage": true,
+  "recorded_commit": "763e5d01a8fcc2d331acea1202f0cddbb0f977f6"
+ },
+ "nodes": [
+  {
+   "id": "tests/test_kg.py",
+   "kind": "target",
+   "label": "test_kg.py",
+   "path": "tests/test_kg.py"
+  },
+  {
+   "id": "src/codetwin/cli.py",
+   "kind": "source",
+   "label": "cli.py",
+   "path": "src/codetwin/cli.py"
+  },
+  {
+   "id": "src/codetwin/engine.py",
+   "kind": "source",
+   "label": "engine.py",
+   "path": "src/codetwin/engine.py"
+  },
+  {
+   "id": "src/codetwin/evidence/model.py",
+   "kind": "source",
+   "label": "model.py",
+   "path": "src/codetwin/evidence/model.py"
+  },
+  {
+   "id": "src/codetwin/kg/__init__.py",
+   "kind": "source",
+   "label": "kg/__init__.py",
+   "path": "src/codetwin/kg/__init__.py"
+  },
+  {
+   "id": "src/codetwin/kg/build.py",
+   "kind": "source",
+   "label": "build.py",
+   "path": "src/codetwin/kg/build.py"
+  },
+  {
+   "id": "src/codetwin/kg/export.py",
+   "kind": "source",
+   "label": "export.py",
+   "path": "src/codetwin/kg/export.py"
+  },
+  {
+   "id": "src/codetwin/kg/schema.py",
+   "kind": "source",
+   "label": "schema.py",
+   "path": "src/codetwin/kg/schema.py"
+  }
+ ],
+ "summary": "used by 0 · 0 tests · 0 unknown",
+ "target": {
+  "id": "tests/test_kg.py",
+  "kind": "target",
+  "label": "test_kg.py",
+  "path": "tests/test_kg.py"
+ },
+ "unknowns": []
+}

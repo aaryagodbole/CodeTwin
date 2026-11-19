@@ -1,0 +1,173 @@
+{
+ "counts": {
+  "importers": 0,
+  "tests": 11,
+  "unknown": 0
+ },
+ "edges": [
+  {
+   "detail": "executes this file",
+   "source": "tests/test_crossrepo.py",
+   "target": "src/codetwin/report/contracts.py",
+   "type": "runtime"
+  },
+  {
+   "detail": "executes this file",
+   "source": "tests/test_end_to_end.py",
+   "target": "src/codetwin/report/contracts.py",
+   "type": "runtime"
+  },
+  {
+   "detail": "executes this file",
+   "source": "tests/test_gaps.py",
+   "target": "src/codetwin/report/contracts.py",
+   "type": "runtime"
+  },
+  {
+   "detail": "executes this file",
+   "source": "tests/test_languages.py",
+   "target": "src/codetwin/report/contracts.py",
+   "type": "runtime"
+  },
+  {
+   "detail": "executes this file",
+   "source": "tests/test_push.py",
+   "target": "src/codetwin/report/contracts.py",
+   "type": "runtime"
+  },
+  {
+   "detail": "executes this file",
+   "source": "tests/test_release_fixes.py",
+   "target": "src/codetwin/report/contracts.py",
+   "type": "runtime"
+  },
+  {
+   "detail": "executes this file",
+   "source": "tests/test_review.py",
+   "target": "src/codetwin/report/contracts.py",
+   "type": "runtime"
+  },
+  {
+   "detail": "executes this file",
+   "source": "tests/test_server.py",
+   "target": "src/codetwin/report/contracts.py",
+   "type": "runtime"
+  },
+  {
+   "detail": "executes this file",
+   "source": "tests/test_structure.py",
+   "target": "src/codetwin/report/contracts.py",
+   "type": "runtime"
+  },
+  {
+   "detail": "executes this file",
+   "source": "tests/test_symbols.py",
+   "target": "src/codetwin/report/contracts.py",
+   "type": "runtime"
+  },
+  {
+   "detail": "executes this file",
+   "source": "tests/test_v3_evidence.py",
+   "target": "src/codetwin/report/contracts.py",
+   "type": "runtime"
+  },
+  {
+   "detail": "imported by this file",
+   "source": "src/codetwin/report/contracts.py",
+   "target": "src/codetwin/contracts/__init__.py",
+   "type": "static"
+  }
+ ],
+ "evidence": {
+  "has_coverage": true,
+  "recorded_commit": "763e5d01a8fcc2d331acea1202f0cddbb0f977f6"
+ },
+ "nodes": [
+  {
+   "id": "src/codetwin/report/contracts.py",
+   "kind": "target",
+   "label": "contracts.py",
+   "path": "src/codetwin/report/contracts.py"
+  },
+  {
+   "id": "tests/test_crossrepo.py",
+   "kind": "test",
+   "label": "test_crossrepo.py",
+   "path": "tests/test_crossrepo.py"
+  },
+  {
+   "id": "tests/test_end_to_end.py",
+   "kind": "test",
+   "label": "test_end_to_end.py",
+   "path": "tests/test_end_to_end.py"
+  },
+  {
+   "id": "tests/test_gaps.py",
+   "kind": "test",
+   "label": "test_gaps.py",
+   "path": "tests/test_gaps.py"
+  },
+  {
+   "id": "tests/test_languages.py",
+   "kind": "test",
+   "label": "test_languages.py",
+   "path": "tests/test_languages.py"
+  },
+  {
+   "id": "tests/test_push.py",
+   "kind": "test",
+   "label": "test_push.py",
+   "path": "tests/test_push.py"
+  },
+  {
+   "id": "tests/test_release_fixes.py",
+   "kind": "test",
+   "label": "test_release_fixes.py",
+   "path": "tests/test_release_fixes.py"
+  },
+  {
+   "id": "tests/test_review.py",
+   "kind": "test",
+   "label": "test_review.py",
+   "path": "tests/test_review.py"
+  },
+  {
+   "id": "tests/test_server.py",
+   "kind": "test",
+   "label": "test_server.py",
+   "path": "tests/test_server.py"
+  },
+  {
+   "id": "tests/test_structure.py",
+   "kind": "test",
+   "label": "test_structure.py",
+   "path": "tests/test_structure.py"
+  },
+  {
+   "id": "tests/test_symbols.py",
+   "kind": "test",
+   "label": "test_symbols.py",
+   "path": "tests/test_symbols.py"
+  },
+  {
+   "id": "tests/test_v3_evidence.py",
+   "kind": "test",
+   "label": "test_v3_evidence.py",
+   "path": "tests/test_v3_evidence.py"
+  },
+  {
+   "id": "src/codetwin/contracts/__init__.py",
+   "kind": "source",
+   "label": "contracts/__init__.py",
+   "path": "src/codetwin/contracts/__init__.py"
+  }
+ ],
+ "summary": "used by 0 · 11 tests · 0 unknown",
+ "target": {
+  "id": "src/codetwin/report/contracts.py",
+  "kind": "target",
+  "label": "contracts.py",
+  "path": "src/codetwin/report/contracts.py"
+ },
+ "unknowns": []
+}

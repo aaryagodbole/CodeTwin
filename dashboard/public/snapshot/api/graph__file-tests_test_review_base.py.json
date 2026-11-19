@@ -1,0 +1,41 @@
+{
+ "counts": {
+  "importers": 0,
+  "tests": 0,
+  "unknown": 0
+ },
+ "edges": [
+  {
+   "detail": "imported by this file",
+   "source": "tests/test_review_base.py",
+   "target": "src/codetwin/commands/review.py",
+   "type": "static"
+  }
+ ],
+ "evidence": {
+  "has_coverage": true,
+  "recorded_commit": "763e5d01a8fcc2d331acea1202f0cddbb0f977f6"
+ },
+ "nodes": [
+  {
+   "id": "tests/test_review_base.py",
+   "kind": "target",
+   "label": "test_review_base.py",
+   "path": "tests/test_review_base.py"
+  },
+  {
+   "id": "src/codetwin/commands/review.py",
+   "kind": "source",
+   "label": "review.py",
+   "path": "src/codetwin/commands/review.py"
+  }
+ ],
+ "summary": "used by 0 · 0 tests · 0 unknown",
+ "target": {
+  "id": "tests/test_review_base.py",
+  "kind": "target",
+  "label": "test_review_base.py",
+  "path": "tests/test_review_base.py"
+ },
+ "unknowns": []
+}

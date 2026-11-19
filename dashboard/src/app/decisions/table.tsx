@@ -6,7 +6,7 @@ import { useState } from "react";
 import { Empty } from "@/components/state";
 import { Badge } from "@/components/ui/badge";
 import { RiskBar } from "@/components/ui/charts";
-import type { DecisionRow } from "@/lib/api";
+import { DATA_MODE, type DecisionRow } from "@/lib/api";
 
 function Outcome({ d }: { d: DecisionRow }) {
   if (d.missed == null) return <Badge>pending</Badge>;
@@ -55,7 +55,9 @@ function Row({ d }: { d: DecisionRow }) {
 }
 
 export function DecisionTable({ rows, empty }: { rows: DecisionRow[]; empty?: React.ReactNode }) {
-  if (rows.length === 0) return <Empty>{empty ?? <>No decisions yet. Run <code>codetwin select</code>.</>}</Empty>;
+  if (rows.length === 0) return <Empty>{empty ?? (DATA_MODE === "cloud"
+    ? <>No reports yet. The project&apos;s CI uploads one decision for every pull request.</>
+    : <>No decisions yet. Run <code>codetwin select</code>.</>)}</Empty>;
   return (
     <div className="relative overflow-x-auto">
       {/* relative: the sr-only header below is position:absolute; without a positioned scroller it escapes

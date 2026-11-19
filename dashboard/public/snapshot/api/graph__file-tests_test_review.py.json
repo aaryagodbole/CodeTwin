@@ -1,0 +1,151 @@
+{
+ "counts": {
+  "importers": 0,
+  "tests": 0,
+  "unknown": 1
+ },
+ "edges": [
+  {
+   "detail": "imported by this file",
+   "source": "tests/test_review.py",
+   "target": "src/codetwin/cli.py",
+   "type": "static"
+  },
+  {
+   "detail": "imported by this file",
+   "source": "tests/test_review.py",
+   "target": "src/codetwin/commands/review.py",
+   "type": "static"
+  },
+  {
+   "detail": "imported by this file",
+   "source": "tests/test_review.py",
+   "target": "src/codetwin/review/__init__.py",
+   "type": "static"
+  },
+  {
+   "detail": "imported by this file",
+   "source": "tests/test_review.py",
+   "target": "src/codetwin/review/analyzers/__init__.py",
+   "type": "static"
+  },
+  {
+   "detail": "imported by this file",
+   "source": "tests/test_review.py",
+   "target": "src/codetwin/review/analyzers/llm_review.py",
+   "type": "static"
+  },
+  {
+   "detail": "imported by this file",
+   "source": "tests/test_review.py",
+   "target": "src/codetwin/review/github_api.py",
+   "type": "static"
+  },
+  {
+   "detail": "imported by this file",
+   "source": "tests/test_review.py",
+   "target": "src/codetwin/review/model.py",
+   "type": "static"
+  },
+  {
+   "detail": "imported by this file",
+   "source": "tests/test_review.py",
+   "target": "src/codetwin/review/render.py",
+   "type": "static"
+  },
+  {
+   "detail": "imported by this file",
+   "source": "tests/test_review.py",
+   "target": "src/codetwin/review/rules.py",
+   "type": "static"
+  },
+  {
+   "detail": "dynamic calls (__import__) on lines 28",
+   "source": "tests/test_review.py",
+   "target": "?tests/test_review.py",
+   "type": "unresolved"
+  }
+ ],
+ "evidence": {
+  "has_coverage": true,
+  "recorded_commit": "763e5d01a8fcc2d331acea1202f0cddbb0f977f6"
+ },
+ "nodes": [
+  {
+   "id": "tests/test_review.py",
+   "kind": "target",
+   "label": "test_review.py",
+   "path": "tests/test_review.py"
+  },
+  {
+   "id": "src/codetwin/cli.py",
+   "kind": "source",
+   "label": "cli.py",
+   "path": "src/codetwin/cli.py"
+  },
+  {
+   "id": "src/codetwin/commands/review.py",
+   "kind": "source",
+   "label": "review.py",
+   "path": "src/codetwin/commands/review.py"
+  },
+  {
+   "id": "src/codetwin/review/__init__.py",
+   "kind": "source",
+   "label": "review/__init__.py",
+   "path": "src/codetwin/review/__init__.py"
+  },
+  {
+   "id": "src/codetwin/review/analyzers/__init__.py",
+   "kind": "source",
+   "label": "analyzers/__init__.py",
+   "path": "src/codetwin/review/analyzers/__init__.py"
+  },
+  {
+   "id": "src/codetwin/review/analyzers/llm_review.py",
+   "kind": "source",
+   "label": "llm_review.py",
+   "path": "src/codetwin/review/analyzers/llm_review.py"
+  },
+  {
+   "id": "src/codetwin/review/github_api.py",
+   "kind": "source",
+   "label": "github_api.py",
+   "path": "src/codetwin/review/github_api.py"
+  },
+  {
+   "id": "src/codetwin/review/model.py",
+   "kind": "source",
+   "label": "model.py",
+   "path": "src/codetwin/review/model.py"
+  },
+  {
+   "id": "src/codetwin/review/render.py",
+   "kind": "source",
+   "label": "render.py",
+   "path": "src/codetwin/review/render.py"
+  },
+  {
+   "id": "src/codetwin/review/rules.py",
+   "kind": "source",
+   "label": "rules.py",
+   "path": "src/codetwin/review/rules.py"
+  },
+  {
+   "id": "?tests/test_review.py",
+   "kind": "unknown",
+   "label": "unresolved",
+   "path": "tests/test_review.py"
+  }
+ ],
+ "summary": "used by 0 · 0 tests · 1 unknown",
+ "target": {
+  "id": "tests/test_review.py",
+  "kind": "target",
+  "label": "test_review.py",
+  "path": "tests/test_review.py"
+ },
+ "unknowns": [
+  "tests/test_review.py: dynamic calls (__import__) cannot be followed statically"
+ ]
+}

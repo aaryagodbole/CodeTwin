@@ -1,0 +1,77 @@
+{
+ "counts": {
+  "importers": 0,
+  "tests": 0,
+  "unknown": 0
+ },
+ "edges": [
+  {
+   "detail": "imported by this file",
+   "source": "tests/test_risk.py",
+   "target": "src/codetwin/risk/calibration.py",
+   "type": "static"
+  },
+  {
+   "detail": "imported by this file",
+   "source": "tests/test_risk.py",
+   "target": "src/codetwin/risk/model.py",
+   "type": "static"
+  },
+  {
+   "detail": "imported by this file",
+   "source": "tests/test_risk.py",
+   "target": "src/codetwin/risk/residual.py",
+   "type": "static"
+  },
+  {
+   "detail": "imported by this file",
+   "source": "tests/test_risk.py",
+   "target": "src/codetwin/selection.py",
+   "type": "static"
+  }
+ ],
+ "evidence": {
+  "has_coverage": true,
+  "recorded_commit": "763e5d01a8fcc2d331acea1202f0cddbb0f977f6"
+ },
+ "nodes": [
+  {
+   "id": "tests/test_risk.py",
+   "kind": "target",
+   "label": "test_risk.py",
+   "path": "tests/test_risk.py"
+  },
+  {
+   "id": "src/codetwin/risk/calibration.py",
+   "kind": "source",
+   "label": "calibration.py",
+   "path": "src/codetwin/risk/calibration.py"
+  },
+  {
+   "id": "src/codetwin/risk/model.py",
+   "kind": "source",
+   "label": "model.py",
+   "path": "src/codetwin/risk/model.py"
+  },
+  {
+   "id": "src/codetwin/risk/residual.py",
+   "kind": "source",
+   "label": "residual.py",
+   "path": "src/codetwin/risk/residual.py"
+  },
+  {
+   "id": "src/codetwin/selection.py",
+   "kind": "source",
+   "label": "selection.py",
+   "path": "src/codetwin/selection.py"
+  }
+ ],
+ "summary": "used by 0 · 0 tests · 0 unknown",
+ "target": {
+  "id": "tests/test_risk.py",
+  "kind": "target",
+  "label": "test_risk.py",
+  "path": "tests/test_risk.py"
+ },
+ "unknowns": []
+}

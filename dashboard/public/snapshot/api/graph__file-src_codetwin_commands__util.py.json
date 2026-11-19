@@ -1,0 +1,461 @@
+{
+ "counts": {
+  "importers": 17,
+  "tests": 17,
+  "unknown": 0
+ },
+ "edges": [
+  {
+   "detail": "executes this file",
+   "source": "tests/test_contracts.py",
+   "target": "src/codetwin/commands/_util.py",
+   "type": "runtime"
+  },
+  {
+   "detail": "executes this file",
+   "source": "tests/test_crossrepo.py",
+   "target": "src/codetwin/commands/_util.py",
+   "type": "runtime"
+  },
+  {
+   "detail": "executes this file",
+   "source": "tests/test_gaps.py",
+   "target": "src/codetwin/commands/_util.py",
+   "type": "runtime"
+  },
+  {
+   "detail": "executes this file",
+   "source": "tests/test_graph.py",
+   "target": "src/codetwin/commands/_util.py",
+   "type": "runtime"
+  },
+  {
+   "detail": "executes this file",
+   "source": "tests/test_kg.py",
+   "target": "src/codetwin/commands/_util.py",
+   "type": "runtime"
+  },
+  {
+   "detail": "executes this file",
+   "source": "tests/test_languages.py",
+   "target": "src/codetwin/commands/_util.py",
+   "type": "runtime"
+  },
+  {
+   "detail": "executes this file",
+   "source": "tests/test_llm.py",
+   "target": "src/codetwin/commands/_util.py",
+   "type": "runtime"
+  },
+  {
+   "detail": "executes this file",
+   "source": "tests/test_push.py",
+   "target": "src/codetwin/commands/_util.py",
+   "type": "runtime"
+  },
+  {
+   "detail": "executes this file",
+   "source": "tests/test_release_fixes.py",
+   "target": "src/codetwin/commands/_util.py",
+   "type": "runtime"
+  },
+  {
+   "detail": "executes this file",
+   "source": "tests/test_review.py",
+   "target": "src/codetwin/commands/_util.py",
+   "type": "runtime"
+  },
+  {
+   "detail": "executes this file",
+   "source": "tests/test_structure.py",
+   "target": "src/codetwin/commands/_util.py",
+   "type": "runtime"
+  },
+  {
+   "detail": "executes this file",
+   "source": "tests/test_symbols.py",
+   "target": "src/codetwin/commands/_util.py",
+   "type": "runtime"
+  },
+  {
+   "detail": "executes this file",
+   "source": "tests/test_triage.py",
+   "target": "src/codetwin/commands/_util.py",
+   "type": "runtime"
+  },
+  {
+   "detail": "executes this file",
+   "source": "tests/test_v3_evidence.py",
+   "target": "src/codetwin/commands/_util.py",
+   "type": "runtime"
+  },
+  {
+   "detail": "reaches this file",
+   "source": "tests/test_end_to_end.py",
+   "target": "src/codetwin/commands/_util.py",
+   "type": "runtime"
+  },
+  {
+   "detail": "reaches this file",
+   "source": "tests/test_server.py",
+   "target": "src/codetwin/commands/_util.py",
+   "type": "runtime"
+  },
+  {
+   "detail": "reaches this file",
+   "source": "tests/test_server.py",
+   "target": "src/codetwin/commands/_util.py",
+   "type": "static"
+  },
+  {
+   "detail": "reaches this file",
+   "source": "tests/test_review_base.py",
+   "target": "src/codetwin/commands/_util.py",
+   "type": "runtime"
+  },
+  {
+   "detail": "reaches this file",
+   "source": "tests/test_review_base.py",
+   "target": "src/codetwin/commands/_util.py",
+   "type": "static"
+  },
+  {
+   "detail": "imports this file",
+   "source": "src/codetwin/commands/contracts.py",
+   "target": "src/codetwin/commands/_util.py",
+   "type": "static"
+  },
+  {
+   "detail": "imports this file",
+   "source": "src/codetwin/commands/crossrepo.py",
+   "target": "src/codetwin/commands/_util.py",
+   "type": "static"
+  },
+  {
+   "detail": "imports this file",
+   "source": "src/codetwin/commands/explain.py",
+   "target": "src/codetwin/commands/_util.py",
+   "type": "static"
+  },
+  {
+   "detail": "imports this file",
+   "source": "src/codetwin/commands/gaps.py",
+   "target": "src/codetwin/commands/_util.py",
+   "type": "static"
+  },
+  {
+   "detail": "imports this file",
+   "source": "src/codetwin/commands/graph.py",
+   "target": "src/codetwin/commands/_util.py",
+   "type": "static"
+  },
+  {
+   "detail": "imports this file",
+   "source": "src/codetwin/commands/impact.py",
+   "target": "src/codetwin/commands/_util.py",
+   "type": "static"
+  },
+  {
+   "detail": "imports this file",
+   "source": "src/codetwin/commands/kg.py",
+   "target": "src/codetwin/commands/_util.py",
+   "type": "static"
+  },
+  {
+   "detail": "imports this file",
+   "source": "src/codetwin/commands/learn.py",
+   "target": "src/codetwin/commands/_util.py",
+   "type": "static"
+  },
+  {
+   "detail": "imports this file",
+   "source": "src/codetwin/commands/llm.py",
+   "target": "src/codetwin/commands/_util.py",
+   "type": "static"
+  },
+  {
+   "detail": "imports this file",
+   "source": "src/codetwin/commands/outcomes.py",
+   "target": "src/codetwin/commands/_util.py",
+   "type": "static"
+  },
+  {
+   "detail": "imports this file",
+   "source": "src/codetwin/commands/push.py",
+   "target": "src/codetwin/commands/_util.py",
+   "type": "static"
+  },
+  {
+   "detail": "imports this file",
+   "source": "src/codetwin/commands/record.py",
+   "target": "src/codetwin/commands/_util.py",
+   "type": "static"
+  },
+  {
+   "detail": "imports this file",
+   "source": "src/codetwin/commands/review.py",
+   "target": "src/codetwin/commands/_util.py",
+   "type": "static"
+  },
+  {
+   "detail": "imports this file",
+   "source": "src/codetwin/commands/run.py",
+   "target": "src/codetwin/commands/_util.py",
+   "type": "static"
+  },
+  {
+   "detail": "imports this file",
+   "source": "src/codetwin/commands/select.py",
+   "target": "src/codetwin/commands/_util.py",
+   "type": "static"
+  },
+  {
+   "detail": "imports this file",
+   "source": "src/codetwin/commands/weakcheck.py",
+   "target": "src/codetwin/commands/_util.py",
+   "type": "static"
+  },
+  {
+   "detail": "imports this file",
+   "source": "src/codetwin/commands/why.py",
+   "target": "src/codetwin/commands/_util.py",
+   "type": "static"
+  },
+  {
+   "detail": "imported by this file",
+   "source": "src/codetwin/commands/_util.py",
+   "target": "src/codetwin/engine.py",
+   "type": "static"
+  }
+ ],
+ "evidence": {
+  "has_coverage": true,
+  "recorded_commit": "763e5d01a8fcc2d331acea1202f0cddbb0f977f6"
+ },
+ "nodes": [
+  {
+   "id": "src/codetwin/commands/_util.py",
+   "kind": "target",
+   "label": "_util.py",
+   "path": "src/codetwin/commands/_util.py"
+  },
+  {
+   "id": "tests/test_contracts.py",
+   "kind": "test",
+   "label": "test_contracts.py",
+   "path": "tests/test_contracts.py"
+  },
+  {
+   "id": "tests/test_crossrepo.py",
+   "kind": "test",
+   "label": "test_crossrepo.py",
+   "path": "tests/test_crossrepo.py"
+  },
+  {
+   "id": "tests/test_gaps.py",
+   "kind": "test",
+   "label": "test_gaps.py",
+   "path": "tests/test_gaps.py"
+  },
+  {
+   "id": "tests/test_graph.py",
+   "kind": "test",
+   "label": "test_graph.py",
+   "path": "tests/test_graph.py"
+  },
+  {
+   "id": "tests/test_kg.py",
+   "kind": "test",
+   "label": "test_kg.py",
+   "path": "tests/test_kg.py"
+  },
+  {
+   "id": "tests/test_languages.py",
+   "kind": "test",
+   "label": "test_languages.py",
+   "path": "tests/test_languages.py"
+  },
+  {
+   "id": "tests/test_llm.py",
+   "kind": "test",
+   "label": "test_llm.py",
+   "path": "tests/test_llm.py"
+  },
+  {
+   "id": "tests/test_push.py",
+   "kind": "test",
+   "label": "test_push.py",
+   "path": "tests/test_push.py"
+  },
+  {
+   "id": "tests/test_release_fixes.py",
+   "kind": "test",
+   "label": "test_release_fixes.py",
+   "path": "tests/test_release_fixes.py"
+  },
+  {
+   "id": "tests/test_review.py",
+   "kind": "test",
+   "label": "test_review.py",
+   "path": "tests/test_review.py"
+  },
+  {
+   "id": "tests/test_structure.py",
+   "kind": "test",
+   "label": "test_structure.py",
+   "path": "tests/test_structure.py"
+  },
+  {
+   "id": "tests/test_symbols.py",
+   "kind": "test",
+   "label": "test_symbols.py",
+   "path": "tests/test_symbols.py"
+  },
+  {
+   "id": "tests/test_triage.py",
+   "kind": "test",
+   "label": "test_triage.py",
+   "path": "tests/test_triage.py"
+  },
+  {
+   "id": "tests/test_v3_evidence.py",
+   "kind": "test",
+   "label": "test_v3_evidence.py",
+   "path": "tests/test_v3_evidence.py"
+  },
+  {
+   "id": "tests/test_end_to_end.py",
+   "kind": "test",
+   "label": "test_end_to_end.py",
+   "path": "tests/test_end_to_end.py"
+  },
+  {
+   "id": "tests/test_server.py",
+   "kind": "test",
+   "label": "test_server.py",
+   "path": "tests/test_server.py"
+  },
+  {
+   "id": "tests/test_review_base.py",
+   "kind": "test",
+   "label": "test_review_base.py",
+   "path": "tests/test_review_base.py"
+  },
+  {
+   "id": "src/codetwin/commands/contracts.py",
+   "kind": "source",
+   "label": "contracts.py",
+   "path": "src/codetwin/commands/contracts.py"
+  },
+  {
+   "id": "src/codetwin/commands/crossrepo.py",
+   "kind": "source",
+   "label": "crossrepo.py",
+   "path": "src/codetwin/commands/crossrepo.py"
+  },
+  {
+   "id": "src/codetwin/commands/explain.py",
+   "kind": "source",
+   "label": "explain.py",
+   "path": "src/codetwin/commands/explain.py"
+  },
+  {
+   "id": "src/codetwin/commands/gaps.py",
+   "kind": "source",
+   "label": "gaps.py",
+   "path": "src/codetwin/commands/gaps.py"
+  },
+  {
+   "id": "src/codetwin/commands/graph.py",
+   "kind": "source",
+   "label": "graph.py",
+   "path": "src/codetwin/commands/graph.py"
+  },
+  {
+   "id": "src/codetwin/commands/impact.py",
+   "kind": "source",
+   "label": "impact.py",
+   "path": "src/codetwin/commands/impact.py"
+  },
+  {
+   "id": "src/codetwin/commands/kg.py",
+   "kind": "source",
+   "label": "kg.py",
+   "path": "src/codetwin/commands/kg.py"
+  },
+  {
+   "id": "src/codetwin/commands/learn.py",
+   "kind": "source",
+   "label": "learn.py",
+   "path": "src/codetwin/commands/learn.py"
+  },
+  {
+   "id": "src/codetwin/commands/llm.py",
+   "kind": "source",
+   "label": "llm.py",
+   "path": "src/codetwin/commands/llm.py"
+  },
+  {
+   "id": "src/codetwin/commands/outcomes.py",
+   "kind": "source",
+   "label": "outcomes.py",
+   "path": "src/codetwin/commands/outcomes.py"
+  },
+  {
+   "id": "src/codetwin/commands/push.py",
+   "kind": "source",
+   "label": "push.py",
+   "path": "src/codetwin/commands/push.py"
+  },
+  {
+   "id": "src/codetwin/commands/record.py",
+   "kind": "source",
+   "label": "record.py",
+   "path": "src/codetwin/commands/record.py"
+  },
+  {
+   "id": "src/codetwin/commands/review.py",
+   "kind": "source",
+   "label": "review.py",
+   "path": "src/codetwin/commands/review.py"
+  },
+  {
+   "id": "src/codetwin/commands/run.py",
+   "kind": "source",
+   "label": "run.py",
+   "path": "src/codetwin/commands/run.py"
+  },
+  {
+   "id": "src/codetwin/commands/select.py",
+   "kind": "source",
+   "label": "select.py",
+   "path": "src/codetwin/commands/select.py"
+  },
+  {
+   "id": "src/codetwin/commands/weakcheck.py",
+   "kind": "source",
+   "label": "weakcheck.py",
+   "path": "src/codetwin/commands/weakcheck.py"
+  },
+  {
+   "id": "src/codetwin/commands/why.py",
+   "kind": "source",
+   "label": "why.py",
+   "path": "src/codetwin/commands/why.py"
+  },
+  {
+   "id": "src/codetwin/engine.py",
+   "kind": "source",
+   "label": "engine.py",
+   "path": "src/codetwin/engine.py"
+  }
+ ],
+ "summary": "used by 17 · 17 tests · 0 unknown",
+ "target": {
+  "id": "src/codetwin/commands/_util.py",
+  "kind": "target",
+  "label": "_util.py",
+  "path": "src/codetwin/commands/_util.py"
+ },
+ "unknowns": []
+}

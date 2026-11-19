@@ -7,6 +7,15 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+- Hosted dashboard with real data (cloud mode): decisions, summary and calibration of `aaryagodbole/CodeTwin` come
+  from CodeTwin Cloud, uploaded by the project's own CI on every pull request (OIDC); the dependency graph and impact
+  views come from a snapshot of the repository itself (`scripts/repo_snapshot.py`, paths and links only). A banner
+  says where the numbers come from.
+- Dependency graph: a *Folders* view (one node per folder, line thickness = number of links) for repositories with
+  more than 40 files, and a *Files* view of one folder at a time with the files it links to; fCoSE layout, folder
+  boxes, a Fit button.
+
 ### Changed
 - `codetwin push` adds `alpha_t`, `test_files` and `suite_seconds` to the report, and the cloud API shows them, so
   its summary, decisions and calibration match `codetwin serve` instead of repeating `alpha` and summing per-test
