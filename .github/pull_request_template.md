@@ -30,7 +30,7 @@
 
 - [ ] Merged the latest `dev` into this branch before asking for review
 - [ ] Checks are green
-- [ ] Self-review done and reported above (AGENTS.md, "Self-review of your pull request")
+- [ ] Opened as a draft; self-review done and reported above, then marked ready (AGENTS.md, "Self-review of your pull request")
 - [ ] Commented `@coderabbitai full review` once ready (and `@coderabbitai review` once after pushing fixes)
 - [ ] Code owner review requested (automatic via CODEOWNERS)
 - [ ] Every review comment fixed or answered with a reason; conversations resolved only when done
@@ -38,4 +38,5 @@
 
 ## Before merge (only the code owner ticks this)
 
-- [ ] Merge review: `/code-review --comment <pull request number>` on the latest commit; every finding fixed or answered
+- [ ] Merge review: `/code-review --comment <pull request number>` on the latest commit (a later merge of `dev`
+      that git completed on its own needs no new run); every finding fixed or answered

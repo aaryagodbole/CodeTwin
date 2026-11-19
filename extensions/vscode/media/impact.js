@@ -11,7 +11,10 @@
   };
   let cy;
   window.addEventListener("message", (event) => {
-    const view = event.data.view;
+    // Only the extension host posts to this webview, and VS Code relays it from the webview's own origin
+    // (vscode-webview://...). Ignore anything else, e.g. a page that opened this frame (CVE-2021-41038 class).
+    if (event.origin !== window.origin) return;
+    const view = event.data && event.data.view;
     if (!view) return;
     document.getElementById("title").textContent = view.target.id;
     document.getElementById("summary").textContent = view.summary;

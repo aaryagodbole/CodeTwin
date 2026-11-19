@@ -2,6 +2,7 @@
 
 import { fmtPct } from "@/components/ui/charts";
 import { useQuery } from "@tanstack/react-query";
+import { useId } from "react";
 import { Crosshair, ShieldAlert, Target } from "lucide-react";
 import { Area, AreaChart, CartesianGrid, Legend, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Empty, ErrorBox, Loading } from "@/components/state";
@@ -10,6 +11,7 @@ import { get, type Calibration } from "@/lib/api";
 
 export default function Results() {
   const q = useQuery({ queryKey: ["calibration"], queryFn: () => get<Calibration>("/calibration") });
+  const gradient = useId();      // unique per chart, so two charts on one page never share a gradient
   if (q.error) return <ErrorBox error={q.error} />;
   if (!q.data) return <Loading />;
   const c = q.data;
@@ -32,7 +34,7 @@ export default function Results() {
       <div className="grid gap-4 sm:grid-cols-3">
         <Stat label="Labelled calibrated decisions" value={c.labelled} icon={Crosshair} />
         <Stat label="Misses" value={c.misses} icon={ShieldAlert} />
-        <Stat label="Observed miss rate" value={rate == null ? "–" : `${rate.toFixed(1)}%`}
+        <Stat label="Observed miss rate" value={rate == null ? "–" : fmtPct(rate / 100)}
           hint={target == null ? undefined : `${ok ? "within" : "above"} the ${mixed ? "average " : ""}${fmtPct(target / 100)} target`} icon={Target} />
       </div>
       <Card title="Observed miss rate vs target">
@@ -41,7 +43,7 @@ export default function Results() {
             <ResponsiveContainer>
               <AreaChart data={data} margin={{ top: 8, right: 12, left: -8, bottom: 8 }}>
                 <defs>
-                  <linearGradient id="obs" x1="0" y1="0" x2="0" y2="1">
+                  <linearGradient id={gradient} x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="var(--accent)" stopOpacity={0.35} />
                     <stop offset="100%" stopColor="var(--accent)" stopOpacity={0} />
                   </linearGradient>
@@ -50,10 +52,10 @@ export default function Results() {
                 <XAxis dataKey="n" tick={{ fill: "var(--muted)", fontSize: 12 }} axisLine={false} tickLine={false}
                   label={{ value: "labelled changes", position: "insideBottom", offset: -4, fill: "var(--muted)", fontSize: 12 }} />
                 <YAxis unit="%" tick={{ fill: "var(--muted)", fontSize: 12 }} axisLine={false} tickLine={false} />
-                <Tooltip formatter={(v) => `${Number(v).toFixed(1)}%`}
+                <Tooltip formatter={(v) => fmtPct(Number(v) / 100)}
                   contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 12, color: "var(--foreground)" }} />
                 <Legend wrapperStyle={{ fontSize: 12 }} />
-                <Area type="monotone" dataKey="observed" name="observed miss rate" stroke="var(--accent)" strokeWidth={2.5} fill="url(#obs)" />
+                <Area type="monotone" dataKey="observed" name="observed miss rate" stroke="var(--accent)" strokeWidth={2.5} fill={`url(#${gradient})`} />
                 <Line type="stepAfter" dataKey="target" name="target α" stroke="var(--warn)" strokeWidth={2} strokeDasharray="5 4" dot={false} />
                 <Line type="monotone" dataKey="level" name="adaptive level α_t" stroke="var(--muted)" strokeWidth={1.5} dot={false} />
               </AreaChart>

@@ -1,6 +1,7 @@
 # PR-Agent settings (.github/workflows/pr-agent.yml). Reference:
 # https://github.com/The-PR-Agent/pr-agent/blob/main/pr_agent/settings/configuration.toml
-# The review rules below are the same as .github/copilot-instructions.md; change both together.
+# The review rules below are the same as .github/copilot-instructions.md and the self-review checklist in
+# AGENTS.md; change all three together.
 
 [ignore]
 glob = [

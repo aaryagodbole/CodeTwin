@@ -176,3 +176,84 @@ def test_failed_health_probes_are_logged(caplog):
     broken = Settings(database_url="postgresql://nobody@127.0.0.1:1/none")
     assert TestClient(create_app(broken)).get("/api/health").status_code == 503
     assert any('"/api/health"' in r.getMessage() and '"status": 503' in r.getMessage() for r in caplog.records)
+
+
+def test_values_carried_by_the_report_match_the_local_api(client, database):
+    """A report from a 0.3 client carries alpha_t, test_files and suite_seconds; the cloud shows those, not values
+    estimated from the per-test rows (#77). Older reports keep the estimate (test_read_values)."""
+    register(database)
+    r = report(outcome={"missed": False, "failing": []})
+    r["decision"] |= {"alpha_t": 0.08, "test_files": 5, "suite_seconds": 2.5}
+    assert client.post("/api/v1/reports", json=r, headers=auth_header(oidc())).status_code in (200, 201)
+    base = "/api/v1/projects/acme/shop"
+    s = client.get(f"{base}/summary").json()
+    assert (s["alpha"], s["alpha_t"], s["test_files"], s["suite_seconds"]) == (0.1, 0.08, 5, 2.5)
+    assert client.get(f"{base}/decisions").json()[0]["alpha_t"] == 0.08
+    assert client.get(f"{base}/calibration").json()["points"][0]["alpha_t"] == 0.08
+
+
+def test_an_empty_project_has_no_made_up_target(client, database):
+    register(database)
+    s = client.get("/api/v1/projects/acme/shop/summary").json()
+    assert s["alpha"] is None and s["alpha_t"] is None and s["test_files"] == 0
+
+
+def test_values_match_the_local_api_on_the_demo_project(client, database):
+    """The shared fixture: the local API's answers saved in the dashboard demo snapshot. Upload what `codetwin push`
+    would send for its newest decisions, then compare the cloud's answers with the local ones value by value."""
+    register(database)
+    local_rows = json.loads((DEMO / "decisions__limit-10.json").read_text())[:4]          # newest first
+    local_summary = json.loads((DEMO / "summary.json").read_text())
+    for i, row in enumerate(reversed(local_rows)):                                        # upload oldest first
+        r = report(run={"source": "github-actions", "id": str(2000 + i), "attempt": 1},
+                   outcome=None if row["missed"] is None else {"missed": row["missed"], "failing": []})
+        r["commit"]["base"] = row["base"]
+        r["decision"] = {"decision": row["decision"], "residual_risk": row["residual_risk"], "alpha": row["alpha"],
+                         "alpha_t": row["alpha_t"], "threshold": row["threshold"], "mode": row["mode"],
+                         "selected": row["selected"], "reasons": row["reasons"],
+                         "test_files": local_summary["test_files"], "suite_seconds": local_summary["suite_seconds"]}
+        res = client.post("/api/v1/reports", json=r, headers=auth_header(oidc(run_id=str(2000 + i))))
+        assert res.status_code == 201, res.json()
+    base = "/api/v1/projects/acme/shop"
+    cloud_rows = client.get(f"{base}/decisions", params={"limit": 10}).json()
+    same = [k for k in local_rows[0] if k not in ("id", "recorded")]                       # ids are per store
+    assert [{k: c[k] for k in same} for c in cloud_rows] == [{k: r[k] for k in same} for r in local_rows]
+    s = client.get(f"{base}/summary").json()
+    for k in ("alpha", "recorded_commit", "test_files", "suite_seconds"):
+        assert s[k] == local_summary[k], k
+
+
+def test_the_upload_lock_holds_the_hourly_limit_under_concurrency(settings, database, monkeypatch):
+    """Ten uploads at once against a limit of five: exactly five are stored (the per-project advisory lock).
+    The insert is slowed down so that, without the lock, every upload would count the same four or fewer."""
+    import time
+    from concurrent.futures import ThreadPoolExecutor
+
+    from fastapi import HTTPException
+
+    from codetwin_cloud import app as cloud_app
+
+    pid = register(database)
+    with db.connect(database) as c:      # already bound: uploads take no row lock, only the advisory lock serialises
+        c.execute("update project set github_repository_id = 111 where id = %s", (pid,))
+    real_insert = cloud_app._insert
+
+    def slow_insert(*args):
+        time.sleep(0.2)
+        return real_insert(*args)
+
+    monkeypatch.setattr(cloud_app, "_insert", slow_insert)
+
+    def upload(i: int) -> int:
+        body = json.dumps(report(run={"source": "github-actions", "id": str(3000 + i), "attempt": 1})).encode()
+        try:
+            cloud_app._store(body, oidc(run_id=str(3000 + i)), settings)
+            return 201
+        except HTTPException as e:
+            return e.status_code
+
+    with ThreadPoolExecutor(max_workers=10) as pool:
+        codes = sorted(pool.map(upload, range(10)))
+    assert codes == [201] * settings.uploads_per_hour + [429] * (10 - settings.uploads_per_hour)
+    with db.connect(database) as c:
+        assert c.execute("select count(*) as n from report").fetchone()["n"] == settings.uploads_per_hour

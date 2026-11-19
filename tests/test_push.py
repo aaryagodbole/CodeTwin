@@ -1,5 +1,6 @@
 """`codetwin push`: what a report contains (and never contains), and how it is sent."""
 import json
+import math
 import threading
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
@@ -371,3 +372,23 @@ def test_out_of_range_risk_is_refused() -> None:
     for bad in [{**base, "residual_risk": 7}, {**base, "threshold": True}]:
         with pytest.raises(push.PushError):
             push.validate_decision(bad)
+
+
+def test_report_carries_the_level_and_the_recorded_run(toy_repo: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    """The cloud shows alpha_t, test_files and suite_seconds like `codetwin serve` does (#77), so the report
+    carries them, and only for the same stored decision."""
+    decision = _decide(toy_repo, capsys)
+    with Engine(toy_repo) as eng:
+        stored = eng.store.decisions(limit=1)[0]
+        run = eng.store.get_run(stored["base"])
+        same = push.build_report(eng, decision, env={}, repository="acme/shop")["decision"]
+        other = push.build_report(eng, {**decision, "mode": "fallback"}, env={}, repository="acme/shop")["decision"]
+    assert same["alpha_t"] == stored["alpha_t"] and same["test_files"] == len(run.durations) > 0
+    assert same["suite_seconds"] == run.wall
+    assert other["alpha_t"] is None and other["test_files"] is None and other["suite_seconds"] is None
+
+
+def test_report_clamps_the_adaptive_level() -> None:
+    """The stored adaptive level drifts past 0 or 1 after many misses or none; the cloud accepts only [0, 1]."""
+    assert push._level(-0.008) == 0.0 and push._level(1.3) == 1.0 and push._level(0.07) == 0.07
+    assert push._level(None) is None and push._level(math.inf) is None

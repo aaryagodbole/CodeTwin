@@ -35,8 +35,8 @@ export interface DemoMeta {
 export interface Summary {
   root: string;
   packages: string[];
-  alpha: number;
-  alpha_t: number;
+  alpha: number | null;     // null on the cloud API before any report carries a target
+  alpha_t: number | null;
   calibration_size: number;
   recorded_commit: string | null;
   test_files: number;

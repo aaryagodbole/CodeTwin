@@ -20,11 +20,8 @@ from ..graph.view import label
 
 def _engine(request: Request) -> Iterator[Engine]:
     """Fresh engine per request (always reads the current evidence), closed when the request ends."""
-    eng = Engine(request.app.state.root)
-    try:
+    with Engine(request.app.state.root) as eng:
         yield eng
-    finally:
-        eng.close()
 
 
 Eng = Annotated[Engine, Depends(_engine)]
