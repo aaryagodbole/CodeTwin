@@ -7,6 +7,16 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+- Connected repositories by URL: `[[repos]]` entries take `url` (https, ssh or file; optional `ref`) as well as
+  `path`, any number of each. `codetwin repos --sync` (or `crossrepo --sync`) clones them into `.codetwin/repos`;
+  analysis stays offline and reports an unsynced entry as an unknown. `codetwin repos` lists every entry and its
+  state. The Action syncs before selecting (`sync-repos`, default on). URLs with credentials, `ext::` and
+  duplicate names are refused with a stated reason. Migration 0006 adds the `not-synced` and `invalid` statuses.
+- `select --json` and `codetwin explain` report `risk_before`, the estimated residual risk of the first selection,
+  next to `residual_risk`, the risk of the tests that run (#96).
+- Report section `freshness` (`src/codetwin/report/freshness.py`): how many commits old the recorded evidence is (merged commits count), `stale` when that exceeds `[freshness] stale_after` (default 20) or when the recorded commit is gone from a complete history, with a hint to run `codetwin record`. The age is `null` when it cannot be established (other branch, older checkout, shallow clone). Git failures other than an unknown commit are shown as a broken section, not hidden as an unknown age.
+
 ### Changed
 - Engine architecture (ADR 0004, `CONTEXT.md`): one `ChangeContext` per change (`Engine.change()`), a pure selection
   policy (`selection.choose()`), a calibration ledger (`risk/ledger.py`), read models for the API (`views.py`) and
@@ -41,11 +51,6 @@ All notable changes to this project are documented here. The format follows
 - `record` stores a run that did not complete (whole-run timeout; pytest exit codes 2, 3, 4) with a warning, and
   `select` never picks it as the default base (a base named with `--base` is used, with a note); `record` then
   exits 1 (#99).
-
-### Added
-- `select --json` and `codetwin explain` report `risk_before`, the estimated residual risk of the first selection,
-  next to `residual_risk`, the risk of the tests that run (#96).
-- Report section `freshness` (`src/codetwin/report/freshness.py`): how many commits old the recorded evidence is (merged commits count), `stale` when that exceeds `[freshness] stale_after` (default 20) or when the recorded commit is gone from a complete history, with a hint to run `codetwin record`. The age is `null` when it cannot be established (other branch, older checkout, shallow clone). Git failures other than an unknown commit are shown as a broken section, not hidden as an unknown age.
 
 ### Fixed
 - VS Code impact graph: the webview ignores messages from any origin but its own (CodeQL `js/missing-origin-check`).

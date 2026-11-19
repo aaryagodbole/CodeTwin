@@ -27,6 +27,11 @@ inputs:
   upload-server:
     description: CodeTwin Cloud API URL (https). Required when `upload` is true; without it the upload is skipped with a warning.
     default: ""
+  sync-repos:
+    description: >-
+      Clone or update the connected repositories given by url in .codetwin.toml ([[repos]], docs/crossrepo.md)
+      before selecting. Private ones need git credentials for their host; a failed sync only warns.
+    default: "true"
 outputs:
   decision:
     description: proceed or abstain
@@ -58,6 +63,14 @@ runs:
         [ -f .codetwin.toml ] || codetwin init
         codetwin record
         git checkout -q --detach "$HEAD_SHA"
+
+    - name: Sync connected repositories
+      # Not for pull requests from forks: their .codetwin.toml could make the runner clone any URL.
+      if: >-
+        inputs.sync-repos == 'true' && (github.event_name != 'pull_request' ||
+        github.event.pull_request.head.repo.full_name == github.repository)
+      shell: bash
+      run: codetwin repos --sync || echo "::warning::CodeTwin could not sync every connected repository; their impact is reported as unknown"
 
     - name: Select tests
       id: select

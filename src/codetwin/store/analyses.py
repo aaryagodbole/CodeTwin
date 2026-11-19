@@ -99,14 +99,21 @@ def save_crossrepo(store: Store, cfg, base: str, out: dict, symbols: list[dict],
         now = time.time()
         unknowns: list[tuple[int | None, str]] = []
         current = []
+        targets: dict[str, int] = {}
         for ri in repos:
-            rid = store.repository(ri.name, ri.path)
+            if ri.name in targets:
+                # a second [[repos]] entry with the same name (reported invalid): its unknowns go on the first entry's
+                # target, and it does not overwrite that repository's location
+                unknowns += [(targets[ri.name], u) for u in ri.unknowns]
+                continue
+            rid = store.repository(ri.name, getattr(ri, "url", None) or ri.path or None)
             current.append(rid)
             store.con.execute("insert into repository_link (consumer_id, provider_id, first_seen, last_seen) "
                               "values (?,?,?,?) on conflict (consumer_id, provider_id) do update set "
                               "last_seen=excluded.last_seen, ended=null", (rid, SELF, now, now))
-            tid = _target(store, aid, rid, ri.path if ri.status != "not-found" else None, ri.language, ri.status,
-                          ri.runtime)
+            here = ri.path if ri.path and ri.status not in ("not-found", "not-synced", "invalid") else None
+            tid = _target(store, aid, rid, here, ri.language, ri.status, ri.runtime)
+            targets[ri.name] = tid
             for c in ri.consumers:
                 cid = store.con.execute("insert into consumer_file (target_id, file_id, link, is_test) values (?,?,?,?)",
                                         (tid, store._entity(c["file"], repo=rid), c["link"], int(c["is_test"]))).lastrowid
@@ -240,6 +247,8 @@ def save_contracts(store: Store, cfg, base: str, out: dict, docs: list[ContractD
             change_ids.update({id(c): i for c, i in zip(d.changes, ids, strict=True)})
         targets: dict[str, tuple[int, int]] = {}
         for s in scopes:
+            if s.name in targets:    # a repeated [[repos]] name (reported invalid): one target per repository
+                continue
             repo = SELF if s.is_self else store.repository(s.name, s.path)
             targets[s.name] = (_target(store, aid, repo, s.path, s.language, s.status, s.runtime), repo)
         for name, change, file, line, how in sites:

@@ -10,6 +10,7 @@ from .. import config as cfgmod
 from .. import lang as langmod
 from ..graph.impact import build_graph, impact_of
 from . import packages as pkgmod
+from .sources import connected
 
 USES_SYMBOL = "uses-changed-symbol"
 IMPORTS = "imports-package"
@@ -19,18 +20,19 @@ IMPORTS = "imports-package"
 class RepoImpact:
     name: str
     path: str
+    url: str | None = None                                    # [[repos]] url (None for a path entry)
     language: str | None = None
     packages: list[str] = field(default_factory=list)
     consumers: list[dict] = field(default_factory=list)       # {file, link, symbols, lines}
     tests: dict[str, set[str]] = field(default_factory=dict)  # test file -> evidence
     unknowns: list[str] = field(default_factory=list)
-    status: str = "analysed"                                  # analysed | not-found | no-package | unsupported
+    status: str = "analysed"     # analysed | not-found | not-synced | invalid | no-package | unsupported
     runtime: bool = False                                     # the dependent had a recorded run
     uses: dict[str, dict[str, list[int]]] = field(default_factory=dict)   # consumer file -> symbol -> lines
 
     def to_dict(self) -> dict:
         strong = sum(1 for c in self.consumers if c["link"] == USES_SYMBOL)
-        return {"name": self.name, "path": self.path, "language": self.language, "packages": self.packages,
+        return {"name": self.name, "path": self.path, "url": self.url, "language": self.language, "packages": self.packages,
                 "status": self.status, "runtime_evidence": self.runtime, "consumers": self.consumers, "tests": {t: sorted(v) for t, v in sorted(self.tests.items())},
                 "unknowns": self.unknowns,
                 "summary": f"{self.name}: {strong} files use a changed symbol, "
@@ -71,8 +73,8 @@ def code_text(line: str) -> str:
 
 
 def declared(cfg) -> list[dict]:
-    repos = cfg.raw.get("repos", [])
-    return [r for r in repos if isinstance(r, dict) and r.get("path")] if isinstance(repos, list) else []
+    """The raw `[[repos]]` tables (path or url entries). Use `sources.connected(cfg)` for where their files are."""
+    return [s.entry or {} for s in connected(cfg)]
 
 
 def own_packages(cfg) -> list[str]:
@@ -105,16 +107,17 @@ def analyse(cfg, changed_symbols: list[str], changed_files: list[str]) -> list[R
     mine = own_packages(cfg)
     names = sorted({s.rsplit(".", 1)[-1] for s in changed_symbols if s})
     sym_rx = re.compile(r"(?<![\w$])(" + "|".join(map(re.escape, names)) + r")(?![\w$])") if names else None
-    for r in declared(cfg):
-        path = (cfg.root / str(r["path"])).resolve()
-        ri = RepoImpact(name=str(r.get("name") or path.name), path=str(path))
+    for src in connected(cfg):
+        r = src.entry or {}
+        ri = RepoImpact(name=src.name, path=str(src.path) if src.path else "", url=src.url)
         pk = list(r.get("packages") or mine)
         ri.packages = pk
-        if not path.exists():
-            ri.status = "not-found"
-            ri.unknowns.append(f"repository {ri.name} not found at {path}: its consumers are unknown")
+        if not src.available or src.path is None:
+            ri.status = "invalid" if src.error else "not-synced" if src.url else "not-found"
+            ri.unknowns.append(src.missing())
             out.append(ri)
             continue
+        path = src.path
         if not pk:
             ri.status = "no-package"
             ri.unknowns.append(f"no package name known for this repository; set [crossrepo] packages or "
