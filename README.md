@@ -364,19 +364,104 @@ codetwin graph src/codetwin/selection.py      # who uses this file, which tests 
 git checkout src/codetwin/selection.py # undo the change
 ```
 
-**Dashboard:** run `codetwin serve` and open http://127.0.0.1:8765/api/docs (the API). To work on the
-dashboard pages, keep `codetwin serve` running and in a second terminal run `cd dashboard && npm run dev`,
-then open http://localhost:3000. Stop a running server with **Ctrl+C**.
+To see it in the dashboard, the editor or with the cloud, continue with step 8.
 
-**VS Code extension:** in VS Code open the folder `extensions/vscode` and press **F5**. A second VS Code
-window opens with the extension loaded. In that window open a Python project (for example this repository),
+### 8. Run the whole app locally (engine, API, dashboard, cloud, editor)
+
+CodeTwin has these parts. You only need the ones for what you are working on.
+
+| Part | What it is | Runs on | Start it with |
+|---|---|---|---|
+| Engine (CLI) | records evidence, selects tests | your terminal | `codetwin record`, `codetwin select` (step 7) |
+| Local API | read-only API over your project's evidence | http://127.0.0.1:8765/api/docs | `codetwin serve` |
+| Dashboard | the web pages | http://localhost:3000 | `cd dashboard && npm run dev` (or `dev:demo`, `dev:cloud`) |
+| Cloud API | stores decision reports from CI (Postgres) | http://localhost:8080/api/docs | `uvicorn app:app` in `cloud/` (8d) |
+| VS Code extension | impact graph and risk in the editor | a second VS Code window | F5 in `extensions/vscode` (8f) |
+
+**Settings files.** Templates with every variable and no real values: [`.env.example`](.env.example) (AI keys,
+Docker), [`dashboard/.env.example`](dashboard/.env.example) (where the dashboard gets its data) and
+[`cloud/.env.example`](cloud/.env.example) (database, CORS). Copy one to `.env` (dashboard: `.env.local`) and
+fill it in. Those copies are git-ignored; **never commit a real key or password**.
+
+**8a. Dashboard with demo data (nothing else needed).** The quickest way to see every page:
+
+```bash
+cd dashboard
+npm run dev:demo                       # open http://localhost:3000; Ctrl+C to stop
+```
+
+**8b. Dashboard on your own evidence (engine + local API + dashboard).** Two terminals, both in the repository
+folder with the virtual environment active:
+
+```bash
+# terminal 1: the API over this repository's evidence (run `codetwin record` once first, step 7)
+codetwin serve                         # http://127.0.0.1:8765/api/docs
+```
+
+```bash
+# terminal 2: the dashboard; dashboard/.env.development already points it at port 8765
+cd dashboard
+npm run dev                            # http://localhost:3000
+```
+
+Make a change and run `codetwin select` in a third terminal: the new decision appears after a page refresh.
+To use another project, run `codetwin init`, `codetwin record` and `codetwin serve` in that project's folder.
+
+**8c. Dashboard with the hosted real data (what https://codetwin-ten.vercel.app shows).** Decisions come from
+CodeTwin Cloud, the dependency graph from `dashboard/public/snapshot/`:
+
+```bash
+cd dashboard
+cp .env.example .env.local             # then in .env.local switch to block 2 (cloud) and remove block 1
+npm run dev:cloud                      # http://localhost:3000
+```
+
+The hosted API answers a browser only from origins listed in its `CODETWIN_CORS_ORIGINS` setting (Vercel → the
+cloud project → Settings → Environment Variables). For this to work on your laptop, that list must also contain
+`http://localhost:3000`; ask the repository owner if the pages say *Failed to fetch*.
+
+Refresh the graph snapshot after big changes: `python scripts/repo_snapshot.py` (runs the test suite, a few
+minutes), then commit `dashboard/public/snapshot/`. Details: [docs/dashboard.md](docs/dashboard.md).
+
+**8d. Cloud API locally (Postgres + FastAPI).** Only for work on `cloud/`. You need Postgres: Docker
+(`docker run --rm -e POSTGRES_PASSWORD=pw -p 5432:5432 postgres:16`), [Postgres.app](https://postgresapp.com/)
+on macOS, or any local install.
+
+```bash
+cd cloud
+pip install -e ".[dev]"                # once, in the same virtual environment (needs Python 3.12)
+cp .env.example .env                   # set DATABASE_URL, and a random CRON_SECRET (openssl rand -hex 24)
+set -a; source .env; set +a            # load it into this terminal
+python -m codetwin_cloud add-project acme/shop --public --token   # prints an upload token once: keep it
+uvicorn app:app --reload --port 8080   # http://localhost:8080/api/docs
+```
+
+Send a real decision to it from any recorded project: `codetwin select --json > d.json`, then
+`codetwin push --decision d.json --server http://localhost:8080 --token <the token> --repository acme/shop`.
+Point the dashboard at it with block 2 of `dashboard/.env.example` (`NEXT_PUBLIC_API_URL=http://localhost:8080`,
+`NEXT_PUBLIC_PROJECT=acme/shop`). Cloud tests: set `CODETWIN_TEST_DATABASE_URL` to a database they may wipe
+(never your real one), then `python -m pytest` inside `cloud/`. More: [cloud/README.md](cloud/README.md).
+
+**8e. Everything in Docker (Postgres + cloud API + dashboard).** Needs Docker with Compose v2.
+
+```bash
+cp .env.example .env                   # set POSTGRES_PASSWORD and CRON_SECRET (openssl rand -hex 24) first
+docker compose up -d --build --wait    # dashboard http://localhost:3000, API http://localhost:8080/api/docs
+docker compose exec api python -m codetwin_cloud add-project acme/shop --public --token
+docker compose down                    # stop (add -v to delete the data too)
+```
+
+Details: [docs/self-hosting.md](docs/self-hosting.md).
+
+**8f. VS Code extension.** In VS Code open the folder `extensions/vscode` and press **F5**. A second VS Code
+window opens with the extension loaded. In that window open a recorded project (for example this repository),
 select some code, right-click → **CodeTwin: Show impact graph of selection**.
 
-**Optional, AI explanations:** create a free key at https://console.groq.com/keys, then
-`export GROQ_API_KEY=your-key` and `codetwin llm --test` (details in [docs/llm.md](docs/llm.md)).
-Never commit a key.
+**8g. AI explanations (optional).** Create a free key at https://console.groq.com/keys, put it in `.env`
+(`GROQ_API_KEY=...`, see `.env.example`), load it with `set -a; source .env; set +a`, then run
+`codetwin llm --test` ([docs/llm.md](docs/llm.md)).
 
-### 8. Make your first change (the team workflow)
+### 9. Make your first change (the team workflow)
 
 Nobody pushes to `dev` or `main` directly. Every change goes through a pull request (PR):
 
@@ -420,6 +505,10 @@ Rules for AI coding assistants: [AGENTS.md](AGENTS.md).
 | Tests fail with a *git* error | Git must be installed and `git config --global user.name/user.email` set (step 2) |
 | `codetwin select` says *no recorded run* | run `codetwin record` first, on a clean checkout |
 | Port 8765 already in use | another `codetwin serve` is running; stop it or use `codetwin serve --port 8770` |
+| Dashboard pages show *Failed to fetch* | the API it reads is not running: start `codetwin serve` (8b), or use `npm run dev:demo` (8a) |
+| Dashboard still shows old data after editing `.env.local` | stop `npm run dev` (Ctrl+C) and start it again: `NEXT_PUBLIC_*` values are read at start |
+| Cloud API: `DATABASE_URL is not set` | load the settings into the terminal: `set -a; source .env; set +a` in `cloud/` |
+| `docker compose up`: *set POSTGRES_PASSWORD in .env* | create `.env` from `.env.example` and fill in `POSTGRES_PASSWORD` first (8e) |
 
 More: CI and release details in [docs/releasing.md](docs/releasing.md), repository settings in
 [docs/github-setup.md](docs/github-setup.md), all changes in [CHANGELOG.md](CHANGELOG.md).
