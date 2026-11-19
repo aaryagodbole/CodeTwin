@@ -20,10 +20,12 @@ OIDC (no secret). Pull requests from forks get no OIDC token and skip the upload
 `codetwin record` there (the full test suite, a few minutes) and rewrites `dashboard/public/snapshot/`. Commit the
 result after larger structural changes; the banner shows the snapshot's commit and date.
 
-**The graph page.** A repository with more than 40 files opens in the *Folders* view: one node per folder (its
-size is the number of files) and one line per folder pair and link type (thicker for more links). Double-click a
-folder, or pick one in *Files*, to see its files and the files they link to; double-click a file for its impact
-view.
+**The graph page.** Every node is a card with its name inside, coloured by its area of the repository (the folder
+below the one most files share, e.g. `commands`, `lang`, `store`; at most seven colours, the rest grey "other";
+an area keeps its colour in every view). Tests have a dashed outline. A repository with more than 40 files opens
+in the *Folders* view: one card per folder with its file count, laid out in layers (a folder above depends on
+folders below it), one line per folder pair and link type, thicker for more links. Double-click a folder, or pick
+one in *Files*, to see its files and the files they link to; double-click a file for its impact view.
 
 ## See it on localhost
 

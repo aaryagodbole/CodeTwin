@@ -148,9 +148,11 @@ export default function SystemMap() {
               ? <Empty>Every node is hidden by the filters above. Switch a filter back on to see them.</Empty>
               : <Empty>Nothing recorded yet. Run <code>codetwin record</code>.</Empty>
           ) : (
-            <div className="grid gap-4 lg:grid-cols-[1fr_18rem]">
-              <GraphView graph={graph} onOpen={onOpen} onSelect={onSelect} search={search} selected={picked} />
-              <aside className="rounded-xl border border-border bg-card-2/40 p-4 text-sm" aria-live="polite">
+            // The graph gets the full width; a node's details float over its top-right corner while it is selected.
+            <div className="relative">
+              <GraphView graph={graph} onOpen={onOpen} onSelect={onSelect} search={search} selected={picked} colourBy={q.data?.nodes} />
+              <aside aria-live="polite"
+                className={node ? "mt-3 rounded-xl border border-border bg-card p-4 text-sm shadow-lg lg:absolute lg:right-3 lg:top-14 lg:mt-0 lg:w-80" : "sr-only"}>
                 {node ? (
                   <div className="space-y-3">
                     <div className="flex items-start justify-between gap-2">
@@ -183,7 +185,7 @@ export default function SystemMap() {
                     )}
                   </div>
                 ) : (
-                  <p className="text-muted">Click a file or test to see what it is connected to.</p>
+                  <p>Click a file or test to see what it is connected to.</p>
                 )}
               </aside>
             </div>

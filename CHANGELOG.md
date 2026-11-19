@@ -12,9 +12,11 @@ All notable changes to this project are documented here. The format follows
   from CodeTwin Cloud, uploaded by the project's own CI on every pull request (OIDC); the dependency graph and impact
   views come from a snapshot of the repository itself (`scripts/repo_snapshot.py`, paths and links only). A banner
   says where the numbers come from.
-- Dependency graph: a *Folders* view (one node per folder, line thickness = number of links) for repositories with
-  more than 40 files, and a *Files* view of one folder at a time with the files it links to; fCoSE layout, folder
-  boxes, a Fit button.
+- Dependency graph redesign: nodes are cards with their name inside, coloured by area of the repository (fixed
+  categorical palette, up to seven areas plus "other", the same colour in every view; tests have a dashed outline);
+  a *Folders* view laid out in layers (dagre) with line thickness for the number of links, the default above 40
+  files; a *Files* view of one folder and its neighbours (force layout that respects card sizes); full-width canvas
+  with a dot grid, floating details, a legend of areas and a Fit button.
 
 ### Changed
 - `codetwin push` adds `alpha_t`, `test_files` and `suite_seconds` to the report, and the cloud API shows them, so
